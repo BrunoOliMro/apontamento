@@ -1,11 +1,13 @@
 // import "dotenv/config";
-import express from "express";
 import path from "path";
+import express from "express";
+import cookieParser from "cookie-parser";
 
 import apiRouter from "./api/router";
 
 const app = express();
 
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("static"));
