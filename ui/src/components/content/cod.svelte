@@ -3,16 +3,20 @@
     let NUMERO_ODF = Number(dataFromBarcode.slice(10));
     let NUMERO_OPERACAO = dataFromBarcode.slice(0, 5);
     let CODIGO_MAQUINA = dataFromBarcode.slice(5, 10);
+    let NOME_CRACHA = "";
+    
+    console.log(NOME_CRACHA)
     const headers = new Headers();
     // headers.append("Content-Type", "application/json");
 
-    let urlString = `/api/v1/apontamento?NUMERO_ODF=${NUMERO_ODF}&CODIGO_MAQUINA=${CODIGO_MAQUINA}&NUMERO_OPERACAO=${NUMERO_OPERACAO}`;
+    let urlString = `/api/v1/apontamento?NUMERO_ODF=${NUMERO_ODF}&CODIGO_MAQUINA=${CODIGO_MAQUINA}&NUMERO_OPERACAO=${NUMERO_OPERACAO}&NOME_CRACHA=${NOME_CRACHA}`;
     let resultado = getOdfData();
     async function getOdfData() {
         const res = await fetch(urlString);
         const odfData = await res.json();
         return odfData;
     }
+    console.log(urlString)
 </script>
 
 <main>
@@ -23,7 +27,7 @@
             <div class="odf">ODF: {NUMERO_ODF}</div>
             <div class="odf">Cód. Interno: {dadosOdf[0].CODIGO_PECA[0] = dadosOdf[0].CODIGO_PECA[0] === null ? "SEM DADOS": dadosOdf[0].CODIGO_PECA[0]}</div>
             <div class="odf">Cód. do Cliente: {dadosOdf[0].CODIGO_CLIENTE}</div>
-            <div class="odf">Operador: {dadosOdf[0].OPERADOR = dadosOdf[0].OPERADOR === undefined ? "SEM DADOS": dadosOdf[0].OPERADOR}</div>
+            <div class="odf">Operador: {NOME_CRACHA}</div>
             <div class="bold">OP: {NUMERO_OPERACAO} - {CODIGO_MAQUINA} - {dadosOdf[0].QTDE_ODF[0]}</div>
         </div>
     {/await}

@@ -6,10 +6,11 @@
     const dataFromBarcode = localStorage.getItem("barcodeData");
     
     let APT_TEMPO_OPERACAO = '';
+    let APT_TEMPO_OPERACAO_TOTAL = 1;
 
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
-    let urlString = `/api/v1/rip?APT_TEMPO_OPERACAO=${APT_TEMPO_OPERACAO}`;
+    let urlString = `/api/v1/rip?APT_TEMPO_OPERACAO=${APT_TEMPO_OPERACAO}&let APT_TEMPO_OPERACAO=${APT_TEMPO_OPERACAO_TOTAL}`;
     let resultado = getOdfData();
     async function getOdfData() {
         const res = await fetch(urlString);

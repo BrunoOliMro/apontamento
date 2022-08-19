@@ -36,9 +36,10 @@
         <button on:click={some5} type="button" class="btn btn-primary"
             >Historico</button
         >
-        <button on:click={some6} type="button" class="btn btn-primary"
+        <a href="/#/desenho/"><button on:click={some6} type="button" class="btn btn-primary"
             >Desenho</button
-        >
+        ></a>
+        
     </div>
 </main>
 
