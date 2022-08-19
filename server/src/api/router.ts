@@ -25,64 +25,49 @@ apiRouter.route("/apontamento")
             res.cookie("barcode", barcode)
             const tool = 0
 
-            if (barcode === "") throw new Error("Código de barras inválido")
-
-            //Divide o codigo em 3 partes para a verificação na proxima etapa
-            const dados = {
-                numOdf: Number(barcode.slice(10)),
-                numOper: barcode.slice(0, 5),
-                codMaq: barcode.slice(5, 10),
-            }
-
-            //Inicia a conexão com o banco de dados e verifica se existe esse codigo
-            const connection = await mssql.connect(sqlConfig);
-            try {
-                const resource = await connection.query(`
-                    SELECT TOP 1
-                    [NUMERO_ODF], 
-                    [CODIGO_MAQUINA],
-                    [NUMERO_OPERACAO]
-                    FROM PCP_PROGRAMACAO_PRODUCAO
-                    WHERE 1 = 1
-                    AND [NUMERO_ODF] = ${dados.numOdf}
-                    AND [CODIGO_MAQUINA] = '${dados.codMaq}'
-                    AND [NUMERO_OPERACAO] = ${dados.numOper}
-                    ORDER BY NUMERO_OPERACAO ASC
-                    `.trim()
-                ).then(result => result.recordset);
-
-                //Verifica se houve um resultado em resource e caso haja redireciona
-                if (resource.length > tool) {
-                    //Regra de negocio(INICIO DE SETUP) Ao Bipar Inicia
-                    // let inicialSetup = ""
-                    // const dados2 = {
-                    //     inicialSetup: inicialSetup
-                    // }
-                    // ,
-                    //         (
-                    //             SELECT TOP 1
-                    //             [APT_TEMPO_OPERACAO]
-                    //             FROM HISAPONTA
-                    //             WHERE 1 = 1
-                    //             AND [APT_TEMPO_OPERACAO] = ${dados2.inicialSetup}
-                    //             ORDER BY CAST(LTRIM(NUMOPE) AS INT) ASC
-                    //         )
-
-                    // Vai ate o final da ferramenta
-                    // Vai até o final do processo
-                    var secondSetup = performance.now()
-                    res.cookie("secondSetup", secondSetup)
-                    console.log("Iniciou processo: " + secondSetup)
-                    res.redirect(`/#/ferramenta/`)
-                } else {
-                    res.redirect(`/#/codigobarras`)
+            if (barcode === "") {
+                res.redirect('/#/codigobarras')
+            } else {
+                //Divide o codigo em 3 partes para a verificação na proxima etapa
+                const dados = {
+                    numOdf: Number(barcode.slice(10)),
+                    numOper: barcode.slice(0, 5),
+                    codMaq: barcode.slice(5, 10),
                 }
-            } catch (error) {
-                console.log(error);
-            } finally {
+                //Inicia a conexão com o banco de dados e verifica se existe esse codigo
+                const connection = await mssql.connect(sqlConfig);
+                try {
+                    const resource = await connection.query(`
+                        SELECT TOP 1
+                        [NUMERO_ODF], 
+                        [CODIGO_MAQUINA],
+                        [NUMERO_OPERACAO]
+                        FROM PCP_PROGRAMACAO_PRODUCAO
+                        WHERE 1 = 1
+                        AND [NUMERO_ODF] = ${dados.numOdf}
+                        AND [CODIGO_MAQUINA] = '${dados.codMaq}'
+                        AND [NUMERO_OPERACAO] = ${dados.numOper}
+                        ORDER BY NUMERO_OPERACAO ASC
+                        `.trim()
+                    ).then(result => result.recordset);
 
-                await connection.close();
-                next()
+                    //Verifica se houve um resultado em resource e caso haja redireciona
+                    if (resource.length > tool) {
+                        // Vai ate o final da ferramenta
+                        // Vai até o final do processo
+                        var secondSetup = performance.now()
+                        res.cookie("secondSetup", secondSetup)
+                        console.log("Iniciou processo: " + secondSetup)
+                        res.redirect(`/#/ferramenta/`)
+                    } else {
+                        res.redirect(`/#/codigobarras`)
+                    }
+                } catch (error) {
+                    console.log(error);
+                } finally {
+                    await connection.close();
+                    next()
+                }
             }
         }
     )
@@ -91,11 +76,15 @@ apiRouter.route("/apontamento")
         const NUMERO_ODF: any = (req.query["NUMERO_ODF"] as string).trim() || undefined;
         const CODIGO_MAQUINA = (req.query["CODIGO_MAQUINA"] as string).trim() || undefined;
         const NUMERO_OPERACAO = (req.query["NUMERO_OPERACAO"] as string).trim() || undefined;
+        const NOME_CRACHA = (req.query["NOME_CRACHA"] as string).trim() || undefined;
+
         // SQL QUERY TO (
         //     SELECT TOP 1 ISNULL(NOME_CRACHA,'INVALIDO') AS NOME_CRACHA, US.NOME FROM FUNCIONARIOS (NOLOCK)
         //     INNER JOIN USUARIOS_SISTEMA US (NOLOCK) ON US.R_E_C_N_O_ = FUNCIONARIOS.USUARIO_SISTEMA
         //     WHERE FUNCIONARIOS.CRACHA = AS OPERADOR'   
         // ) AS OPERADOR
+        console.log(NOME_CRACHA)
+
         const connection = await mssql.connect(sqlConfig);
         try {
             const resource: any = await connection.query(`
@@ -114,7 +103,12 @@ apiRouter.route("/apontamento")
                 [QTD_REFUGO],
                 [HORA_INICIO],
                 [HORA_FIM],
-                [CODIGO_PECA]
+                [CODIGO_PECA],
+                (
+                    SELECT TOP 1
+                    [NOME_CRACHA]
+                    FROM FUNCIONARIOS
+                ) as NOME_CRACHA
                 FROM PCP_PROGRAMACAO_PRODUCAO
                 WHERE 1 = 1
                 AND [NUMERO_ODF] = ${NUMERO_ODF}
@@ -122,6 +116,8 @@ apiRouter.route("/apontamento")
                 AND [NUMERO_OPERACAO] = ${NUMERO_OPERACAO}
                 ORDER BY NUMERO_OPERACAO ASC`.trim()).then(result => result.recordset);
             res.json(resource);
+            console.log(NOME_CRACHA)
+            console.log(resource)
         } catch (error) {
             console.log(error);
         } finally {
@@ -161,13 +157,8 @@ apiRouter.route("/apontamento")
 
 apiRouter.route("/ferramenta")
     .get(async (req, res) => {
-        //variavel do front
         var APT_TEMPO_OPERACAO: any = req.query["APT_TEMPO_OPERACAO"]
-
-        //variavel para receber o tempo agora
         var secondSetup = performance.now()
-
-        //Variavel que receba as ferramentas
         const tools = 0
 
         //Encerra a primeira parte do Setup 
@@ -184,8 +175,8 @@ apiRouter.route("/ferramenta")
             //Verifica se houve um resultado em resource e caso haja redireciona
             if (tools === 0) {
                 const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO + ')')
+                console.log(insertSql)
                 console.log("Tempo de Ferramenta: " + APT_TEMPO_OPERACAO)
-
                 res.redirect(`/#/codigobarras/apontamento`)
             } else {
                 res.redirect(`/#/ferramenta`)
@@ -202,19 +193,19 @@ apiRouter.route("/apontar")
     .post(
         async (req, _res, next) => {
             console.log("POST iniciado")
-            const status = '';
-            const goodFeed = 1
-            const badFeed = 1
-            const NUMERO_ODF = 548548
-            const NUMERO_OPERACAO = "'50'"
-            const CODIGO_MAQUINA = "'LASO1'"
-            const EMPRESA_RECNO = 1
-            const QTDE_APONTADA = 1
-            const QTD_REFUGO = 1
+            // const status = '';
+            // const goodFeed = 1
+            // const badFeed = 1
+            // const NUMERO_ODF = 548548
+            // const NUMERO_OPERACAO = "'50'"
+            // const CODIGO_MAQUINA = "'LASO1'"
+            // const EMPRESA_RECNO = 1
+            // const QTDE_APONTADA = 1
+            // const QTD_REFUGO = 1
 
-            const dados2 = {
-                apontaTempo: status
-            }
+            // const dados2 = {
+            //     apontaTempo: status
+            // }
 
             //Sanitizaão de input
             function sanitize(input: string) {
@@ -224,6 +215,7 @@ apiRouter.route("/apontar")
                     .map((char) => (allowedChars.test(char) ? char : ""))
                     .join("");
             }
+            console.log(sanitize)
 
             //INSERIR VALOR PREVIO PARA CASO HAJA UM VALOR PARCIAL/INICIAL
             // var preventValue;
@@ -269,6 +261,7 @@ apiRouter.route("/apontar")
                 APT_TEMPO_OPERACAO = secondSetup
 
                 const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO + ')')
+                console.log(insertSql)
                 console.log("Produção : " + APT_TEMPO_OPERACAO)
 
                 //Inicia o Timer da Rip
@@ -306,9 +299,11 @@ apiRouter.route("/rip")
 
             // Insert com o tempo final no banco
             const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO + ')')
+            console.log(insertSql)
             console.log("Rip: " + APT_TEMPO_OPERACAO)
 
             const insertSql2 = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO_TOTAL + ')')
+            console.log(insertSql2)
             console.log("Completo: " + APT_TEMPO_OPERACAO_TOTAL)
 
         } catch (error) {

@@ -5,8 +5,6 @@
     let CODIGO_MAQUINA = dataFromBarcode.slice(5, 10);
     let status = 0;
 
-    console.log(status)
-
     setInterval(() => {
         status++;
     }, 200);
@@ -20,7 +18,6 @@
         const odfData = await res.json();
         return odfData;
     }
-    console.log(status)
 </script>
 
 <main>

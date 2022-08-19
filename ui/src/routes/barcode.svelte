@@ -3,7 +3,7 @@
   import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
   import Title from "../components/title/title.svelte";
 
-  let value = "" ;
+  let value = "";
   let codigoBarras;
   let result = {};
 
@@ -14,15 +14,17 @@
       alert("Valor inválido.");
       codigoBarras = "";
     } else {
-      const headers = new Headers();
-      headers.append("Content-Type", "application/json");
+      
 
       const res = await fetch(`/api/v1/apontamento`, {
         method: "POST",
         body: JSON.stringify({
           codigoBarras: !codigoBarras ? "" : codigoBarras,
         }),
-        headers,
+        headers : { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+       }
       })
         .then((res) => res.json())
         .then(console.log);
@@ -33,6 +35,11 @@
     result = doPost();
   }
 
+  function blockForbiddenChars(event) {
+    let value = event.target.value;
+    event.target.value = preSanitize(value);
+  }
+
   function preSanitize(input) {
     const allowedChars = /[A-Za-z0-9]/;
     const sanitizedOutput = input
@@ -41,15 +48,10 @@
       .join("");
     return sanitizedOutput;
   }
-
-  function blockForbiddenChars(event) {
-    let value = event.target.value;
-    event.target.value = preSanitize(value);
-  }
-
-  function setValues (){
+  
+  function setValues() {
     var values = value;
-    localStorage.setItem("barcodeData", values)
+    localStorage.setItem("barcodeData", values);
   }
 </script>
 
@@ -57,7 +59,7 @@
   <div>
     <Breadcrumb />
     <Title />
-    
+
     <div class="bar">Código de barras</div>
     <!-- <form on:submit|preventDefault={handleSubmit} > -->
     <form action="/api/v1/apontamento" method="POST">
@@ -66,6 +68,8 @@
           bind:value
           on:input={blockForbiddenChars}
           on:input={setValues}
+          on:keyup={handleSubmit}
+
           id="codigoBarras"
           name="codigoBarras"
           minlength="16"
