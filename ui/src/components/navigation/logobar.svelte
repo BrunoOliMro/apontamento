@@ -1,6 +1,3 @@
-<script>
-</script>
-
 <main>
     <img src="/images/LogoCIM.png" alt="">
 </main>
@@ -17,7 +14,7 @@
     }
 
     img{
-        width: 5%;
+        width: 100px;
         height: 5vh;
         }
 </style>
