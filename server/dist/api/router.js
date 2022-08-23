@@ -116,6 +116,7 @@ apiRouter.route("/apontamento")
 });
 apiRouter.route("/ferramenta")
     .get(async (req, res) => {
+    var getToolsPhotos = req.query["getPhotos"];
     var APT_TEMPO_OPERACAO = req.query["APT_TEMPO_OPERACAO"];
     var secondSetup = performance.now();
     const tools = 0;
@@ -125,6 +126,18 @@ apiRouter.route("/ferramenta")
     var processSetup = performance.now();
     res.cookie("processSetup", processSetup);
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    try {
+        const resource = await connection.query(`SELECT TOP 1
+            getPhotos
+            FROM HISAPONTA
+            AND  getPhotos = ${getToolsPhotos}`);
+    }
+    catch {
+        console.log(Error);
+    }
+    finally {
+        await connection.close();
+    }
     try {
         if (tools === 0) {
             const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO + ')');

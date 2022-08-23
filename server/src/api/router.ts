@@ -157,6 +157,7 @@ apiRouter.route("/apontamento")
 
 apiRouter.route("/ferramenta")
     .get(async (req, res) => {
+        var getToolsPhotos: any = req.query["getPhotos"]
         var APT_TEMPO_OPERACAO: any = req.query["APT_TEMPO_OPERACAO"]
         var secondSetup = performance.now()
         const tools = 0
@@ -171,6 +172,18 @@ apiRouter.route("/ferramenta")
         res.cookie("processSetup", processSetup)
 
         const connection = await mssql.connect(sqlConfig);
+
+        try {
+            const resource: any = await connection.query(`SELECT TOP 1
+            getPhotos
+            FROM HISAPONTA
+            AND  getPhotos = ${getToolsPhotos}`)
+        } catch {
+            console.log(Error)
+        } finally {
+            await connection.close()
+        }
+
         try {
             //Verifica se houve um resultado em resource e caso haja redireciona
             if (tools === 0) {

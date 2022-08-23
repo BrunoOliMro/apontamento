@@ -28,27 +28,32 @@
   }
 
   function popUp() {
-    const closePop = (document.getElementById("popUp").style.display = "none");
+    document.getElementById("popUp").style.display = "block";
   }
 
   function popUpCracha() {
-    const cracha = (document.getElementById("popUpCracha").style.display =
-      "none");
+    document.getElementById("popUpCracha").style.display = "block";
   }
 
-  function handleSubmit(event) {
+  function handleSubmit() {
     result = doPost();
   }
 
-  function getSubmit(event) {
-    if (event.key === "Enter") {
+  function getSubmit(e) {
+
+    if (e.key === "Enter") {
+      document.getElementById("popUp").style.display = "block";
+      document.getElementById("popUpCracha").style.display = "block";
       handleSubmit();
+    } else if (e.key === popUp ) {
+      document.getElementById("popUp").style.display = "none";
+      document.getElementById("popUpCracha").style.display = "none";
     }
   }
 
-  function blockForbiddenChars(event) {
-    let value = event.target.value;
-    event.target.value = preSanitize(value);
+  function blockForbiddenChars(e) {
+    let value = e.target.value;
+    e.target.value = preSanitize(value);
   }
 
   function preSanitize(input) {
@@ -67,27 +72,25 @@
   }
 </script>
 
-<svelte:window on:keyup={getSubmit} />
+<svelte:window on:keydown={getSubmit} />
 <main>
   <div>
     <Breadcrumb />
     <Title />
 
     <div class="bar">Código de barras</div>
-    <!-- <form on:submit|preventDefault={handleSubmit} > -->
     <form action="/api/v1/apontamento" method="POST" on:submit={handleSubmit}>
+      <!-- svelte-ignore a11y-label-has-associated-control -->
       <label class="input">
-        <div class="modal_body">
-          <div id="popUp">
-            <div id="button" on:click={popUp}>X</div>
-            <div>Codigo de barras Invalido</div>
-          </div>
+        <div id="popUp">
+          <div id="button" on:click={popUp}>X</div>
+          <div>Codigo de barras Invalido</div>
+        </div>
 
-          <div id="popUpCracha">
-            <div id="button" on:click={popUpCracha}>X</div>
-            <div>Selecione quem irá produzir essa peça</div>
-            <input id="inputText" type="text" />
-          </div>
+        <div id="popUpCracha">
+          <div id="button" on:click={popUpCracha}>X</div>
+          <div>Selecione quem irá produzir essa peça</div>
+          <input id="inputText" type="text" />
         </div>
 
         <input
@@ -102,6 +105,9 @@
         />
       </label>
     </form>
+    <!-- 
+      
+    </form> -->
   </div>
 </main>
 
@@ -139,7 +145,7 @@
     padding: 15px;
     font-size: 35px;
     border-radius: 5px;
-    display: block;
+    display: none;
     position: absolute;
     background-color: black;
     color: white;
@@ -149,7 +155,7 @@
     padding: 20px;
     font-size: 35px;
     border-radius: 5px;
-    display: block;
+    display: none;
     position: absolute;
     background-color: black;
     color: white;
