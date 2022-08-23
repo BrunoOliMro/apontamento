@@ -1,9 +1,50 @@
 import { Router } from "express";
 import mssql from "mssql";
 import { sqlConfig } from "../global.config";
+import pictures = require("../api/pictures")
+const { getPicturePath } = require("./pictures");
+
 const apiRouter = Router();
 
 // /api/v1/
+
+apiRouter.route("/apontamentoCracha")
+    .post(async (req, res) => {
+        //Sanitizar codigo
+        const MATRIC: any = req.body["MATRIC"]
+        let NOME_CRACHA = req.query["NOME_CRACHA"]
+        res.cookie("MATRIC", MATRIC)
+
+        if (MATRIC === "") {
+            res.redirect(`/#/codigobarras`)
+        } else {
+            const connection = await mssql.connect(sqlConfig);
+            try {
+                const resource = await connection.query(` 
+                SELECT TOP 1
+                [NOME_CRACHA],
+                [MATRIC]
+                FROM FUNCIONARIOS
+                WHERE 1 = 1
+                AND [MATRIC] = '${MATRIC}'
+                `.trim()
+                ).then(result => result.recordset);
+                console.log(resource[0].NOME_CRACHA)
+                NOME_CRACHA = resource[0].NOME_CRACHA
+                if (resource.length > 0) {
+                    res.redirect(`/#/ferramenta`)
+                } else {
+                    res.redirect(`/#/codigobarras`)
+                }
+            } catch (error) {
+                console.log(error)
+                res.redirect(`/#/codigobarras`)
+            } finally {
+                await connection.close()
+            }
+        }
+
+    });
 
 apiRouter.route("/apontamento")
     .post(
@@ -58,7 +99,7 @@ apiRouter.route("/apontamento")
                         var secondSetup = performance.now()
                         res.cookie("secondSetup", secondSetup)
                         console.log("Iniciou processo: " + secondSetup)
-                        res.redirect(`/#/ferramenta/`)
+                        res.redirect(`/#/ferramenta`)
                     } else {
                         res.redirect(`/#/codigobarras`)
                     }
@@ -76,18 +117,14 @@ apiRouter.route("/apontamento")
         const NUMERO_ODF: any = (req.query["NUMERO_ODF"] as string).trim() || undefined;
         const CODIGO_MAQUINA = (req.query["CODIGO_MAQUINA"] as string).trim() || undefined;
         const NUMERO_OPERACAO = (req.query["NUMERO_OPERACAO"] as string).trim() || undefined;
-        const NOME_CRACHA = (req.query["NOME_CRACHA"] as string).trim() || undefined;
-
         // SQL QUERY TO (
         //     SELECT TOP 1 ISNULL(NOME_CRACHA,'INVALIDO') AS NOME_CRACHA, US.NOME FROM FUNCIONARIOS (NOLOCK)
         //     INNER JOIN USUARIOS_SISTEMA US (NOLOCK) ON US.R_E_C_N_O_ = FUNCIONARIOS.USUARIO_SISTEMA
         //     WHERE FUNCIONARIOS.CRACHA = AS OPERADOR'   
         // ) AS OPERADOR
-        console.log(NOME_CRACHA)
-
         const connection = await mssql.connect(sqlConfig);
         try {
-            const resource: any = await connection.query(`
+            const resource = await connection.query(`
                 SELECT TOP 1
                 [NUMERO_ODF], 
                 [CODIGO_MAQUINA], 
@@ -103,12 +140,7 @@ apiRouter.route("/apontamento")
                 [QTD_REFUGO],
                 [HORA_INICIO],
                 [HORA_FIM],
-                [CODIGO_PECA],
-                (
-                    SELECT TOP 1
-                    [NOME_CRACHA]
-                    FROM FUNCIONARIOS
-                ) as NOME_CRACHA
+                [CODIGO_PECA]
                 FROM PCP_PROGRAMACAO_PRODUCAO
                 WHERE 1 = 1
                 AND [NUMERO_ODF] = ${NUMERO_ODF}
@@ -116,8 +148,6 @@ apiRouter.route("/apontamento")
                 AND [NUMERO_OPERACAO] = ${NUMERO_OPERACAO}
                 ORDER BY NUMERO_OPERACAO ASC`.trim()).then(result => result.recordset);
             res.json(resource);
-            console.log(NOME_CRACHA)
-            console.log(resource)
         } catch (error) {
             console.log(error);
         } finally {
@@ -155,9 +185,9 @@ apiRouter.route("/apontamento")
         // }
     )
 
+
 apiRouter.route("/ferramenta")
-    .get(async (req, res) => {
-        var getToolsPhotos: any = req.query["getPhotos"]
+    .get(async (req, res, next) => {
         var APT_TEMPO_OPERACAO: any = req.query["APT_TEMPO_OPERACAO"]
         var secondSetup = performance.now()
         const tools = 0
@@ -174,19 +204,9 @@ apiRouter.route("/ferramenta")
         const connection = await mssql.connect(sqlConfig);
 
         try {
-            const resource: any = await connection.query(`SELECT TOP 1
-            getPhotos
-            FROM HISAPONTA
-            AND  getPhotos = ${getToolsPhotos}`)
-        } catch {
-            console.log(Error)
-        } finally {
-            await connection.close()
-        }
-
-        try {
             //Verifica se houve um resultado em resource e caso haja redireciona
             if (tools === 0) {
+                //Insere o resultado do tempo no banco
                 const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO + ')')
                 console.log(insertSql)
                 console.log("Tempo de Ferramenta: " + APT_TEMPO_OPERACAO)
@@ -199,8 +219,35 @@ apiRouter.route("/ferramenta")
         } finally {
             console.log("get FERRAMENTA finalizado")
             await connection.close()
+            return next();
         }
     })
+
+
+apiRouter.route("/ferramenta")
+    //GET das Fotos das ferramentas
+    .get(async (_req, res) => {
+        const connection = await mssql.connect(sqlConfig);
+        try {
+            const resource = await connection.query(`SELECT TOP 1
+             * FROM PCP_PROGRAMACAO_PRODUCAO ORDER BY TOTAL DESC`);
+            const result = resource.recordset.map(record => {
+                const imgPath = getPicturePath(record["CODIGO_PECA"], record["IMAGEM"]);
+                return {
+                    img: imgPath, // caminho da imagem (ex.: "")
+                    razao: record["RAZAO"],
+                    codigoInterno: record["CODIGO_PECA"],
+                    total: record["TOTAL"],
+                }
+            });
+            console.log(resource)
+            res.json(result);
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({ error: true, message: "Erro no servidor." });
+        }
+    });
+
 
 apiRouter.route("/apontar")
     .post(

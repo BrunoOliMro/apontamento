@@ -4,6 +4,7 @@
     let NUMERO_OPERACAO = dataFromBarcode.slice(0, 5);
     let CODIGO_MAQUINA = dataFromBarcode.slice(5, 10);
     let status = 0;
+    let IMAGEM = "";
 
     setInterval(() => {
         status++;
@@ -11,9 +12,17 @@
 
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
-    let urlString = `/api/v1/apontamento?NUMERO_ODF=${NUMERO_ODF}&CODIGO_MAQUINA=${CODIGO_MAQUINA}&NUMERO_OPERACAO=${NUMERO_OPERACAO}`;
+    let urlString = `/api/v1/apontamento?NUMERO_ODF=${NUMERO_ODF}&CODIGO_MAQUINA=${CODIGO_MAQUINA}&NUMERO_OPERACAO=${NUMERO_OPERACAO}&IMAGEM=${IMAGEM}`;
     let resultado = getOdfData();
     async function getOdfData() {
+        const res = await fetch(urlString);
+        const odfData = await res.json();
+        return odfData;
+    }
+
+    let urlStringImg = `/api/v1/IMAGEM?IMAGEM=${IMAGEM}`;
+    let resultadoImg = getImgdata();
+    async function getImgdata() {
         const res = await fetch(urlString);
         const odfData = await res.json();
         return odfData;
@@ -44,7 +53,7 @@
                 {dadosOdf[0].APT_TEMPO_OPERACAO}
             </div>
         {/if}
-        <div class="card" style="width:18rem; height: 18rem; " />
+        <div class="card" style="width:18rem; height: 18rem; ">{IMAGEM}</div>
     {/await}
 </main>
 

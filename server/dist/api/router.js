@@ -6,7 +6,45 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../global.config");
+const { getPicturePath } = require("./pictures");
 const apiRouter = (0, express_1.Router)();
+apiRouter.route("/apontamentoCracha")
+    .post(async (req, res) => {
+    const MATRIC = req.body["MATRIC"];
+    let NOME_CRACHA = req.query["NOME_CRACHA"];
+    res.cookie("MATRIC", MATRIC);
+    if (MATRIC === "") {
+        res.redirect(`/#/codigobarras`);
+    }
+    else {
+        const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+        try {
+            const resource = await connection.query(` 
+                SELECT TOP 1
+                [NOME_CRACHA],
+                [MATRIC]
+                FROM FUNCIONARIOS
+                WHERE 1 = 1
+                AND [MATRIC] = '${MATRIC}'
+                `.trim()).then(result => result.recordset);
+            console.log(resource[0].NOME_CRACHA);
+            NOME_CRACHA = resource[0].NOME_CRACHA;
+            if (resource.length > 0) {
+                res.redirect(`/#/ferramenta`);
+            }
+            else {
+                res.redirect(`/#/codigobarras`);
+            }
+        }
+        catch (error) {
+            console.log(error);
+            res.redirect(`/#/codigobarras`);
+        }
+        finally {
+            await connection.close();
+        }
+    }
+});
 apiRouter.route("/apontamento")
     .post(async (req, _res, next) => {
     req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
@@ -49,7 +87,7 @@ apiRouter.route("/apontamento")
                 var secondSetup = performance.now();
                 res.cookie("secondSetup", secondSetup);
                 console.log("Iniciou processo: " + secondSetup);
-                res.redirect(`/#/ferramenta/`);
+                res.redirect(`/#/ferramenta`);
             }
             else {
                 res.redirect(`/#/codigobarras`);
@@ -69,8 +107,6 @@ apiRouter.route("/apontamento")
     const NUMERO_ODF = req.query["NUMERO_ODF"].trim() || undefined;
     const CODIGO_MAQUINA = req.query["CODIGO_MAQUINA"].trim() || undefined;
     const NUMERO_OPERACAO = req.query["NUMERO_OPERACAO"].trim() || undefined;
-    const NOME_CRACHA = req.query["NOME_CRACHA"].trim() || undefined;
-    console.log(NOME_CRACHA);
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const resource = await connection.query(`
@@ -89,12 +125,7 @@ apiRouter.route("/apontamento")
                 [QTD_REFUGO],
                 [HORA_INICIO],
                 [HORA_FIM],
-                [CODIGO_PECA],
-                (
-                    SELECT TOP 1
-                    [NOME_CRACHA]
-                    FROM FUNCIONARIOS
-                ) as NOME_CRACHA
+                [CODIGO_PECA]
                 FROM PCP_PROGRAMACAO_PRODUCAO
                 WHERE 1 = 1
                 AND [NUMERO_ODF] = ${NUMERO_ODF}
@@ -102,8 +133,6 @@ apiRouter.route("/apontamento")
                 AND [NUMERO_OPERACAO] = ${NUMERO_OPERACAO}
                 ORDER BY NUMERO_OPERACAO ASC`.trim()).then(result => result.recordset);
         res.json(resource);
-        console.log(NOME_CRACHA);
-        console.log(resource);
     }
     catch (error) {
         console.log(error);
@@ -115,8 +144,7 @@ apiRouter.route("/apontamento")
     }
 });
 apiRouter.route("/ferramenta")
-    .get(async (req, res) => {
-    var getToolsPhotos = req.query["getPhotos"];
+    .get(async (req, res, next) => {
     var APT_TEMPO_OPERACAO = req.query["APT_TEMPO_OPERACAO"];
     var secondSetup = performance.now();
     const tools = 0;
@@ -126,18 +154,6 @@ apiRouter.route("/ferramenta")
     var processSetup = performance.now();
     res.cookie("processSetup", processSetup);
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    try {
-        const resource = await connection.query(`SELECT TOP 1
-            getPhotos
-            FROM HISAPONTA
-            AND  getPhotos = ${getToolsPhotos}`);
-    }
-    catch {
-        console.log(Error);
-    }
-    finally {
-        await connection.close();
-    }
     try {
         if (tools === 0) {
             const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO + ')');
@@ -155,6 +171,30 @@ apiRouter.route("/ferramenta")
     finally {
         console.log("get FERRAMENTA finalizado");
         await connection.close();
+        return next();
+    }
+});
+apiRouter.route("/ferramenta")
+    .get(async (_req, res) => {
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    try {
+        const resource = await connection.query(`SELECT TOP 1
+             * FROM PCP_PROGRAMACAO_PRODUCAO ORDER BY TOTAL DESC`);
+        const result = resource.recordset.map(record => {
+            const imgPath = getPicturePath(record["CODIGO_PECA"], record["IMAGEM"]);
+            return {
+                img: imgPath,
+                razao: record["RAZAO"],
+                codigoInterno: record["CODIGO_PECA"],
+                total: record["TOTAL"],
+            };
+        });
+        console.log(resource);
+        res.json(result);
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({ error: true, message: "Erro no servidor." });
     }
 });
 apiRouter.route("/apontar")

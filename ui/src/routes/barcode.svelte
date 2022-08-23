@@ -6,14 +6,13 @@
   let value = "";
   let codigoBarras = "";
   let result = {};
+  let MATRIC = "";
 
   async function doPost() {
     codigoBarras = preSanitize(codigoBarras);
     if (codigoBarras.length < 16) {
-      popUp();
       codigoBarras = "";
     } else {
-      popUpCracha();
       const res = await fetch(`/api/v1/apontamento`, {
         method: "POST",
         body: JSON.stringify({
@@ -27,29 +26,11 @@
     }
   }
 
-  function popUp() {
-    document.getElementById("popUp").style.display = "block";
-  }
-
-  function popUpCracha() {
-    document.getElementById("popUpCracha").style.display = "block";
-  }
 
   function handleSubmit() {
     result = doPost();
   }
 
-  function getSubmit(e) {
-
-    if (e.key === "Enter") {
-      document.getElementById("popUp").style.display = "block";
-      document.getElementById("popUpCracha").style.display = "block";
-      handleSubmit();
-    } else if (e.key === popUp ) {
-      document.getElementById("popUp").style.display = "none";
-      document.getElementById("popUpCracha").style.display = "none";
-    }
-  }
 
   function blockForbiddenChars(e) {
     let value = e.target.value;
@@ -70,44 +51,58 @@
     var values = value;
     localStorage.setItem("barcodeData", values);
   }
+
+  function setNomeCracha() {
+    var MATRIC = MATRIC;
+    localStorage.setItem("MATRIC", MATRIC);
+  }
 </script>
 
-<svelte:window on:keydown={getSubmit} />
 <main>
   <div>
     <Breadcrumb />
     <Title />
 
     <div class="bar">Código de barras</div>
-    <form action="/api/v1/apontamento" method="POST" on:submit={handleSubmit}>
-      <!-- svelte-ignore a11y-label-has-associated-control -->
+
+    <div id="popUp">
+      <div id="button">X</div>
+      <div>Codigo de barras Invalido</div>
+    </div>
+
+    <div id="popUp">
+      <div id="button">X</div>
+      <div>Usuario Invalido</div>
+    </div>
+    
+    
+    <form action="/api/v1/apontamentoCracha" method="POST">
+    <div id="popUpCracha">
+      <div id="button">X</div>
+      <div>Selecione quem irá produzir essa peça</div>
+      <input
+        on:input={blockForbiddenChars}
+        on:input={setNomeCracha}
+        name="MATRIC"
+        id="MATRIC"
+        type="text"
+      />
+    </div>
+  </form>
+
+    <form action="/api/v1/apontamento" method="POST" 
+    on:submit={handleSubmit}>
       <label class="input">
-        <div id="popUp">
-          <div id="button" on:click={popUp}>X</div>
-          <div>Codigo de barras Invalido</div>
-        </div>
-
-        <div id="popUpCracha">
-          <div id="button" on:click={popUpCracha}>X</div>
-          <div>Selecione quem irá produzir essa peça</div>
-          <input id="inputText" type="text" />
-        </div>
-
         <input
           bind:value
           on:input={blockForbiddenChars}
           on:input={setValues}
           id="codigoBarras"
           name="codigoBarras"
-          minlength="16"
-          maxlength="18"
           type="text"
         />
       </label>
     </form>
-    <!-- 
-      
-    </form> -->
   </div>
 </main>
 
@@ -129,11 +124,6 @@
     display: flex;
   }
 
-  #inputText {
-    background-color: black;
-    color: white;
-  }
-
   #button {
     display: flex;
     justify-content: right;
@@ -145,8 +135,6 @@
     padding: 15px;
     font-size: 35px;
     border-radius: 5px;
-    display: none;
-    position: absolute;
     background-color: black;
     color: white;
   }
@@ -155,8 +143,6 @@
     padding: 20px;
     font-size: 35px;
     border-radius: 5px;
-    display: none;
-    position: absolute;
     background-color: black;
     color: white;
   }

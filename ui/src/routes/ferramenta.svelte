@@ -5,7 +5,7 @@
 
     let APT_TEMPO_OPERACAO = "";
 
-    let getToolsPhotos = [];
+    let getToolsPhotos =  "";
 
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
@@ -22,7 +22,9 @@
     }
 
     function generateCardTools (){
-        document.getElementById("card")
+        var newDiv = document.createElement("div")
+        const element = document.getElementById("card")
+        newDiv.appendChild(element)
     }
 </script>
 
@@ -42,7 +44,7 @@
         </div>
 
         <div>
-            <a class="card" href=""> {getToolsPhotos[0]} </a>
+            <a on:click={generateCardTools} class="card"> {getToolsPhotos[0]} </a>
             <a class="card" href="" />
         </div>
         <div>
