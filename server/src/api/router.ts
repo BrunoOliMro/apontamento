@@ -1,7 +1,7 @@
 import { Router } from "express";
 import mssql from "mssql";
 import { sqlConfig } from "../global.config";
-import pictures = require("../api/pictures")
+// import pictures = require("../api/pictures")
 const { getPicturePath } = require("./pictures");
 
 const apiRouter = Router();
@@ -11,39 +11,34 @@ const apiRouter = Router();
 apiRouter.route("/apontamentoCracha")
     .post(async (req, res) => {
         //Sanitizar codigo
-        const MATRIC: any = req.body["MATRIC"]
-        let NOME_CRACHA = req.query["NOME_CRACHA"]
+        let MATRIC: any = (req.body["MATRIC"] as string).trim() || 0
         res.cookie("MATRIC", MATRIC)
 
         if (MATRIC === "") {
             res.redirect(`/#/codigobarras`)
         } else {
+
             const connection = await mssql.connect(sqlConfig);
             try {
                 const resource = await connection.query(` 
                 SELECT TOP 1
-                [NOME_CRACHA],
                 [MATRIC]
                 FROM FUNCIONARIOS
                 WHERE 1 = 1
-                AND [MATRIC] = '${MATRIC}'
+                AND [MATRIC] = ${MATRIC}
                 `.trim()
-                ).then(result => result.recordset);
-                console.log(resource[0].NOME_CRACHA)
-                NOME_CRACHA = resource[0].NOME_CRACHA
+                ).then(result => result.recordset)
                 if (resource.length > 0) {
-                    res.redirect(`/#/ferramenta`)
+                    res.redirect("/#/ferramenta")
                 } else {
-                    res.redirect(`/#/codigobarras`)
+                    res.redirect("/#/codigobarras")
                 }
             } catch (error) {
                 console.log(error)
-                res.redirect(`/#/codigobarras`)
             } finally {
                 await connection.close()
             }
         }
-
     });
 
 apiRouter.route("/apontamento")
@@ -155,35 +150,33 @@ apiRouter.route("/apontamento")
             await connection.close()
             next()
         }
-    },
-        // async (req, res, next) => {
-        //     console.log("GET barra de status iniciado")
-        //     const connection = await mssql.connect(sqlConfig);
-        //     let status = req.query["status"];
-
-        //     const dados2 = {
-        //         apontaTempo: status
-        //     }
-
-        //     try {
-        //         const resource = await connection.query(`
-        //         SELECT TOP 1
-        //         [APT_TEMPO_OPERACAO]
-        //         FROM HISAPONTA
-        //         WHERE 1 = 1
-        //         AND [APT_TEMPO_OPERACAO] = ${dados2.apontaTempo}
-        //         ORDER BY CAST(LTRIM(NUMOPE) AS INT) ASC
-        //         `.trim()).then(result => result.recordset);
-        //         console.log(resource)
-        //         res.json(resource);
-        //     } catch (error) {
-        //         console.log(error)
-        //     } finally {
-        //         await connection.close()
-        //         next()
-        //     }
-        // }
-    )
+    })
+    .get(async (req, res) => {
+        const IMAGEM = req.query["IMAGEM"]
+        console.log(IMAGEM)
+        const connection = await mssql.connect(sqlConfig);
+        try {
+            const resource = await connection.query(`
+            SELECT 
+            [NUMPEC],
+            [IMAGEM]
+            FROM PROCESSO (NOLOCK) WHERE NUMPEC = '00060004-21-2'`);
+            const result = resource.recordset.map(record => {
+                const imgPath = getPicturePath(record["NUMPEC"], record["IMAGEM"]);
+                return {
+                    img: imgPath, // caminho da imagem (ex.: "")
+                    razao: record["RAZAO"],
+                    codigoInterno: record["NUMPEC"],
+                    total: record["TOTAL"],
+                }
+            });
+            console.log(resource)
+            res.json(result);
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({ error: true, message: "Erro no servidor." });
+        }
+    });
 
 
 apiRouter.route("/ferramenta")
@@ -375,4 +368,34 @@ apiRouter.route("/rip")
         }
 
     })
+
+
+apiRouter.route("/desenho")
+    //GET das Fotos das ferramentas
+    .get(async (req, res) => {
+        const IMAGEM = req.query["IMAGEM"]
+        console.log(IMAGEM)
+        const connection = await mssql.connect(sqlConfig);
+        try {
+            const resource = await connection.query(`
+            SELECT 
+            [NUMPEC],
+            [IMAGEM] 
+            FROM QA_LAYOUT (NOLOCK) WHERE NUMPEC = '04350563'`);
+            const result = resource.recordset.map(record => {
+                const imgPath = getPicturePath(record["NUMPEC"], record["IMAGEM"]);
+                return {
+                    img: imgPath, // caminho da imagem (ex.: "")
+                    razao: record["RAZAO"],
+                    codigoInterno: record["NUMPEC"],
+                    total: record["TOTAL"],
+                }
+            });
+            console.log(resource)
+            res.json(result);
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({ error: true, message: "Erro no servidor." });
+        }
+    });
 export default apiRouter;

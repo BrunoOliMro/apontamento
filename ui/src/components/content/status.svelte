@@ -53,8 +53,11 @@
                 {dadosOdf[0].APT_TEMPO_OPERACAO}
             </div>
         {/if}
-        <div class="card" style="width:18rem; height: 18rem; ">{IMAGEM}</div>
     {/await}
+
+    <div class="card" style="width:18rem; height: 18rem; ">
+        <img src="images/parts/00060004-21-2.jpg" alt="" />
+    </div>
 </main>
 
 <style>

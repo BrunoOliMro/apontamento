@@ -44,7 +44,7 @@
         </div>
 
         <div>
-            <a on:click={generateCardTools} class="card"> {getToolsPhotos[0]} </a>
+            <a class="card"> {getToolsPhotos[0]} </a>
             <a class="card" href="" />
         </div>
         <div>

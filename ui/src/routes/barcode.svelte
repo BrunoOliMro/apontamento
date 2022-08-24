@@ -6,7 +6,6 @@
   let value = "";
   let codigoBarras = "";
   let result = {};
-  let MATRIC = "";
 
   async function doPost() {
     codigoBarras = preSanitize(codigoBarras);
@@ -26,11 +25,9 @@
     }
   }
 
-
   function handleSubmit() {
     result = doPost();
   }
-
 
   function blockForbiddenChars(e) {
     let value = e.target.value;
@@ -52,10 +49,6 @@
     localStorage.setItem("barcodeData", values);
   }
 
-  function setNomeCracha() {
-    var MATRIC = MATRIC;
-    localStorage.setItem("MATRIC", MATRIC);
-  }
 </script>
 
 <main>
@@ -74,24 +67,21 @@
       <div id="button">X</div>
       <div>Usuario Invalido</div>
     </div>
-    
-    
-    <form action="/api/v1/apontamentoCracha" method="POST">
-    <div id="popUpCracha">
-      <div id="button">X</div>
-      <div>Selecione quem irá produzir essa peça</div>
-      <input
-        on:input={blockForbiddenChars}
-        on:input={setNomeCracha}
-        name="MATRIC"
-        id="MATRIC"
-        type="text"
-      />
-    </div>
-  </form>
 
-    <form action="/api/v1/apontamento" method="POST" 
-    on:submit={handleSubmit}>
+    <form action="/api/v1/apontamentoCracha" method="POST">
+      <div id="popUpCracha">
+        <div id="button">X</div>
+        <div>Selecione quem irá produzir essa peça</div>
+        <input
+          on:input={blockForbiddenChars}
+          name="MATRIC"
+          id="MATRIC"
+          type="text"
+        />
+      </div>
+    </form>
+
+    <form action="/api/v1/apontamento" method="POST" on:submit={handleSubmit}>
       <label class="input">
         <input
           bind:value

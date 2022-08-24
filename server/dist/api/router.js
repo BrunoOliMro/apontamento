@@ -10,8 +10,7 @@ const { getPicturePath } = require("./pictures");
 const apiRouter = (0, express_1.Router)();
 apiRouter.route("/apontamentoCracha")
     .post(async (req, res) => {
-    const MATRIC = req.body["MATRIC"];
-    let NOME_CRACHA = req.query["NOME_CRACHA"];
+    let MATRIC = req.body["MATRIC"].trim() || 0;
     res.cookie("MATRIC", MATRIC);
     if (MATRIC === "") {
         res.redirect(`/#/codigobarras`);
@@ -21,24 +20,20 @@ apiRouter.route("/apontamentoCracha")
         try {
             const resource = await connection.query(` 
                 SELECT TOP 1
-                [NOME_CRACHA],
                 [MATRIC]
                 FROM FUNCIONARIOS
                 WHERE 1 = 1
-                AND [MATRIC] = '${MATRIC}'
+                AND [MATRIC] = ${MATRIC}
                 `.trim()).then(result => result.recordset);
-            console.log(resource[0].NOME_CRACHA);
-            NOME_CRACHA = resource[0].NOME_CRACHA;
             if (resource.length > 0) {
-                res.redirect(`/#/ferramenta`);
+                res.redirect("/#/ferramenta");
             }
             else {
-                res.redirect(`/#/codigobarras`);
+                res.redirect("/#/codigobarras");
             }
         }
         catch (error) {
             console.log(error);
-            res.redirect(`/#/codigobarras`);
         }
         finally {
             await connection.close();
@@ -141,6 +136,33 @@ apiRouter.route("/apontamento")
         console.log("ODF FEED finalizado");
         await connection.close();
         next();
+    }
+})
+    .get(async (req, res) => {
+    const IMAGEM = req.query["IMAGEM"];
+    console.log(IMAGEM);
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    try {
+        const resource = await connection.query(`
+            SELECT 
+            [NUMPEC],
+            [IMAGEM]
+            FROM PROCESSO (NOLOCK) WHERE NUMPEC = '00060004-21-2'`);
+        const result = resource.recordset.map(record => {
+            const imgPath = getPicturePath(record["NUMPEC"], record["IMAGEM"]);
+            return {
+                img: imgPath,
+                razao: record["RAZAO"],
+                codigoInterno: record["NUMPEC"],
+                total: record["TOTAL"],
+            };
+        });
+        console.log(resource);
+        res.json(result);
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({ error: true, message: "Erro no servidor." });
     }
 });
 apiRouter.route("/ferramenta")
@@ -258,6 +280,34 @@ apiRouter.route("/rip")
     finally {
         console.log("RIP finalizada");
         await connection.close();
+    }
+});
+apiRouter.route("/desenho")
+    .get(async (req, res) => {
+    const IMAGEM = req.query["IMAGEM"];
+    console.log(IMAGEM);
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    try {
+        const resource = await connection.query(`
+            SELECT 
+            [NUMPEC],
+            [IMAGEM] 
+            FROM QA_LAYOUT (NOLOCK) WHERE NUMPEC = '04350563'`);
+        const result = resource.recordset.map(record => {
+            const imgPath = getPicturePath(record["NUMPEC"], record["IMAGEM"]);
+            return {
+                img: imgPath,
+                razao: record["RAZAO"],
+                codigoInterno: record["NUMPEC"],
+                total: record["TOTAL"],
+            };
+        });
+        console.log(resource);
+        res.json(result);
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({ error: true, message: "Erro no servidor." });
     }
 });
 exports.default = apiRouter;
