@@ -5,6 +5,8 @@
     let CODIGO_MAQUINA = dataFromBarcode.slice(5, 10);
     let status = 0;
     let IMAGEM = "";
+    let odfData = [];
+    // let imgReceive = "/images/04350243-1.jpg";
 
     setInterval(() => {
         status++;
@@ -13,23 +15,41 @@
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
     let urlString = `/api/v1/apontamento?NUMERO_ODF=${NUMERO_ODF}&CODIGO_MAQUINA=${CODIGO_MAQUINA}&NUMERO_OPERACAO=${NUMERO_OPERACAO}&IMAGEM=${IMAGEM}`;
-    let resultado = getOdfData();
     async function getOdfData() {
         const res = await fetch(urlString);
-        const odfData = await res.json();
+        odfData = await res.json();
         return odfData;
     }
+    
+    let resultado = getOdfData();
+    // let urlStringImg = `/api/v1/IMAGEM?IMAGEM=${IMAGEM}`;
+    // let resultadoImg = getImgdata();
+    // async function getImgdata() {
+    //     const res = await fetch(urlString);
+    //     const odfData = await res.json();
+    //     console.log(odfData)
+    //     return odfData;
+    // }
 
-    let urlStringImg = `/api/v1/IMAGEM?IMAGEM=${IMAGEM}`;
-    let resultadoImg = getImgdata();
-    async function getImgdata() {
-        const res = await fetch(urlString);
-        const odfData = await res.json();
-        return odfData;
-    }
+    resultado.then(()=>{
+        const atributeSrcImg = "/images/00751302.jpg"
+        odfData.forEach((element) => {
+            let divSelector = document.querySelector("div");
+            let imgElement = document.createElement("img");
+            divSelector.appendChild(imgElement);
+            imgElement.setAttribute("src", atributeSrcImg);
+            imgElement.setAttribute("alt", "ferramenta");
+            imgElement.style.width = "170px";
+            imgElement.style.height = "170px";
+            imgElement.style.margin = "2%";
+            imgElement.style.borderRadius = "3px";
+        });
+    })
+
+
 </script>
 
-<main>
+<div>
     {#await resultado}
         <div>...</div>
     {:then dadosOdf}
@@ -54,17 +74,14 @@
             </div>
         {/if}
     {/await}
-
     <div class="card" style="width:18rem; height: 18rem; ">
-        <img src="images/parts/00060004-21-2.jpg" alt="" />
+        <img src="/images/00060270-1.jpg" alt="">
     </div>
-</main>
+</div>
 
 <style>
-    main {
-        display: flex;
-    }
     div {
+        display: flex;
         margin-top: 5%;
         margin-right: 2%;
     }

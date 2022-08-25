@@ -2,37 +2,40 @@
     import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
     export let Subtitle = "Selecione as Ferramentas necessarias: ";
     const dataFromBarcode = localStorage.getItem("barcodeData");
-
     let APT_TEMPO_OPERACAO = "";
-
-    let getToolsPhotos =  "";
-
+    let fetchItem = [];
+    let urlString = `/api/v1/ferramenta?fetchItem=${fetchItem}`;
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
-    let urlString = `/api/v1/ferramenta?APT_TEMPO_OPERACAO=${APT_TEMPO_OPERACAO}&getToolsPhotos=${getToolsPhotos}`;
-    let resultado = getOdfData();
-    async function getOdfData() {
+
+    async function getfetchItem() {
         const res = await fetch(urlString);
-        const odfData = await res.json();
-        return odfData;
+        fetchItem = await res.json();
+        return fetchItem;
     }
+    let resultado = getfetchItem();
 
-    function popUp(){
-        document.getElementById("popUp").style.display = "none"
-    }
-
-    function generateCardTools (){
-        var newDiv = document.createElement("div")
-        const element = document.getElementById("card")
-        newDiv.appendChild(element)
-    }
+    resultado.then(() => {
+        const atributeSrcImg = fetchItem[0].img
+        // let imgFromBack = [`/images/04350563.jpg` , `/images/04350243-1.jpg`];
+        fetchItem.forEach((element) => {
+            let divSelector = document.querySelector("div");
+            let imgElement = document.createElement("img");
+            divSelector.appendChild(imgElement);
+            imgElement.setAttribute("src", atributeSrcImg);
+            imgElement.setAttribute("alt", "ferramenta");
+            imgElement.style.width = "170px";
+            imgElement.style.height = "170px";
+            imgElement.style.margin = "2%";
+            imgElement.style.borderRadius = "3px";
+        });
+    });
 </script>
 
-<main>
+<div>
     <Breadcrumb />
     {Subtitle}
     <div class="content">
-
         <div id="popUP">
             <p>X</p>
             <p>Selecione as Ferramentas para a produção</p>
@@ -42,34 +45,10 @@
             <p>X</p>
             <p>Ferramentas selecionadas inicie agora a produção</p>
         </div>
-
-        <div>
-            <a class="card"> {getToolsPhotos[0]} </a>
-            <a class="card" href="" />
-        </div>
-        <div>
-            <a class="card" href="" />
-            <a class="card" href="" />
-        </div>
-        <div>
-            <a class="card" href="" />
-            <a class="card" href="" />
-        </div>
-        <div>
-            <a class="card" href="" />
-            <a class="card" href="" />
-        </div>
-        <div>
-            <a class="card" href="" />
-            <a class="card" href="" />
-        </div>
     </div>
-</main>
+</div>
 
 <style>
-    main {
-        margin: 1%;
-    }
     .content {
         margin-left: 5%;
         margin-right: 5%;
@@ -80,15 +59,8 @@
         flex-direction: row;
     }
 
-    a:hover {
-        border: 5px solid rgb(0, 0, 0);
-    }
-
-    .card {
-        margin: 10%;
-        width: 160px;
-        height: 160px;
-        cursor: pointer;
-        margin: 10%;
+    div {
+        margin: 1%;
+        border-radius: 5px;
     }
 </style>

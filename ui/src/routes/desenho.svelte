@@ -22,8 +22,7 @@
     <Breadcrumb />
     <div class="subtitle">{Subtitle}</div>
     <div class="card" >
-        {IMAGEM}
-        <img src="images/parts/04350563.jpg" alt="">
+        <img src="/images/00060270-1.jpg" alt="">
     </div>
 </main>
 

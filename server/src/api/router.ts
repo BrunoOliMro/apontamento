@@ -2,7 +2,7 @@ import { Router } from "express";
 import mssql from "mssql";
 import { sqlConfig } from "../global.config";
 // import pictures = require("../api/pictures")
-const { getPicturePath } = require("./pictures");
+import { pictures } from "./pictures";
 
 const apiRouter = Router();
 
@@ -158,20 +158,19 @@ apiRouter.route("/apontamento")
         try {
             const resource = await connection.query(`
             SELECT 
-            [NUMPEC],
+            [CODIGO],
             [IMAGEM]
-            FROM PROCESSO (NOLOCK) WHERE NUMPEC = '00060004-21-2'`);
+            FROM VIEW_APTO_FERRAMENTAL (NOLOCK) WHERE CODIGO = '00060270-1'`);
             const result = resource.recordset.map(record => {
-                const imgPath = getPicturePath(record["NUMPEC"], record["IMAGEM"]);
+                const imgPath = pictures.getPicturePath(record["CODIGO"], record["IMAGEM"]);
                 return {
                     img: imgPath, // caminho da imagem (ex.: "")
                     razao: record["RAZAO"],
-                    codigoInterno: record["NUMPEC"],
+                    codigoInterno: record["CODIGO"],
                     total: record["TOTAL"],
                 }
             });
-            console.log(resource)
-            res.json(result);
+            console.log(result[0])
         } catch (error) {
             console.log(error)
             res.status(500).json({ error: true, message: "Erro no servidor." });
@@ -195,7 +194,6 @@ apiRouter.route("/ferramenta")
         res.cookie("processSetup", processSetup)
 
         const connection = await mssql.connect(sqlConfig);
-
         try {
             //Verifica se houve um resultado em resource e caso haja redireciona
             if (tools === 0) {
@@ -203,7 +201,6 @@ apiRouter.route("/ferramenta")
                 const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO + ')')
                 console.log(insertSql)
                 console.log("Tempo de Ferramenta: " + APT_TEMPO_OPERACAO)
-                res.redirect(`/#/codigobarras/apontamento`)
             } else {
                 res.redirect(`/#/ferramenta`)
             }
@@ -215,26 +212,29 @@ apiRouter.route("/ferramenta")
             return next();
         }
     })
-
-
-apiRouter.route("/ferramenta")
     //GET das Fotos das ferramentas
     .get(async (_req, res) => {
+        const CODIGO = '00751302'
         const connection = await mssql.connect(sqlConfig);
         try {
-            const resource = await connection.query(`SELECT TOP 1
-             * FROM PCP_PROGRAMACAO_PRODUCAO ORDER BY TOTAL DESC`);
+            const resource = await connection.query(`
+            SELECT 
+            [IMAGEM], 
+            [CODIGO]
+            FROM VIEW_APTO_FERRAMENTAL 
+            WHERE 1 = 1
+            AND CODIGO = '${CODIGO}'
+            `);
             const result = resource.recordset.map(record => {
-                const imgPath = getPicturePath(record["CODIGO_PECA"], record["IMAGEM"]);
+                const imgPath = pictures.getPicturePath(record["CODIGO"], record["IMAGEM"]);
                 return {
                     img: imgPath, // caminho da imagem (ex.: "")
                     razao: record["RAZAO"],
-                    codigoInterno: record["CODIGO_PECA"],
+                    codigoInterno: record["CODIGO"],
                     total: record["TOTAL"],
                 }
             });
-            console.log(resource)
-            res.json(result);
+            res.json(result)
         } catch (error) {
             console.log(error)
             res.status(500).json({ error: true, message: "Erro no servidor." });
@@ -381,9 +381,9 @@ apiRouter.route("/desenho")
             SELECT 
             [NUMPEC],
             [IMAGEM] 
-            FROM QA_LAYOUT (NOLOCK) WHERE NUMPEC = '04350563'`);
+            FROM QA_LAYOUT (NOLOCK) WHERE NUMPEC = '00060270-1'`);
             const result = resource.recordset.map(record => {
-                const imgPath = getPicturePath(record["NUMPEC"], record["IMAGEM"]);
+                const imgPath = pictures.getPicturePath(record["NUMPEC"], record["IMAGEM"]);
                 return {
                     img: imgPath, // caminho da imagem (ex.: "")
                     razao: record["RAZAO"],

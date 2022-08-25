@@ -1,27 +1,25 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.pictures = void 0;
-const fs = require("fs");
-const path = require("path");
+import fs = require("fs");
+import path = require("path");
 const picturesRelativePath = path.join(__dirname, "../../static/images");
 const OUTPUT_FOLDER = `/images`;
-exports.pictures = {
-    getPicturePath: (item, hex) => {
+
+export const pictures = {
+    getPicturePath: (item: any, hex: WithImplicitCoercion<string> | { [Symbol.toPrimitive](hint: "string"): string; } | null) => {
         try {
+            // Verificar se já existe imagem do item
             const filePath = path.join(picturesRelativePath, `${item}.jpg`);
             if (fs.existsSync(filePath)) {
                 return `${OUTPUT_FOLDER}/${item}.jpg`;
             }
-            if (hex === null || hex.toString().trim() === "")
-                return `${OUTPUT_FOLDER}/sem_imagem.gif`;
+            // Verifica se veio o hexadecimal
+            if (hex === null || hex.toString().trim() === "") return `${OUTPUT_FOLDER}/sem_imagem.gif`;
+            // Criar arquivo de imagem
             const buffer = Buffer.from(hex, "hex");
             fs.writeFileSync(filePath, buffer);
             return `${OUTPUT_FOLDER}/${item}.jpg`;
-        }
-        catch (err) {
+        } catch (err) {
             console.log(err);
             return `${OUTPUT_FOLDER}/sem_imagem.gif`;
         }
     }
-};
-//# sourceMappingURL=pictures.js.map
+}

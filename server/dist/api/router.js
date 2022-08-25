@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../global.config");
-const { getPicturePath } = require("./pictures");
+const pictures_1 = require("./pictures");
 const apiRouter = (0, express_1.Router)();
 apiRouter.route("/apontamentoCracha")
     .post(async (req, res) => {
@@ -145,20 +145,19 @@ apiRouter.route("/apontamento")
     try {
         const resource = await connection.query(`
             SELECT 
-            [NUMPEC],
+            [CODIGO],
             [IMAGEM]
-            FROM PROCESSO (NOLOCK) WHERE NUMPEC = '00060004-21-2'`);
+            FROM VIEW_APTO_FERRAMENTAL (NOLOCK) WHERE CODIGO = '00060270-1'`);
         const result = resource.recordset.map(record => {
-            const imgPath = getPicturePath(record["NUMPEC"], record["IMAGEM"]);
+            const imgPath = pictures_1.pictures.getPicturePath(record["CODIGO"], record["IMAGEM"]);
             return {
                 img: imgPath,
                 razao: record["RAZAO"],
-                codigoInterno: record["NUMPEC"],
+                codigoInterno: record["CODIGO"],
                 total: record["TOTAL"],
             };
         });
-        console.log(resource);
-        res.json(result);
+        console.log(result[0]);
     }
     catch (error) {
         console.log(error);
@@ -181,7 +180,6 @@ apiRouter.route("/ferramenta")
             const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO + ')');
             console.log(insertSql);
             console.log("Tempo de Ferramenta: " + APT_TEMPO_OPERACAO);
-            res.redirect(`/#/codigobarras/apontamento`);
         }
         else {
             res.redirect(`/#/ferramenta`);
@@ -195,23 +193,28 @@ apiRouter.route("/ferramenta")
         await connection.close();
         return next();
     }
-});
-apiRouter.route("/ferramenta")
+})
     .get(async (_req, res) => {
+    const CODIGO = '00751302';
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
-        const resource = await connection.query(`SELECT TOP 1
-             * FROM PCP_PROGRAMACAO_PRODUCAO ORDER BY TOTAL DESC`);
+        const resource = await connection.query(`
+            SELECT 
+            [IMAGEM], 
+            [CODIGO]
+            FROM VIEW_APTO_FERRAMENTAL 
+            WHERE 1 = 1
+            AND CODIGO = '${CODIGO}'
+            `);
         const result = resource.recordset.map(record => {
-            const imgPath = getPicturePath(record["CODIGO_PECA"], record["IMAGEM"]);
+            const imgPath = pictures_1.pictures.getPicturePath(record["CODIGO"], record["IMAGEM"]);
             return {
                 img: imgPath,
                 razao: record["RAZAO"],
-                codigoInterno: record["CODIGO_PECA"],
+                codigoInterno: record["CODIGO"],
                 total: record["TOTAL"],
             };
         });
-        console.log(resource);
         res.json(result);
     }
     catch (error) {
@@ -292,9 +295,9 @@ apiRouter.route("/desenho")
             SELECT 
             [NUMPEC],
             [IMAGEM] 
-            FROM QA_LAYOUT (NOLOCK) WHERE NUMPEC = '04350563'`);
+            FROM QA_LAYOUT (NOLOCK) WHERE NUMPEC = '00060270-1'`);
         const result = resource.recordset.map(record => {
-            const imgPath = getPicturePath(record["NUMPEC"], record["IMAGEM"]);
+            const imgPath = pictures_1.pictures.getPicturePath(record["NUMPEC"], record["IMAGEM"]);
             return {
                 img: imgPath,
                 razao: record["RAZAO"],
