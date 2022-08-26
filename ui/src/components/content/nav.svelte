@@ -27,9 +27,9 @@
         <button on:click={some2} type="button" class="btn btn-primary"
             >Retrabalhar</button
         >
-        <button on:click={some3} type="button" class="btn btn-primary"
+        <a href="/#/rip/"><button on:click={some6} type="button" class="btn btn-primary"
             >Inspeção</button
-        >
+        ></a>
         <button on:click={some4} type="button" class="btn btn-primary"
             >Parada</button
         >

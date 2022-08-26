@@ -6,24 +6,20 @@
   let value = "";
   let codigoBarras = "";
   let result = {};
+  let urlS = `/api/v1/apontamento`;
 
   async function doPost() {
-    codigoBarras = preSanitize(codigoBarras);
-    if (codigoBarras.length < 16) {
-      codigoBarras = "";
-    } else {
-      const res = await fetch(`/api/v1/apontamento`, {
-        method: "POST",
-        body: JSON.stringify({
-          codigoBarras: !codigoBarras ? "" : codigoBarras,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      }).then((res) => res.json());
-    }
+    const res = await fetch(urlS, {
+      method: "POST",
+      body: JSON.stringify({ codigoBarras: !codigoBarras ? "" : codigoBarras }),
+    });
+    const data = await res.json().then(json =>{
+      return Promise.resolve({json: json, res: Response})
+    });
+    console.log(data[0])
   }
+
+  // codigoBarras = preSanitize(codigoBarras);
 
   function handleSubmit() {
     result = doPost();
@@ -49,6 +45,21 @@
     localStorage.setItem("barcodeData", values);
   }
 
+  function mymm() {
+    let xx = document.getElementById("popUp");
+    xx.style.display = "block";
+  }
+
+  function myFunction(e) {
+    var x = document.getElementById("popUp");
+    x.style.display = "none";
+  }
+
+  // function mken(e){
+  //   if(x === "none"){
+  //     var x = document.getElementById('popUp').style.display = "block";
+  //   }
+  // }
 </script>
 
 <main>
@@ -57,30 +68,6 @@
     <Title />
 
     <div class="bar">Código de barras</div>
-
-    <div id="popUp">
-      <div id="button">X</div>
-      <div>Codigo de barras Invalido</div>
-    </div>
-
-    <div id="popUp">
-      <div id="button">X</div>
-      <div>Usuario Invalido</div>
-    </div>
-
-    <form action="/api/v1/apontamentoCracha" method="POST">
-      <div id="popUpCracha">
-        <div id="button">X</div>
-        <div>Selecione quem irá produzir essa peça</div>
-        <input
-          on:input={blockForbiddenChars}
-          name="MATRIC"
-          id="MATRIC"
-          type="text"
-        />
-      </div>
-    </form>
-
     <form action="/api/v1/apontamento" method="POST" on:submit={handleSubmit}>
       <label class="input">
         <input
@@ -92,6 +79,30 @@
           type="text"
         />
       </label>
+    </form>
+
+    {#if doPost.length > 0}
+      <div id="popUp">
+        <div id="button">X</div>
+        <div>Codigo de barras Invalido</div>
+      </div>
+    {/if}
+
+    <!-- <div id="popUp">
+      <div id="button">X</div>
+      <div>Usuario Invalido</div>
+    </div> -->
+
+    <form action="/api/v1/apontamentoCracha" method="POST">
+      <div id="popUpCracha">
+        <div>Colaborador</div>
+        <input
+          on:input={blockForbiddenChars}
+          name="MATRIC"
+          id="MATRIC"
+          type="text"
+        />
+      </div>
     </form>
   </div>
 </main>
@@ -125,15 +136,17 @@
     padding: 15px;
     font-size: 35px;
     border-radius: 5px;
-    background-color: black;
-    color: white;
+    color: black;
+    justify-content: center;
+    text-align: center;
+    align-items: center;
   }
 
   #popUp {
     padding: 20px;
     font-size: 35px;
+    display: none;
     border-radius: 5px;
-    background-color: black;
-    color: white;
+    color: black;
   }
 </style>

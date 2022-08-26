@@ -82,10 +82,10 @@ apiRouter.route("/apontamento")
                 var secondSetup = performance.now();
                 res.cookie("secondSetup", secondSetup);
                 console.log("Iniciou processo: " + secondSetup);
-                res.redirect(`/#/ferramenta`);
+                res.json(resource);
             }
             else {
-                res.redirect(`/#/codigobarras`);
+                res.json(resource);
             }
         }
         catch (error) {
@@ -137,27 +137,33 @@ apiRouter.route("/apontamento")
         await connection.close();
         next();
     }
-})
+});
+apiRouter.route("/IMAGEM")
     .get(async (req, res) => {
     const IMAGEM = req.query["IMAGEM"];
+    const NUMPEC = '00060270-1';
     console.log(IMAGEM);
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const resource = await connection.query(`
-            SELECT 
-            [CODIGO],
+            SELECT TOP 10
+            [NUMPEC],
             [IMAGEM]
-            FROM VIEW_APTO_FERRAMENTAL (NOLOCK) WHERE CODIGO = '00060270-1'`);
+            FROM PROCESSO (NOLOCK) 
+            WHERE 1 = 1
+            AND NUMPEC = '${NUMPEC}'
+            AND IMAGEM IS NOT NULL
+            `);
         const result = resource.recordset.map(record => {
-            const imgPath = pictures_1.pictures.getPicturePath(record["CODIGO"], record["IMAGEM"]);
+            const imgPath = pictures_1.pictures.getPicturePath(record["NUMPEC"], record["IMAGEM"]);
             return {
                 img: imgPath,
                 razao: record["RAZAO"],
-                codigoInterno: record["CODIGO"],
+                codigoInterno: record["NUMPEC"],
                 total: record["TOTAL"],
             };
         });
-        console.log(result[0]);
+        res.json(result);
     }
     catch (error) {
         console.log(error);
@@ -205,6 +211,7 @@ apiRouter.route("/ferramenta")
             FROM VIEW_APTO_FERRAMENTAL 
             WHERE 1 = 1
             AND CODIGO = '${CODIGO}'
+            AND IMAGEM IS NOT NULL
             `);
         const result = resource.recordset.map(record => {
             const imgPath = pictures_1.pictures.getPicturePath(record["CODIGO"], record["IMAGEM"]);
@@ -215,6 +222,7 @@ apiRouter.route("/ferramenta")
                 total: record["TOTAL"],
             };
         });
+        console.log(result);
         res.json(result);
     }
     catch (error) {
@@ -288,14 +296,17 @@ apiRouter.route("/rip")
 apiRouter.route("/desenho")
     .get(async (req, res) => {
     const IMAGEM = req.query["IMAGEM"];
-    console.log(IMAGEM);
+    const NUMPEC = '00060278-3';
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const resource = await connection.query(`
-            SELECT 
+            SELECT
             [NUMPEC],
             [IMAGEM] 
-            FROM QA_LAYOUT (NOLOCK) WHERE NUMPEC = '00060270-1'`);
+            FROM QA_LAYOUT (NOLOCK) 
+            WHERE 1 = 1 
+            AND NUMPEC = '${NUMPEC}'
+            AND IMAGEM IS NOT NULL`);
         const result = resource.recordset.map(record => {
             const imgPath = pictures_1.pictures.getPicturePath(record["NUMPEC"], record["IMAGEM"]);
             return {
@@ -305,7 +316,6 @@ apiRouter.route("/desenho")
                 total: record["TOTAL"],
             };
         });
-        console.log(resource);
         res.json(result);
     }
     catch (error) {

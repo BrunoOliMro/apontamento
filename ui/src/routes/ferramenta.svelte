@@ -36,7 +36,7 @@
     <Breadcrumb />
     {Subtitle}
     <div class="content">
-        <div id="popUP">
+        <!-- <div id="popUP">
             <p>X</p>
             <p>Selecione as Ferramentas para a produção</p>
         </div>
@@ -44,7 +44,7 @@
         <div id="popUP">
             <p>X</p>
             <p>Ferramentas selecionadas inicie agora a produção</p>
-        </div>
+        </div> -->
     </div>
 </div>
 
