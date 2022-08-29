@@ -6,7 +6,7 @@
 	import Rip from "./routes/rip.svelte";
 	import Desenho from "./routes/desenho.svelte";
 	import Barcode from "./routes/barcode.svelte";
-	import Parada from "./routes/parada.svelte";
+	import historico from "./routes/historico.svelte";
 </script>
 
 <main>
@@ -20,6 +20,6 @@
 		"/rip": Rip,
 		"/ferramenta": Ferramenta,
 		"/codigobarras": Barcode,
-		"/parada": Parada,
+		"/historico": historico,
 	}}
 />

@@ -1,7 +1,6 @@
 import { Router } from "express";
 import mssql from "mssql";
 import { sqlConfig } from "../global.config";
-// import pictures = require("../api/pictures")
 import { pictures } from "./pictures";
 
 const apiRouter = Router();
@@ -29,7 +28,7 @@ apiRouter.route("/apontamentoCracha")
                 `.trim()
                 ).then(result => result.recordset)
                 if (resource.length > 0) {
-                    res.redirect("/#/ferramenta")
+                    res.redirect("/#/codigobarras")
                 } else {
                     res.redirect("/#/codigobarras")
                 }
@@ -77,26 +76,31 @@ apiRouter.route("/apontamento")
                         SELECT TOP 1
                         [NUMERO_ODF], 
                         [CODIGO_MAQUINA],
-                        [NUMERO_OPERACAO]
-                        FROM PCP_PROGRAMACAO_PRODUCAO
+                        [NUMERO_OPERACAO],
+                        [CODIGO_PECA]
+                        FROM            
+                        PCP_PROGRAMACAO_PRODUCAO
                         WHERE 1 = 1
                         AND [NUMERO_ODF] = ${dados.numOdf}
                         AND [CODIGO_MAQUINA] = '${dados.codMaq}'
                         AND [NUMERO_OPERACAO] = ${dados.numOper}
+                        AND [CODIGO_PECA] IS NOT NULL
                         ORDER BY NUMERO_OPERACAO ASC
                         `.trim()
                     ).then(result => result.recordset);
-
+                    res.cookie("CODIGO_PECA", resource[0].CODIGO_PECA)
+                    res.cookie("NUMERO_ODF", resource[0].NUMERO_ODF)
+                    res.redirect("/#/ferramenta")
                     //Verifica se houve um resultado em resource e caso haja redireciona
-                    if (resource.length > tool) {
+                    if (tool > 0) {
                         // Vai ate o final da ferramenta
                         // Vai até o final do processo
                         var secondSetup = performance.now()
                         res.cookie("secondSetup", secondSetup)
                         console.log("Iniciou processo: " + secondSetup)
-                        res.json(resource)
+                        res.redirect("/#/ferramenta")
                     } else {
-                        res.json(resource)
+                        res.redirect("/#/codigobarras")
                     }
                 } catch (error) {
                     console.log(error);
@@ -108,7 +112,6 @@ apiRouter.route("/apontamento")
         }
     )
     .get(async (req, res, next) => {
-        console.log("ODF FEED iniciado")
         const NUMERO_ODF: any = (req.query["NUMERO_ODF"] as string).trim() || undefined;
         const CODIGO_MAQUINA = (req.query["CODIGO_MAQUINA"] as string).trim() || undefined;
         const NUMERO_OPERACAO = (req.query["NUMERO_OPERACAO"] as string).trim() || undefined;
@@ -134,8 +137,7 @@ apiRouter.route("/apontamento")
                 [DT_ENTREGA_ODF],
                 [QTD_REFUGO],
                 [HORA_INICIO],
-                [HORA_FIM],
-                [CODIGO_PECA]
+                [HORA_FIM]
                 FROM PCP_PROGRAMACAO_PRODUCAO
                 WHERE 1 = 1
                 AND [NUMERO_ODF] = ${NUMERO_ODF}
@@ -143,6 +145,7 @@ apiRouter.route("/apontamento")
                 AND [NUMERO_OPERACAO] = ${NUMERO_OPERACAO}
                 ORDER BY NUMERO_OPERACAO ASC`.trim()).then(result => result.recordset);
             res.json(resource);
+            res.redirect("/#/ferramenta")
         } catch (error) {
             console.log(error);
         } finally {
@@ -155,13 +158,11 @@ apiRouter.route("/apontamento")
 
 apiRouter.route("/IMAGEM")
     .get(async (req, res) => {
-        const IMAGEM = req.query["IMAGEM"]
-        const NUMPEC = '00060270-1'
-        console.log(IMAGEM)
+        const NUMPEC = req.cookies["CODIGO_PECA"]
         const connection = await mssql.connect(sqlConfig);
         try {
             const resource = await connection.query(`
-            SELECT TOP 10
+            SELECT TOP 1
             [NUMPEC],
             [IMAGEM]
             FROM PROCESSO (NOLOCK) 
@@ -182,8 +183,34 @@ apiRouter.route("/IMAGEM")
         } catch (error) {
             console.log(error)
             res.status(500).json({ error: true, message: "Erro no servidor." });
+        } finally {
+            await connection.close()
         }
     });
+
+
+apiRouter.route("/HISTORICO")
+    .get(async (req, res) => {
+        let some = req.cookies["NUMERO_ODF"]
+        const connection = await mssql.connect(sqlConfig);
+        try {
+            const resource = await connection.query(`
+            SELECT
+            *
+            FROM VW_APP_APONTAMENTO_HISTORICO
+            WHERE 1 = 1
+            AND [ODF] = ${some}
+            `);
+            res.json(resource)
+            console.log(resource)
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({ error: true, message: "Erro no servidor." });
+        } finally {
+            await connection.close()
+        }
+    });
+
 
 
 apiRouter.route("/ferramenta")
@@ -209,6 +236,7 @@ apiRouter.route("/ferramenta")
                 const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO + ')')
                 console.log(insertSql)
                 console.log("Tempo de Ferramenta: " + APT_TEMPO_OPERACAO)
+                res.redirect(`/#/ferramenta`)
             } else {
                 res.redirect(`/#/ferramenta`)
             }
@@ -221,9 +249,10 @@ apiRouter.route("/ferramenta")
         }
     })
     //GET das Fotos das ferramentas
-    .get(async (_req, res) => {
-        const CODIGO = '00751302'
+    .get(async (req, res) => {
+        const CODIGO = req.cookies["CODIGO_PECA"]
         const connection = await mssql.connect(sqlConfig);
+        console.log(CODIGO)
         try {
             const resource = await connection.query(`
             SELECT 
@@ -243,11 +272,16 @@ apiRouter.route("/ferramenta")
                     total: record["TOTAL"],
                 }
             });
-            console.log(result)
-            res.json(result)
+            if (result.length > 0) {
+                res.json()
+            } else {
+                res.redirect("/#/apontamento")
+            }
         } catch (error) {
             console.log(error)
             res.status(500).json({ error: true, message: "Erro no servidor." });
+        } finally {
+            await connection.close()
         }
     });
 
@@ -255,20 +289,28 @@ apiRouter.route("/ferramenta")
 apiRouter.route("/apontar")
     .post(
         async (req, _res, next) => {
-            console.log("POST iniciado")
-            // const status = '';
-            // const goodFeed = 1
-            // const badFeed = 1
-            // const NUMERO_ODF = 548548
-            // const NUMERO_OPERACAO = "'50'"
-            // const CODIGO_MAQUINA = "'LASO1'"
-            // const EMPRESA_RECNO = 1
-            // const QTDE_APONTADA = 1
-            // const QTD_REFUGO = 1
+            let resource1 = 0;
+            let resource2 = 0;
+            let resource3 = 0;
 
-            // const dados2 = {
-            //     apontaTempo: status
-            // }
+            let enviado = resource1 + resource2 + resource3
+
+            function getEnviado() {
+
+            }
+
+            req.body = sanitize(req.body.trim());
+            let status = '';
+            let goodFeed = 1
+            let badFeed = 1
+            let NUMERO_ODF = 548548
+            let NUMERO_OPERACAO = "'50'"
+            let CODIGO_MAQUINA = "'LASO1'"
+            let EMPRESA_RECNO = 1
+            let QTDE_APONTADA = 1
+            let QTD_REFUGO = 1
+            let CST_PC_FALTANTE = 1;
+            let CST_QTD_RETRABALHADA = 1;
 
             //Sanitizaão de input
             function sanitize(input: string) {
@@ -278,60 +320,35 @@ apiRouter.route("/apontar")
                     .map((char) => (allowedChars.test(char) ? char : ""))
                     .join("");
             }
-            console.log(sanitize)
 
             //INSERIR VALOR PREVIO PARA CASO HAJA UM VALOR PARCIAL/INICIAL
             // var preventValue;
-
-            //Logica de negocio
-            // if (goodFeed === "" || badFeed === "") {
-            //     goodFeed = 0
-            //     badFeed = 0
-            // }
 
             // if(!preventValue){
             //     preventValue + goodFeed
             //     return goodFeed
             // }
 
-            // if(badFeed === QTD_ODF){
-            //     console.log("serviço Incompleto")
-            //     return badFeed
-            // }
-
-
-            // AO APONTAR ENCERRA A PRODUÇÃO FINAL
-            // const resource = await connection.query(`
-            // SELECT TOP 1
-            // [APT_TEMPO_OPERACAO]
-            // FROM HISAPONTA
-            // WHERE ODF = '329682' order by DATAHORA asc
-            // `.trim()).then(result => result.recordset);
-
-
-
-            //Ta funcionando
             var APT_TEMPO_OPERACAO: any = req.query["APT_TEMPO_OPERACAO"]
             const connection = await mssql.connect(sqlConfig);
             try {
-                //Ajustar para receber os dados do front
-                // const insertSql = await connection.query('INSERT INTO PCP_PROGRAMACAO_PRODUCAO(NUMERO_ODF,NUMERO_OPERACAO,CODIGO_MAQUINA,EMPRESA_RECNO, QTDE_APONTADA, QTD_REFUGO) VALUES (' + NUMERO_ODF + ',' + NUMERO_OPERACAO + ',' + CODIGO_MAQUINA + ',' + EMPRESA_RECNO + ',' + QTDE_APONTADA + ',' + QTD_REFUGO + ')')
-                // console.log(insertSqlFeed)
+                if (CST_PC_FALTANTE > 0 || CST_QTD_RETRABALHADA > 0) {
+                    const insertSqlRework = await connection.query('INSERT INTO HISAPONTA(CST_PC_FALTANTE, CST_QTD_RETRABALHADA) VALUES (' + CST_PC_FALTANTE + ',' + CST_QTD_RETRABALHADA + ')')
+                } else {
+                    //Ajustar para receber os dados do front
+                    const insertSql = await connection.query('INSERT INTO PCP_PROGRAMACAO_PRODUCAO(NUMERO_ODF,NUMERO_OPERACAO,CODIGO_MAQUINA,EMPRESA_RECNO, QTDE_APONTADA, QTD_REFUGO) VALUES (' + NUMERO_ODF + ',' + NUMERO_OPERACAO + ',' + CODIGO_MAQUINA + ',' + EMPRESA_RECNO + ',' + QTDE_APONTADA + ',' + QTD_REFUGO + ')')
+                }
                 //Encerra A Segunda Fase do Setup
                 const processSetup = req.cookies["processSetup"]
                 var endTimer = performance.now();
                 var secondSetup = processSetup - endTimer;
                 APT_TEMPO_OPERACAO = secondSetup
 
-                const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO + ')')
-                console.log(insertSql)
-                console.log("Produção : " + APT_TEMPO_OPERACAO)
+                const insertSqlTimer = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO + ')')
 
                 //Inicia o Timer da Rip
                 var ripTimer = performance.now()
                 _res.cookie("ripTimer", ripTimer)
-                console.log("inicou o processo da rip : " + ripTimer)
-
                 _res.redirect(`/#/rip`)
             } catch (error) {
                 _res.redirect(`/#/rip`)
@@ -383,8 +400,7 @@ apiRouter.route("/rip")
 apiRouter.route("/desenho")
     //GET das Fotos das ferramentas
     .get(async (req, res) => {
-        const IMAGEM = req.query["IMAGEM"]
-        const NUMPEC = '00060278-3'
+        const NUMPEC = req.cookies["CODIGO_PECA"]
         const connection = await mssql.connect(sqlConfig);
         try {
             const resource = await connection.query(`
@@ -408,6 +424,8 @@ apiRouter.route("/desenho")
         } catch (error) {
             console.log(error)
             res.status(500).json({ error: true, message: "Erro no servidor." });
+        } finally {
+            await connection.close()
         }
     });
 export default apiRouter;

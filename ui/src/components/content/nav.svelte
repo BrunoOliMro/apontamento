@@ -1,45 +1,73 @@
 <script>
-    const some1 = () => {
-        console.log("Faltante");
+    import badFeed from "../content/feed.svelte";
+    import reworkFeed from "../content/feed.svelte";
+    import missingFeed from "../content/feed.svelte";
+    import some from "../content/feed.svelte";
+    import retrabalhar from "../content/feed.svelte";
+    import faltante from "../content/feed.svelte";
+    import popUp from "../content/feed.svelte";
+    import popUp1 from "../content/feed.svelte";
+    import popUp2 from "../content/feed.svelte";
+    import popUp3 from "../content/feed.svelte";
+    import popUp4 from "../content/feed.svelte";
+    import popUp5 from "../content/feed.svelte";
+    import close from "../content/feed.svelte";
+
+    const getMissingFeed = () => {
+        document.getElementById("faltante").style.display = "block";
+        document.getElementById("retrabalhar").style.display = "none";
+        document.getElementById("some").style.display = "none";
+        document.getElementById("badFeed").style.display = "none";
     };
-    const some2 = () => {
-        console.log("Retrabalhar");
+    const getReworkFeed = () => {
+        document.getElementById("faltante").style.display = "none";
+        document.getElementById("retrabalhar").style.display = "block";
+        document.getElementById("some").style.display = "none";
+        document.getElementById("badFeed").style.display = "none";
     };
-    const some3 = () => {
-        console.log("Inspeção");
-    };
-    const some4 = () => {
-        console.log("Parada");
-    };
-    const some5 = () => {
-        console.log("Historico");
-    };
-    const some6 = () => {
-        console.log("Desenho");
+
+    const paradaMaq = () => {
+        document.getElementById("popUp").style.display = "block";
+        document.getElementById("popUp1").style.display = "block";
+        document.getElementById("popUp2").style.display = "block";
+        document.getElementById("popUp3").style.display = "block";
+        document.getElementById("popUp4").style.display = "block";
+        document.getElementById("popUp5").style.display = "block";
+        document.getElementById("close").style.display = "block";
     };
 </script>
 
 <main>
     <div class="nav">
-        <button on:click={some1} type="button" class="btn btn-primary"
-            >Faltante</button
+        <button
+            on:click={getMissingFeed}
+            type="button"
+            class="btn btn-primary"
+            id="missingFeed"
+            name="missing"
+            >Faltante
+        </button>
+        <button
+            on:click={getReworkFeed}
+            type="button"
+            class="btn btn-primary"
+            id="reworkFeed"
+            name="rework"
+            >Retrabalhar
+        </button>
+        <a href="/#/rip/"
+            ><button type="button" class="btn btn-primary">Inspeção</button></a
         >
-        <button on:click={some2} type="button" class="btn btn-primary"
-            >Retrabalhar</button
-        >
-        <a href="/#/rip/"><button on:click={some6} type="button" class="btn btn-primary"
-            >Inspeção</button
-        ></a>
-        <button on:click={some4} type="button" class="btn btn-primary"
+        <a href="/#/historico/">
+            <button type="button" class="btn btn-primary"> Historico </button>
+        </a>
+
+        <button on:click={paradaMaq} type="button" class="btn btn-primary"
             >Parada</button
         >
-        <button on:click={some5} type="button" class="btn btn-primary"
-            >Historico</button
+        <a href="/#/desenho/"
+            ><button type="button" class="btn btn-primary">Desenho</button></a
         >
-        <a href="/#/desenho/"><button on:click={some6} type="button" class="btn btn-primary"
-            >Desenho</button
-        ></a>
-        
     </div>
 </main>
 

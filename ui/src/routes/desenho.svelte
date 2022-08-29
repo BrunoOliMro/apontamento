@@ -59,6 +59,13 @@
             var width = img.clientWidth;
             img.style.width = (width - zoomNumber) + "px";
     }
+
+    function print(){
+        let myWindow = window.open()
+        myWindow.close();
+        myWindow.focus()
+        myWindow.print();
+    }
 </script>
 
 <main>
@@ -68,7 +75,7 @@
     <button id="left" on:click={left}>ESQUERDA</button>
     <button id="zoomIn" on:click={zoomIn}>ZOOM +</button>
     <button id="zoomOut" on:click={zoomOut}>ZOOM -</button>
-    <button id="zoomOut" on:click={zoomOut}>IMPRIMIR</button>
+    <button id="zoomOut" on:click={print}>IMPRIMIR</button>
 </main>
 
 <style>
