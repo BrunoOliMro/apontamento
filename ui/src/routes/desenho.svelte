@@ -1,22 +1,21 @@
 <script>
     import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
     export let Subtitle = "DESENHO";
-    let zoomNumber = 450
+    let zoomNumber = 400;
     let rotation = 0;
-    let IMAGEM = [];
+    let imagemBack = [];
 
-    const headers = new Headers();
-    headers.append("Content-Type", "application/json");
-    let urlString = `/api/v1/desenho?IMAGEM=${IMAGEM}`;
+    let urlString = `/api/v1/desenho?imagemBack=${imagemBack}`;
     async function getIMAGEM() {
         const res = await fetch(urlString);
-        IMAGEM = await res.json();
-        return IMAGEM;
+        imagemBack = await res.json();
+        console.log(imagemBack);
+        return imagemBack;
     }
 
     let resultado = getIMAGEM();
-    resultado.then(() => {
-        const atributeSrcImg = IMAGEM[0].img;
+    const some = resultado.then(() => {
+        const atributeSrcImg = imagemBack[0].img;
         let divSelector = document.querySelector("div");
         let imgElement = document.createElement("img");
         divSelector.appendChild(imgElement);
@@ -26,44 +25,60 @@
         imgElement.classList.add("some");
         imgElement.style.margin = "2%";
         imgElement.style.borderRadius = "3px";
-        imgElement.style.alignItems = "center"
-        imgElement.style.justifyContent = "center"
-        imgElement.style.textAlign = "center"
+        imgElement.style.display = "flex";
+        imgElement.style.alignItems = "center";
+        imgElement.style.justifyContent = "center";
+        imgElement.style.textAlign = "center";
+        imgElement.style.overflowY = "hidden";
+        imgElement.style.overflowX = "hidden";
+        imgElement.style.maxWidth = "90%";
+        imgElement.style.minWidth = "30%";
     });
 
     function right() {
         rotation += 90;
         document.getElementById("some").style.transition = "all 1s";
-        document.getElementById(
-            "some"
-        ).style.transform = `rotate(${rotation}deg)`;
+        document.getElementById("some").style.transform = `rotate(${rotation}deg)`;
+        document.getElementById("some").style.marginRight = "2%";
+        document.getElementById("some").style.marginLeft = "2%";
     }
 
     function left() {
         rotation -= 90;
         document.getElementById("some").style.transition = "all 1s";
-        document.getElementById(
-            "some"
-        ).style.transform = `rotate(${rotation}deg)`;
-    }
+        document.getElementById("some").style.transform = `rotate(${rotation}deg)`;
+        document.getElementById("some").style.marginRight = "2%";
+        document.getElementById("some").style.marginLeft = "2%";
+    }1
 
-    
     function zoomIn() {
         var img = document.getElementById("some");
         var width = img.clientWidth;
         img.style.width = width + zoomNumber + "px";
+        img.style.marginLeft = "2%"
+        img.style.marginRight = "2%"
+        img.style.display = "flex"
+        img.style.justifyContent = "center"
+        img.style.alignItems = "center"
+        img.style.textAlign = "center"
     }
 
     function zoomOut() {
         var img = document.getElementById("some");
-            var width = img.clientWidth;
-            img.style.width = (width - zoomNumber) + "px";
+        var width = img.clientWidth;
+        img.style.width = width - zoomNumber + "px";
+        img.style.marginLeft = "2%"
+        img.style.marginRight = "2%"
+        img.style.display = "flex"
+        img.style.justifyContent = "center"
+        img.style.alignItems = "center"
+        img.style.textAlign = "center"
     }
 
-    function print(){
-        let myWindow = window.open()
+    function print() {
+        let myWindow = window.open();
         myWindow.close();
-        myWindow.focus()
+        myWindow.focus();
         myWindow.print();
     }
 </script>
@@ -71,11 +86,13 @@
 <main>
     <Breadcrumb />
     <div id="subtitle" class="subtitle">{Subtitle}</div>
-    <button id="right" on:click={right}>DIREITA</button>
-    <button id="left" on:click={left}>ESQUERDA</button>
-    <button id="zoomIn" on:click={zoomIn}>ZOOM +</button>
-    <button id="zoomOut" on:click={zoomOut}>ZOOM -</button>
-    <button id="zoomOut" on:click={print}>IMPRIMIR</button>
+    <div id="buttons">
+        <button id="right" on:click={right}>DIREITA</button>
+        <button id="left" on:click={left}>ESQUERDA</button>
+        <button id="zoomIn" on:click={zoomIn}>ZOOM +</button>
+        <button id="zoomOut" on:click={zoomOut}>ZOOM -</button>
+        <button id="zoomOut" on:click={print}>IMPRIMIR</button>
+    </div>
 </main>
 
 <style>
@@ -86,5 +103,12 @@
         font-size: 30px;
         display: flex;
         justify-content: center;
+    }
+
+    #buttons {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
     }
 </style>

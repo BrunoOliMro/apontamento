@@ -12,13 +12,12 @@
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
     let urlString = `/api/v1/apontamento?NUMERO_ODF=${NUMERO_ODF}&CODIGO_MAQUINA=${CODIGO_MAQUINA}&NUMERO_OPERACAO=${NUMERO_OPERACAO}`;
-    let resultado = getOdfData();
     async function getOdfData() {
         const res = await fetch(urlString);
         const odfData = await res.json();
         return odfData;
     }
-
+    
     const doPost = async () => {
         const headers = new Headers();
         const res = fetch(`/api/v1/apontar`, {
@@ -32,6 +31,8 @@
             headers,
         });
     };
+    
+    let resultado = getOdfData();
 </script>
 
 <main class="align-self-center">

@@ -55,16 +55,12 @@
             name="rework"
             >Retrabalhar
         </button>
-        <a href="/#/rip/"
-            ><button type="button" class="btn btn-primary">Inspeção</button></a
+        <a href="/#/rip/"><button type="button" class="btn btn-primary">Inspeção</button></a
         >
-        <a href="/#/historico/">
-            <button type="button" class="btn btn-primary"> Historico </button>
+        <a href="/#/historico/"><button type="button" class="btn btn-primary"> Historico </button>
         </a>
 
-        <button on:click={paradaMaq} type="button" class="btn btn-primary"
-            >Parada</button
-        >
+        <button on:click={paradaMaq} type="button" class="btn btn-primary">Parada</button>
         <a href="/#/desenho/"
             ><button type="button" class="btn btn-primary">Desenho</button></a
         >
