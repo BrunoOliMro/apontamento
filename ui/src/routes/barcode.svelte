@@ -9,14 +9,17 @@
   let urlS = `/api/v1/apontamento`;
 
   async function doPost() {
+    if (codigoBarras.length <= 16) {
+    } else {
+    }
     const res = await fetch(urlS, {
       method: "POST",
       body: JSON.stringify({ codigoBarras: !codigoBarras ? "" : codigoBarras }),
     });
-    const data = await res.json().then(json =>{
-      return Promise.resolve({json: json, res: Response})
+    const data = await res.json().then((json) => {
+      return Promise.resolve({ json: json, res: Response });
     });
-    console.log(data[0])
+    console.log(data[0]);
   }
 
   // codigoBarras = preSanitize(codigoBarras);
@@ -44,22 +47,6 @@
     var values = value;
     localStorage.setItem("barcodeData", values);
   }
-
-  function mymm() {
-    let xx = document.getElementById("popUp");
-    xx.style.display = "block";
-  }
-
-  function myFunction(e) {
-    var x = document.getElementById("popUp");
-    x.style.display = "none";
-  }
-
-  // function mken(e){
-  //   if(x === "none"){
-  //     var x = document.getElementById('popUp').style.display = "block";
-  //   }
-  // }
 </script>
 
 <main>
@@ -67,10 +54,12 @@
     <Breadcrumb />
     <Title />
 
-    <div class="bar">Código de barras</div>
+    <div class="bar" id="title">Código de barras</div>
     <form action="/api/v1/apontamento" method="POST" on:submit={handleSubmit}>
       <label class="input">
         <input
+          data-bs-toggle="modal"
+          data-bs-target="#exampleModalCenter"
           bind:value
           on:input={blockForbiddenChars}
           on:input={setValues}
@@ -81,22 +70,12 @@
       </label>
     </form>
 
-    {#if doPost.length > 0}
-      <div id="popUp">
-        <div id="button">X</div>
-        <div>Codigo de barras Invalido</div>
-      </div>
-    {/if}
-
-    <!-- <div id="popUp">
-      <div id="button">X</div>
-      <div>Usuario Invalido</div>
-    </div> -->
-
     <form action="/api/v1/apontamentoCracha" method="POST">
       <div id="popUpCracha">
-        <div>Colaborador</div>
+        <div id="title">Colaborador</div>
         <input
+          data-bs-toggle="modal show"
+          data-bs-target="#exampleModalCenter"
           on:input={blockForbiddenChars}
           name="MATRIC"
           id="MATRIC"
@@ -104,6 +83,46 @@
         />
       </div>
     </form>
+  </div>
+
+  <!-- <button
+    type="button"
+    class="btn btn-primary"
+    data-bs-toggle="modal"
+    data-bs-target="#exampleModalCenter"
+  >
+    Codigo de barras Invalido
+  </button> -->
+
+  <div
+    class="modal fade show"
+    id="exampleModalCenter"
+    tabindex="-1"
+    role="dialog"
+    aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true"
+  >
+    <div>
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle">
+              Codigo de barras Invalido
+            </h5>
+          </div>
+          <div class="modal-body">
+            <p>Codigo de barras não encontrado ou não é valido</p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal">Fechar</button
+            >
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </main>
 
@@ -125,13 +144,6 @@
     display: flex;
   }
 
-  #button {
-    display: flex;
-    justify-content: right;
-    align-items: center;
-    text-align: center;
-  }
-
   #popUpCracha {
     padding: 15px;
     font-size: 35px;
@@ -142,11 +154,12 @@
     align-items: center;
   }
 
-  #popUp {
-    padding: 20px;
-    font-size: 35px;
-    display: none;
-    border-radius: 5px;
-    color: black;
+  @media (max-width: 460px) {
+    input {
+      width: 150px;
+    }
+    #title {
+      font-size: 20px;
+    }
   }
 </style>

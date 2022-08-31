@@ -35,39 +35,32 @@
     let resultado = getOdfData();
 </script>
 
-<main class="align-self-center">
+<main  class="align-self-center">
     {#await resultado}
         <div>...</div>
     {:then dadosOdf}
         <form action="/api/v1/apontar" method="POST">
-            <div>Produzir {dadosOdf[0].QTDE_ODF[0]}</div>
-            <div id="goodFeed">
+            <div class="write">Produzir {dadosOdf[0].QTDE_ODF[0]}</div>
+            <div class="write" id="goodFeed">
                 Boas
-                <input id="goodFeed" name="goodFeed" />
+                <input class="input" id="goodFeed" name="goodFeed" />
             </div>
-            <div id="some" name="some">
+            <div  class="write" id="some" name="some">
                 Ruins
-                <input id="badFeed" name="badFeed" />
+                <input class="input" id="badFeed" name="badFeed" />
             </div>
-            <div id="retrabalhar">
+            <div class="write" id="retrabalhar">
                 Retrabalhar
-                <input type="text" id="reworkFeed" name="reworkFeed" />
+                <input class="input" type="text" id="reworkFeed" name="reworkFeed" />
             </div>
-            <div id="faltante">
+            <div class="write" id="faltante">
                 Faltante
-                <input type="text" id="missingFeed" name="missingFeed" />
+                <input class="input" type="text" id="missingFeed" name="missingFeed" />
             </div>
-            <button on:click={doPost} type="submit" class="btn btn-primary"
+            <button id="button" on:click={doPost} type="submit" class="btn btn-primary"
                 >Apontar</button
             >
-            <div id="popUp">MOTIVO DA PARADA</div>
-            <ul id="popUp1">
-                <li id="close">X</li>
-                <li id="popUp2">banheiro</li>
-                <li id="popUp3">troca de turno</li>
-                <li id="popUp4">alguma coisa</li>
-                <li id="popUp5">supervisor</li>
-            </ul>
+            
         </form>
     {/await}
 </main>
@@ -101,62 +94,74 @@
     #faltante {
         display: none;
     }
-    #popUp {
-        width: 200px;
-        height: 200px;
-        padding: 20px;
-        margin: 0px;
-        background-color: azure;
-        display: none;
-        font-size: 20px;
-        position: fixed;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
+    
+    @media (max-width: 400px) {
+        .write{
+            font-size: 15px;
+        }
+        .input{
+            width: 50px;
+        }
     }
-    #popUp1 {
-        background-color: azure;
-        display: none;
-        font-size: 20px;
-        position: fixed; 
-        justify-content: center;
-        align-items: center;
-        text-align: center;
+
+    /* @media (max-width: 600px) {
+        .write{
+            font-size: 5px;
+        }
+        .input{
+            width: 40px;
+        }
     }
-    #popUp2 {
-        background-color: azure;
-        display: none;
-        font-size: 20px;
-        position: fixed;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
+
+
+    @media(max-width: 850px){
+       
+        .write{
+            font-size: 10px;
+        }
+        .input{
+            width: 60px;
+        }
     }
-    #popUp3 {
-        background-color: azure;
-        display: none;
-        font-size: 20px;
-        position: fixed;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
+
+    @media(max-width: 1000px){
+        .write{
+            font-size: 20px;
+        }
+
+        .input{
+            width: 80px;
+        }
     }
-    #popUp4 {
-        background-color: azure;
-        display: none;
-        font-size: 20px;
-        position: fixed;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
+
+    @media(max-width: 1200px){
+        .input{
+            width: 40px;
+        }
+        .write{
+            font-size: 10px;
+        }
     }
-    #popUp5 {
-        background-color: azure;
-        display: none;
-        font-size: 20px;
-        position: fixed;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
+    
+
+    @media(max-width: 1400px){
+        .write{
+            font-size: 60px;
+        }
+
+        .input{
+            width: 125px;
+        }
     }
+
+    @media(max-width: 1600px){
+        
+        .write{
+            font-size: 80px;
+        }
+       
+        .input{
+            width: 120px;
+        }
+    } */
 </style>

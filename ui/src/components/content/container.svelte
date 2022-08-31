@@ -25,4 +25,10 @@ import Status from "./status.svelte";
         justify-content: left;
         align-items: center;
     }
+    @media (max-width: 400px) {
+        main{
+            display: flex;
+            flex-direction: column;
+        }
+    }
 </style>

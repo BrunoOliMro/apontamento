@@ -9,10 +9,10 @@ const apiRouter = Router();
 
 apiRouter.route("/apontamentoCracha")
     .post(async (req, res, next) => {
+        let maxRange = 600000
         //Sanitizar codigo
         let MATRIC: any = (req.body["MATRIC"] as string).trim()
-        let FUNCIONARIO;
-        res.cookie("MATRIC", MATRIC)
+        res.cookie("MATRIC", MATRIC, { httpOnly: true, maxAge: maxRange })
 
         if (MATRIC === "") {
             res.redirect(`/#/codigobarras`)
@@ -37,7 +37,6 @@ apiRouter.route("/apontamentoCracha")
 
                     res.cookie("MATRIC", resource[0].MATRIC)
                     res.cookie("FUNCIONARIO", resource[0].FUNCIONARIO)
-                    console.log(resource[0].FUNCIONARIO)
 
                     res.redirect("/#/codigobarras")
                     return next()
@@ -134,7 +133,7 @@ apiRouter.route("/apontamento")
         let NUMERO_ODF: any = (req.query["NUMERO_ODF"] as string).trim() || undefined;
         let CODIGO_MAQUINA = (req.query["CODIGO_MAQUINA"] as string).trim() || undefined;
         let NUMERO_OPERACAO = (req.query["NUMERO_OPERACAO"] as string).trim() || undefined;
-        
+
         // SQL QUERY TO (
         //     SELECT TOP 1 ISNULL(NOME_CRACHA,'INVALIDO') AS NOME_CRACHA, US.NOME FROM FUNCIONARIOS (NOLOCK)
         //     INNER JOIN USUARIOS_SISTEMA US (NOLOCK) ON US.R_E_C_N_O_ = FUNCIONARIOS.USUARIO_SISTEMA
@@ -206,7 +205,7 @@ apiRouter.route("/IMAGEM")
 
 
 apiRouter.route("/HISTORICO")
-    .get(async (req, res,next) => {
+    .get(async (req, res, next) => {
         let NUMERO_ODF = req.cookies["NUMERO_ODF"]
         const connection = await mssql.connect(sqlConfig);
         try {

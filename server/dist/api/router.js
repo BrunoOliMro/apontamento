@@ -10,9 +10,9 @@ const pictures_1 = require("./pictures");
 const apiRouter = (0, express_1.Router)();
 apiRouter.route("/apontamentoCracha")
     .post(async (req, res, next) => {
+    let maxRange = 600000;
     let MATRIC = req.body["MATRIC"].trim();
-    let FUNCIONARIO;
-    res.cookie("MATRIC", MATRIC);
+    res.cookie("MATRIC", MATRIC, { httpOnly: true, maxAge: maxRange });
     if (MATRIC === "") {
         res.redirect(`/#/codigobarras`);
     }
@@ -34,7 +34,6 @@ apiRouter.route("/apontamentoCracha")
                 res.cookie("starterBarcode", start.getTime());
                 res.cookie("MATRIC", resource[0].MATRIC);
                 res.cookie("FUNCIONARIO", resource[0].FUNCIONARIO);
-                console.log(resource[0].FUNCIONARIO);
                 res.redirect("/#/codigobarras");
                 return next();
             }

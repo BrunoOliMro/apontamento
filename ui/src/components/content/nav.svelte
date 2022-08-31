@@ -13,6 +13,8 @@
     import popUp5 from "../content/feed.svelte";
     import close from "../content/feed.svelte";
 
+    let showModal = false;
+
     const getMissingFeed = () => {
         document.getElementById("faltante").style.display = "block";
         document.getElementById("retrabalhar").style.display = "none";
@@ -27,17 +29,19 @@
     };
 
     const paradaMaq = () => {
-        document.getElementById("popUp").style.display = "block";
-        document.getElementById("popUp1").style.display = "block";
-        document.getElementById("popUp2").style.display = "block";
-        document.getElementById("popUp3").style.display = "block";
-        document.getElementById("popUp4").style.display = "block";
-        document.getElementById("popUp5").style.display = "block";
-        document.getElementById("close").style.display = "block";
+        document.getElementById("popUp1").style.display = "none";
     };
 </script>
 
 <main>
+    <ul class="nav2">
+        <li>Faltante</li>
+        <li>Retrabalhar</li>
+        <li>Inspeção</li>
+        <li>Historico</li>
+        <li>Parada</li>
+        <li>Desenho</li>
+    </ul>
     <div class="nav">
         <button
             on:click={getMissingFeed}
@@ -55,15 +59,58 @@
             name="rework"
             >Retrabalhar
         </button>
-        <a href="/#/rip/"><button type="button" class="btn btn-primary">Inspeção</button></a
+        <a href="/#/rip/"
+            ><button type="button" class="btn btn-primary">Inspeção</button></a
         >
-        <a href="/#/historico/"><button type="button" class="btn btn-primary"> Historico </button>
+        <a href="/#/historico/"
+            ><button type="button" class="btn btn-primary"> Historico </button>
         </a>
+        <button
+            type="button"
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#exampleModalCenter"
+        >
+            Parada
+        </button>
 
-        <button on:click={paradaMaq} type="button" class="btn btn-primary">Parada</button>
         <a href="/#/desenho/"
             ><button type="button" class="btn btn-primary">Desenho</button></a
         >
+
+        <div
+            class="modal fade"
+            id="exampleModalCenter"
+            tabindex="-1"
+            role="dialog"
+            aria-labelledby="exampleModalCenterTitle"
+            aria-hidden="true"
+        >
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">
+                            Motivo da Parada
+                        </h5>
+                    </div>
+                    <div class="modal-body">
+                        <li>DOR DE BARRIGA</li>
+                        <li>DIARREIA</li>
+                        <li>CAGANEIRA</li>
+                        <li>SOLTA UM BARRO</li>
+                        <li>HEMORROIDA ATACADA</li>
+                        <li>FEIJOADA DEMAIS</li>
+                    </div>
+                    <div class="modal-footer">
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">Close</button
+                        >
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </main>
 
@@ -76,5 +123,36 @@
         justify-content: space-between;
         align-items: center;
         text-align: center;
+    }
+
+
+    @media (max-width: 450px) {
+        .nav {
+            display: none;
+        }
+        ul {
+            list-style-type: none;
+        }
+        .nav2 {
+            display: none;
+        }
+    }
+
+    @media (min-width: 450px) {
+        .nav2 {
+            display: none;
+        }
+        .nav2 {
+            display: none;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .nav {
+            display: none;
+        }
+        .nav2 {
+            display: none;
+        }
     }
 </style>

@@ -42,4 +42,10 @@
     margin-top: 5%;
     justify-content: space-around;
   }
+
+  @media (max-width: 400px) {
+        main {
+            font-size: 10px;
+        }
+    }
 </style>
