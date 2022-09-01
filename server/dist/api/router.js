@@ -150,7 +150,6 @@ apiRouter.route("/apontamento")
         console.log(error);
     }
     finally {
-        console.log("ODF FEED finalizado");
         await connection.close();
         next();
     }

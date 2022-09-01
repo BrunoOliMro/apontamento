@@ -39,15 +39,17 @@
         <div>...</div>
     {:then dadosOdf}
         <div class="areaCodigos">
-            <div class="odf">ODF: {NUMERO_ODF}</div>
-            <div class="odf">
-                Cód. Interno: {dadosOdf[0].CODIGO_PECA}
-            </div>
-            <div class="odf">Cód. do Cliente: {dadosOdf[0].CODIGO_CLIENTE}</div>
-            <div class="odf">Operador: {someth.FUNCIONARIO}</div>
+            <div class="odf">ODF:</div>
+            <div class="bold">{NUMERO_ODF}</div>
+            <div class="odf">Cód. Interno:</div>
+            <div class="bold">{dadosOdf[0].CODIGO_PECA}</div>
+            <div class="odf">Cód. do Cliente:</div>
+            <div class="bold">{dadosOdf[0].CODIGO_CLIENTE}</div>
+            <div class="odf">Operador:</div>
+            <div class="bold">{someth.FUNCIONARIO}</div>
+            <div class="odf">OP:</div>
             <div class="bold">
-                OP: {NUMERO_OPERACAO} - {CODIGO_MAQUINA} - {dadosOdf[0]
-                    .QTDE_ODF[0]}
+                {NUMERO_OPERACAO} - {CODIGO_MAQUINA} - {dadosOdf[0].QTDE_ODF[0]}
             </div>
         </div>
     {/await}
@@ -57,88 +59,120 @@
     .bold {
         font-weight: bold;
     }
-    .areaCodigos {
-        padding: 0%;
-        margin-top: 5%;
-        height: 18rem;
-        display: flex;
-        flex-direction: column;
-        align-items: left;
-        justify-content: space-between;
-    }
 
-
-
-    @media (max-width: 400px) {
-        .odf{
+    @media screen and (max-width: 550px) {
+        .odf {
             font-size: 12px;
         }
-        .bold{
-            font-size: 12px;
+        .bold {
+            font-size: 15px;
+        }
+        .areaCodigos {
+            padding: 0%;
+            margin-right: 0px;
+            margin-left: 5px;
+            margin-bottom: 2%;
+            margin-top: 10px;
+            justify-content: flex-start;
+            align-items: left;
+            text-align: left;
         }
     }
 
-    /* @media (max-width: 600px) {
-        .odf{
-            font-size: 5px;
+    @media screen and (min-width: 551px) {
+        .odf {
+            font-size: 20px;
         }
-        .bold{
-            width: 40px;
+        .bold {
+            font-size: 22px;
         }
-    }
-
-    @media(max-width: 850px){
-       
-        .odf{
-            font-size: 10px;
-        }
-        .bold{
-            font-size: 10px;
-        }
-    }
-
-    @media(max-width: 1000px){
-        
-                
-        .odf{
-            font-size: 10px;
-        }
-
-        .bold{
-            font-size: 10px;
+        .areaCodigos {
+            width: 250px;
+            padding: 0%;
+            margin-right: 0px;
+            margin-left: 20px;
+            margin-bottom: 2%;
+            margin-top: 10px;
+            justify-content: flex-start;
+            align-items: left;
+            text-align: left;
         }
     }
 
-    @media(max-width: 1200px){
-        .bold{
-            font-size: 10px;
+    @media screen and (min-width: 820px) {
+        .odf {
+            font-size: 14px;
         }
-        
-        .odf{
-            font-size: 10px;
+        .bold {
+            font-size: 16px;
         }
-    }
-    
-
-    @media(max-width: 1400px){
-        
-        .odf{
-            font-size: 10px;
-        }
-
-        .bold{
-            font-size: 10px;
+        .areaCodigos {
+            width: 150px;
+            padding: 0%;
+            margin-right: 0px;
+            margin-left: 20px;
+            margin-bottom: 2%;
+            margin-top: 10px;
+            justify-content: flex-start;
+            align-items: left;
+            text-align: left;
         }
     }
+    @media screen and (min-width: 1000px) {
+        .odf {
+            font-size: 20px;
+        }
+        .bold {
+            font-size: 20px;
+        }
+        .areaCodigos {
+            padding: 0%;
+            margin-right: 0px;
+            margin-left: 20px;
+            margin-bottom: 2%;
+            margin-top: 10px;
+            justify-content: flex-start;
+            align-items: left;
+            text-align: left;
+        }
+    }
+    @media screen and (min-width: 1200px) {
+        .odf {
+            font-size: 20px;
+        }
+        .bold {
+            font-size: 20px;
+        }
+        .areaCodigos {
+            width: 300px;
+            padding: 0%;
+            margin-right: 0px;
+            margin-left: 20px;
+            margin-bottom: 2%;
+            margin-top: 10px;
+            justify-content: flex-start;
+            align-items: left;
+            text-align: left;
+        }
+    }
 
-    @media(max-width: 1600px){
-        
-        .odf{
-            font-size: 10px;
+    @media screen and (min-width: 1600px) {
+        .odf {
+            font-size: 25px;
+            margin-left: 5px;
         }
-       
-        .bold{
-            font-size: 10px;
+        .bold {
+            font-size: 25px;
         }
-    } */
+        .areaCodigos {
+            padding: 0%;
+            margin-right: 0px;
+            margin-left: 20px;
+            margin-bottom: 2%;
+            margin-top: 10px;
+            justify-content: flex-start;
+            align-items: left;
+            text-align: left;
+        }
+    }
 </style>

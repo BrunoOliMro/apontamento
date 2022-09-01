@@ -38,7 +38,9 @@
     function right() {
         rotation += 90;
         document.getElementById("some").style.transition = "all 1s";
-        document.getElementById("some").style.transform = `rotate(${rotation}deg)`;
+        document.getElementById(
+            "some"
+        ).style.transform = `rotate(${rotation}deg)`;
         document.getElementById("some").style.marginRight = "2%";
         document.getElementById("some").style.marginLeft = "2%";
     }
@@ -46,33 +48,36 @@
     function left() {
         rotation -= 90;
         document.getElementById("some").style.transition = "all 1s";
-        document.getElementById("some").style.transform = `rotate(${rotation}deg)`;
+        document.getElementById(
+            "some"
+        ).style.transform = `rotate(${rotation}deg)`;
         document.getElementById("some").style.marginRight = "2%";
         document.getElementById("some").style.marginLeft = "2%";
-    }1
+    }
+    1;
 
     function zoomIn() {
         var img = document.getElementById("some");
         var width = img.clientWidth;
         img.style.width = width + zoomNumber + "px";
-        img.style.marginLeft = "2%"
-        img.style.marginRight = "2%"
-        img.style.display = "flex"
-        img.style.justifyContent = "center"
-        img.style.alignItems = "center"
-        img.style.textAlign = "center"
+        img.style.marginLeft = "2%";
+        img.style.marginRight = "2%";
+        img.style.display = "flex";
+        img.style.justifyContent = "center";
+        img.style.alignItems = "center";
+        img.style.textAlign = "center";
     }
 
     function zoomOut() {
         var img = document.getElementById("some");
         var width = img.clientWidth;
         img.style.width = width - zoomNumber + "px";
-        img.style.marginLeft = "2%"
-        img.style.marginRight = "2%"
-        img.style.display = "flex"
-        img.style.justifyContent = "center"
-        img.style.alignItems = "center"
-        img.style.textAlign = "center"
+        img.style.marginLeft = "2%";
+        img.style.marginRight = "2%";
+        img.style.display = "flex";
+        img.style.justifyContent = "center";
+        img.style.alignItems = "center";
+        img.style.textAlign = "center";
     }
 
     function print() {
@@ -91,7 +96,7 @@
         <button id="left" on:click={left}>ESQUERDA</button>
         <button id="zoomIn" on:click={zoomIn}>ZOOM +</button>
         <button id="zoomOut" on:click={zoomOut}>ZOOM -</button>
-        <button id="zoomOut" on:click={print}>IMPRIMIR</button>
+        <button id="print" on:click={print}>IMPRIMIR</button>
     </div>
 </main>
 
@@ -110,5 +115,219 @@
         justify-content: center;
         align-items: center;
         text-align: center;
+    }
+
+    @media screen and (max-width: 550px) {
+        .subtitle {
+            font-size: 25px;
+        }
+        #right {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #left {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #zoomIn {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #zoomOut {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #print {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+    }
+
+    @media screen and (min-width: 551px) {
+        .subtitle {
+            font-size: 25px;
+        }
+        #right {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #left {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #zoomIn {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #zoomOut {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #print {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+    }
+
+    @media screen and (min-width: 860px) {
+        .subtitle {
+            font-size: 25px;
+        }
+        #right {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #left {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #zoomIn {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #zoomOut {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #print {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+    }
+    @media screen and (min-width: 1000px) {
+        .subtitle {
+            font-size: 25px;
+        }
+        #right {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #left {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #zoomIn {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #zoomOut {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #print {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+    }
+    @media screen and (min-width: 1200px) {
+        .subtitle {
+            font-size: 30px;
+        }
+        #right {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #left {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #zoomIn {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #zoomOut {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #print {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+    }
+    @media screen and (min-width: 1400px) {
+        .subtitle {
+            font-size: 30px;
+        }
+        #right {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #left {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #zoomIn {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #zoomOut {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #print {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+    }
+
+    @media screen and (min-width: 1600px) {
+        .subtitle {
+            font-size: 30px;
+        }
+        #right {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #left {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #zoomIn {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #zoomOut {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
+        #print {
+            width: 50px;
+            height: 20px;
+            font-size: 5px;
+        }
     }
 </style>

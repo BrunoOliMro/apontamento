@@ -15,22 +15,32 @@
   }
 </script>
 
-<main>
+<main class="main">
   {#await resultado}
     <div>...</div>
   {:then dadosOdf}
-    <div>
-      INICIO: {dadosOdf[0].DT_INICIO_OP.slice(6, 8)} /
+    <div class="div1">
+      <div class="title">
+        INICIO:
+      </div>
+      {dadosOdf[0].DT_INICIO_OP.slice(6, 8)} /
       {dadosOdf[0].DT_INICIO_OP.slice(4, 6)} /
       {dadosOdf[0].DT_INICIO_OP.slice(0, 4)}
-      - {(dadosOdf[0].HORA_INICIO = dadosOdf[0].HORA_INICIO === null ? "SEM DADOS" : dadosOdf[0].HORA_INICIO)}
+      - {(dadosOdf[0].HORA_INICIO =
+        dadosOdf[0].HORA_INICIO === null
+          ? "SEM DADOS"
+          : dadosOdf[0].HORA_INICIO)}
     </div>
 
-    <div>
-      FINAL: {dadosOdf[0].DT_FIM_OP.slice(6, 8)} /
+    <div class="div2">
+      <div class="title">
+        FINAL:
+      </div>
+      {dadosOdf[0].DT_FIM_OP.slice(6, 8)} /
       {dadosOdf[0].DT_FIM_OP.slice(4, 6)} /
-      {dadosOdf[0].DT_FIM_OP.slice(0, 4)} - 
-      {(dadosOdf[0].HORA_FIM = dadosOdf[0].HORA_FIM === null ? "SEM DADOS" : dadosOdf[0].HORA_FIM)}
+      {dadosOdf[0].DT_FIM_OP.slice(0, 4)} -
+      {(dadosOdf[0].HORA_FIM =
+        dadosOdf[0].HORA_FIM === null ? "SEM DADOS" : dadosOdf[0].HORA_FIM)}
     </div>
   {/await}
 </main>
@@ -43,9 +53,95 @@
     justify-content: space-around;
   }
 
-  @media (max-width: 400px) {
-        main {
-            font-size: 10px;
-        }
+  @media screen and (max-width: 574px) {
+    .main {
+      margin-top: 6%;
+      font-size: 15px;
+      margin-left: 1%;
+      margin-right: 1%;
+      justify-content: space-around;
+      text-align: left;
+      align-items: left;
     }
+    div{
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .title{
+      font-weight: normal;
+    }
+  }
+  @media screen and (min-width: 575px) {
+    .main {
+      margin-left: 1%;
+      margin-right: 1%;
+      justify-content: space-around;
+      text-align: left;
+      align-items: left;
+    }
+    div{
+      font-size: 22px;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .title{
+      font-weight: normal;
+    }
+  }
+  @media screen and (min-width: 860px) {
+    .main {
+      font-size: 20px;
+      margin-left: 1%;
+      margin-right: 1%;
+      justify-content: space-around;
+      text-align: left;
+      align-items: left;
+    }
+    .title{
+      font-weight: normal;
+    }
+  }
+
+  @media screen and (min-width: 1000px) {
+    .main {
+      font-size: 20px;
+      margin-left: 1%;
+      margin-right: 1%;
+      justify-content: space-around;
+      text-align: left;
+      align-items: left;
+    }
+    .title{
+      font-weight: normal;
+    }
+  }
+  @media screen and (min-width: 1200px) {
+    .main {
+      font-size: 20px;
+      margin-left: 1%;
+      margin-right: 1%;
+      justify-content: space-around;
+      text-align: left;
+      align-items: left;
+    }
+    .title{
+      font-weight: normal;
+    }
+  }
+
+  @media screen and (min-width: 1600px) {
+    .main {
+      font-size: 25px;
+      margin-left: 1%;
+      margin-right: 1%;
+      justify-content: space-around;
+      text-align: left;
+      align-items: left;
+    }
+    .title{
+      font-weight: normal;
+    }
+  }
 </style>

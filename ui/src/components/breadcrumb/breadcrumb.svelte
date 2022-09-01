@@ -14,11 +14,48 @@
     margin-bottom: 1%;
   }
 
-  @media (max-width: 400px) {
+  @media screen and (max-width: 500px) {
     .breadcrumb {
-      margin-bottom: 15%;
-      margin-top: 15%;
-      font-size: 12px;
+      margin-bottom: 1%;
+      margin-left: 1%;
+      font-size: 13px;
+    }
+  }
+  @media screen and (min-width: 501px) {
+    .breadcrumb {
+      margin-bottom: 1%;
+      margin-left: 1%;
+      font-size: 15px;
+    }
+  }
+  @media screen and (min-width: 820px) {
+    .breadcrumb {
+      margin-bottom: 1%;
+      margin-left: 1%;
+      font-size: 16px;
+    }
+  }
+
+  @media screen and (min-width: 1000px) {
+    .breadcrumb {
+      margin-bottom: 1%;
+      margin-left: 1%;
+      font-size: 18px;
+    }
+  }
+  @media screen and (min-width: 1200px) {
+    .breadcrumb {
+      margin-bottom: 1%;
+      margin-left: 1%;
+      font-size: 20px;
+    }
+  }
+
+  @media screen and (min-width: 1600px) {
+    .breadcrumb {
+      margin-bottom: 1%;
+      margin-left: 1%;
+      font-size: 21px;
     }
   }
 </style>

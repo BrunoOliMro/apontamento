@@ -9,9 +9,6 @@
   let urlS = `/api/v1/apontamento`;
 
   async function doPost() {
-    if (codigoBarras.length <= 16) {
-    } else {
-    }
     const res = await fetch(urlS, {
       method: "POST",
       body: JSON.stringify({ codigoBarras: !codigoBarras ? "" : codigoBarras }),
@@ -58,8 +55,6 @@
     <form action="/api/v1/apontamento" method="POST" on:submit={handleSubmit}>
       <label class="input">
         <input
-          data-bs-toggle="modal"
-          data-bs-target="#exampleModalCenter"
           bind:value
           on:input={blockForbiddenChars}
           on:input={setValues}
@@ -74,8 +69,6 @@
       <div id="popUpCracha">
         <div id="title">Colaborador</div>
         <input
-          data-bs-toggle="modal show"
-          data-bs-target="#exampleModalCenter"
           on:input={blockForbiddenChars}
           name="MATRIC"
           id="MATRIC"
@@ -94,36 +87,73 @@
     Codigo de barras Invalido
   </button> -->
 
+  <!-- {#await result.ok}
+    <div>...</div>
+  {:then result.ok} 
   <div
-    class="modal fade show"
-    id="exampleModalCenter"
-    tabindex="-1"
-    role="dialog"
-    aria-labelledby="exampleModalCenterTitle"
-    aria-hidden="true"
-  >
-    <div>
-      <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLongTitle">
-              Codigo de barras Invalido
-            </h5>
-          </div>
-          <div class="modal-body">
-            <p>Codigo de barras não encontrado ou não é valido</p>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal">Fechar</button
-            >
-          </div>
+  class="modal fade show"
+  id="exampleModalCenter"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="exampleModalCenterTitle"
+  aria-hidden="true"
+>
+  <div>
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">
+            Codigo de barras Invalido
+          </h5>
+        </div>
+        <div class="modal-body">
+          <p>Codigo de barras não encontrado ou não é valido</p>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal">Fechar</button
+          >
         </div>
       </div>
     </div>
   </div>
+</div>
+{/await} -->
+
+  {#if result.ok}
+    <div
+      class="modal fade show"
+      id="exampleModalCenter"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="exampleModalCenterTitle"
+      aria-hidden="true"
+    >
+      <div>
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLongTitle">
+                Codigo de barras Invalido
+              </h5>
+            </div>
+            <div class="modal-body">
+              <p>Codigo de barras não encontrado ou não é valido</p>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal">Fechar</button
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {/if}
 </main>
 
 <style>
@@ -154,12 +184,88 @@
     align-items: center;
   }
 
-  @media (max-width: 460px) {
+  @media (max-width: 820px) {
     input {
       width: 150px;
     }
     #title {
       font-size: 20px;
+    }
+  }
+
+  @media (max-width: 1200px) {
+    input {
+      width: 150px;
+    }
+    #title {
+      font-size: 20px;
+    }
+  }
+
+  @media screen and (max-width: 550px) {
+    input {
+      width: 170px;
+    }
+    #title {
+      margin-top: 5%;
+      font-size: 20px;
+    }
+  }
+
+  @media screen and (min-width: 551px) {
+    input {
+      width: 190px;
+    }
+    #title {
+      margin-top: 5%;
+      font-size: 25px;
+    }
+  }
+
+  @media screen and (min-width: 860px) {
+    input {
+      width: 240px;
+    }
+    #title {
+      margin-top: 5%;
+      font-size: 25px;
+    }
+  }
+  @media screen and (min-width: 1000px) {
+    input {
+      width: 250px;
+    }
+    #title {
+      margin-top: 5%;
+      font-size: 25px;
+    }
+  }
+  @media screen and (min-width: 1200px) {
+    input {
+      width: 250px;
+    }
+    #title {
+      margin-top: 5%;
+      font-size: 30px;
+    }
+  }
+  @media screen and (min-width: 1400px) {
+    input {
+      width: 300px;
+    }
+    #title {
+      margin-top: 5%;
+      font-size: 35px;
+    }
+  }
+
+  @media screen and (min-width: 1600px) {
+    input {
+      width: 400px;
+    }
+    #title {
+      margin-top: 5%;
+      font-size: 40px;
     }
   }
 </style>
