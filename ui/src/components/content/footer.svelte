@@ -6,7 +6,7 @@
   const headers = new Headers();
   // headers.append("Content-Type", "application/json");
 
-  let urlString = `/api/v1/apontamento?NUMERO_ODF=${NUMERO_ODF}&CODIGO_MAQUINA=${CODIGO_MAQUINA}&NUMERO_OPERACAO=${NUMERO_OPERACAO}`;
+  let urlString = `/api/v1/odf?NUMERO_ODF=${NUMERO_ODF}&CODIGO_MAQUINA=${CODIGO_MAQUINA}&NUMERO_OPERACAO=${NUMERO_OPERACAO}`;
   let resultado = getOdfData();
   async function getOdfData() {
     const res = await fetch(urlString);

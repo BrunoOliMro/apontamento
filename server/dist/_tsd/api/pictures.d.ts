@@ -1,7 +1,4 @@
-/// <reference types="node" />
 export declare const pictures: {
-    getPicturePath: (item: any, hex: WithImplicitCoercion<string> | {
-        [Symbol.toPrimitive](hint: "string"): string;
-    } | null) => string;
+    getPicturePath: (item: any, hex: String, sufixo: String) => string;
 };
 //# sourceMappingURL=pictures.d.ts.map

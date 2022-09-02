@@ -8,7 +8,7 @@ const apiRouter = Router();
 // /api/v1/
 
 apiRouter.route("/apontamentoCracha")
-    .post(async (req, res, next) => {
+    .post(async (req, res) => {
         let maxRange = 600000
         //Sanitizar codigo
         let MATRIC: any = (req.body["MATRIC"] as string).trim()
@@ -17,7 +17,6 @@ apiRouter.route("/apontamentoCracha")
         if (MATRIC === "") {
             res.redirect(`/#/codigobarras`)
         } else {
-
             const connection = await mssql.connect(sqlConfig);
             try {
                 const resource = await connection.query(` 
@@ -34,21 +33,16 @@ apiRouter.route("/apontamentoCracha")
                     let mili = start.getMilliseconds();
                     console.log(mili / 1000)
                     res.cookie("starterBarcode", start.getTime())
-
                     res.cookie("MATRIC", resource[0].MATRIC)
                     res.cookie("FUNCIONARIO", resource[0].FUNCIONARIO)
-
                     res.redirect("/#/codigobarras")
-                    return next()
                 } else {
                     res.redirect("/#/codigobarras")
-                    return next()
                 }
             } catch (error) {
                 console.log(error)
             } finally {
                 await connection.close()
-                next()
             }
         }
     });
@@ -56,26 +50,19 @@ apiRouter.route("/apontamentoCracha")
 apiRouter.route("/apontamento")
     .post(
         //Sanitização do codigo
-        async (req, _res, next) => {
-            req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
-            return next();
-
+        async (req, res, next) => {
+            const barcode = req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
+            console.log(barcode)
             function sanitize(input: string) {
                 const allowedChars = /[A-Za-z0-9]/;
-                return input
-                    .split("")
-                    .map((char) => (allowedChars.test(char) ? char : ""))
-                    .join("");
+                return input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
             }
-        },
-        async (req, res, next) => {
-            const barcode = req.body["codigoBarras"];
+            // const barcode = req.body["codigoBarras"];
             res.cookie("barcode", barcode)
-            const tool = 0
 
-            if (barcode === "") {
-                res.redirect('/#/codigobarras')
-            } else {
+            // if (barcode === "") {
+            //     res.redirect('/#/codigobarras')
+            // } else {
                 //Divide o codigo em 3 partes para a verificação na proxima etapa
                 const dados = {
                     numOdf: Number(barcode.slice(10)),
@@ -101,46 +88,43 @@ apiRouter.route("/apontamento")
                         ORDER BY NUMERO_OPERACAO ASC
                         `.trim()
                     ).then(result => result.recordset);
-
                     res.cookie("NUMERO_ODF", resource[0].NUMERO_ODF)
                     res.cookie("CODIGO_MAQUINA", resource[0].CODIGO_MAQUINA)
-
                     res.cookie("NUMERO_OPERACAO", resource[0].NUMERO_OPERACAO)
                     res.cookie("CODIGO_PECA", resource[0].CODIGO_PECA)
-
-                    res.redirect("/#/ferramenta")
+                    res.redirect("/#/codigobarras")
                     //Verifica se houve um resultado em resource e caso haja redireciona
-                    if (tool > 0) {
-                        // Vai ate o final da ferramenta
-                        // Vai até o final do processo
-                        var secondSetup = performance.now()
-                        res.cookie("secondSetup", secondSetup)
-                        console.log("Iniciou processo: " + secondSetup)
-                        res.redirect("/#/ferramenta")
-                    } else {
-                        res.redirect("/#/codigobarras")
-                    }
+                    // if (tool > 0) {
+                    //     // Vai ate o final da ferramenta
+                    //     // Vai até o final do processo
+                    //     var secondSetup = performance.now()
+                    //     res.cookie("secondSetup", secondSetup)
+                    //     console.log("Iniciou processo: " + secondSetup)
+                    //     res.redirect("/#/ferramenta")
+                    // } else {
+                    // }
                 } catch (error) {
                     console.log(error);
                 } finally {
                     await connection.close();
-                    next()
                 }
             }
-        }
+        // }
     )
-    .get(async (req, res, next) => {
+
+apiRouter.route("/odf")
+    .get(async (req, res) => {
         let NUMERO_ODF: any = (req.query["NUMERO_ODF"] as string).trim() || undefined;
         let CODIGO_MAQUINA = (req.query["CODIGO_MAQUINA"] as string).trim() || undefined;
         let NUMERO_OPERACAO = (req.query["NUMERO_OPERACAO"] as string).trim() || undefined;
-
-        // SQL QUERY TO (
+        //(
         //     SELECT TOP 1 ISNULL(NOME_CRACHA,'INVALIDO') AS NOME_CRACHA, US.NOME FROM FUNCIONARIOS (NOLOCK)
         //     INNER JOIN USUARIOS_SISTEMA US (NOLOCK) ON US.R_E_C_N_O_ = FUNCIONARIOS.USUARIO_SISTEMA
         //     WHERE FUNCIONARIOS.CRACHA = AS OPERADOR'   
         // ) AS OPERADOR
         const connection = await mssql.connect(sqlConfig);
         try {
+
             const resource = await connection.query(`
                 SELECT TOP 1
                 [NUMERO_ODF], 
@@ -168,15 +152,15 @@ apiRouter.route("/apontamento")
             console.log(error);
         } finally {
             await connection.close()
-            next()
         }
     })
 
 
 apiRouter.route("/IMAGEM")
     .get(async (req, res) => {
-        const NUMPEC = req.cookies["CODIGO_PECA"]
+        const NUMPEC = await req.cookies["CODIGO_PECA"]
         const connection = await mssql.connect(sqlConfig);
+        let statusImg = "_status"
         try {
             const resource = await connection.query(`
             SELECT TOP 1
@@ -188,9 +172,10 @@ apiRouter.route("/IMAGEM")
             AND IMAGEM IS NOT NULL
             `);
             const result = resource.recordset.map(record => {
-                const imgPath = pictures.getPicturePath(record["NUMPEC"], record["IMAGEM"]);
+                const imgPath = pictures.getPicturePath(record[`NUMPEC`], record["IMAGEM"], (statusImg));
                 return {
                     img: imgPath, // caminho da imagem (ex.: "")
+                    sufixo: record["sufixo"]
                 }
             });
             res.json(result)
@@ -265,8 +250,9 @@ apiRouter.route("/ferramenta")
     })
     //GET das Fotos das ferramentas
     .get(async (req, res) => {
-        const CODIGO = req.cookies["CODIGO_PECA"]
+        const CODIGO = await req.cookies["CODIGO_PECA"]
         const connection = await mssql.connect(sqlConfig);
+        let ferramenta = "_ferr"
         console.log(CODIGO)
         try {
             const resource = await connection.query(`
@@ -279,12 +265,9 @@ apiRouter.route("/ferramenta")
             AND IMAGEM IS NOT NULL
             `);
             const result = resource.recordset.map(record => {
-                const imgPath = pictures.getPicturePath(record["CODIGO"], record["IMAGEM"]);
+                const imgPath = pictures.getPicturePath(record["CODIGO"], record["IMAGEM"], (ferramenta));
                 return {
                     img: imgPath, // caminho da imagem (ex.: "")
-                    razao: record["RAZAO"],
-                    codigoInterno: record["CODIGO"],
-                    total: record["TOTAL"],
                 }
             });
             if (result.length > 0) {
@@ -399,32 +382,26 @@ apiRouter.route("/rip")
 apiRouter.route("/desenho")
     //GET das Fotos das ferramentas
     .get(async (req, res) => {
-        let end = new Date();
-        let start = req.cookies["start"]
-        let final = end.getTime() - Number(start)
-        console.log("operação: " + final + " milisegundos")
-
-        const NUMPEC = req.cookies["CODIGO_PECA"]
+        const NUMPEC = await req.cookies["CODIGO_PECA"]
         const connection = await mssql.connect(sqlConfig);
+        let desenho = "_desenho"
         try {
             const resource = await connection.query(`
             SELECT
             [NUMPEC],
             [IMAGEM]
-            FROM QA_LAYOUT (NOLOCK) 
+            FROM  QA_LAYOUT(NOLOCK) 
             WHERE 1 = 1 
             AND NUMPEC = '${NUMPEC}'
             AND IMAGEM IS NOT NULL`);
             const result = resource.recordset.map(record => {
-                const imgPath = pictures.getPicturePath(record["NUMPEC"], record["IMAGEM"]);
+                const imgPath = pictures.getPicturePath(record[`NUMPEC`], record["IMAGEM"], desenho);
                 return {
-                    img: imgPath, // caminho da imagem (ex.: "")
-                    razao: record["RAZAO"],
-                    codigoInterno: record["NUMPEC"],
-                    total: record["TOTAL"],
+                    img: imgPath,
+                    codigoInterno: record[`NUMPEC`],
+                    sufixo: record["sufixo"],
                 }
             });
-
             res.json(result);
         } catch (error) {
             console.log(error)

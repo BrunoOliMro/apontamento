@@ -6,111 +6,170 @@
     let imagemBack = [];
 
     let urlString = `/api/v1/desenho?imagemBack=${imagemBack}`;
+
     async function getIMAGEM() {
         const res = await fetch(urlString);
         imagemBack = await res.json();
-        console.log(imagemBack);
-        return imagemBack;
+        return imagemBack[0].img;
     }
 
     let resultado = getIMAGEM();
-    const some = resultado.then(() => {
-        const atributeSrcImg = imagemBack[0].img;
-        let divSelector = document.querySelector("div");
-        let imgElement = document.createElement("img");
-        divSelector.appendChild(imgElement);
-        imgElement.setAttribute("src", atributeSrcImg);
-        imgElement.setAttribute("alt", "ferramenta");
-        imgElement.id = "some";
-        imgElement.classList.add("some");
-        imgElement.style.margin = "2%";
-        imgElement.style.borderRadius = "3px";
-        imgElement.style.display = "flex";
-        imgElement.style.alignItems = "center";
-        imgElement.style.justifyContent = "center";
-        imgElement.style.textAlign = "center";
-        imgElement.style.overflowY = "hidden";
-        imgElement.style.overflowX = "hidden";
-        imgElement.style.maxWidth = "90%";
-        imgElement.style.minWidth = "30%";
+    resultado.then(() => {
+        imagemBack.forEach((element) => {
+            imagemBack[0].img;
+        });
     });
+    // const some = resultado.then(() => {
+    //     const atributeSrcImg = imagemBack[0].img;
+    //     let divSelector = document.querySelector("div");
+    //     let imgElement = document.createElement("img");
+    //     divSelector.appendChild(imgElement);
+    //     imgElement.setAttribute("src", atributeSrcImg);
+    //     imgElement.setAttribute("alt", "ferramenta");
+    // });
 
     function right() {
         rotation += 90;
-        document.getElementById("some").style.transition = "all 1s";
+        document.getElementById("img").style.transition = "all 1s";
         document.getElementById(
-            "some"
+            "img"
         ).style.transform = `rotate(${rotation}deg)`;
-        document.getElementById("some").style.marginRight = "2%";
-        document.getElementById("some").style.marginLeft = "2%";
     }
 
     function left() {
         rotation -= 90;
-        document.getElementById("some").style.transition = "all 1s";
+        document.getElementById("img").style.transition = "all 1s";
         document.getElementById(
-            "some"
+            "img"
         ).style.transform = `rotate(${rotation}deg)`;
-        document.getElementById("some").style.marginRight = "2%";
-        document.getElementById("some").style.marginLeft = "2%";
     }
     1;
 
     function zoomIn() {
-        var img = document.getElementById("some");
+        var img = document.getElementById("img");
         var width = img.clientWidth;
         img.style.width = width + zoomNumber + "px";
-        img.style.marginLeft = "2%";
-        img.style.marginRight = "2%";
-        img.style.display = "flex";
-        img.style.justifyContent = "center";
-        img.style.alignItems = "center";
-        img.style.textAlign = "center";
     }
 
     function zoomOut() {
-        var img = document.getElementById("some");
+        var img = document.getElementById("img");
         var width = img.clientWidth;
         img.style.width = width - zoomNumber + "px";
-        img.style.marginLeft = "2%";
-        img.style.marginRight = "2%";
-        img.style.display = "flex";
-        img.style.justifyContent = "center";
-        img.style.alignItems = "center";
-        img.style.textAlign = "center";
     }
 
     function print() {
-        let myWindow = window.open();
-        myWindow.close();
-        myWindow.focus();
-        myWindow.print();
+        window.print();
     }
 </script>
 
-<main>
+<main class="main">
     <Breadcrumb />
     <div id="subtitle" class="subtitle">{Subtitle}</div>
     <div id="buttons">
-        <button id="right" on:click={right}>DIREITA</button>
-        <button id="left" on:click={left}>ESQUERDA</button>
-        <button id="zoomIn" on:click={zoomIn}>ZOOM +</button>
-        <button id="zoomOut" on:click={zoomOut}>ZOOM -</button>
-        <button id="print" on:click={print}>IMPRIMIR</button>
+        <button
+            type="button"
+            class="btn btn-primary"
+            id="right"
+            on:click={right}>DIREITA</button
+        >
+        <button type="button" class="btn btn-primary" id="left" on:click={left}
+            >ESQUERDA</button
+        >
+        <button
+            type="button"
+            class="btn btn-primary"
+            id="zoomIn"
+            on:click={zoomIn}>ZOOM +</button
+        >
+        <button
+            type="button"
+            class="btn btn-primary"
+            id="zoomOut"
+            on:click={zoomOut}>ZOOM -</button
+        >
+        <button
+            type="button"
+            class="btn btn-primary"
+            id="print"
+            on:click={print}>IMPRIMIR</button
+        >
+    </div>
+    <div class="newDiv">
+        {#await resultado}
+            <div>...</div>
+        {:then data}
+            <img id="img" class="img" src={imagemBack[0].img} alt="" />
+        {/await}
     </div>
 </main>
 
 <style>
-    main {
+    div {
+        margin: 5%;
+        display: flex;
+        flex-direction: column;
+    }
+    .main {
         margin: 1%;
     }
     .subtitle {
+        margin: 1%;
+        padding: 0%;
         font-size: 30px;
         display: flex;
         justify-content: center;
     }
+    .newDiv {
+        margin: 0%;
+        padding: 0%;
+        display: flex;
+        justify-content: center;
+        text-align: center;
+        align-items: center;
+    }
+    .img {
+        display: flex;
+        min-width: 10%;
+        border-radius: 3px;
+        margin: 1%;
+        padding: 0%;
+    }
 
     #buttons {
+        margin: 0%;
+        padding: 0%;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+    #right {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+
+    #left {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+    #zoomIn {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+    #zoomOut {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+    #print {
         display: flex;
         justify-content: center;
         align-items: center;
@@ -119,63 +178,69 @@
 
     @media screen and (max-width: 550px) {
         .subtitle {
-            font-size: 25px;
+            font-size: 20px;
         }
         #right {
-            width: 50px;
+            width: 48px;
             height: 20px;
-            font-size: 5px;
+            font-size: 7px;
         }
         #left {
-            width: 50px;
+            width: 48px;
             height: 20px;
-            font-size: 5px;
+            font-size: 7px;
         }
         #zoomIn {
-            width: 50px;
+            width: 55px;
             height: 20px;
-            font-size: 5px;
+            font-size: 7px;
         }
         #zoomOut {
-            width: 50px;
+            width: 55px;
             height: 20px;
-            font-size: 5px;
+            font-size: 7px;
         }
         #print {
-            width: 50px;
+            width: 48px;
             height: 20px;
-            font-size: 5px;
+            font-size: 7px;
+        }
+        button {
+            margin: 1%;
         }
     }
 
     @media screen and (min-width: 551px) {
         .subtitle {
-            font-size: 25px;
+            font-size: 22px;
         }
         #right {
             width: 50px;
             height: 20px;
-            font-size: 5px;
+            font-size: 7px;
         }
         #left {
             width: 50px;
             height: 20px;
-            font-size: 5px;
+            font-size: 7px;
         }
         #zoomIn {
-            width: 50px;
+            width: 55px;
             height: 20px;
-            font-size: 5px;
+            font-size: 7px;
         }
         #zoomOut {
-            width: 50px;
+            width: 55px;
             height: 20px;
-            font-size: 5px;
+            font-size: 7px;
         }
         #print {
             width: 50px;
             height: 20px;
-            font-size: 5px;
+            font-size: 7px;
+        }
+        button {
+            margin: 1%;
         }
     }
 
@@ -184,150 +249,165 @@
             font-size: 25px;
         }
         #right {
-            width: 50px;
+            width: 55px;
             height: 20px;
-            font-size: 5px;
+            font-size: 7px;
         }
         #left {
-            width: 50px;
+            width: 55px;
             height: 20px;
-            font-size: 5px;
+            font-size: 7px;
         }
         #zoomIn {
-            width: 50px;
-            height: 20px;
-            font-size: 5px;
+            width: 55px;
+            height: 22px;
+            font-size: 7px;
         }
         #zoomOut {
-            width: 50px;
-            height: 20px;
-            font-size: 5px;
+            width: 55px;
+            height: 22px;
+            font-size: 7px;
         }
         #print {
-            width: 50px;
+            width: 55px;
             height: 20px;
-            font-size: 5px;
+            font-size: 7px;
+        }
+        button {
+            margin: 1%;
         }
     }
     @media screen and (min-width: 1000px) {
         .subtitle {
-            font-size: 25px;
+            font-size: 30px;
         }
         #right {
-            width: 50px;
+            width: 60px;
             height: 20px;
-            font-size: 5px;
+            font-size: 8px;
         }
         #left {
-            width: 50px;
+            width: 60px;
             height: 20px;
-            font-size: 5px;
+            font-size: 8px;
         }
         #zoomIn {
-            width: 50px;
-            height: 20px;
-            font-size: 5px;
+            width: 60px;
+            height: 22px;
+            font-size: 8px;
         }
         #zoomOut {
-            width: 50px;
-            height: 20px;
-            font-size: 5px;
+            width: 60px;
+            height: 22px;
+            font-size: 8px;
         }
         #print {
-            width: 50px;
+            width: 60px;
             height: 20px;
-            font-size: 5px;
+            font-size: 8px;
+        }
+        button {
+            margin: 1%;
         }
     }
     @media screen and (min-width: 1200px) {
         .subtitle {
-            font-size: 30px;
+            font-size: 40px;
         }
         #right {
-            width: 50px;
+            width: 65px;
             height: 20px;
-            font-size: 5px;
+            font-size: 8px;
         }
         #left {
-            width: 50px;
+            width: 65px;
             height: 20px;
-            font-size: 5px;
+            font-size: 8px;
         }
         #zoomIn {
-            width: 50px;
-            height: 20px;
-            font-size: 5px;
+            width: 65px;
+            height: 22px;
+            font-size: 8px;
         }
         #zoomOut {
-            width: 50px;
-            height: 20px;
-            font-size: 5px;
+            width: 65px;
+            height: 22px;
+            font-size: 8px;
         }
         #print {
-            width: 50px;
+            width: 65px;
             height: 20px;
-            font-size: 5px;
+            font-size: 8px;
+        }
+        button {
+            margin: 1%;
         }
     }
     @media screen and (min-width: 1400px) {
         .subtitle {
-            font-size: 30px;
+            font-size: 50px;
         }
         #right {
-            width: 50px;
+            width: 80px;
             height: 20px;
-            font-size: 5px;
+            font-size: 10px;
         }
         #left {
-            width: 50px;
+            width: 80px;
             height: 20px;
-            font-size: 5px;
+            font-size: 10px;
         }
         #zoomIn {
-            width: 50px;
-            height: 20px;
-            font-size: 5px;
+            width: 80px;
+            height: 22px;
+            font-size: 10px;
         }
         #zoomOut {
-            width: 50px;
-            height: 20px;
-            font-size: 5px;
+            width: 80px;
+            height: 22px;
+            font-size: 10px;
         }
         #print {
-            width: 50px;
+            width: 80px;
             height: 20px;
-            font-size: 5px;
+            font-size: 10px;
+        }
+        button {
+            margin: 1%;
         }
     }
 
     @media screen and (min-width: 1600px) {
         .subtitle {
-            font-size: 30px;
+            font-size: 55px;
         }
         #right {
-            width: 50px;
-            height: 20px;
-            font-size: 5px;
+            width: 90px;
+            height: 28px;
+            font-size: 15px;
         }
         #left {
-            width: 50px;
-            height: 20px;
-            font-size: 5px;
+            width: 90px;
+            height: 28px;
+            font-size: 15px;
         }
         #zoomIn {
-            width: 50px;
-            height: 20px;
-            font-size: 5px;
+            width: 100px;
+            height: 30px;
+            font-size: 15px;
         }
         #zoomOut {
-            width: 50px;
-            height: 20px;
-            font-size: 5px;
+            width: 100px;
+            height: 30px;
+            font-size: 15px;
         }
         #print {
-            width: 50px;
-            height: 20px;
-            font-size: 5px;
+            width: 90px;
+            height: 28px;
+            font-size: 15px;
+        }
+        button {
+            margin: 1%;
         }
     }
 </style>

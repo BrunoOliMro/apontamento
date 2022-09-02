@@ -8,19 +8,19 @@ const OUTPUT_FOLDER = `/images`;
 let num = Math.floor(Math.random() * 10);
 let item2 = "-" + num;
 exports.pictures = {
-    getPicturePath: (item, hex, sufixo) => {
+    getPicturePath: (item, hex) => {
         try {
-            const filePath = path.join(picturesRelativePath, (`${item}${sufixo ? `${sufixo}` : ""}.jpg`));
+            const filePath = path.join(picturesRelativePath, `${item}.jpg`);
             if (fs.existsSync(filePath)) {
-                return `${OUTPUT_FOLDER}/${item}${sufixo}.jpg`;
+                return `${OUTPUT_FOLDER}/${item}.jpg`;
             }
             if (hex === null || hex.toString().trim() === "")
                 return `${OUTPUT_FOLDER}/sem_imagem.gif`;
             const buffer = Buffer.from(hex, "hex");
-            let url = `${OUTPUT_FOLDER}/${item}${sufixo}.jpg`;
+            let url = `${OUTPUT_FOLDER}/${item}.jpg`;
             fs.writeFileSync(filePath, buffer);
             if (url === url) {
-                url = `${OUTPUT_FOLDER}/${item + item2}${sufixo}.jpg`;
+                url = `${OUTPUT_FOLDER}/${item + item2}.jpg`;
             }
             return url;
         }
@@ -30,4 +30,4 @@ exports.pictures = {
         }
     }
 };
-//# sourceMappingURL=pictures.js.map
+//# sourceMappingURL=picture.js.map

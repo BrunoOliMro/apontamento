@@ -34,7 +34,7 @@
 
 <div>
     <Breadcrumb />
-    {Subtitle}
+    <div class="subtitle">{Subtitle}</div>
     <div class="content">
         <!-- <div id="popUP">
             <p>X</p>
@@ -63,4 +63,73 @@
         margin: 1%;
         border-radius: 5px;
     }
+    .subtitle{
+        font-size: 20px;
+    }
+
+    @media (max-width: 820px) {
+        div {
+        margin: 1%;
+        border-radius: 5px;
+    }
+  }
+
+  @media (max-width: 1200px) {
+    div {
+        margin: 1%;
+        border-radius: 5px;
+    }
+  }
+
+  @media screen and (max-width: 550px) {
+    div {
+        margin: 1%;
+        border-radius: 5px;
+    }
+  }
+
+  @media screen and (min-width: 551px) {
+    div {
+        margin: 1%;
+        border-radius: 5px;
+    }
+  }
+
+  @media screen and (min-width: 860px) {
+    div {
+        margin: 1%;
+        border-radius: 5px;
+    }
+  }
+  @media screen and (min-width: 1000px) {
+    div {
+        margin: 1%;
+        border-radius: 5px;
+    }
+  }
+  @media screen and (min-width: 1200px) {
+    div {
+        margin: 1%;
+        border-radius: 5px;
+    }
+  }
+  @media screen and (min-width: 1400px) {
+    div {
+        margin: 1%;
+        border-radius: 5px;
+    }
+    .subtitle{
+        font-size: 20px;
+    }
+  }
+
+  @media screen and (min-width: 1600px) {
+    div {
+        margin: 1%;
+        border-radius: 5px;
+    }
+    .subtitle{
+        font-size: 20px;
+    }
+  }
 </style>

@@ -104,8 +104,8 @@
     @media screen and (min-width: 860px) {
         .img {
             border-radius: 3px;
-            width: 250px;
-            height: 250px;
+            width: 285px;
+            height: 285px;
         }
         div {
             margin: 0px;
@@ -149,7 +149,7 @@
             text-align: left;
         }
         .item{
-            width: 30px;
+            width: 28px;
         }
     }
     

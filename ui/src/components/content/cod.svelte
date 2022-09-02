@@ -24,14 +24,14 @@
 
     console.log(someth);
 
-    let urlString = `/api/v1/apontamento?NUMERO_ODF=${NUMERO_ODF}&CODIGO_MAQUINA=${CODIGO_MAQUINA}&NUMERO_OPERACAO=${NUMERO_OPERACAO}`;
+    let urlString = `/api/v1/odf?NUMERO_ODF=${NUMERO_ODF}&CODIGO_MAQUINA=${CODIGO_MAQUINA}&NUMERO_OPERACAO=${NUMERO_OPERACAO}`;
     async function getOdfData() {
         const res = await fetch(urlString);
         const odfData = await res.json();
         console.log(odfData);
         return odfData;
     }
-    let resultado = getOdfData();
+    let resultado = getOdfData()
 </script>
 
 <main>
@@ -120,12 +120,13 @@
     }
     @media screen and (min-width: 1000px) {
         .odf {
-            font-size: 20px;
+            font-size: 16px;
         }
         .bold {
-            font-size: 20px;
+            font-size: 18px;
         }
         .areaCodigos {
+            width: 150px;
             padding: 0%;
             margin-right: 0px;
             margin-left: 20px;
