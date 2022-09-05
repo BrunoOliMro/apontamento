@@ -5,7 +5,7 @@
     let rotation = 0;
     let imagemBack = [];
 
-    let urlString = `/api/v1/desenho?imagemBack=${imagemBack}`;
+    let urlString = `/api/v1/desenho?=imagemBack${imagemBack}`;
 
     async function getIMAGEM() {
         const res = await fetch(urlString);

@@ -7,6 +7,7 @@
     let badFeed;
     let missingFeed;
     let reworkFeed;
+    let urlS = `/api/v1/apontar`
     import paradaMaq from "../content/nav.svelte";
 
     const headers = new Headers();
@@ -15,12 +16,13 @@
     async function getOdfData() {
         const res = await fetch(urlString);
         const odfData = await res.json();
+        alert("ajuwb uip")
         return odfData;
     }
 
     const doPost = async () => {
         const headers = new Headers();
-        const res = fetch(`/api/v1/apontar`, {
+        const res = await fetch(urlS, {
             method: "POST",
             body: JSON.stringify({
                 goodFeed: goodFeed,
@@ -30,6 +32,7 @@
             }),
             headers,
         });
+        alert("ta aqui");
     };
 
     let resultado = getOdfData();
@@ -154,7 +157,7 @@
         div {
             margin: 1%;
         }
-        #main{
+        #main {
             margin: 0%;
             padding: 0%;
         }

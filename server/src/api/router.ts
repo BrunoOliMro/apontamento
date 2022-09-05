@@ -10,12 +10,12 @@ const apiRouter = Router();
 apiRouter.route("/apontamentoCracha")
     .post(async (req, res) => {
         let maxRange = 600000
-        //Sanitizar codigo
-        let MATRIC: any = (req.body["MATRIC"] as string).trim()
-        res.cookie("MATRIC", MATRIC, { httpOnly: true, maxAge: maxRange })
 
-        if (MATRIC === "") {
-            res.redirect(`/#/codigobarras`)
+        //Sanitizar codigo
+        let MATRIC: String = req.body["MATRIC"].trim()
+
+        if (MATRIC === '') {
+            res.status(404).send("FUNCIONARIO DESTA MATRICULA NAO ENCONTRADO" + MATRIC)
         } else {
             const connection = await mssql.connect(sqlConfig);
             try {
@@ -33,14 +33,14 @@ apiRouter.route("/apontamentoCracha")
                     let mili = start.getMilliseconds();
                     console.log(mili / 1000)
                     res.cookie("starterBarcode", start.getTime())
-                    res.cookie("MATRIC", resource[0].MATRIC)
+                    res.cookie("MATRIC", resource[0].MATRIC, { httpOnly: true, maxAge: maxRange })
                     res.cookie("FUNCIONARIO", resource[0].FUNCIONARIO)
-                    res.redirect("/#/codigobarras")
+                    res.status(200).redirect("/#/codigobarras")
                 } else {
-                    res.redirect("/#/codigobarras")
+                    res.status(404).redirect("/#/codigobarras")
                 }
             } catch (error) {
-                console.log(error)
+                res.status(404).send("Erro")
             } finally {
                 await connection.close()
             }
@@ -50,24 +50,27 @@ apiRouter.route("/apontamentoCracha")
 apiRouter.route("/apontamento")
     .post(
         //Sanitização do codigo
-        async (req, res, next) => {
-            const barcode = req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
-            console.log(barcode)
+        async (req, res) => {
+            req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
+            let barcode = req.body["codigoBarras"]
+
+            // barcode === "" ? barcode = "S/I" : res.sendStatus(400).sendStatus("Logged in");
+            // barcode === "" ? barcode : res.sendStatus(400).sendStatus("EMPTY STRING");
+            // barcode === "" ? barcode === '' ? "" : barcode);
+
             function sanitize(input: string) {
                 const allowedChars = /[A-Za-z0-9]/;
                 return input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
             }
-            // const barcode = req.body["codigoBarras"];
-            res.cookie("barcode", barcode)
 
-            // if (barcode === "") {
-            //     res.redirect('/#/codigobarras')
-            // } else {
+            if (barcode === '') {
+                res.status(400).redirect("/#/codigobarras")
+            } else {
                 //Divide o codigo em 3 partes para a verificação na proxima etapa
                 const dados = {
                     numOdf: Number(barcode.slice(10)),
-                    numOper: barcode.slice(0, 5),
-                    codMaq: barcode.slice(5, 10),
+                    numOper: String(barcode.slice(0, 5)),
+                    codMaq: String(barcode.slice(5, 10)),
                 }
                 //Inicia a conexão com o banco de dados e verifica se existe esse codigo
                 const connection = await mssql.connect(sqlConfig);
@@ -87,34 +90,31 @@ apiRouter.route("/apontamento")
                         AND [CODIGO_PECA] IS NOT NULL
                         ORDER BY NUMERO_OPERACAO ASC
                         `.trim()
-                    ).then(result => result.recordset);
-                    res.cookie("NUMERO_ODF", resource[0].NUMERO_ODF)
-                    res.cookie("CODIGO_MAQUINA", resource[0].CODIGO_MAQUINA)
-                    res.cookie("NUMERO_OPERACAO", resource[0].NUMERO_OPERACAO)
-                    res.cookie("CODIGO_PECA", resource[0].CODIGO_PECA)
-                    res.redirect("/#/codigobarras")
-                    //Verifica se houve um resultado em resource e caso haja redireciona
-                    // if (tool > 0) {
-                    //     // Vai ate o final da ferramenta
-                    //     // Vai até o final do processo
-                    //     var secondSetup = performance.now()
-                    //     res.cookie("secondSetup", secondSetup)
-                    //     console.log("Iniciou processo: " + secondSetup)
-                    //     res.redirect("/#/ferramenta")
-                    // } else {
-                    // }
+                    ).then(result => result.recordset)
+                    if (resource.length > 0) {
+                        // res.cookie("NUMERO_ODF", resource[0].NUMERO_ODF)
+                        // res.cookie("NUMERO_ODF", resource[0].NUMERO_ODF)
+                        // res.cookie("CODIGO_MAQUINA", resource[0].CODIGO_MAQUINA)
+                        // res.cookie("NUMERO_OPERACAO", resource[0].NUMERO_OPERACAO)
+                        // res.cookie("CODIGO_PECA", resource[0].CODIGO_PECA)
+                        // res.cookie("barcode", barcode)
+                        res.status(200).redirect("/#/ferramenta")
+                    } else {
+                        res.status(400).send("ODF nao ienwurwbv!")
+                    }
                 } catch (error) {
-                    console.log(error);
+                    console.log(error)
+                    res.status(400).send("Dados não encontrados!")
                 } finally {
                     await connection.close();
                 }
             }
-        // }
+        }
     )
 
 apiRouter.route("/odf")
     .get(async (req, res) => {
-        let NUMERO_ODF: any = (req.query["NUMERO_ODF"] as string).trim() || undefined;
+        let NUMERO_ODF = (req.query["NUMERO_ODF"] as string).trim() || undefined;
         let CODIGO_MAQUINA = (req.query["CODIGO_MAQUINA"] as string).trim() || undefined;
         let NUMERO_OPERACAO = (req.query["NUMERO_OPERACAO"] as string).trim() || undefined;
         //(
@@ -124,7 +124,6 @@ apiRouter.route("/odf")
         // ) AS OPERADOR
         const connection = await mssql.connect(sqlConfig);
         try {
-
             const resource = await connection.query(`
                 SELECT TOP 1
                 [NUMERO_ODF], 
@@ -181,7 +180,7 @@ apiRouter.route("/IMAGEM")
             res.json(result)
         } catch (error) {
             console.log(error)
-            res.status(500).json({ error: true, message: "Erro no servidor." });
+            res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
         } finally {
             await connection.close()
         }
@@ -204,7 +203,7 @@ apiRouter.route("/HISTORICO")
             return next()
         } catch (error) {
             console.log(error)
-            res.status(500).json({ error: true, message: "Erro no servidor." });
+            res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
         } finally {
             await connection.close()
         }
@@ -226,7 +225,6 @@ apiRouter.route("/ferramenta")
         //Inicia a produção
         let startProd = new Date();
         let mili = startProd.getMilliseconds();
-        console.log(mili / 1000)
         res.cookie("startProd", startProd.getTime())
 
         const connection = await mssql.connect(sqlConfig);
@@ -277,7 +275,7 @@ apiRouter.route("/ferramenta")
             }
         } catch (error) {
             console.log(error)
-            res.status(500).json({ error: true, message: "Erro no servidor." });
+            res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
         } finally {
             await connection.close()
         }
@@ -286,7 +284,7 @@ apiRouter.route("/ferramenta")
 
 apiRouter.route("/apontar")
     .post(
-        async (req, _res, next) => {
+        async (req, _res) => {
             //  req.body = sanitize(req.body.trim());
             let status = '';
             let NUMERO_ODF = req.cookies["NUMERO_ODF"]
@@ -307,17 +305,37 @@ apiRouter.route("/apontar")
                     .join("");
             }
 
-            //INSERIR VALOR PREVIO PARA CASO HAJA UM VALOR PARCIAL/INICIAL
-            // var preventValue;
-
-            // if(!preventValue){
-            //     preventValue + goodFeed
-            //     return goodFeed
-            // }
-
             const connection = await mssql.connect(sqlConfig);
             try {
-                //Encerra tempo de produção
+                const resource = await connection.query(`
+                SELECT TOP 1
+                [ODF],
+                [PECA],
+                [REVISAO],
+                [ITEM],
+                [PC_BOAS],
+                [PC_REFUGA]
+                FROM            
+                HISAPONTA
+                WHERE 1 = 1
+                AND [ODF] = ${NUMERO_ODF}
+                AND [PECA] =${CODIGO_MAQUINA}
+                ORDER BY DATAHORA DESC
+                `.trim()
+                ).then(result => result.recordset)
+                let preventValuePcBoas = resource[0].PC_BOAS
+                let preventValuePcRefuga = resource[0].PC_REFUGA
+                console.log("pecas boas: " + resource[0].PC_BOAS)
+                console.log("pecas refuga: " + resource[0].PC_REFUGA)
+                var totalPecas = preventValuePcBoas + QTDE_APONTADA
+                var totalRefugo = preventValuePcRefuga + QTD_REFUGO
+            } catch (error) {
+                console.log(error)
+            }
+
+
+
+            try {
                 let endProdTimer = new Date();
                 let startProd = req.cookies["startProd"]
                 let finalProdTimer = endProdTimer.getTime() - Number(startProd)
@@ -334,20 +352,17 @@ apiRouter.route("/apontar")
                 const insertSqlRework = await connection.query('INSERT INTO HISAPONTA(CST_PC_FALTANTE, CST_QTD_RETRABALHADA) VALUES (' + CST_PC_FALTANTE + ',' + CST_QTD_RETRABALHADA + ')')
                 // } else {
 
-                //Ajustar para receber os dados do front
-                const insertSql = await connection.query('INSERT INTO PCP_PROGRAMACAO_PRODUCAO(NUMERO_ODF,NUMERO_OPERACAO,CODIGO_MAQUINA,EMPRESA_RECNO, QTDE_APONTADA, QTD_REFUGO) VALUES (' + NUMERO_ODF + ',' + NUMERO_OPERACAO + ',' + CODIGO_MAQUINA + ',' + EMPRESA_RECNO + ',' + QTDE_APONTADA + ',' + QTD_REFUGO + ')')
+                const insertSql = await connection.query('INSERT INTO PCP_PROGRAMACAO_PRODUCAO(NUMERO_ODF,NUMERO_OPERACAO,CODIGO_MAQUINA,EMPRESA_RECNO, QTDE_APONTADA, QTD_REFUGO) VALUES (' + NUMERO_ODF + ',' + NUMERO_OPERACAO + ',' + CODIGO_MAQUINA + ',' + EMPRESA_RECNO + ',' + totalPecas + ',' + totalRefugo + ')')
                 console.log(insertSql)
                 // }
 
                 const insertSqlTimer = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + finalProdTimer + ')')
 
                 _res.redirect(`/#/rip`)
-                return next()
             } catch (error) {
                 _res.redirect(`/#/rip`)
             } finally {
                 await connection.close()
-                next()
             }
         }
     )
@@ -405,7 +420,7 @@ apiRouter.route("/desenho")
             res.json(result);
         } catch (error) {
             console.log(error)
-            res.status(500).json({ error: true, message: "Erro no servidor." });
+            res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
         } finally {
             await connection.close()
         }

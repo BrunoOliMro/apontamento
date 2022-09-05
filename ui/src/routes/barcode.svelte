@@ -2,35 +2,30 @@
   import { bind } from "svelte/internal";
   import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
   import Title from "../components/title/title.svelte";
-
-  import { createEventDispatcher } from "svelte";
-  const dispatch = createEventDispatcher();
-
   let value = "";
-  let codigoBarras = "";
+  let codigoBarras = "564";
   let result = {};
   let urlS = `/api/v1/apontamento`;
-
   // function handleSubmit() {
   //   result = doPost();
   // }
 
-  function blockForbiddenChars(e) {
-    let value = e.target.value;
-    e.target.value = preSanitize(value);
-  }
+  // function blockForbiddenChars(e) {
+  //   let value = e.target.value;
+  //   e.target.value = preSanitize(value);
+  // }
 
-  /**
-   * @param {string} input
-   */
-  function preSanitize(input) {
-    const allowedChars = /[A-Za-z0-9]/;
-    const sanitizedOutput = input
-      .split("")
-      .map((char) => (allowedChars.test(char) ? char : ""))
-      .join("");
-    return sanitizedOutput;
-  }
+  // /**
+  //  * @param {string} input
+  //  */
+  // function preSanitize(input) {
+  //   const allowedChars = /[A-Za-z0-9]/;
+  //   const sanitizedOutput = input
+  //     .split("")
+  //     .map((char) => (allowedChars.test(char) ? char : ""))
+  //     .join("");
+  //   return sanitizedOutput;
+  // }
 
   // function setValues() {
   //   var values = value;
@@ -38,62 +33,41 @@
   // }
 
   // async function doPost() {
-    // value = preSanitize(value);
-    // if (value.length < 16) {
-    //   alert("INVALIDO");
-    // }
-  //   alert("ODF INVALIDA");
+  // value = preSanitize(value);
 
-  //     const res = await fetch(urlS, {
-  //       method: "POST",
-  //       body: JSON.stringify({
-  //         codigoBarras: !codigoBarras ? "" : codigoBarras,
-  //       }),
-  //     });
-  //     const data = await res.json();
-  //     // .then((res) => {
-  //     //   if (res.length === 1) {
-  //     //   }
-  //     // });
-  // }
-
-    async function doPost() {
-        const res = await fetch(urlS, {
-        method: "POST",
-        body: JSON.stringify({codigoBarras: !codigoBarras ? "" : codigoBarras})});
-        const odfData = await res.json();
+  const doPost = async (/** @type {any} */ error, /** @type {Response} */ res) => {
+    const headers = new Headers();
+    headers.append("Content-Type", "application/json");
+    res = await fetch(urlS, {
+      method: "POST",
+      body: JSON.stringify({
+        codigoBarras: !codigoBarras ? "" : codigoBarras,
+      }),
+      headers,
+    });
+    if (!res.ok) {
+      alert(res.status)
+    } else {
+      alert(res.status);
     }
+  };
+
+  // data = await res.json();
+  let resultado = doPost;
 </script>
 
 <main>
   <div>
     <Breadcrumb />
     <Title />
-    <div class="bar" id="title">Código de barras</div>
-    <!-- on:input={setValues} -->
-    <form action="/api/v1/apontamento" method="POST" on:submit={doPost}>
-      <label class="input">
-        <input
-          bind:value
-          on:input={blockForbiddenChars}
-          id="codigoBarras"
-          name="codigoBarras"
-          type="text"
-        />
-      </label>
-    </form>
 
-    <form action="/api/v1/apontamentoCracha" method="POST">
-      <div id="popUpCracha">
-        <div id="title">Colaborador</div>
-        <input
-          on:input={blockForbiddenChars}
-          name="MATRIC"
-          id="MATRIC"
-          type="text"
-        />
-      </div>
-    </form>
+    <!-- {#if !data.ok}
+    <div> dheb</div>
+    {/if} -->
+
+    <!-- {#await resultado }
+  <div>...</div>
+{:then da }  -->
     <div
       class="modal fade show"
       id="exampleModalCenter"
@@ -124,6 +98,24 @@
         </div>
       </div>
     </div>
+    <!-- {/await} -->
+
+    <div class="bar" id="title">Código de barras</div>
+    <!-- on:input={setValues} -->
+    <!-- on:input={blockForbiddenChars} -->
+    <form action="/api/v1/apontamento" method="POST" on:submit={doPost}>
+      <label class="input">
+        <input bind:value id="codigoBarras" name="codigoBarras" type="text" />
+      </label>
+    </form>
+
+    <form action="/api/v1/apontamentoCracha" method="POST">
+      <div id="popUpCracha">
+        <!-- on:input={blockForbiddenChars} -->
+        <div id="title">Colaborador</div>
+        <input name="MATRIC" id="MATRIC" type="text" />
+      </div>
+    </form>
     <!-- <button
     type="button"
     class="btn btn-primary"

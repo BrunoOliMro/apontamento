@@ -9,7 +9,7 @@ export const pictures = {
     getPicturePath: (item: any, hex: String, sufixo: String) => {
         try {
             // Verificar se já existe imagem do item
-            const filePath = path.join(picturesRelativePath, (`${item}${sufixo? `${sufixo}` : ""}.jpg`));
+            const filePath = path.join(picturesRelativePath, (`${item}${sufixo ? `${sufixo}` : ""}.jpg`));
             if (fs.existsSync(filePath)) {
                 return `${OUTPUT_FOLDER}/${item}${sufixo}.jpg`;
             }
@@ -19,7 +19,7 @@ export const pictures = {
             const buffer = Buffer.from(hex, "hex");
             let url = `${OUTPUT_FOLDER}/${item}${sufixo}.jpg`;
             fs.writeFileSync(filePath, buffer);
-            if(url === url){
+            if (url === url) {
                 url = `${OUTPUT_FOLDER}/${item + item2}${sufixo}.jpg`;
             }
             return url

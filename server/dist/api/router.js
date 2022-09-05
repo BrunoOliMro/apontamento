@@ -12,9 +12,8 @@ apiRouter.route("/apontamentoCracha")
     .post(async (req, res) => {
     let maxRange = 600000;
     let MATRIC = req.body["MATRIC"].trim();
-    res.cookie("MATRIC", MATRIC, { httpOnly: true, maxAge: maxRange });
-    if (MATRIC === "") {
-        res.redirect(`/#/codigobarras`);
+    if (MATRIC === '') {
+        res.status(404).send("FUNCIONARIO DESTA MATRICULA NAO ENCONTRADO" + MATRIC);
     }
     else {
         const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
@@ -32,16 +31,16 @@ apiRouter.route("/apontamentoCracha")
                 let mili = start.getMilliseconds();
                 console.log(mili / 1000);
                 res.cookie("starterBarcode", start.getTime());
-                res.cookie("MATRIC", resource[0].MATRIC);
+                res.cookie("MATRIC", resource[0].MATRIC, { httpOnly: true, maxAge: maxRange });
                 res.cookie("FUNCIONARIO", resource[0].FUNCIONARIO);
-                res.redirect("/#/codigobarras");
+                res.status(200).redirect("/#/codigobarras");
             }
             else {
-                res.redirect("/#/codigobarras");
+                res.status(404).redirect("/#/codigobarras");
             }
         }
         catch (error) {
-            console.log(error);
+            res.status(404).send("Erro");
         }
         finally {
             await connection.close();
@@ -49,22 +48,25 @@ apiRouter.route("/apontamentoCracha")
     }
 });
 apiRouter.route("/apontamento")
-    .post(async (req, res, next) => {
-    const barcode = req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
-    console.log(barcode);
+    .post(async (req, res) => {
+    req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
+    let barcode = req.body["codigoBarras"];
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
         return input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
     }
-    res.cookie("barcode", barcode);
-    const dados = {
-        numOdf: Number(barcode.slice(10)),
-        numOper: barcode.slice(0, 5),
-        codMaq: barcode.slice(5, 10),
-    };
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    try {
-        const resource = await connection.query(`
+    if (barcode === '') {
+        res.status(400).redirect("/#/codigobarras");
+    }
+    else {
+        const dados = {
+            numOdf: Number(barcode.slice(10)),
+            numOper: String(barcode.slice(0, 5)),
+            codMaq: String(barcode.slice(5, 10)),
+        };
+        const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+        try {
+            const resource = await connection.query(`
                         SELECT TOP 1
                         [NUMERO_ODF], 
                         [CODIGO_MAQUINA],
@@ -79,17 +81,20 @@ apiRouter.route("/apontamento")
                         AND [CODIGO_PECA] IS NOT NULL
                         ORDER BY NUMERO_OPERACAO ASC
                         `.trim()).then(result => result.recordset);
-        res.cookie("NUMERO_ODF", resource[0].NUMERO_ODF);
-        res.cookie("CODIGO_MAQUINA", resource[0].CODIGO_MAQUINA);
-        res.cookie("NUMERO_OPERACAO", resource[0].NUMERO_OPERACAO);
-        res.cookie("CODIGO_PECA", resource[0].CODIGO_PECA);
-        res.redirect("/#/codigobarras");
-    }
-    catch (error) {
-        console.log(error);
-    }
-    finally {
-        await connection.close();
+            if (resource.length > 0) {
+                res.status(200).redirect("/#/ferramenta");
+            }
+            else {
+                res.status(400).send("ODF nao ienwurwbv!");
+            }
+        }
+        catch (error) {
+            console.log(error);
+            res.status(400).send("Dados não encontrados!");
+        }
+        finally {
+            await connection.close();
+        }
     }
 });
 apiRouter.route("/odf")
@@ -156,7 +161,7 @@ apiRouter.route("/IMAGEM")
     }
     catch (error) {
         console.log(error);
-        res.status(500).json({ error: true, message: "Erro no servidor." });
+        res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
     }
     finally {
         await connection.close();
@@ -179,7 +184,7 @@ apiRouter.route("/HISTORICO")
     }
     catch (error) {
         console.log(error);
-        res.status(500).json({ error: true, message: "Erro no servidor." });
+        res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
     }
     finally {
         await connection.close();
@@ -194,7 +199,6 @@ apiRouter.route("/ferramenta")
     console.log("Primeira operação: " + final / 1000 + " segundos");
     let startProd = new Date();
     let mili = startProd.getMilliseconds();
-    console.log(mili / 1000);
     res.cookie("startProd", startProd.getTime());
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
@@ -246,14 +250,14 @@ apiRouter.route("/ferramenta")
     }
     catch (error) {
         console.log(error);
-        res.status(500).json({ error: true, message: "Erro no servidor." });
+        res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
     }
     finally {
         await connection.close();
     }
 });
 apiRouter.route("/apontar")
-    .post(async (req, _res, next) => {
+    .post(async (req, _res) => {
     let status = '';
     let NUMERO_ODF = req.cookies["NUMERO_ODF"];
     let NUMERO_OPERACAO = req.cookies["NUMERO_OPERACAO"];
@@ -272,6 +276,32 @@ apiRouter.route("/apontar")
     }
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
+        const resource = await connection.query(`
+                SELECT TOP 1
+                [ODF],
+                [PECA],
+                [REVISAO],
+                [ITEM],
+                [PC_BOAS],
+                [PC_REFUGA]
+                FROM            
+                HISAPONTA
+                WHERE 1 = 1
+                AND [ODF] = ${NUMERO_ODF}
+                AND [PECA] =${CODIGO_MAQUINA}
+                ORDER BY DATAHORA DESC
+                `.trim()).then(result => result.recordset);
+        let preventValuePcBoas = resource[0].PC_BOAS;
+        let preventValuePcRefuga = resource[0].PC_REFUGA;
+        console.log("pecas boas: " + resource[0].PC_BOAS);
+        console.log("pecas refuga: " + resource[0].PC_REFUGA);
+        var totalPecas = preventValuePcBoas + QTDE_APONTADA;
+        var totalRefugo = preventValuePcRefuga + QTD_REFUGO;
+    }
+    catch (error) {
+        console.log(error);
+    }
+    try {
         let endProdTimer = new Date();
         let startProd = req.cookies["startProd"];
         let finalProdTimer = endProdTimer.getTime() - Number(startProd);
@@ -281,18 +311,16 @@ apiRouter.route("/apontar")
         console.log(mili / 1000);
         _res.cookie("startRip", startRip.getTime());
         const insertSqlRework = await connection.query('INSERT INTO HISAPONTA(CST_PC_FALTANTE, CST_QTD_RETRABALHADA) VALUES (' + CST_PC_FALTANTE + ',' + CST_QTD_RETRABALHADA + ')');
-        const insertSql = await connection.query('INSERT INTO PCP_PROGRAMACAO_PRODUCAO(NUMERO_ODF,NUMERO_OPERACAO,CODIGO_MAQUINA,EMPRESA_RECNO, QTDE_APONTADA, QTD_REFUGO) VALUES (' + NUMERO_ODF + ',' + NUMERO_OPERACAO + ',' + CODIGO_MAQUINA + ',' + EMPRESA_RECNO + ',' + QTDE_APONTADA + ',' + QTD_REFUGO + ')');
+        const insertSql = await connection.query('INSERT INTO PCP_PROGRAMACAO_PRODUCAO(NUMERO_ODF,NUMERO_OPERACAO,CODIGO_MAQUINA,EMPRESA_RECNO, QTDE_APONTADA, QTD_REFUGO) VALUES (' + NUMERO_ODF + ',' + NUMERO_OPERACAO + ',' + CODIGO_MAQUINA + ',' + EMPRESA_RECNO + ',' + totalPecas + ',' + totalRefugo + ')');
         console.log(insertSql);
         const insertSqlTimer = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + finalProdTimer + ')');
         _res.redirect(`/#/rip`);
-        return next();
     }
     catch (error) {
         _res.redirect(`/#/rip`);
     }
     finally {
         await connection.close();
-        next();
     }
 });
 apiRouter.route("/rip")
@@ -343,7 +371,7 @@ apiRouter.route("/desenho")
     }
     catch (error) {
         console.log(error);
-        res.status(500).json({ error: true, message: "Erro no servidor." });
+        res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
     }
     finally {
         await connection.close();
