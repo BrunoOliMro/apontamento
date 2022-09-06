@@ -10,7 +10,8 @@ const pictures_1 = require("./pictures");
 const apiRouter = (0, express_1.Router)();
 apiRouter.route("/apontamentoCracha")
     .post(async (req, res) => {
-    let maxRange = 600000;
+    let finalTimer = 6000000;
+    let maxRange = finalTimer;
     let MATRIC = req.body["MATRIC"].trim();
     if (MATRIC === '') {
         res.status(404).send("FUNCIONARIO DESTA MATRICULA NAO ENCONTRADO" + MATRIC);
@@ -82,6 +83,12 @@ apiRouter.route("/apontamento")
                         ORDER BY NUMERO_OPERACAO ASC
                         `.trim()).then(result => result.recordset);
             if (resource.length > 0) {
+                res.cookie("NUMERO_ODF", resource[0].NUMERO_ODF);
+                res.cookie("NUMERO_ODF", resource[0].NUMERO_ODF);
+                res.cookie("CODIGO_MAQUINA", resource[0].CODIGO_MAQUINA);
+                res.cookie("NUMERO_OPERACAO", resource[0].NUMERO_OPERACAO);
+                res.cookie("CODIGO_PECA", resource[0].CODIGO_PECA);
+                res.cookie("barcode", barcode);
                 res.status(200).redirect("/#/ferramenta");
             }
             else {
@@ -257,16 +264,16 @@ apiRouter.route("/ferramenta")
     }
 });
 apiRouter.route("/apontar")
-    .post(async (req, _res) => {
+    .post(async (req, res) => {
     let status = '';
-    let NUMERO_ODF = req.cookies["NUMERO_ODF"];
-    let NUMERO_OPERACAO = req.cookies["NUMERO_OPERACAO"];
-    let CODIGO_MAQUINA = req.cookies["CODIGO_MAQUINA"];
+    let NUMERO_ODF = req.cookies["NUMERO_ODF"].trim();
+    let NUMERO_OPERACAO = req.cookies["NUMERO_OPERACAO"].trim();
+    let CODIGO_MAQUINA = req.cookies["CODIGO_MAQUINA"].trim();
     let EMPRESA_RECNO = 1;
-    let QTDE_APONTADA = req.body["goodFeed"];
-    let QTD_REFUGO = req.body["badfeed"];
-    let CST_PC_FALTANTE = req.body["reworkFeed"];
-    let CST_QTD_RETRABALHADA = req.body["missingFeed"];
+    let QTDE_APONTADA = req.body["goodFeed"].trim();
+    let QTD_REFUGO = req.body["badfeed"].trim();
+    let CST_PC_FALTANTE = req.body["reworkFeed"].trim();
+    let CST_QTD_RETRABALHADA = req.body["missingFeed"].trim();
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
         return input
@@ -309,34 +316,123 @@ apiRouter.route("/apontar")
         let startRip = new Date();
         let mili = startRip.getMilliseconds();
         console.log(mili / 1000);
-        _res.cookie("startRip", startRip.getTime());
+        res.cookie("startRip", startRip.getTime());
         const insertSqlRework = await connection.query('INSERT INTO HISAPONTA(CST_PC_FALTANTE, CST_QTD_RETRABALHADA) VALUES (' + CST_PC_FALTANTE + ',' + CST_QTD_RETRABALHADA + ')');
         const insertSql = await connection.query('INSERT INTO PCP_PROGRAMACAO_PRODUCAO(NUMERO_ODF,NUMERO_OPERACAO,CODIGO_MAQUINA,EMPRESA_RECNO, QTDE_APONTADA, QTD_REFUGO) VALUES (' + NUMERO_ODF + ',' + NUMERO_OPERACAO + ',' + CODIGO_MAQUINA + ',' + EMPRESA_RECNO + ',' + totalPecas + ',' + totalRefugo + ')');
         console.log(insertSql);
         const insertSqlTimer = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + finalProdTimer + ')');
-        _res.redirect(`/#/rip`);
+        res.redirect(`/#/rip`);
     }
     catch (error) {
-        _res.redirect(`/#/rip`);
+        res.redirect(`/#/rip`);
     }
     finally {
         await connection.close();
     }
 });
 apiRouter.route("/rip")
-    .get(async (req, _res) => {
+    .get(async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
+        const resource = await connection.query(`
+            SELECT DISTINCT 
+            TOP 1 
+            [NUMPEC], 
+            [R_E_C_N_O_], 
+            [REVISAO], 
+            [CST_NUMOPE], 
+            [NUMCAR], 
+            [INSTRUMENTO], 
+            [DESCRICAO], 
+            [LIE], 
+            [LSE], 
+            [ESPECIFICACAO], 
+            [REV_QA] 
+            FROM QA_CARACTERISTICA 
+            WHERE NUMPEC = '00500163' 
+            AND REVISAO = '00' 
+            AND REV_QA = '00' 
+            AND NUMCAR < 2999
+                `.trim()).then(result => result.recordset);
+        console.log(resource);
         let end = new Date();
         let start = req.cookies["starterBarcode"];
         let final = end.getTime() - Number(start);
         let endProdRip = new Date();
         let startRip = req.cookies["startRip"];
         let finalProdRip = endProdRip.getTime() - Number(startRip);
-        const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + finalProdRip + ')');
-        console.log("Rip: " + finalProdRip / 1000 + " segundos");
-        const insertSql2 = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + final + ')');
-        console.log("Completo: " + final / 1000 + " segundos");
+        res.json(resource);
+    }
+    catch (error) {
+        console.log(error);
+    }
+    finally {
+        await connection.close();
+    }
+});
+apiRouter.route("/rip")
+    .post(async (req, res) => {
+    let ITEM = req.cookies["NUMERO_ODF"].trim();
+    let DESCRICAO = req.cookies["NUMERO_ODF"].trim();
+    let ESPECIFICACAO = req.cookies["NUMERO_ODF"].trim();
+    let LIE = req.cookies["NUMERO_ODF"].trim();
+    let LSE = req.cookies["NUMERO_ODF"].trim();
+    let SETUP = req.cookies["NUMERO_ODF"].trim();
+    let M2 = req.cookies["NUMERO_ODF"].trim();
+    let M3 = req.cookies["NUMERO_ODF"].trim();
+    let M4 = req.cookies["NUMERO_ODF"].trim();
+    let M5 = req.cookies["NUMERO_ODF"].trim();
+    let M6 = req.cookies["NUMERO_ODF"].trim();
+    let M7 = req.cookies["NUMERO_ODF"].trim();
+    let M8 = req.cookies["NUMERO_ODF"].trim();
+    let M9 = req.cookies["NUMERO_ODF"].trim();
+    let M10 = req.cookies["NUMERO_ODF"].trim();
+    let M11 = req.cookies["NUMERO_ODF"].trim();
+    let M12 = req.cookies["NUMERO_ODF"].trim();
+    let M13 = req.cookies["NUMERO_ODF"].trim();
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    try {
+        const resource = await connection.query(`
+            'INSERT INTO CST_RIP_ODF_PRODUCAO([ODF],
+                [ITEM],
+                [DESCRICAO],
+                [ESPECIFICACAO],
+                [LIE],
+                [LSE],
+                [SETUP],
+                [M2],
+                [M3],
+                [M4],
+                [M5],
+                [M6],
+                [M7],
+                [M8],
+                [M9],
+                [M10],
+                [M11],
+                [M12],
+                [M13],
+                [INSTRUMENTO]) VALUES (' 
+                + ${ITEM} + '
+                + ${DESCRICAO} + '
+                + ${ESPECIFICACAO} + '
+                + ${LSE} + '
+                + ${LIE} + '
+                + ${SETUP} + '
+                + ${M2} + '
+                + ${M3} + '
+                + ${M4} + '
+                + ${M5} + '
+                + ${M6} + '
+                + ${M7} + '
+                + ${M8} + '
+                + ${M9} + '
+                + ${M10} + '
+                + ${M11} + '
+                + ${M12} + '
+                + ${M13} + '
+                `.trim()).then(result => result.recordset);
+        res.json(resource);
     }
     catch (error) {
         console.log(error);

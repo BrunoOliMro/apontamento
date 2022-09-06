@@ -1,8 +1,10 @@
 <script>
     const dataFromBarcode = localStorage.getItem("barcodeData");
     let NUMERO_ODF = Number(dataFromBarcode.slice(10));
-    let NUMERO_OPERACAO = dataFromBarcode.slice(0, 5);
-    let CODIGO_MAQUINA = dataFromBarcode.slice(5, 10);
+    let NUMERO_OPERACAO = Number(dataFromBarcode.slice(0, 5));
+    let CODIGO_MAQUINA = String(dataFromBarcode.slice(5, 10));
+    let urlString = `/api/v1/odf?NUMERO_ODF=${NUMERO_ODF}&CODIGO_MAQUINA=${CODIGO_MAQUINA}&NUMERO_OPERACAO=${NUMERO_OPERACAO}`;
+    let dadosOdf = [];
 
     // Procura na string
     // let allCookies = document.cookie;
@@ -11,7 +13,7 @@
     // let gss = allCookies.search("barcode=") - 2;
     // let someee = allCookies.slice(numberFunc, gss);
 
-    let someth = document.cookie
+    let employeName = document.cookie
         .split(";")
         .map((cookie) => cookie.split("="))
         .reduce(
@@ -22,16 +24,11 @@
             {}
         );
 
-    console.log(someth);
-
-    let urlString = `/api/v1/odf?NUMERO_ODF=${NUMERO_ODF}&CODIGO_MAQUINA=${CODIGO_MAQUINA}&NUMERO_OPERACAO=${NUMERO_OPERACAO}`;
     async function getOdfData() {
         const res = await fetch(urlString);
-        const odfData = await res.json();
-        console.log(odfData);
-        return odfData;
+        dadosOdf = await res.json();
     }
-    let resultado = getOdfData()
+    let resultado = getOdfData();
 </script>
 
 <main>
@@ -46,7 +43,7 @@
             <div class="odf">Cód. do Cliente:</div>
             <div class="bold">{dadosOdf[0].CODIGO_CLIENTE}</div>
             <div class="odf">Operador:</div>
-            <div class="bold">{someth.FUNCIONARIO}</div>
+            <div class="bold">{employeName.FUNCIONARIO}</div>
             <div class="odf">OP:</div>
             <div class="bold">
                 {NUMERO_OPERACAO} - {CODIGO_MAQUINA} - {dadosOdf[0].QTDE_ODF[0]}

@@ -9,15 +9,12 @@
     let reworkFeed;
     let urlS = `/api/v1/apontar`
     import paradaMaq from "../content/nav.svelte";
-
-    const headers = new Headers();
-    headers.append("Content-Type", "application/json");
     let urlString = `/api/v1/odf?NUMERO_ODF=${NUMERO_ODF}&CODIGO_MAQUINA=${CODIGO_MAQUINA}&NUMERO_OPERACAO=${NUMERO_OPERACAO}`;
+    let dadosOdf = []
+
     async function getOdfData() {
         const res = await fetch(urlString);
-        const odfData = await res.json();
-        alert("ajuwb uip")
-        return odfData;
+        dadosOdf = await res.json();
     }
 
     const doPost = async () => {
@@ -32,7 +29,6 @@
             }),
             headers,
         });
-        alert("ta aqui");
     };
 
     let resultado = getOdfData();

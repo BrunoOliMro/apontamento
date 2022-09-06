@@ -1,18 +1,16 @@
 <script>
   var dataFromBarcode = localStorage.getItem("barcodeData");
   let NUMERO_ODF = Number(dataFromBarcode.slice(10));
-  let NUMERO_OPERACAO = dataFromBarcode.slice(0, 5);
-  let CODIGO_MAQUINA = dataFromBarcode.slice(5, 10);
-  const headers = new Headers();
-  // headers.append("Content-Type", "application/json");
-
+  let NUMERO_OPERACAO = String(dataFromBarcode.slice(0, 5));
+  let CODIGO_MAQUINA = String(dataFromBarcode.slice(5, 10));
+  let dadosOdf = [];
   let urlString = `/api/v1/odf?NUMERO_ODF=${NUMERO_ODF}&CODIGO_MAQUINA=${CODIGO_MAQUINA}&NUMERO_OPERACAO=${NUMERO_OPERACAO}`;
-  let resultado = getOdfData();
+
   async function getOdfData() {
     const res = await fetch(urlString);
-    const odfData = await res.json();
-    return odfData;
+    dadosOdf = await res.json();
   }
+  let resultado = getOdfData();
 </script>
 
 <main class="main">
@@ -20,9 +18,7 @@
     <div>...</div>
   {:then dadosOdf}
     <div class="div1">
-      <div class="title">
-        INICIO:
-      </div>
+      <div class="title">INICIO:</div>
       {dadosOdf[0].DT_INICIO_OP.slice(6, 8)} /
       {dadosOdf[0].DT_INICIO_OP.slice(4, 6)} /
       {dadosOdf[0].DT_INICIO_OP.slice(0, 4)}
@@ -33,9 +29,7 @@
     </div>
 
     <div class="div2">
-      <div class="title">
-        FINAL:
-      </div>
+      <div class="title">FINAL:</div>
       {dadosOdf[0].DT_FIM_OP.slice(6, 8)} /
       {dadosOdf[0].DT_FIM_OP.slice(4, 6)} /
       {dadosOdf[0].DT_FIM_OP.slice(0, 4)} -
@@ -63,12 +57,12 @@
       text-align: left;
       align-items: left;
     }
-    div{
+    div {
       justify-content: center;
       align-items: center;
       text-align: center;
     }
-    .title{
+    .title {
       font-weight: normal;
     }
   }
@@ -80,13 +74,13 @@
       text-align: left;
       align-items: left;
     }
-    div{
+    div {
       font-size: 22px;
       justify-content: center;
       align-items: center;
       text-align: center;
     }
-    .title{
+    .title {
       font-weight: normal;
     }
   }
@@ -99,7 +93,7 @@
       text-align: left;
       align-items: left;
     }
-    .title{
+    .title {
       font-weight: normal;
     }
   }
@@ -113,7 +107,7 @@
       text-align: left;
       align-items: left;
     }
-    .title{
+    .title {
       font-weight: normal;
     }
   }
@@ -126,7 +120,7 @@
       text-align: left;
       align-items: left;
     }
-    .title{
+    .title {
       font-weight: normal;
     }
   }
@@ -140,7 +134,7 @@
       text-align: left;
       align-items: left;
     }
-    .title{
+    .title {
       font-weight: normal;
     }
   }

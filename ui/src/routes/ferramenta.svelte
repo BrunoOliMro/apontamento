@@ -1,8 +1,8 @@
 <script>
     import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
     export let Subtitle = "Selecione as Ferramentas necessarias: ";
-    const dataFromBarcode = localStorage.getItem("barcodeData");
-    let APT_TEMPO_OPERACAO = "";
+    // const dataFromBarcode = localStorage.getItem("barcodeData");
+    // let APT_TEMPO_OPERACAO = "";
     let fetchItem = [];
     let urlString = `/api/v1/ferramenta?fetchItem=${fetchItem}`;
     const headers = new Headers();

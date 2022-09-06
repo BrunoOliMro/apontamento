@@ -1,17 +1,14 @@
 <script>
   import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
-  import Title from "../components/title/title.svelte";
   let subtitle = "Historico de Apontamento"
   let HISTORICO = [];
-
   let urlString = `/api/v1/HISTORICO?&HISTORICO=${HISTORICO}`;
+
   async function getHISTORICO() {
     const res = await fetch(urlString);
     HISTORICO = await res.json();
-    console.log(JSON.stringify(HISTORICO));
     return HISTORICO;
   }
-
   let res = getHISTORICO();
 </script>
 
