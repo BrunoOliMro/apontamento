@@ -370,6 +370,85 @@ apiRouter.route("/rip")
         await connection.close();
     }
 });
+apiRouter.route("/rip1")
+    .get(async (_req, res) => {
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    try {
+        const resource = await connection.query(`
+            SELECT DISTINCT TOP 1 
+            [NUMPEC] AS NUMPEC, 
+            [R_E_C_N_O_] AS RECNO, 
+            [REVISAO] AS REV, 
+            [CST_NUMOPE] AS NUMOPE, 
+            [NUMCAR] AS NUMCAR, 
+            [INSTRUMENTO] AS INSTRUMENTO, 
+            [DESCRICAO] AS DESCRICAO, 
+            [LIE] AS LIE, 
+            [LSE] AS LSE, 
+            [ESPECIFICACAO] AS ESPECIF, 
+            [REV_QA] AS REVQA 
+            FROM QA_CARACTERISTICA
+                `.trim()).then(result => result.recordset);
+        console.log(resource);
+        res.json(resource);
+    }
+    catch (error) {
+        console.log(error);
+    }
+    finally {
+        await connection.close();
+    }
+});
+apiRouter.route("/rip2")
+    .get(async (_req, res) => {
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    try {
+        const resource = await connection.query(`
+            SELECT DISTINCT TOP 1 
+            [NUMPEC] AS NUMPEC, 
+            [R_E_C_N_O_] AS RECNO, 
+            [REVISAO] AS REV, 
+            [RESUCLI] AS RESU ,
+            [DESPEC] AS DESPEC, 
+            [REV_QA] AS REVQA 
+            FROM PROCESSO(NOLOCK)
+                `.trim()).then(result => result.recordset);
+        console.log(resource);
+        res.json(resource);
+    }
+    catch (error) {
+        console.log(error);
+    }
+    finally {
+        await connection.close();
+    }
+});
+apiRouter.route("/rip3")
+    .get(async (_req, res) => {
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    try {
+        const resource = await connection.query(`
+            SELECT DISTINCT TOP 1 
+            [NUMPEC] AS NUMPEC, 
+            [R_E_C_N_O_] AS RECNO, 
+            [REV_PEC] AS REVPEC, 
+            [NUMOPE] AS NUMOPE, 
+            [NUMITE] AS NUMITE, 
+            [MAQUIN] AS MAQUIN, 
+            [FERRAMENTA] AS FERR, 
+            [DESCRI]  AS DESCRI 
+            FROM OPERACAO
+                `.trim()).then(result => result.recordset);
+        console.log(resource);
+        res.json(resource);
+    }
+    catch (error) {
+        console.log(error);
+    }
+    finally {
+        await connection.close();
+    }
+});
 apiRouter.route("/rip")
     .post(async (req, res) => {
     let ITEM = req.cookies["NUMERO_ODF"].trim();

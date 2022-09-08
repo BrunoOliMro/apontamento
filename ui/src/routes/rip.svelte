@@ -2,6 +2,9 @@
     import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
     import { onMount } from "svelte";
     let urlString = `/api/v1/rip`;
+    let urlStringss = `/api/v1/rip1`;
+    let urlStringssSS = `/api/v1/rip2`;
+    let urlStringssSS1 = `/api/v1/rip3`;
     let Subtitle = "RIP - RELATÓRIO DE INSPEÇÃO DE PROCESSOS";
     let Item = "ITEM";
     let Descrição = "Descrição";
@@ -24,10 +27,28 @@
     let M13 = "M13";
     let ripTable = [];
     let dados = [];
-    let rowNumber = 1
+    let rowNumber = 1;
 
     onMount(async () => {
         const res = await fetch(urlString);
+        ripTable = await res.json();
+        console.log(ripTable[0]);
+    });
+
+    onMount(async () => {
+        const res = await fetch(urlStringss);
+        ripTable = await res.json();
+        console.log(ripTable[0]);
+    });
+
+    onMount(async () => {
+        const res = await fetch(urlStringssSS);
+        ripTable = await res.json();
+        console.log(ripTable[0]);
+    });
+
+    onMount(async () => {
+        const res = await fetch(urlStringssSS1);
         ripTable = await res.json();
         console.log(ripTable[0]);
     });
@@ -37,70 +58,30 @@
     <Breadcrumb />
     <div>{Subtitle}</div>
     {#if ripTable.length != 0}
-    {#each ripTable as row }
-        {JSON.stringify(ripTable[0])}
-    {/each}
-        <thead class="thead">
-            <th scope="row">{ripTable[0].ITEM === undefined ? "ITEM" : Item}</th
-            >
-            <th scope="row">{ripTable[0].NUMPEC}</th>
-            <th scope="row">{ripTable[0].DESCRICAO}</th>
-            <th scope="row">{ripTable[0].INSTRUMENTO}</th>
-            <th scope="row">{ripTable[0].ESPECIFICACAO}</th>
-            <th class="table-active" scope="row">{ripTable[0].LIE}</th>
-            <th class="table-active" scope="row">{ripTable[0].LSE}</th>
-            <th class="table-active" scope="row">{SETUP}</th>
-            <th scope="row">{M2}</th>
-            <th scope="row">{M3}</th>
-            <th scope="row">{M4}</th>
-            <th scope="row">{M5}</th>
-            <th scope="row">{M6}</th>
-            <th scope="row">{M7}</th>
-            <th scope="row">{M8}</th>
-            <th scope="row">{M9}</th>
-            <th scope="row">{M10}</th>
-            <th scope="row">{M11}</th>
-            <th scope="row">{M12}</th>
-            <th scope="row">{M13}</th>
+        <thead>
+            {#each Object.keys(ripTable[0]) as ripTable}
+                <th scope="col" class="cellBody ">{ripTable}</th>
+            {/each}
         </thead>
-        <tbody class="tbody" /><tbody>
-            <tr class="table-active">
-                <th id="cell" scope="row">{rowNumber}</th>
-                <th id="cell" scope="row">{ripTable[0].NUMPEC}</th>
-                <th id="cell" scope="row">{ripTable[0].DESCRICAO}</th>
-                <th id="cell" scope="row">{ripTable[0].INSTRUMENTO}</th>
-                <th id="cell" scope="row">{ripTable[0].ESPECIFICACAO}</th>
-                <th class="table-active" id="cell" scope="row">{ripTable[0].LIE}</th>
-                <th class="table-active" id="cell" scope="row">{ripTable[0].LSE}</th>
-                <th class="table-active" id="cell" scope="row">{SETUP}</th>
-            </tr>
-            <tr class="table-active">
-                <th scope="row">2</th>
-            </tr>
-            <tr class="table-active">
-                <th scope="row">3</th>
-            </tr>
-        </tbody>
+
+        <thead>
+            {#each Object.values(ripTable[0]) as ripTable}
+                <th scope="col" class="cellStats ">{ripTable}</th>
+            {/each}
+        </thead>
     {:else}
         <h3>Não há histórico para exibir</h3>
     {/if}
 </main>
 
 <style>
-    #cell{
-        margin: 1%;
-        display: inline;
-        justify-content: space-between;
-    }
-    th {
-        margin: 1%;
-    }
-    .thead {
-        margin: 1%;
+    .cellStats {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        text-align: center;
+    }
+    .cellBody {
+        display: inline;
+        margin: 1%;
+        flex-direction: row;
     }
     main {
         margin: 1%;
