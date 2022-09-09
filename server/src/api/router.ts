@@ -501,69 +501,42 @@ apiRouter.route("/rip3")
 
 
 
-apiRouter.route("/rip")
+apiRouter.route("/lancamentoRip")
     .post(async (req, res) => {
-        let ITEM = req.cookies["NUMERO_ODF"].trim()
-        let DESCRICAO = req.cookies["NUMERO_ODF"].trim()
-        let ESPECIFICACAO = req.cookies["NUMERO_ODF"].trim()
-        let LIE = req.cookies["NUMERO_ODF"].trim()
-        let LSE = req.cookies["NUMERO_ODF"].trim()
-        let SETUP = req.cookies["NUMERO_ODF"].trim()
-        let M2 = req.cookies["NUMERO_ODF"].trim()
-        let M3 = req.cookies["NUMERO_ODF"].trim()
-        let M4 = req.cookies["NUMERO_ODF"].trim()
-        let M5 = req.cookies["NUMERO_ODF"].trim()
-        let M6 = req.cookies["NUMERO_ODF"].trim()
-        let M7 = req.cookies["NUMERO_ODF"].trim()
-        let M8 = req.cookies["NUMERO_ODF"].trim()
-        let M9 = req.cookies["NUMERO_ODF"].trim()
-        let M10 = req.cookies["NUMERO_ODF"].trim()
-        let M11 = req.cookies["NUMERO_ODF"].trim()
-        let M12 = req.cookies["NUMERO_ODF"].trim()
-        let M13 = req.cookies["NUMERO_ODF"].trim()
+        // let ITEM = req.cookies["NUMERO_ODF"].trim()
+        // let DESCRICAO = req.cookies["NUMERO_ODF"].trim()
+        // let ESPECIFICACAO = req.cookies["NUMERO_ODF"].trim()
+        // let LIE = req.cookies["NUMERO_ODF"].trim()
+        // let LSE = req.cookies["NUMERO_ODF"].trim()
+        let SETUP = req.body["SETUP"].trim()
+        let M2 = req.body["M2"].trim()
+        let M3 = req.body["M3"].trim()
+        let M4 = req.body["M4"].trim()
+        let M5 = req.body["M5"].trim()
+        let M6 = req.body["M6"].trim()
+        let M7 = req.body["M7"].trim()
+        let M8 = req.body["M8"].trim()
+        let M9 = req.body["M9"].trim()
+        let M10 = req.body["M10"].trim()
+        let M11 = req.body["M11"].trim()
+        let M12 = req.body["M12"].trim()
+        let M13 = req.body["M13"].trim()
         const connection = await mssql.connect(sqlConfig);
         try {
-            const resource = await connection.query(`
-            'INSERT INTO CST_RIP_ODF_PRODUCAO([ODF],
-                [ITEM],
-                [DESCRICAO],
-                [ESPECIFICACAO],
-                [LIE],
-                [LSE],
-                [SETUP],
-                [M2],
-                [M3],
-                [M4],
-                [M5],
-                [M6],
-                [M7],
-                [M8],
-                [M9],
-                [M10],
-                [M11],
-                [M12],
-                [M13],
-                [INSTRUMENTO]) VALUES (' 
-                + ${ITEM} + '
-                + ${DESCRICAO} + '
-                + ${ESPECIFICACAO} + '
-                + ${LSE} + '
-                + ${LIE} + '
-                + ${SETUP} + '
-                + ${M2} + '
-                + ${M3} + '
-                + ${M4} + '
-                + ${M5} + '
-                + ${M6} + '
-                + ${M7} + '
-                + ${M8} + '
-                + ${M9} + '
-                + ${M10} + '
-                + ${M11} + '
-                + ${M12} + '
-                + ${M13} + '
-                `.trim()
-            ).then(result => result.recordset)
+            const resource = await connection.query('INSERT INTO CST_RIP_ODF_PRODUCAO(SETUP, M2,M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13) VALUES ('
+                + SETUP + ','
+                + M2 + ','
+                + M3 + ','
+                + M4 + ','
+                + M5 + ','
+                + M6 + ','
+                + M7 + ','
+                + M8 + ','
+                + M9 + ','
+                + M10 + ','
+                + M11 + ','
+                + M12 + ','
+                + M13 + ')').then(result => result.recordset)
             res.json(resource)
         } catch (error) {
             console.log(error)
