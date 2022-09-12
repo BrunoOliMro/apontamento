@@ -376,7 +376,7 @@ apiRouter.route("/rip")
             SELECT DISTINCT 
             TOP 1 
             [NUMPEC], 
-            [R_E_C_N_O_], 
+            [R_E_C_N_O_] as RECNO, 
             [REVISAO], 
             [CST_NUMOPE], 
             [NUMCAR], 
@@ -479,7 +479,7 @@ apiRouter.route("/rip3")
             const resource = await connection.query(`
             SELECT DISTINCT TOP 1 
             [NUMPEC] AS NUMPEC, 
-            [R_E_C_N_O_] AS RECNO, 
+            [R_E_C_N_O] AS RECNO, 
             [REV_PEC] AS REVPEC, 
             [NUMOPE] AS NUMOPE, 
             [NUMITE] AS NUMITE, 

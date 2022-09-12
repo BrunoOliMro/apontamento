@@ -1,6 +1,8 @@
 <script>
     import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
+    import TableRow from "../components/Tables/TableRipRow.svelte";
     import { onMount } from "svelte";
+    import TableRipRow from "../components/Tables/TableRipRow.svelte";
     let urlS = `/api/v1/lancamentoRip`;
     let urlString = `/api/v1/rip`;
     let urlStringss = `/api/v1/rip1`;
@@ -74,15 +76,23 @@
         });
     };
 
+    let numbers = [1];
     function createCol() {
-        console.log("is gonna create another row until max 13");
+        if (numbers.length < 7) numbers = [...numbers, numbers.length + 1];
     }
 </script>
 
 <main>
     <Breadcrumb />
-    <div>{Subtitle}</div>
-
+    <div class="title">{Subtitle}</div>
+    <div class="btn">
+        <button on:click={createCol} class="btnData" type="submit"
+            >Adicionar coluna</button
+        >
+        <button on:click={doPost} class="btnData" type="submit"
+            >Enviar dados</button
+        >
+    </div>
     <!-- <button
         type="button"
         class="btn btn-primary"
@@ -125,165 +135,53 @@
             </div>
         </div>
     </div> -->
-
     {#if ripTable.length != 0}
         <form action="/api/v1/lancamentoRip" method="POST">
-            <thead>
-                <tr class="header">
-                    <th>
-                        {#each Object.keys(ripTable[0]) as ripTable}
-                            <th scope="col" class="cellBody">{ripTable}</th>
-                            {/each}
-                        </th>
-                        <div class="headerSetup">
-                            <div class="headerInput">SETUP</div>
-                            <div class="headerInput">M2</div>
-                            <div class="headerInput">M3</div>
-                            <div class="headerInput">M4</div>
-                            <div class="headerInput">M5</div>
-                            <div class="headerInput">M6</div>
-                            <div class="headerInput">M7</div>
-                        </div>
-                </tr>
-            </thead>
-        </form>
-        <table>
-            <div class="table">
-                {#each Object.values(ripTable[0]) as ripTable}
-                    <th scope="col" class="cellStats ">{ripTable}</th>
-                {/each}
-                <th>
-                    <div class="headerInput">SETUP</div>
-                    <div>
-                        <input class="input" id="M13" name="M13" />
-                    </div>
-                </th>
-
-                <th>
-                    <div class="headerInput">M2</div>
-                    <div>
-                        <input class="input" id="M13" name="M13" />
-                    </div>
-                </th>
-                <th>
-                    <div class="headerInput">M3</div>
-                    <div>
-                        <input class="input" id="M13" name="M13" />
-                    </div>
-                </th>
-                <th>
-                    <div class="headerInput">M4</div>
-                    <div>
-                        <input class="input" id="M13" name="M13" />
-                    </div>
-                </th>
-                <th>
-                    <div class="headerInput">M5</div>
-                    <div>
-                        <input class="input" id="M13" name="M13" />
-                    </div>
-                </th>
-                <th>
-                    <div class="headerInput">M6</div>
-                    <div>
-                        <input class="input" id="M13" name="M13" />
-                    </div>
-                </th>
-                <th>
-                    <div class="headerInput">M7</div>
-                    <div>
-                        <input class="input" id="M13" name="M13" />
-                    </div>
-                </th>
-                <!-- <th>
-                    <div class="headerInput">M8</div>
-                    <div>
-                        <input class="input" id="M13" name="M13" />
-                    </div>
-                </th>
-                <th>
-                    <div class="headerInput">M9</div>
-                    <div>
-                        <input class="input" id="M13" name="M13" />
-                    </div>
-                </th>
-                <th>
-                    <div class="headerInput">M10</div>
-                    <div>
-                        <input class="input" id="M13" name="M13" />
-                    </div>
-                </th>
-                <th>
-                    <div class="headerInput">M11</div>
-                    <div>
-                        <input class="input" id="M13" name="M13" />
-                    </div>
-                </th>
-                <th>
-                    <div class="headerInput">M12</div>
-                    <div>
-                        <input class="input" id="M13" name="M13" />
-                    </div>
-                </th>
-                <th>
-                    <div class="headerInput">M13</div>
-                    <div>
-                        <input class="input" id="M13" name="M13" />
-                    </div>
-                </th> -->
+            <div class="tabela table-responsive">
+                <table class="table table-hover table-striped caption-top">
+                    <!-- <caption>Lista Completa</caption> -->
+                    <thead>
+                        <tr id="header">
+                            <th scope="col">Item</th>
+                            <th scope="col">Descrição</th>
+                            <th scope="col">Especif.</th>
+                            <th scope="col">LIE</th>
+                            <th scope="col">LSE</th>
+                            <th scope="col">SETUP</th>
+                            <th scope="col">Instrumento</th>
+                            <th scope="col">M {numbers}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoTabela">
+                        {#each ripTable as row}
+                            <TableRipRow dados={row} />
+                        {/each}
+                    </tbody>
+                </table>
             </div>
-        </table>
-        <button on:click={doPost} class="btnData" type="submit"
-            >Enviar dados</button
-        >
-        <button on:click={createCol} class="btnData" type="submit"
-            >Adicionar coluna</button
-        >
+        </form>
     {:else}
         <h3>Não há histórico para exibir</h3>
     {/if}
 </main>
 
 <style>
-    .headerSetup{
+    .btn {
         display: flex;
-        font-size: 10px;
-        border: 1px solid;
-        font-weight: bold;
-        height: 45px;
+        margin: 1%;
+        justify-content: right;
     }
-    .cellBody{
-        font-size: 10px;
-        width: 80px;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-    }
-    .cellStats {
-        display: flex;
-        font-size: 10px;
-        width: 80px;
-        justify-content: center;
-        text-align: center;
-        align-items: center;
-    }
-    th {
-        border: 1px solid;
-        height: 40px;
-    }
-    .headerInput {
-        font-size: 10px;
-        width: 80px;
+    .title {
+        font-size: 35px;
+        margin: 1%;
         display: flex;
         justify-content: center;
-        align-items: center;
-        text-align: center;
     }
     .btnData {
-        margin-bottom: 1%;
+        margin: 1%;
         padding: 0%;
-        font-size: 12px;
-        width: 100px;
+        font-size: 14px;
+        width: 120px;
         height: 35px;
         display: flex;
         justify-content: center;
@@ -299,22 +197,26 @@
         color: white;
         transition: 1s;
     }
-
-    input {
-        font-size: 10px;
-        height: 5px;
-        width: 60px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-    }
     main {
         margin: 1%;
     }
-    div {
-        font-size: 30px;
-        display: flex;
-        justify-content: center;
+    .tabela {
+        width: 100%;
+        height: 100%;
+        border: 2px solid #cfd4d9;
+        /* border-radius: 10px; */
+        padding: 0 15px 0 15px;
+    }
+    table {
+        width: 100%;
+        height: 100%;
+    }
+    tr {
+        position: sticky;
+        top: 0;
+        overflow: auto;
+        background-color: white;
+        height: fit-content;
+        text-align: center;
     }
 </style>
