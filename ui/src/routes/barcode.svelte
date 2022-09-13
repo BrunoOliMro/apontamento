@@ -3,7 +3,7 @@
   import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
   import Title from "../components/title/title.svelte";
   let value = "";
-  let codigoBarras = "564";
+  let codigoBarras = "";
   let result = {};
   let urlS = `/api/v1/apontamento`;
   // function handleSubmit() {

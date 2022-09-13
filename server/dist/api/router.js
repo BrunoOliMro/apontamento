@@ -298,6 +298,7 @@ apiRouter.route("/apontar")
                 AND [PECA] =${CODIGO_MAQUINA}
                 ORDER BY DATAHORA DESC
                 `.trim()).then(result => result.recordset);
+        console.log(resource);
         let preventValuePcBoas = resource[0].PC_BOAS;
         let preventValuePcRefuga = resource[0].PC_REFUGA;
         console.log("pecas boas: " + resource[0].PC_BOAS);
@@ -307,6 +308,41 @@ apiRouter.route("/apontar")
     }
     catch (error) {
         console.log(error);
+    }
+    finally {
+        await connection.close();
+    }
+    try {
+        const resource = await connection.query(`
+                SELECT DISTINCT                 
+                   OP.NUMITE,                 
+                   CAST(OP.EXECUT AS INT) AS EXECUT,       
+                   CAST(E.SALDOREAL AS INT) AS SALDOREAL,                 
+                   CAST(((E.SALDOREAL - ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO AND CA.ODF = PCP.NUMERO_ODF),0)) / ISNULL(OP.EXECUT,0)) AS INT) AS QTD_LIBERADA_PRODUZIR,
+                   ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO),0) as saldo_alocado
+                   FROM PROCESSO PRO (NOLOCK)                  
+                   INNER JOIN OPERACAO OP (NOLOCK) ON OP.RECNO_PROCESSO = PRO.R_E_C_N_O_                  
+                   INNER JOIN ESTOQUE E (NOLOCK) ON E.CODIGO = OP.NUMITE                
+                   INNER JOIN PCP_PROGRAMACAO_PRODUCAO PCP (NOLOCK) ON PCP.CODIGO_PECA = OP.NUMPEC                
+                   WHERE 1=1                    
+                   AND PRO.ATIVO ='S'                   
+                   AND PRO.CONCLUIDO ='T'                
+                   AND OP.CONDIC ='P'                 
+                   AND PCP.NUMERO_ODF = '1232975'    
+                `.trim()).then(result => result.recordset);
+        console.log(resource);
+        let preventValuePcBoas = resource[0].PC_BOAS;
+        let preventValuePcRefuga = resource[0].PC_REFUGA;
+        console.log("pecas boas: " + resource[0].PC_BOAS);
+        console.log("pecas refuga: " + resource[0].PC_REFUGA);
+        var totalPecas = preventValuePcBoas + QTDE_APONTADA;
+        var totalRefugo = preventValuePcRefuga + QTD_REFUGO;
+    }
+    catch (error) {
+        console.log(error);
+    }
+    finally {
+        await connection.close();
     }
     try {
         let endProdTimer = new Date();
@@ -332,114 +368,40 @@ apiRouter.route("/apontar")
 });
 apiRouter.route("/rip")
     .get(async (req, res) => {
+    let NUMPEC = '00240070';
+    let REVISAO = '02';
+    let NUMCAR = '2999';
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const resource = await connection.query(`
-            SELECT DISTINCT 
-            TOP 1 
-            [NUMPEC], 
-            [R_E_C_N_O_] as RECNO, 
-            [REVISAO], 
-            [CST_NUMOPE], 
-            [NUMCAR], 
-            [INSTRUMENTO], 
-            [DESCRICAO], 
-            [LIE], 
-            [LSE], 
-            [ESPECIFICACAO], 
-            [REV_QA] 
-            FROM QA_CARACTERISTICA 
-            WHERE NUMPEC = '00500163' 
-            AND REVISAO = '00' 
-            AND REV_QA = '00' 
-            AND NUMCAR < 2999
+            SELECT  DISTINCT
+            PROCESSO.NUMPEC,
+            PROCESSO.REVISAO,
+            QA_CARACTERISTICA.NUMCAR AS NUMCAR,
+            QA_CARACTERISTICA.CST_NUMOPE AS CST_NUMOPE,
+            QA_CARACTERISTICA.DESCRICAO,
+            ESPECIFICACAO  AS ESPECIF,
+            LIE,
+            LSE,
+            QA_CARACTERISTICA.INSTRUMENTO
+            FROM PROCESSO
+            INNER JOIN CLIENTES ON PROCESSO.RESUCLI = CLIENTES.CODIGO
+            INNER JOIN QA_CARACTERISTICA ON QA_CARACTERISTICA.NUMPEC=PROCESSO.NUMPEC
+            AND QA_CARACTERISTICA.REV_QA=PROCESSO.REV_QA 
+            AND QA_CARACTERISTICA.REVISAO = PROCESSO.REVISAO 
+            LEFT JOIN (SELECT OP.MAQUIN, OP.NUMPEC, OP.RECNO_PROCESSO, LTRIM(NUMOPE) AS CST_SEQUENCIA  
+            FROM OPERACAO OP (NOLOCK)) AS TBL ON TBL.RECNO_PROCESSO = PROCESSO.R_E_C_N_O_  AND TBL.MAQUIN = QA_CARACTERISTICA.CST_NUMOPE
+			WHERE PROCESSO.NUMPEC = '${NUMPEC}' 
+            AND PROCESSO.REVISAO = '${REVISAO}' 
+            AND NUMCAR < '${NUMCAR}'
+            ORDER BY NUMPEC ASC
                 `.trim()).then(result => result.recordset);
-        console.log(resource);
         let end = new Date();
         let start = req.cookies["starterBarcode"];
         let final = end.getTime() - Number(start);
         let endProdRip = new Date();
         let startRip = req.cookies["startRip"];
         let finalProdRip = endProdRip.getTime() - Number(startRip);
-        res.json(resource);
-    }
-    catch (error) {
-        console.log(error);
-    }
-    finally {
-        await connection.close();
-    }
-});
-apiRouter.route("/rip1")
-    .get(async (_req, res) => {
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    try {
-        const resource = await connection.query(`
-            SELECT DISTINCT TOP 1 
-            [NUMPEC] AS NUMPEC, 
-            [R_E_C_N_O_] AS RECNO, 
-            [REVISAO] AS REV, 
-            [CST_NUMOPE] AS NUMOPE, 
-            [NUMCAR] AS NUMCAR, 
-            [INSTRUMENTO] AS INSTRUMENTO, 
-            [DESCRICAO] AS DESCRICAO, 
-            [LIE] AS LIE, 
-            [LSE] AS LSE, 
-            [ESPECIFICACAO] AS ESPECIF, 
-            [REV_QA] AS REVQA 
-            FROM QA_CARACTERISTICA
-                `.trim()).then(result => result.recordset);
-        console.log(resource);
-        res.json(resource);
-    }
-    catch (error) {
-        console.log(error);
-    }
-    finally {
-        await connection.close();
-    }
-});
-apiRouter.route("/rip2")
-    .get(async (_req, res) => {
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    try {
-        const resource = await connection.query(`
-            SELECT DISTINCT TOP 1 
-            [NUMPEC] AS NUMPEC, 
-            [R_E_C_N_O_] AS RECNO, 
-            [REVISAO] AS REV, 
-            [RESUCLI] AS RESU ,
-            [DESPEC] AS DESPEC, 
-            [REV_QA] AS REVQA 
-            FROM PROCESSO(NOLOCK)
-                `.trim()).then(result => result.recordset);
-        console.log(resource);
-        res.json(resource);
-    }
-    catch (error) {
-        console.log(error);
-    }
-    finally {
-        await connection.close();
-    }
-});
-apiRouter.route("/rip3")
-    .get(async (_req, res) => {
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    try {
-        const resource = await connection.query(`
-            SELECT DISTINCT TOP 1 
-            [NUMPEC] AS NUMPEC, 
-            [R_E_C_N_O] AS RECNO, 
-            [REV_PEC] AS REVPEC, 
-            [NUMOPE] AS NUMOPE, 
-            [NUMITE] AS NUMITE, 
-            [MAQUIN] AS MAQUIN, 
-            [FERRAMENTA] AS FERR, 
-            [DESCRI]  AS DESCRI 
-            FROM OPERACAO
-                `.trim()).then(result => result.recordset);
-        console.log(resource);
         res.json(resource);
     }
     catch (error) {
@@ -457,29 +419,17 @@ apiRouter.route("/lancamentoRip")
     let M4 = req.body["M4"].trim();
     let M5 = req.body["M5"].trim();
     let M6 = req.body["M6"].trim();
-    let M7 = req.body["M7"].trim();
-    let M8 = req.body["M8"].trim();
-    let M9 = req.body["M9"].trim();
-    let M10 = req.body["M10"].trim();
-    let M11 = req.body["M11"].trim();
-    let M12 = req.body["M12"].trim();
-    let M13 = req.body["M13"].trim();
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
-        const resource = await connection.query('INSERT INTO CST_RIP_ODF_PRODUCAO(SETUP, M2,M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13) VALUES ('
+        const resource = await connection.query('INSERT INTO CST_RIP_ODF_PRODUCAO(SETUP, M2,M3,M4,M5,M6) VALUES ('
             + SETUP + ','
             + M2 + ','
             + M3 + ','
             + M4 + ','
             + M5 + ','
-            + M6 + ','
-            + M7 + ','
-            + M8 + ','
-            + M9 + ','
-            + M10 + ','
-            + M11 + ','
-            + M12 + ','
-            + M13 + ')').then(result => result.recordset);
+            + M6 +
+            ')').then(result => result.recordset);
+        console.log(resource);
         res.json(resource);
     }
     catch (error) {

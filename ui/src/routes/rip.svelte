@@ -5,23 +5,20 @@
     import TableRipRow from "../components/Tables/TableRipRow.svelte";
     let urlS = `/api/v1/lancamentoRip`;
     let urlString = `/api/v1/rip`;
-    let urlStringss = `/api/v1/rip1`;
-    let urlStringssSS = `/api/v1/rip2`;
-    let urlStringssSS1 = `/api/v1/rip3`;
     let Subtitle = "RIP - RELATÓRIO DE INSPEÇÃO DE PROCESSOS";
-    let SETUP = "SETUP";
-    let M2 = "M2";
-    let M3 = "M3";
-    let M4 = "M4";
-    let M5 = "M5";
-    let M6 = "M6";
-    let M7 = "M7";
-    let M8 = "M8";
-    let M9 = "M9";
-    let M10 = "M10";
-    let M11 = "M11";
-    let M12 = "M12";
-    let M13 = "M13";
+    let SETUP = "";
+    let M2 = "";
+    let M3 = "";
+    let M4 = "";
+    let M5 = "";
+    let M6 = "";
+    let M7 = "";
+    let M8 = "";
+    let M9 = "";
+    let M10 = "";
+    let M11 = "";
+    let M12 = "";
+    let M13 = "";
     let ripTable = [];
 
     onMount(async () => {
@@ -30,69 +27,46 @@
         console.log(ripTable[0]);
     });
 
-    onMount(async () => {
-        const res = await fetch(urlStringss);
-        ripTable = await res.json();
-        console.log(ripTable[0]);
-    });
-
-    onMount(async () => {
-        const res = await fetch(urlStringssSS);
-        ripTable = await res.json();
-        console.log(ripTable[0]);
-    });
-
-    onMount(async () => {
-        const res = await fetch(urlStringssSS1);
-        ripTable = await res.json();
-        console.log(ripTable[0]);
-    });
-
     const doPost = async (
         /** @type {any} */ error,
         /** @type {Response} */ res
     ) => {
-        console.log("click");
         const headers = new Headers();
         headers.append("Content-Type", "application/json");
         res = await fetch(urlS, {
             method: "POST",
             body: JSON.stringify({
-                SETUP: !SETUP ? "" : SETUP,
+                SETUP: SETUP,
                 M2: M2,
                 M3: M3,
                 M4: M4,
                 M5: M5,
                 M6: M6,
-                M7: M7,
-                M8: M8,
-                M9: M9,
-                M10: M10,
-                M11: M11,
-                M12: M12,
-                M13: M13,
             }),
             headers,
         });
     };
 
-    let numbers = [1];
+    let seq = "Seq";
+    let extraColumns = [];
     function createCol() {
-        if (numbers.length < 7) numbers = [...numbers, numbers.length + 1];
+        if (extraColumns.length < 7) {
+            extraColumns = [...extraColumns, extraColumns.length + 6];
+        }
     }
 </script>
 
 <main>
     <Breadcrumb />
-    <div class="title">{Subtitle}</div>
-    <div class="btn">
-        <button on:click={createCol} class="btnData" type="submit"
+    <div class="divBtn">
+        <button on:click={createCol} class="sideButton" type="submit"
             >Adicionar coluna</button
         >
-        <button on:click={doPost} class="btnData" type="submit"
+        <button on:click={doPost} class="sideButton" type="submit"
             >Enviar dados</button
         >
     </div>
+    <div class="title">{Subtitle}</div>
     <!-- <button
         type="button"
         class="btn btn-primary"
@@ -135,26 +109,37 @@
             </div>
         </div>
     </div> -->
-    {#if ripTable.length != 0}
+    {#if ripTable.length !== 0}
         <form action="/api/v1/lancamentoRip" method="POST">
             <div class="tabela table-responsive">
                 <table class="table table-hover table-striped caption-top">
-                    <!-- <caption>Lista Completa</caption> -->
                     <thead>
                         <tr id="header">
+                            <th scope="col">{seq}</th>
                             <th scope="col">Item</th>
                             <th scope="col">Descrição</th>
                             <th scope="col">Especif.</th>
                             <th scope="col">LIE</th>
                             <th scope="col">LSE</th>
-                            <th scope="col">SETUP</th>
                             <th scope="col">Instrumento</th>
-                            <th scope="col">M {numbers}</th>
+                            <th scope="col">SETUP</th>
+                            <th scope="col">M 2</th>
+                            <th scope="col">M 3</th>
+                            <th scope="col">M 4</th>
+                            <th scope="col">M 5</th>
+                            {#each extraColumns as columnNumber}
+                                <th scope="col">M {columnNumber}</th>
+                            {/each}
+                            <!-- <th scope="col">M {numbers}</th> -->
                         </tr>
                     </thead>
                     <tbody id="corpoTabela">
-                        {#each ripTable as row}
-                            <TableRipRow dados={row} />
+                        {#each ripTable as row, i}
+                            <TableRipRow
+                                dados={row}
+                                indice={i + 1}
+                                {extraColumns}
+                            />
                         {/each}
                     </tbody>
                 </table>
@@ -166,7 +151,7 @@
 </main>
 
 <style>
-    .btn {
+    .divBtn {
         display: flex;
         margin: 1%;
         justify-content: right;
@@ -177,7 +162,7 @@
         display: flex;
         justify-content: center;
     }
-    .btnData {
+    .sideButton {
         margin: 1%;
         padding: 0%;
         font-size: 14px;
@@ -191,7 +176,7 @@
         background-color: transparent;
     }
 
-    .btnData:hover {
+    .sideButton:hover {
         cursor: pointer;
         background-color: black;
         color: white;
