@@ -50,6 +50,7 @@ apiRouter.route("/apontamentoCracha")
 });
 apiRouter.route("/apontamento")
     .post(async (req, res) => {
+    var NUMERO_ODF = '1232975';
     req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
     let barcode = req.body["codigoBarras"];
     function sanitize(input) {
@@ -98,6 +99,32 @@ apiRouter.route("/apontamento")
         catch (error) {
             console.log(error);
             res.status(400).send("Dados não encontrados!");
+        }
+        finally {
+            await connection.close();
+        }
+        try {
+            const resource = await connection.query(`
+                    SELECT DISTINCT                 
+                       OP.NUMITE,                 
+                       CAST(OP.EXECUT AS INT) AS EXECUT,       
+                       CAST(E.SALDOREAL AS INT) AS SALDOREAL,                 
+                       CAST(((E.SALDOREAL - ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO AND CA.ODF = PCP.NUMERO_ODF),0)) / ISNULL(OP.EXECUT,0)) AS INT) AS QTD_LIBERADA_PRODUZIR,
+                       ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO),0) as saldo_alocado
+                       FROM PROCESSO PRO (NOLOCK)                  
+                       INNER JOIN OPERACAO OP (NOLOCK) ON OP.RECNO_PROCESSO = PRO.R_E_C_N_O_                  
+                       INNER JOIN ESTOQUE E (NOLOCK) ON E.CODIGO = OP.NUMITE                
+                       INNER JOIN PCP_PROGRAMACAO_PRODUCAO PCP (NOLOCK) ON PCP.CODIGO_PECA = OP.NUMPEC                
+                       WHERE 1=1                    
+                       AND PRO.ATIVO ='S'                   
+                       AND PRO.CONCLUIDO ='T'                
+                       AND OP.CONDIC ='P'                 
+                       AND PCP.NUMERO_ODF = '${NUMERO_ODF}'    
+                    `.trim()).then(result => result.recordset);
+            console.log(resource);
+        }
+        catch (error) {
+            console.log(error);
         }
         finally {
             await connection.close();
@@ -313,38 +340,6 @@ apiRouter.route("/apontar")
         await connection.close();
     }
     try {
-        const resource = await connection.query(`
-                SELECT DISTINCT                 
-                   OP.NUMITE,                 
-                   CAST(OP.EXECUT AS INT) AS EXECUT,       
-                   CAST(E.SALDOREAL AS INT) AS SALDOREAL,                 
-                   CAST(((E.SALDOREAL - ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO AND CA.ODF = PCP.NUMERO_ODF),0)) / ISNULL(OP.EXECUT,0)) AS INT) AS QTD_LIBERADA_PRODUZIR,
-                   ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO),0) as saldo_alocado
-                   FROM PROCESSO PRO (NOLOCK)                  
-                   INNER JOIN OPERACAO OP (NOLOCK) ON OP.RECNO_PROCESSO = PRO.R_E_C_N_O_                  
-                   INNER JOIN ESTOQUE E (NOLOCK) ON E.CODIGO = OP.NUMITE                
-                   INNER JOIN PCP_PROGRAMACAO_PRODUCAO PCP (NOLOCK) ON PCP.CODIGO_PECA = OP.NUMPEC                
-                   WHERE 1=1                    
-                   AND PRO.ATIVO ='S'                   
-                   AND PRO.CONCLUIDO ='T'                
-                   AND OP.CONDIC ='P'                 
-                   AND PCP.NUMERO_ODF = '1232975'    
-                `.trim()).then(result => result.recordset);
-        console.log(resource);
-        let preventValuePcBoas = resource[0].PC_BOAS;
-        let preventValuePcRefuga = resource[0].PC_REFUGA;
-        console.log("pecas boas: " + resource[0].PC_BOAS);
-        console.log("pecas refuga: " + resource[0].PC_REFUGA);
-        var totalPecas = preventValuePcBoas + QTDE_APONTADA;
-        var totalRefugo = preventValuePcRefuga + QTD_REFUGO;
-    }
-    catch (error) {
-        console.log(error);
-    }
-    finally {
-        await connection.close();
-    }
-    try {
         let endProdTimer = new Date();
         let startProd = req.cookies["startProd"];
         let finalProdTimer = endProdTimer.getTime() - Number(startProd);
@@ -368,6 +363,7 @@ apiRouter.route("/apontar")
 });
 apiRouter.route("/rip")
     .get(async (req, res) => {
+    var NUMERO_ODF = '1232975';
     let NUMPEC = '00240070';
     let REVISAO = '02';
     let NUMCAR = '2999';
@@ -396,6 +392,40 @@ apiRouter.route("/rip")
             AND NUMCAR < '${NUMCAR}'
             ORDER BY NUMPEC ASC
                 `.trim()).then(result => result.recordset);
+        try {
+            const resource = await connection.query(`
+                SELECT DISTINCT                 
+                   OP.NUMITE,                 
+                   CAST(OP.EXECUT AS INT) AS EXECUT,       
+                   CAST(E.SALDOREAL AS INT) AS SALDOREAL,                 
+                   CAST(((E.SALDOREAL - ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO AND CA.ODF = PCP.NUMERO_ODF),0)) / ISNULL(OP.EXECUT,0)) AS INT) AS QTD_LIBERADA_PRODUZIR,
+                   ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO),0) as saldo_alocado
+                   FROM PROCESSO PRO (NOLOCK)                  
+                   INNER JOIN OPERACAO OP (NOLOCK) ON OP.RECNO_PROCESSO = PRO.R_E_C_N_O_                  
+                   INNER JOIN ESTOQUE E (NOLOCK) ON E.CODIGO = OP.NUMITE                
+                   INNER JOIN PCP_PROGRAMACAO_PRODUCAO PCP (NOLOCK) ON PCP.CODIGO_PECA = OP.NUMPEC                
+                   WHERE 1=1                    
+                   AND PRO.ATIVO ='S'                   
+                   AND PRO.CONCLUIDO ='T'                
+                   AND OP.CONDIC ='P'                 
+                   AND PCP.NUMERO_ODF = '${NUMERO_ODF}'    
+                `.trim()).then(result => result.recordset);
+            let newAr = [];
+            for (const key in resource) {
+                if (resource.hasOwnProperty(key)) {
+                    const value = [resource[key].SALDOREAL];
+                    newAr.push(value);
+                    let newValue = Math.min(value);
+                    console.log(newAr);
+                }
+            }
+        }
+        catch (error) {
+            console.log(error);
+        }
+        finally {
+            await connection.close();
+        }
         let end = new Date();
         let start = req.cookies["starterBarcode"];
         let final = end.getTime() - Number(start);

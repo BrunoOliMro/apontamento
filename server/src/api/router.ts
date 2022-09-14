@@ -1,5 +1,6 @@
-import { Router } from "express";
-import mssql from "mssql";
+import { response, Router } from "express";
+import { any } from "joi";
+import mssql, { map } from "mssql";
 import { sqlConfig } from "../global.config";
 import { pictures } from "./pictures";
 
@@ -49,8 +50,9 @@ apiRouter.route("/apontamentoCracha")
 
 apiRouter.route("/apontamento")
     .post(
-        //Sanitização do codigo
         async (req, res) => {
+            var NUMERO_ODF = '1232975'
+            //Sanitização do codigo
             req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
             let barcode = req.body["codigoBarras"]
 
@@ -107,6 +109,34 @@ apiRouter.route("/apontamento")
                     res.status(400).send("Dados não encontrados!")
                 } finally {
                     await connection.close();
+                }
+
+
+
+                try {
+                    const resource = await connection.query(`
+                    SELECT DISTINCT                 
+                       OP.NUMITE,                 
+                       CAST(OP.EXECUT AS INT) AS EXECUT,       
+                       CAST(E.SALDOREAL AS INT) AS SALDOREAL,                 
+                       CAST(((E.SALDOREAL - ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO AND CA.ODF = PCP.NUMERO_ODF),0)) / ISNULL(OP.EXECUT,0)) AS INT) AS QTD_LIBERADA_PRODUZIR,
+                       ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO),0) as saldo_alocado
+                       FROM PROCESSO PRO (NOLOCK)                  
+                       INNER JOIN OPERACAO OP (NOLOCK) ON OP.RECNO_PROCESSO = PRO.R_E_C_N_O_                  
+                       INNER JOIN ESTOQUE E (NOLOCK) ON E.CODIGO = OP.NUMITE                
+                       INNER JOIN PCP_PROGRAMACAO_PRODUCAO PCP (NOLOCK) ON PCP.CODIGO_PECA = OP.NUMPEC                
+                       WHERE 1=1                    
+                       AND PRO.ATIVO ='S'                   
+                       AND PRO.CONCLUIDO ='T'                
+                       AND OP.CONDIC ='P'                 
+                       AND PCP.NUMERO_ODF = '${NUMERO_ODF}'    
+                    `.trim()
+                    ).then(result => result.recordset)
+                    console.log(resource)
+                } catch (error) {
+                    console.log(error)
+                } finally {
+                    await connection.close()
                 }
             }
         }
@@ -332,41 +362,6 @@ apiRouter.route("/apontar")
             }
 
 
-
-            try {
-                const resource = await connection.query(`
-                SELECT DISTINCT                 
-                   OP.NUMITE,                 
-                   CAST(OP.EXECUT AS INT) AS EXECUT,       
-                   CAST(E.SALDOREAL AS INT) AS SALDOREAL,                 
-                   CAST(((E.SALDOREAL - ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO AND CA.ODF = PCP.NUMERO_ODF),0)) / ISNULL(OP.EXECUT,0)) AS INT) AS QTD_LIBERADA_PRODUZIR,
-                   ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO),0) as saldo_alocado
-                   FROM PROCESSO PRO (NOLOCK)                  
-                   INNER JOIN OPERACAO OP (NOLOCK) ON OP.RECNO_PROCESSO = PRO.R_E_C_N_O_                  
-                   INNER JOIN ESTOQUE E (NOLOCK) ON E.CODIGO = OP.NUMITE                
-                   INNER JOIN PCP_PROGRAMACAO_PRODUCAO PCP (NOLOCK) ON PCP.CODIGO_PECA = OP.NUMPEC                
-                   WHERE 1=1                    
-                   AND PRO.ATIVO ='S'                   
-                   AND PRO.CONCLUIDO ='T'                
-                   AND OP.CONDIC ='P'                 
-                   AND PCP.NUMERO_ODF = '1232975'    
-                `.trim()
-                ).then(result => result.recordset)
-                console.log(resource)
-                let preventValuePcBoas = resource[0].PC_BOAS
-                let preventValuePcRefuga = resource[0].PC_REFUGA
-                console.log("pecas boas: " + resource[0].PC_BOAS)
-                console.log("pecas refuga: " + resource[0].PC_REFUGA)
-                var totalPecas = preventValuePcBoas + QTDE_APONTADA
-                var totalRefugo = preventValuePcRefuga + QTD_REFUGO
-            } catch (error) {
-                console.log(error)
-            } finally {
-                await connection.close()
-            }
-
-
-
             try {
                 let endProdTimer = new Date();
                 let startProd = req.cookies["startProd"]
@@ -401,6 +396,7 @@ apiRouter.route("/apontar")
 
 apiRouter.route("/rip")
     .get(async (req, res) => {
+        var NUMERO_ODF = '1232975'
         let NUMPEC = '00240070'
         let REVISAO = '02'
         let NUMCAR = '2999'
@@ -430,6 +426,127 @@ apiRouter.route("/rip")
             ORDER BY NUMPEC ASC
                 `.trim()
             ).then(result => result.recordset)
+
+            try {
+                const resource = await connection.query(`
+                SELECT DISTINCT                 
+                   OP.NUMITE,                 
+                   CAST(OP.EXECUT AS INT) AS EXECUT,       
+                   CAST(E.SALDOREAL AS INT) AS SALDOREAL,                 
+                   CAST(((E.SALDOREAL - ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO AND CA.ODF = PCP.NUMERO_ODF),0)) / ISNULL(OP.EXECUT,0)) AS INT) AS QTD_LIBERADA_PRODUZIR,
+                   ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO),0) as saldo_alocado
+                   FROM PROCESSO PRO (NOLOCK)                  
+                   INNER JOIN OPERACAO OP (NOLOCK) ON OP.RECNO_PROCESSO = PRO.R_E_C_N_O_                  
+                   INNER JOIN ESTOQUE E (NOLOCK) ON E.CODIGO = OP.NUMITE                
+                   INNER JOIN PCP_PROGRAMACAO_PRODUCAO PCP (NOLOCK) ON PCP.CODIGO_PECA = OP.NUMPEC                
+                   WHERE 1=1                    
+                   AND PRO.ATIVO ='S'                   
+                   AND PRO.CONCLUIDO ='T'                
+                   AND OP.CONDIC ='P'                 
+                   AND PCP.NUMERO_ODF = '${NUMERO_ODF}'    
+                `.trim()
+                ).then(result => result.recordset)
+                // const sum1 = Number(resource[0].SALDOREAL)
+                // const sum2 = Number(resource[1].SALDOREAL)
+                // const sum3 = Number(resource[2].SALDOREAL)
+                // const sum4 = sum1 + sum2 + sum3
+                // console.log(sum4)
+
+                // console.log("vamo lá: " + sum1 + "/" + sum2 +"/" + sum3)
+                // const values = Object.keys(resource)
+                // const max = Math.max(...values)
+                // console.log(parseFloat(max.toString()))
+
+                // resource.map((obj)=>{
+                //     obj.value
+                //     console.log(obj.value)
+                // })
+
+                // const vruiwebn = resource.map(Number)
+                // console.log(vruiwebn)
+
+
+
+                // const rey = [sum1, sum2, sum3]
+
+                // let sxs = rey.map((sx)=>{
+                //     return sx
+                // })
+                // console.log(sxs)
+
+                // function equal (){
+                //     return resource[0].SALDOREAL === resource[1].SALDOREAL
+                // }
+                // equal
+
+                // let s = resource[0].SALDOREAL === resource[1].SALDOREAL
+                // console.log(s)
+
+                // Object.entries(resource[0])
+                //     .forEach(([_key, value]) => {
+                //         const max = Math.max(Number(value))
+                //         console.log(max)
+                //         // if(max === 0){
+                //         //     console.log("0")
+                //         // } else {
+                //         //     console.log("outro valor")
+                //         // }
+                //     });
+
+
+                // console.log(JSON.stringify(resource)
+                //     .split(",")
+                //     .map((s) => s.split(":"))
+                // console.log(resource)
+
+                // resource.map((_res)=>{
+                //     console.log(_res)
+                // })
+
+
+                // console.log(rey)
+                // Object.entries(resource[0]).forEach(([key, value]) => {
+                //     const max = Math.max(Number(value))
+                //     console.log("value are: " + max)
+                // });
+
+
+                // Object.entries(resource[0]).forEach(([_key, _value]) => {console.log(_key + "-" + _value) };
+                // let s = Object.values(resource)
+                // let q = Object.values(resource)
+                // q.forEach(() => {
+                //     console.log(q)
+                // });
+                // let v = Object.entries(resource)
+                // console.log(v)
+                // console.log(s)
+                let newAr = []
+                for (const key in resource) {
+                    if (resource.hasOwnProperty(key)) {
+                        const value = [resource[key].SALDOREAL]
+                        // .join(",");
+                        newAr.push(value)
+                         let newValue = Math.min(value)
+                        console.log(newAr)
+                        // let newValue = Math.min(Number(newAr))
+                        // console.log(newValue)
+                        //    if(value < 1){
+                        //     console.log("ewubf")
+                        //    } else if(value >= 1){ 
+                        //     console.log("outro valor")
+                        //    }
+                        //    console.log(newValue)
+                        //    console.log(value);
+                    }
+                }
+
+
+
+            } catch (error) {
+                console.log(error)
+            } finally {
+                await connection.close()
+            }
 
             //Encerra o processo todo
             let end = new Date();
