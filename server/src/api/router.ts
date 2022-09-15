@@ -1,5 +1,5 @@
 import { response, Router } from "express";
-import { any } from "joi";
+import assert from "node:assert";
 import mssql, { map } from "mssql";
 import { sqlConfig } from "../global.config";
 import { pictures } from "./pictures";
@@ -132,7 +132,23 @@ apiRouter.route("/apontamento")
                        AND PCP.NUMERO_ODF = '${NUMERO_ODF}'    
                     `.trim()
                     ).then(result => result.recordset)
-                    console.log(resource)
+                    let saldoRealValues = []
+                    for (const key in resource) {
+                        if (resource.hasOwnProperty(key)) {
+                            const value = [resource[key].SALDOREAL]
+                            // .join(",");
+                            saldoRealValues.push(value)
+                            //    if(value < 1){
+                            //     console.log("ewubf")
+                            //    } else if(value >= 1){ 
+                            //     console.log("outro valor")
+                            //    }
+                        }
+                    }
+                    let minSaldoRealValue = saldoRealValues.reduce((acc) => {
+                        return acc
+                    })
+                    res.json(Number(minSaldoRealValue))
                 } catch (error) {
                     console.log(error)
                 } finally {
@@ -310,6 +326,7 @@ apiRouter.route("/ferramenta")
 apiRouter.route("/apontar")
     .post(
         async (req, res) => {
+            // var NUMERO_ODFUp = '1232975'
             //  req.body = sanitize(req.body.trim());
             let status = '';
             let NUMERO_ODF = req.cookies["NUMERO_ODF"].trim()
@@ -348,15 +365,22 @@ apiRouter.route("/apontar")
                 ORDER BY DATAHORA DESC
                 `.trim()
                 ).then(result => result.recordset)
-                console.log(resource)
-                let preventValuePcBoas = resource[0].PC_BOAS
-                let preventValuePcRefuga = resource[0].PC_REFUGA
-                console.log("pecas boas: " + resource[0].PC_BOAS)
-                console.log("pecas refuga: " + resource[0].PC_REFUGA)
-                var totalPecas = preventValuePcBoas + QTDE_APONTADA
-                var totalRefugo = preventValuePcRefuga + QTD_REFUGO
             } catch (error) {
                 console.log(error)
+            } finally {
+                await connection.close()
+            }
+
+
+            // Por enquanto esta sendo mantido mas vai entrar uma verificação, e provalvelmente depois LIXO
+            try {
+                const resource = await connection.query(`
+                UPDATE CST_ALOCACAO  SET QUANTIDADE =  QUANTIDADE + '${QTDE_APONTADA}' WHERE 1 = 1 AND ODF = '${NUMERO_ODF}'`);
+                const result = resource.recordset.map(() => { });
+                res.json(result);
+            } catch (error) {
+                console.log(error)
+                res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
             } finally {
                 await connection.close()
             }
@@ -391,6 +415,7 @@ apiRouter.route("/apontar")
             } finally {
                 await connection.close()
             }
+
         }
     )
 
@@ -446,108 +471,145 @@ apiRouter.route("/rip")
                    AND PCP.NUMERO_ODF = '${NUMERO_ODF}'    
                 `.trim()
                 ).then(result => result.recordset)
-                // const sum1 = Number(resource[0].SALDOREAL)
-                // const sum2 = Number(resource[1].SALDOREAL)
-                // const sum3 = Number(resource[2].SALDOREAL)
-                // const sum4 = sum1 + sum2 + sum3
-                // console.log(sum4)
 
-                // console.log("vamo lá: " + sum1 + "/" + sum2 +"/" + sum3)
-                // const values = Object.keys(resource)
-                // const max = Math.max(...values)
-                // console.log(parseFloat(max.toString()))
+                /**
+                 * Calcula quantas peças pai podem ser produzidas com o estoque atual de componentes
+                 */
+                function calcQtdMax(qtdNecessPorPeca: number[], saldoEstoque: number[]): number {
+                    // Quantas peças pai o estoque do componente poderia produzir
+                    const pecasPaiPorComponente = qtdNecessPorPeca.map((qtdPorPeca, i) => {
+                        return Math.floor((saldoEstoque[i] || 0) / qtdPorPeca);
+                    });
 
-                // resource.map((obj)=>{
-                //     obj.value
-                //     console.log(obj.value)
-                // })
+                    const qtdMaxProduzivel = pecasPaiPorComponente.reduce((qtdMax, pecasPorComp) => {
+                        return Math.min(qtdMax, pecasPorComp);
+                    }, Infinity);
 
-                // const vruiwebn = resource.map(Number)
-                // console.log(vruiwebn)
-
-
-
-                // const rey = [sum1, sum2, sum3]
-
-                // let sxs = rey.map((sx)=>{
-                //     return sx
-                // })
-                // console.log(sxs)
-
-                // function equal (){
-                //     return resource[0].SALDOREAL === resource[1].SALDOREAL
-                // }
-                // equal
-
-                // let s = resource[0].SALDOREAL === resource[1].SALDOREAL
-                // console.log(s)
-
-                // Object.entries(resource[0])
-                //     .forEach(([_key, value]) => {
-                //         const max = Math.max(Number(value))
-                //         console.log(max)
-                //         // if(max === 0){
-                //         //     console.log("0")
-                //         // } else {
-                //         //     console.log("outro valor")
-                //         // }
-                //     });
-
-
-                // console.log(JSON.stringify(resource)
-                //     .split(",")
-                //     .map((s) => s.split(":"))
-                // console.log(resource)
-
-                // resource.map((_res)=>{
-                //     console.log(_res)
-                // })
-
-
-                // console.log(rey)
-                // Object.entries(resource[0]).forEach(([key, value]) => {
-                //     const max = Math.max(Number(value))
-                //     console.log("value are: " + max)
-                // });
-
-
-                // Object.entries(resource[0]).forEach(([_key, _value]) => {console.log(_key + "-" + _value) };
-                // let s = Object.values(resource)
-                // let q = Object.values(resource)
-                // q.forEach(() => {
-                //     console.log(q)
-                // });
-                // let v = Object.entries(resource)
-                // console.log(v)
-                // console.log(s)
-                let newAr = []
-                for (const key in resource) {
-                    if (resource.hasOwnProperty(key)) {
-                        const value = [resource[key].SALDOREAL]
-                        // .join(",");
-                        newAr.push(value)
-                         let newValue = Math.min(value)
-                        console.log(newAr)
-                        // let newValue = Math.min(Number(newAr))
-                        // console.log(newValue)
-                        //    if(value < 1){
-                        //     console.log("ewubf")
-                        //    } else if(value >= 1){ 
-                        //     console.log("outro valor")
-                        //    }
-                        //    console.log(newValue)
-                        //    console.log(value);
-                    }
+                    //qtdMaxProduzivel.toFixed(1)
+                    Math.round(qtdMaxProduzivel)
+                    return (qtdMaxProduzivel === Infinity ? 0 : qtdMaxProduzivel);
                 }
+                // // Teste 1
+                // assert.deepStrictEqual(
+                //     calcQtdMax(
+                //         [1, 1, 1],
+                //         [1, 1, 119]
+                //     ),
+                //     1,
+                //     "Teste 1"
+                // );
+                // // Teste 2
+                // assert.deepStrictEqual(
+                //     calcQtdMax(
+                //         [100, 1],
+                //         [99, 4]
+                //     ),
+                //     0,
+                //     "Teste 2"
+                // );
+                // // Teste 3
+                // assert.deepStrictEqual(
+                //     calcQtdMax(
+                //         [1, 1515, 3, 2, 1, 1, 1],
+                //         [99, 43, 13, 123, 5, 80, 12],
+                //     ),
+                //     0,
+                //     "Teste 3"
+                // );
 
 
+                // // Teste 4
+                // assert.deepStrictEqual(
+                //     calcQtdMax(
+                //         [100, 515, 354, 696, 65, 625, 979],
+                //         [99, 43, 13, 123, 5, 80, 12],
+                //     ),
+                //     0,
+                //     //0 0 0 0 0 0 0
+                //     "Teste 4"
+                // );
 
+
+                // // Teste 5
+                // assert.deepStrictEqual(
+                //     calcQtdMax(
+                //         [999, 5, 3, 2, 1, 1, 1],
+                //         [99, 43, 13, 123, 5, 80, 12],
+                //     ),
+                //     0,
+                //     "Teste 5"
+                // );
+
+                // // Teste 6
+                // assert.deepStrictEqual(
+                //     calcQtdMax(
+                //         [1000, 5, 3, 2, 1, 1, 1],
+                //         [99, 43, 13, 123, 5, 80, 12],
+                //     ),
+                //     0,
+                //     "Teste 6"
+                // );
+                // // Teste 7
+                // assert.deepStrictEqual(
+                //     calcQtdMax(
+                //         [1000000000000000000000000000000000000000000000000000, 5, 3, 2, 1, 1, 1],
+                //         [99, 43, 13, 123, 5, 80, 12],
+                //     ),
+                //     0,
+                //     "Teste 7"
+                // );
+                // // Teste 8
+                // assert.deepStrictEqual(
+                //     calcQtdMax(
+                //         [15555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555, 5, 3, 2, 1, 1, 1],
+                //         [99, 43, 13, 123, 5, 80, 12],
+                //     ),
+                //     0,
+                //     "Teste 8"
+                // );
+                // // Teste 9
+                // assert.deepStrictEqual(
+                //     calcQtdMax(
+                //         [0.05888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888, 5, 3, 2, 1, 1, 1],
+                //         [99, 43, 13, 123, 5, 80, 12],
+                //     ),
+                //     4,
+                //     "Teste 9"
+                // );
+
+                // // Teste 10
+                // assert.deepStrictEqual(
+                //     calcQtdMax(
+                //         [1000.05888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888, 5, 3, 2, 15, 1, 1],
+                //         [99, 43, 13, 123, 5, 80, 12],
+                //     ),
+                //     0,
+                //     "Teste 10"
+                // );
+                const qtdExec = resource.map(item => item.EXECUT);
+                const saldoEstoque = resource.map(item => item.SALDOREAL);
+                let qtdTotal = calcQtdMax(qtdExec, saldoEstoque);
+
+
+                try {
+                    const resource = await connection.query(`
+                    UPDATE CST_ALOCACAO  SET QUANTIDADE =  QUANTIDADE + '${qtdTotal}' WHERE 1 = 1 AND ODF = '${NUMERO_ODF}'`);
+                    const result = resource.recordset.map(() => { });
+                    res.json(result);
+                } catch (error) {
+                    console.log(error)
+                    res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
+                } finally {
+                    await connection.close()
+                }
+    
+                
+                //res.json(qtdTotal)
             } catch (error) {
                 console.log(error)
             } finally {
                 await connection.close()
             }
-
             //Encerra o processo todo
             let end = new Date();
             let start = req.cookies["starterBarcode"]

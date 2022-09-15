@@ -58,7 +58,6 @@
 
 <main>
   <div>
-    <Breadcrumb />
     <Title />
 
     <!-- {#if !data.ok}

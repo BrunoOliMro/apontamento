@@ -121,7 +121,17 @@ apiRouter.route("/apontamento")
                        AND OP.CONDIC ='P'                 
                        AND PCP.NUMERO_ODF = '${NUMERO_ODF}'    
                     `.trim()).then(result => result.recordset);
-            console.log(resource);
+            let saldoRealValues = [];
+            for (const key in resource) {
+                if (resource.hasOwnProperty(key)) {
+                    const value = [resource[key].SALDOREAL];
+                    saldoRealValues.push(value);
+                }
+            }
+            let minSaldoRealValue = saldoRealValues.reduce((acc) => {
+                return acc;
+            });
+            res.json(Number(minSaldoRealValue));
         }
         catch (error) {
             console.log(error);
@@ -325,16 +335,22 @@ apiRouter.route("/apontar")
                 AND [PECA] =${CODIGO_MAQUINA}
                 ORDER BY DATAHORA DESC
                 `.trim()).then(result => result.recordset);
-        console.log(resource);
-        let preventValuePcBoas = resource[0].PC_BOAS;
-        let preventValuePcRefuga = resource[0].PC_REFUGA;
-        console.log("pecas boas: " + resource[0].PC_BOAS);
-        console.log("pecas refuga: " + resource[0].PC_REFUGA);
-        var totalPecas = preventValuePcBoas + QTDE_APONTADA;
-        var totalRefugo = preventValuePcRefuga + QTD_REFUGO;
     }
     catch (error) {
         console.log(error);
+    }
+    finally {
+        await connection.close();
+    }
+    try {
+        const resource = await connection.query(`
+                UPDATE CST_ALOCACAO  SET QUANTIDADE =  QUANTIDADE + '${QTDE_APONTADA}' WHERE 1 = 1 AND ODF = '${NUMERO_ODF}'`);
+        const result = resource.recordset.map(() => { });
+        res.json(result);
+    }
+    catch (error) {
+        console.log(error);
+        res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
     }
     finally {
         await connection.close();
@@ -410,14 +426,31 @@ apiRouter.route("/rip")
                    AND OP.CONDIC ='P'                 
                    AND PCP.NUMERO_ODF = '${NUMERO_ODF}'    
                 `.trim()).then(result => result.recordset);
-            let newAr = [];
-            for (const key in resource) {
-                if (resource.hasOwnProperty(key)) {
-                    const value = [resource[key].SALDOREAL];
-                    newAr.push(value);
-                    let newValue = Math.min(value);
-                    console.log(newAr);
-                }
+            function calcQtdMax(qtdNecessPorPeca, saldoEstoque) {
+                const pecasPaiPorComponente = qtdNecessPorPeca.map((qtdPorPeca, i) => {
+                    return Math.floor((saldoEstoque[i] || 0) / qtdPorPeca);
+                });
+                const qtdMaxProduzivel = pecasPaiPorComponente.reduce((qtdMax, pecasPorComp) => {
+                    return Math.min(qtdMax, pecasPorComp);
+                }, Infinity);
+                Math.round(qtdMaxProduzivel);
+                return (qtdMaxProduzivel === Infinity ? 0 : qtdMaxProduzivel);
+            }
+            const qtdExec = resource.map(item => item.EXECUT);
+            const saldoEstoque = resource.map(item => item.SALDOREAL);
+            let qtdTotal = calcQtdMax(qtdExec, saldoEstoque);
+            try {
+                const resource = await connection.query(`
+                    UPDATE CST_ALOCACAO  SET QUANTIDADE =  QUANTIDADE + '${qtdTotal}' WHERE 1 = 1 AND ODF = '${NUMERO_ODF}'`);
+                const result = resource.recordset.map(() => { });
+                res.json(result);
+            }
+            catch (error) {
+                console.log(error);
+                res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
+            }
+            finally {
+                await connection.close();
             }
         }
         catch (error) {
