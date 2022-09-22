@@ -3,8 +3,6 @@
     export let indice;
     export let extraColumns;
     let value = [];
-    console.log(dados.LIE);
-
     let some = 10
 </script>
 
@@ -175,9 +173,6 @@
         background-color: white;
         text-align: center;
     }
-    /* .rowIdentadaEsquerda {
-        text-align: left;
-    } */
     td {
         /* width: 100%; */
         vertical-align: middle;

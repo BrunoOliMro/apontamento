@@ -8,46 +8,6 @@ const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../global.config");
 const pictures_1 = require("./pictures");
 const apiRouter = (0, express_1.Router)();
-apiRouter.route("/apontamentoCracha")
-    .post(async (req, res) => {
-    let finalTimer = 6000000;
-    let maxRange = finalTimer;
-    let MATRIC = req.body["MATRIC"].trim();
-    if (MATRIC === '') {
-        res.status(404).send("FUNCIONARIO DESTA MATRICULA NAO ENCONTRADO" + MATRIC);
-    }
-    else {
-        const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-        try {
-            const resource = await connection.query(` 
-                SELECT TOP 1
-                [MATRIC],
-                [FUNCIONARIO]
-                FROM FUNCIONARIOS
-                WHERE 1 = 1
-                AND [MATRIC] = ${MATRIC}
-                `.trim()).then(result => result.recordset);
-            if (resource.length > 0) {
-                let start = new Date();
-                let mili = start.getMilliseconds();
-                console.log(mili / 1000);
-                res.cookie("starterBarcode", start.getTime());
-                res.cookie("MATRIC", resource[0].MATRIC, { httpOnly: true, maxAge: maxRange });
-                res.cookie("FUNCIONARIO", resource[0].FUNCIONARIO);
-                res.status(200).redirect("/#/codigobarras");
-            }
-            else {
-                res.status(404).redirect("/#/codigobarras");
-            }
-        }
-        catch (error) {
-            res.status(404).send("Erro");
-        }
-        finally {
-            await connection.close();
-        }
-    }
-});
 apiRouter.route("/apontamento")
     .post(async (req, res) => {
     var NUMERO_ODF = '1232975';
@@ -121,20 +81,90 @@ apiRouter.route("/apontamento")
                        AND OP.CONDIC ='P'                 
                        AND PCP.NUMERO_ODF = '${NUMERO_ODF}'    
                     `.trim()).then(result => result.recordset);
-            let saldoRealValues = [];
-            for (const key in resource) {
-                if (resource.hasOwnProperty(key)) {
-                    const value = [resource[key].SALDOREAL];
-                    saldoRealValues.push(value);
-                }
+            function calMaxQuant(qtdNecessPorPeca, saldoReal) {
+                const pecasPaiPorComponente = qtdNecessPorPeca.map((qtdPorPeca, i) => {
+                    return Math.floor((saldoReal[i] || 0) / qtdPorPeca);
+                });
+                const qtdMaxProduzivel = pecasPaiPorComponente.reduce((qtdMax, pecasPorComp) => {
+                    return Math.min(qtdMax, pecasPorComp);
+                }, Infinity);
+                Math.round(qtdMaxProduzivel);
+                return (qtdMaxProduzivel === Infinity ? 0 : qtdMaxProduzivel);
             }
-            let minSaldoRealValue = saldoRealValues.reduce((acc) => {
-                return acc;
-            });
-            res.json(Number(minSaldoRealValue));
+            const execut = resource.map(item => item.EXECUT);
+            const saldoReal = resource.map(item => item.SALDOREAL);
+            let qtdTotal = calMaxQuant(execut, saldoReal);
+            const reservedItens = execut.map((e) => {
+                return Math.floor((qtdTotal || 0) * e);
+            }, Infinity);
+            try {
+                const resource = await connection.query(`
+                    UPDATE CST_ALOCAÇÃO SET  QUANTIDADE AS RESERVA = RESERVA + '${reservedItens}' WHERE 1= 1 AND ODF= '${NUMERO_ODF}'`);
+                const result = resource.recordset.map(() => { });
+            }
+            catch (error) {
+                console.log(error);
+                res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
+            }
+            finally {
+                await connection.close();
+            }
+            try {
+                const resource = await connection.query(`
+                    UPDATE CST_ALOCAÇÃO SET  SALDOREAL = SALDOREAL + '${reservedItens}' WHERE 1= 1 AND ODF= '${NUMERO_ODF}'`);
+                const result = resource.recordset.map(() => { });
+            }
+            catch (error) {
+                console.log(error);
+                res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
+            }
+            finally {
+                await connection.close();
+            }
+            res.json();
         }
         catch (error) {
             console.log(error);
+        }
+        finally {
+            await connection.close();
+        }
+    }
+});
+apiRouter.route("/apontamentoCracha")
+    .post(async (req, res) => {
+    let finalTimer = 6000000;
+    let maxRange = finalTimer;
+    let MATRIC = req.body["MATRIC"].trim();
+    if (MATRIC === '') {
+        res.status(404).send("FUNCIONARIO DESTA MATRICULA NAO ENCONTRADO" + MATRIC);
+    }
+    else {
+        const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+        try {
+            const resource = await connection.query(` 
+                SELECT TOP 1
+                [MATRIC],
+                [FUNCIONARIO]
+                FROM FUNCIONARIOS
+                WHERE 1 = 1
+                AND [MATRIC] = ${MATRIC}
+                `.trim()).then(result => result.recordset);
+            if (resource.length > 0) {
+                let start = new Date();
+                let mili = start.getMilliseconds();
+                console.log(mili / 1000);
+                res.cookie("starterBarcode", start.getTime());
+                res.cookie("MATRIC", resource[0].MATRIC, { httpOnly: true, maxAge: maxRange });
+                res.cookie("FUNCIONARIO", resource[0].FUNCIONARIO);
+                res.status(200).redirect("/#/codigobarras");
+            }
+            else {
+                res.status(404).redirect("/#/codigobarras");
+            }
+        }
+        catch (error) {
+            res.status(404).send("Erro");
         }
         finally {
             await connection.close();
@@ -366,9 +396,10 @@ apiRouter.route("/apontar")
         res.cookie("startRip", startRip.getTime());
         const insertSqlRework = await connection.query('INSERT INTO HISAPONTA(CST_PC_FALTANTE, CST_QTD_RETRABALHADA) VALUES (' + CST_PC_FALTANTE + ',' + CST_QTD_RETRABALHADA + ')');
         const insertSql = await connection.query('INSERT INTO PCP_PROGRAMACAO_PRODUCAO(NUMERO_ODF,NUMERO_OPERACAO,CODIGO_MAQUINA,EMPRESA_RECNO, QTDE_APONTADA, QTD_REFUGO) VALUES (' + NUMERO_ODF + ',' + NUMERO_OPERACAO + ',' + CODIGO_MAQUINA + ',' + EMPRESA_RECNO + ',' + totalPecas + ',' + totalRefugo + ')');
-        console.log(insertSql);
         const insertSqlTimer = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + finalProdTimer + ')');
-        res.redirect(`/#/rip`);
+        const resourceReserved = await connection.query(`UPDATE CST_ALOCAÇÃO SET  QUANTIDADE AS RESERVA = RESERVA - '${QTDE_APONTADA}' WHERE 1= 1 AND ODF= '${NUMERO_ODF}'`);
+        const resourceSaldoReal = await connection.query(`UPDATE CST_ALOCAÇÃO SET  SALDOREAL = SALDOREAL - '${QTDE_APONTADA}' WHERE 1= 1 AND ODF= '${NUMERO_ODF}'`);
+        res.sendStatus(200).redirect(`/#/rip`);
     }
     catch (error) {
         res.redirect(`/#/rip`);
@@ -426,32 +457,6 @@ apiRouter.route("/rip")
                    AND OP.CONDIC ='P'                 
                    AND PCP.NUMERO_ODF = '${NUMERO_ODF}'    
                 `.trim()).then(result => result.recordset);
-            function calcQtdMax(qtdNecessPorPeca, saldoEstoque) {
-                const pecasPaiPorComponente = qtdNecessPorPeca.map((qtdPorPeca, i) => {
-                    return Math.floor((saldoEstoque[i] || 0) / qtdPorPeca);
-                });
-                const qtdMaxProduzivel = pecasPaiPorComponente.reduce((qtdMax, pecasPorComp) => {
-                    return Math.min(qtdMax, pecasPorComp);
-                }, Infinity);
-                Math.round(qtdMaxProduzivel);
-                return (qtdMaxProduzivel === Infinity ? 0 : qtdMaxProduzivel);
-            }
-            const qtdExec = resource.map(item => item.EXECUT);
-            const saldoEstoque = resource.map(item => item.SALDOREAL);
-            let qtdTotal = calcQtdMax(qtdExec, saldoEstoque);
-            try {
-                const resource = await connection.query(`
-                    UPDATE CST_ALOCACAO  SET QUANTIDADE =  QUANTIDADE + '${qtdTotal}' WHERE 1 = 1 AND ODF = '${NUMERO_ODF}'`);
-                const result = resource.recordset.map(() => { });
-                res.json(result);
-            }
-            catch (error) {
-                console.log(error);
-                res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
-            }
-            finally {
-                await connection.close();
-            }
         }
         catch (error) {
             console.log(error);
@@ -476,6 +481,8 @@ apiRouter.route("/rip")
 });
 apiRouter.route("/lancamentoRip")
     .post(async (req, res) => {
+    let returnedvalue = req.body["returnValue"].trim();
+    let NUMERO_ODF = req.cookies["NUMERO_ODF"];
     let SETUP = req.body["SETUP"].trim();
     let M2 = req.body["M2"].trim();
     let M3 = req.body["M3"].trim();
@@ -494,6 +501,25 @@ apiRouter.route("/lancamentoRip")
             ')').then(result => result.recordset);
         console.log(resource);
         res.json(resource);
+    }
+    catch (error) {
+        console.log(error);
+    }
+    finally {
+        await connection.close();
+    }
+});
+apiRouter.route("/returnedValue")
+    .post(async (req, res) => {
+    let returnedvalue = req.body["returnValue"].trim();
+    let NUMERO_ODF = req.body["returnValue"].trim();
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    try {
+        const resource = await connection.query(`
+                    UPDATE CST_ALOCACAO  SET SALDOREAL =  SALDOREAL - '${returnedvalue}' WHERE 1 = 1 AND ODF = '${NUMERO_ODF}'`);
+        const result = resource.recordset.map(() => { });
+        console.log(resource);
+        res.status(200).json(resource);
     }
     catch (error) {
         console.log(error);

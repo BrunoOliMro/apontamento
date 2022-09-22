@@ -10,8 +10,13 @@
 </nav>
 
 <style>
-  .breadcrumb {
-    margin-bottom: 1%;
+  a{
+    font-size: 18px;
+    color: black;
+  }
+
+  a:hover{
+    color: rgb(52, 52, 52);
   }
 
   @media screen and (max-width: 500px) {

@@ -54,6 +54,15 @@
             extraColumns = [...extraColumns, extraColumns.length + 6];
         }
     }
+
+    let showmodal = false;
+    function returnValue() {
+        if(showmodal === false){
+            showmodal = true
+        } else {
+            showmodal = false
+        }
+    }
 </script>
 
 <main>
@@ -65,50 +74,27 @@
         <button on:click={doPost} class="sideButton" type="submit"
             >Enviar dados</button
         >
+
+        <button on:click={returnValue} class="sideButton" type="submit">
+            Estornar Valores
+        </button>
+
+        {#if showmodal === true}
+            <form
+                action="/api/v1/returnedValue"
+                method="POST"
+                class="returnValue"
+            >
+                <h2 class="modalTitle">Codigo do Supervisor</h2>
+                <input type="text" id="returnValue" name="returnValue"/>
+                <h2 class="modalTitle">
+                    Insira a quantidade que deseja estornar
+                </h2>
+                <input type="text" />
+            </form>
+        {/if}
     </div>
     <div class="title">{Subtitle}</div>
-    <!-- <button
-        type="button"
-        class="btn btn-primary"
-        data-bs-toggle="modal"
-        data-bs-target="#exampleModalLong"
-    >
-        Desefetivar Lançamento
-    </button> -->
-
-    <!-- <div
-        class="modal fade"
-        id="exampleModalLong"
-        tabindex="-1"
-        role="dialog"
-        aria-labelledby="exampleModalLongTitle"
-        aria-modal="true"
-    >
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLongTitle">
-                        Para alterar um lançamento, Selecione um Supervisor
-                    </h5>
-                    <button
-                        type="button"
-                        class="close"
-                        data-bs-dismiss="modal"
-                        aria-label="Close"
-                    >
-                    </button>
-                </div>
-                <div class="modal-body">...</div>
-                <div class="modal-footer">
-                    <button
-                        type="button"
-                        class="btn btn-secondary"
-                        data-bs-dismiss="modal">Fechar</button
-                    >
-                </div>
-            </div>
-        </div>
-    </div> -->
     {#if ripTable.length !== 0}
         <form action="/api/v1/lancamentoRip" method="POST">
             <div class="tabela table-responsive">
@@ -151,6 +137,24 @@
 </main>
 
 <style>
+
+    h2 {
+        font-size: 20px;
+    }
+    .returnValue {
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        width: 350px;
+        height: 250px;
+        border-radius: 3px;
+        vertical-align: middle;
+        position: absolute;
+        left: 40%;
+        top: 20%;
+        color: white;
+        background-color: black;
+    }
     .divBtn {
         display: flex;
         margin: 1%;

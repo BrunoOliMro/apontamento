@@ -33,7 +33,13 @@
 </script>
 
 <div>
-    <Breadcrumb />
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="/#/codigobarras/apontamento">Apontamento</a>
+      </li>
+    </ol>
+  </nav>
     <div class="subtitle">{Subtitle}</div>
     <div class="content">
         <!-- <div id="popUP">

@@ -13,8 +13,6 @@
     import popUp5 from "../content/feed.svelte";
     import close from "../content/feed.svelte";
 
-    let showModal = false;
-
     const getMissingFeed = () => {
         document.getElementById("faltante").style.display = "block";
         document.getElementById("retrabalhar").style.display = "none";
@@ -31,6 +29,19 @@
     const paradaMaq = () => {
         document.getElementById("popUp1").style.display = "none";
     };
+
+    let showmodal = false;
+    function returnValue() {
+        if (showmodal === false) {
+            showmodal = true;
+        } else {
+            showmodal = false;
+        }
+    }
+
+    function stop(){
+        console.log("dwenfu")
+    }
 </script>
 
 <main>
@@ -46,7 +57,7 @@
         <button
             on:click={getMissingFeed}
             type="button"
-            class="btn btn-primary"
+            class="sideButton"
             id="missingFeed"
             name="missing"
             >Faltante
@@ -54,67 +65,81 @@
         <button
             on:click={getReworkFeed}
             type="button"
-            class="btn btn-primary"
+            class="sideButton"
             id="reworkFeed"
             name="rework"
             >Retrabalhar
         </button>
         <a href="/#/rip/"
-            ><button type="button" class="btn btn-primary">Inspeção</button></a
+            ><button type="button" class="sideButton">Inspeção</button></a
         >
         <a href="/#/historico/"
-            ><button type="button" class="btn btn-primary"> Historico </button>
+            ><button type="button" class="sideButton"> Historico </button>
         </a>
-        <button
-            type="button"
-            class="btn btn-primary"
-            data-bs-toggle="modal"
-            data-bs-target="#exampleModalCenter"
-        >
+        <button type="button" class="sideButton" on:click={returnValue}>
             Parada
         </button>
 
         <a href="/#/desenho/"
-            ><button type="button" class="btn btn-primary">Desenho</button></a
+            ><button type="button" class="sideButton">Desenho</button></a
         >
 
-        <div
-            class="modal fade"
-            id="exampleModalCenter"
-            tabindex="-1"
-            role="dialog"
-            aria-labelledby="exampleModalCenterTitle"
-            aria-hidden="true"
-        >
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLongTitle">
-                            Motivo da Parada
-                        </h5>
-                    </div>
-                    <div class="modal-body">
-                        <li>DOR DE BARRIGA</li>
-                        <li>DIARREIA</li>
-                        <li>CAGANEIRA</li>
-                        <li>SOLTA UM BARRO</li>
-                        <li>HEMORROIDA ATACADA</li>
-                        <li>FEIJOADA DEMAIS</li>
-                    </div>
-                    <div class="modal-footer">
-                        <button
-                            type="button"
-                            class="btn btn-secondary"
-                            data-bs-dismiss="modal">Close</button
-                        >
-                    </div>
-                </div>
+        {#if showmodal === true}
+        <div class="li">
+            <h2>Motivo da Parada</h2>
+            <div class="btns">
+                <button on:click={stop}>DOR DE BARRIGA</button>
+                <button on:click={stop}>CAGANEIRA</button>
+                <button on:click={stop}>FEIJOADA DEMAIS</button>
+                <button on:click={stop}>ESTUFADO</button>
+                <button on:click={stop}>SONO</button>
+
             </div>
         </div>
+        {/if}
     </div>
 </main>
 
 <style>
+    .btns{
+        display: flex;
+        flex-direction: column;
+    }
+    .li {
+        display: inline-block;
+        position: fixed; /* Stay in place */
+        left: 40%;
+        top: 25%;
+        width: 350px; /* Full width */
+        height: 230px; /* Full height */
+        background-color:black; /* Fallback color */
+        color: white;
+        border-radius: 3px;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+    .sideButton {
+        margin: 1%;
+        padding: 0%;
+        font-size: 14px;
+        width: 120px;
+        height: 35px;
+        display: flex;
+        justify-content: center;
+        text-align: center;
+        align-items: center;
+        border-radius: 3px;
+        background-color: transparent;
+    }
+
+    .sideButton:hover {
+        outline: none;
+        cursor: pointer;
+        background-color: black;
+        color: white;
+        transition: 1s;
+    }
     .nav {
         margin: 0%;
         padding: 0%;
@@ -138,7 +163,7 @@
             display: none;
         }
     }
-   
+
     @media screen and (max-width: 820px) {
         .nav {
             display: none;

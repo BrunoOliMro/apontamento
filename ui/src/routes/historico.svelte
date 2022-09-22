@@ -1,6 +1,6 @@
 <script>
   import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
-  let subtitle = "Historico de Apontamento"
+  let subtitle = "Historico de Apontamento";
   let HISTORICO = [];
   let urlString = `/api/v1/HISTORICO?&HISTORICO=${HISTORICO}`;
 
@@ -19,9 +19,21 @@
     {#await res}
       <div>...</div>
     {:then HISTORICO}
-      <div id="cardb" class="card">
-        {JSON.stringify(HISTORICO)}
-      </div>
+      <table class="table table-hover table-striped caption-top">
+        <thead>
+          <tr id="header">
+            <th scope="col">Item</th>
+            <th scope="col">Descrição</th>
+            <th scope="col">Especif.</th>
+          </tr>
+        </thead>
+        <tbody id="corpoTabela">
+          {#each HISTORICO as row, i}
+            <HISTORICO />
+            {HISTORICO}
+          {/each}
+        </tbody>
+      </table>
     {/await}
   </div>
 </main>
@@ -30,25 +42,17 @@
   main {
     margin: 1%;
   }
-  #cardb {
-    width: 600px;
-    height: 200px;
-  }
 
   @media screen and (max-width: 550px) {
     main {
       margin: 1%;
     }
-    #cardb {
-      width: 425px;
-      height: 200px;
-      margin: 1%;
-    }
-    .subtitle{
+
+    .subtitle {
       font-size: 23px;
       margin: 1%;
     }
-    .main{
+    .main {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -60,16 +64,12 @@
     main {
       margin: 1%;
     }
-    #cardb {
-      width: 450px;
-      height: 200px;
-      margin: 1%;
-    }
-    .subtitle{
+
+    .subtitle {
       font-size: 25px;
       margin: 1%;
     }
-    .main{
+    .main {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -81,16 +81,12 @@
     main {
       margin: 1%;
     }
-    #cardb {
-      width: 475px;
-      height: 200px;
-      margin: 1%;
-    }
-    .subtitle{
+
+    .subtitle {
       font-size: 28px;
       margin: 1%;
     }
-    .main{
+    .main {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -101,15 +97,12 @@
     main {
       margin: 1%;
     }
-    #cardb {
-      width: 600px;
-      height: 200px;
-    }
-    .subtitle{
+
+    .subtitle {
       font-size: 30px;
       margin: 1%;
     }
-    .main{
+    .main {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -120,17 +113,14 @@
     main {
       margin: 1%;
     }
-    #cardb {
-      width: 600px;
-      height: 200px;
-    }
-    .main{
+
+    .main {
       display: flex;
       justify-content: center;
       align-items: center;
       text-align: center;
     }
-    .subtitle{
+    .subtitle {
       font-size: 35px;
       margin: 1%;
     }
@@ -139,17 +129,14 @@
     main {
       margin: 1%;
     }
-    #cardb {
-      width: 600px;
-      height: 200px;
-    }
-    .main{
+
+    .main {
       display: flex;
       justify-content: center;
       align-items: center;
       text-align: center;
     }
-    .subtitle{
+    .subtitle {
       font-size: 35px;
       margin: 1%;
     }
@@ -159,17 +146,14 @@
     main {
       margin: 1%;
     }
-    #cardb {
-      width: 600px;
-      height: 200px;
-    }
-    .main{
+
+    .main {
       display: flex;
       justify-content: center;
       align-items: center;
       text-align: center;
     }
-    .subtitle{
+    .subtitle {
       font-size: 35px;
       margin: 1%;
     }
