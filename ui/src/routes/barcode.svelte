@@ -6,6 +6,8 @@
   let codigoBarras = "";
   let result = {};
   let urlS = `/api/v1/apontamento`;
+  let urlBagde = `/api/v1/apontamentoCracha`;
+  let cracha = '';
   // function handleSubmit() {
   //   result = doPost();
   // }
@@ -35,7 +37,10 @@
   // async function doPost() {
   // value = preSanitize(value);
 
-  const doPost = async (/** @type {any} */ error, /** @type {Response} */ res) => {
+  const doPost = async (
+    /** @type {any} */ error,
+    /** @type {Response} */ res
+  ) => {
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
     res = await fetch(urlS, {
@@ -45,70 +50,50 @@
       }),
       headers,
     });
-    if (!res.ok) {
-      alert(res.status)
-    } else {
-      alert(res.status);
-    }
   };
 
-  // data = await res.json();
+  const checkBagde = async (
+    /** @type {any} */ error,
+    /** @type {Response} */ res
+  ) => {
+    const headers = new Headers();
+    headers.append("Content-Type", "application/json");
+    res = await fetch(urlBagde, {
+      method: "POST",
+      body: JSON.stringify({
+        cracha: !cracha ? "" : cracha,
+      }),
+      headers,
+    });
+  };
+
+
   let resultado = doPost;
 </script>
 
 <main>
   <div>
     <Title />
+    {#if resultado.length == 0}
+      <h5>Codigo de barras Invalido</h5>
+    {/if}
 
-    <!-- {#if !data.ok}
-    <div> dheb</div>
-    {/if} -->
+    {#if resultado.length == 0}
+      <h5>Crachá Invalido</h5>
+    {/if}
 
-    <!-- {#await resultado }
-  <div>...</div>
-{:then da }  -->
-    <div
-      class="modal fade show"
-      id="exampleModalCenter"
-      tabindex="-1"
-      role="dialog"
-      aria-labelledby="exampleModalCenterTitle"
-      aria-hidden="true"
-    >
-      <div>
-        <div class="modal-dialog modal-dialog-centered" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="exampleModalLongTitle">
-                Codigo de barras Invalido
-              </h5>
-            </div>
-            <div class="modal-body">
-              <p>Codigo de barras não encontrado ou não é valido</p>
-            </div>
-            <div class="modal-footer">
-              <button
-                type="button"
-                class="btn btn-secondary"
-                data-bs-dismiss="modal">Fechar</button
-              >
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- {/await} -->
+    {#if resultado.length !== 0}
+      <form action="/api/v1/apontamento" method="POST" on:submit={doPost}>
+        <div class="bar" id="title">Código de barras</div>
+        <!-- on:input={setValues} -->
+        <!-- on:input={blockForbiddenChars} -->
+        <label class="input">
+          <input bind:value id="codigoBarras" name="codigoBarras" type="text" />
+        </label>
+      </form>
+    {/if}
 
-    <div class="bar" id="title">Código de barras</div>
-    <!-- on:input={setValues} -->
-    <!-- on:input={blockForbiddenChars} -->
-    <form action="/api/v1/apontamento" method="POST" on:submit={doPost}>
-      <label class="input">
-        <input bind:value id="codigoBarras" name="codigoBarras" type="text" />
-      </label>
-    </form>
-
-    <form action="/api/v1/apontamentoCracha" method="POST">
+    <form action="/api/v1/apontamentoCracha" method="POST" on:submit={checkBagde}>
       <div id="popUpCracha">
         <!-- on:input={blockForbiddenChars} -->
         <div id="title">Colaborador</div>

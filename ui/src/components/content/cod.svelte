@@ -1,17 +1,12 @@
 <script>
+    // @ts-nocheck
+
     const dataFromBarcode = localStorage.getItem("barcodeData");
     let NUMERO_ODF = Number(dataFromBarcode.slice(10));
     let NUMERO_OPERACAO = Number(dataFromBarcode.slice(0, 5));
     let CODIGO_MAQUINA = String(dataFromBarcode.slice(5, 10));
     let urlString = `/api/v1/odf?NUMERO_ODF=${NUMERO_ODF}&CODIGO_MAQUINA=${CODIGO_MAQUINA}&NUMERO_OPERACAO=${NUMERO_OPERACAO}`;
     let dadosOdf = [];
-
-    // Procura na string
-    // let allCookies = document.cookie;
-    // allCookies.split(";");
-    // let numberFunc = allCookies.search("FUNCIONARIO=") + 12;
-    // let gss = allCookies.search("barcode=") - 2;
-    // let someee = allCookies.slice(numberFunc, gss);
 
     let employeName = document.cookie
         .split(";")
@@ -27,29 +22,53 @@
     async function getOdfData() {
         const res = await fetch(urlString);
         dadosOdf = await res.json();
+        console.log(dadosOdf);
     }
     let resultado = getOdfData();
 </script>
 
 <main>
-    {#await resultado}
-        <div>...</div>
-    {:then dadosOdf}
+    {#if dadosOdf.length !== 0}
         <div class="areaCodigos">
             <div class="odf">ODF:</div>
-            <div class="bold">{NUMERO_ODF}</div>
+            <div class="bold">
+                {NUMERO_ODF === null || !NUMERO_ODF ? "S/I" : NUMERO_ODF}
+            </div>
             <div class="odf">Cód. Interno:</div>
-            <div class="bold">{dadosOdf[0].CODIGO_PECA}</div>
+            <div class="bold">
+                {dadosOdf[0].CODIGO_PECA === null || !dadosOdf[0].CODIGO_PECA
+                    ? "S/I"
+                    : dadosOdf[0].CODIGO_PECA}
+            </div>
             <div class="odf">Cód. do Cliente:</div>
-            <div class="bold">{dadosOdf[0].CODIGO_CLIENTE}</div>
+            <div class="bold">
+                {dadosOdf[0].CODIGO_CLIENTE === null ||
+                !dadosOdf[0].CODIGO_CLIENTE
+                    ? "S/I"
+                    : dadosOdf[0].CODIGO_CLIENTE}
+            </div>
             <div class="odf">Operador:</div>
-            <div class="bold">{employeName.FUNCIONARIO}</div>
+            <div class="bold">
+                {employeName.FUNCIONARIO === null || !employeName.FUNCIONARIO
+                    ? "S/I"
+                    : employeName.FUNCIONARIO}
+            </div>
             <div class="odf">OP:</div>
             <div class="bold">
-                {NUMERO_OPERACAO} - {CODIGO_MAQUINA} - {dadosOdf[0].QTDE_ODF[0]}
+                {NUMERO_OPERACAO === null || !NUMERO_OPERACAO
+                    ? "S/I"
+                    : NUMERO_OPERACAO} -
+                {CODIGO_MAQUINA === null || !CODIGO_MAQUINA
+                    ? "S/I"
+                    : CODIGO_MAQUINA} -
+                {dadosOdf[0].QTDE_ODF[0] === null || !dadosOdf[0].QTDE_ODF[0]
+                    ? "S/I"
+                    : dadosOdf[0].QTDE_ODF[0]}
             </div>
         </div>
-    {/await}
+    {:else}
+        <h3>Não há histórico para exibir</h3>
+    {/if}
 </main>
 
 <style>

@@ -3,9 +3,12 @@
     import TableRow from "../components/Tables/TableRipRow.svelte";
     import { onMount } from "svelte";
     import TableRipRow from "../components/Tables/TableRipRow.svelte";
+    
     let urlS = `/api/v1/lancamentoRip`;
     let urlString = `/api/v1/rip`;
+
     let Subtitle = "RIP - RELATÓRIO DE INSPEÇÃO DE PROCESSOS";
+
     let SETUP = "";
     let M2 = "";
     let M3 = "";

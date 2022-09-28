@@ -9,14 +9,13 @@
   async function getOdfData() {
     const res = await fetch(urlString);
     dadosOdf = await res.json();
+    console.log(dadosOdf);
   }
   let resultado = getOdfData();
 </script>
 
 <main class="main">
-  {#await resultado}
-    <div>...</div>
-  {:then dadosOdf}
+  {#if dadosOdf.length !== 0}
     <div class="div1">
       <div class="title">INICIO:</div>
       {dadosOdf[0].DT_INICIO_OP.slice(6, 8)} /
@@ -36,14 +35,16 @@
       {(dadosOdf[0].HORA_FIM =
         dadosOdf[0].HORA_FIM === null ? "SEM DADOS" : dadosOdf[0].HORA_FIM)}
     </div>
-  {/await}
+  {:else}
+    <h3>Não há histórico para exibir</h3>
+  {/if}
 </main>
 
 <style>
   main {
     display: flex;
     font-weight: bold;
-    margin-top: 5%;
+    margin-top: 3%;
     justify-content: space-around;
   }
 

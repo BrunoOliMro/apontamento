@@ -7,7 +7,6 @@
   async function getHISTORICO() {
     const res = await fetch(urlString);
     HISTORICO = await res.json();
-    return HISTORICO;
   }
   let res = getHISTORICO();
 </script>
@@ -16,25 +15,32 @@
   <Breadcrumb />
   <div class="subtitle">{subtitle}</div>
   <div class="main">
-    {#await res}
-      <div>...</div>
-    {:then HISTORICO}
+      {#if HISTORICO.length !== 0 }
       <table class="table table-hover table-striped caption-top">
         <thead>
           <tr id="header">
-            <th scope="col">Item</th>
-            <th scope="col">Descrição</th>
-            <th scope="col">Especif.</th>
+            <th scope="col">OP</th>
+            <th scope="col">ODF</th>
+            <th scope="col">MAQUINA</th>
+            <th scope="col">BOAS</th>
+            <th scope="col">REFUGO</th>
+            <th scope="col">FALTANTE</th>
           </tr>
         </thead>
         <tbody id="corpoTabela">
           {#each HISTORICO as row, i}
-            <HISTORICO />
-            {HISTORICO}
+          <td>{HISTORICO[0].OP === null || !HISTORICO[0].OP ? "S/I" : HISTORICO[0].OP}</td>
+          <td>{HISTORICO[0].ODF === null || !HISTORICO[0].ODF ? "S/I" : HISTORICO[0].ODF}</td>
+          <td>{HISTORICO[0].MAQUINA === null || !HISTORICO[0].MAQUINA ? "S/I" : HISTORICO[0].MAQUINA}</td>
+          <td>{HISTORICO[0].BOAS === null || !HISTORICO[0].BOAS ? "S/I" : HISTORICO[0].BOAS}</td>
+          <td>{HISTORICO[0].REFUGO === null || !HISTORICO[0].REFUGO ? "S/I" : HISTORICO[0].REFUGO}</td>
+          <td>{HISTORICO[0].PC_FALTANTE === null || !HISTORICO[0].PC_FALTANTE ? "S/I" : HISTORICO[0].PC_FALTANTE}</td>
           {/each}
         </tbody>
       </table>
-    {/await}
+      {:else}
+        <h3>Não há histórico para exibir</h3>
+      {/if}
   </div>
 </main>
 

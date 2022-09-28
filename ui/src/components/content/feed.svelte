@@ -1,16 +1,20 @@
 <script>
+    import showBtnParcial from "./nav.svelte";
     const dataFromBarcode = localStorage.getItem("barcodeData");
     let NUMERO_ODF = Number(dataFromBarcode.slice(10));
-    let NUMERO_OPERACAO = dataFromBarcode.slice(0, 5);
-    let CODIGO_MAQUINA = dataFromBarcode.slice(5, 10);
+    let NUMERO_OPERACAO = String(dataFromBarcode.slice(0, 5));
+    let CODIGO_MAQUINA = String(dataFromBarcode.slice(5, 10));
     let goodFeed;
     let badFeed;
     let missingFeed;
     let reworkFeed;
-    let urlS = `/api/v1/apontar`
+    let parcialFeed;
+
+    let urlS = `/api/v1/apontar`;
+
     import paradaMaq from "../content/nav.svelte";
     let urlString = `/api/v1/odf?NUMERO_ODF=${NUMERO_ODF}&CODIGO_MAQUINA=${CODIGO_MAQUINA}&NUMERO_OPERACAO=${NUMERO_OPERACAO}`;
-    let dadosOdf = []
+    let dadosOdf = [];
 
     async function getOdfData() {
         const res = await fetch(urlString);
@@ -26,6 +30,7 @@
                 badFeed: badFeed,
                 reworkFeed: reworkFeed,
                 missingFeed: missingFeed,
+                parcialFeed: parcialFeed,
             }),
             headers,
         });
@@ -35,16 +40,14 @@
 </script>
 
 <main id="main" class="align-self-center">
-    {#await resultado}
-        <div>...</div>
-    {:then dadosOdf}
+    {#if dadosOdf.length !== 0}
         <form action="/api/v1/apontar" method="POST">
             <div class="write">Produzir {dadosOdf[0].QTDE_ODF[0]}</div>
             <div class="write" id="goodFeed">
                 Boas
                 <input class="input" id="goodFeed" name="goodFeed" />
             </div>
-            <div class="write" id="some" name="some">
+            <div class="write" id="ruins" name="ruins">
                 Ruins
                 <input class="input" id="badFeed" name="badFeed" />
             </div>
@@ -55,6 +58,15 @@
                     type="text"
                     id="reworkFeed"
                     name="reworkFeed"
+                />
+            </div>
+            <div class="write" id="parcialFeed">
+                Parcial
+                <input
+                    class="input"
+                    type="text"
+                    id="parcial"
+                    name="parcial"
                 />
             </div>
             <div class="write" id="faltante">
@@ -73,10 +85,15 @@
                 class="btn btn-primary">Apontar</button
             >
         </form>
-    {/await}
+    {:else}
+        <h3>Não há histórico para exibir</h3>
+    {/if}
 </main>
 
 <style>
+    #parcialFeed{
+        display: none;
+    }
     main {
         font-size: 55px;
         justify-content: center;

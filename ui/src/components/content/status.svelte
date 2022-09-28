@@ -10,17 +10,13 @@
     async function getIMAGEM() {
         const res = await fetch(urlString);
         IMAGEM = await res.json();
-        console.log(IMAGEM);
-        return IMAGEM;
     }
 
     let resultado = getIMAGEM();
 </script>
 
 <div class="content">
-    {#await resultado}
-        <div>...</div>
-    {:then dadosOdf}
+    {#if IMAGEM.length !== 0 }
         {#if status <= 50}
             <div class="item" style="background-color:black" id="status">
                 <!-- {dadosOdf[0].APT_TEMPO_OPERACAO} -->
@@ -42,7 +38,9 @@
             </div>
         {/if}
         <img class="img" src={IMAGEM[0].img} alt="" />
-    {/await}
+        {:else}
+        <h3>Não há histórico para exibir</h3>
+        {/if}
 </div>
 
 <style>

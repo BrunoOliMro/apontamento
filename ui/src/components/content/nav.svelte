@@ -2,35 +2,42 @@
     import badFeed from "../content/feed.svelte";
     import reworkFeed from "../content/feed.svelte";
     import missingFeed from "../content/feed.svelte";
-    import some from "../content/feed.svelte";
+    import ruins from "../content/feed.svelte";
     import retrabalhar from "../content/feed.svelte";
     import faltante from "../content/feed.svelte";
-    import popUp from "../content/feed.svelte";
-    import popUp1 from "../content/feed.svelte";
-    import popUp2 from "../content/feed.svelte";
-    import popUp3 from "../content/feed.svelte";
-    import popUp4 from "../content/feed.svelte";
-    import popUp5 from "../content/feed.svelte";
-    import close from "../content/feed.svelte";
+    import parcialFeed from "../content/feed.svelte"
 
-    const getMissingFeed = () => {
+    let urlStop = `/api/v1/parada`;
+    let urlPause = `/api/v1/pause`;
+    let dadosOdf = []
+
+    const getMissingFeed = async () => {
         document.getElementById("faltante").style.display = "block";
         document.getElementById("retrabalhar").style.display = "none";
-        document.getElementById("some").style.display = "none";
+        document.getElementById("ruins").style.display = "none";
         document.getElementById("badFeed").style.display = "none";
+        document.getElementById("parcialFeed").style.display = "none";
     };
-    const getReworkFeed = () => {
+
+    const getReworkFeed = async () => {
         document.getElementById("faltante").style.display = "none";
         document.getElementById("retrabalhar").style.display = "block";
-        document.getElementById("some").style.display = "none";
+        document.getElementById("ruins").style.display = "none";
         document.getElementById("badFeed").style.display = "none";
+        document.getElementById("parcialFeed").style.display = "none";
     };
 
-    const paradaMaq = () => {
-        document.getElementById("popUp1").style.display = "none";
-    };
+    const getParcial = async () =>{
+        document.getElementById("faltante").style.display = "none";
+        document.getElementById("retrabalhar").style.display = "none";
+        document.getElementById("ruins").style.display = "none";
+        document.getElementById("badFeed").style.display = "none";
+        document.getElementById("parcialFeed").style.display = "block";
+    }
+
 
     let showmodal = false;
+    //let showBtnParcial = false;
     function returnValue() {
         if (showmodal === false) {
             showmodal = true;
@@ -39,13 +46,20 @@
         }
     }
 
-    function stop(){
-        console.log("dwenfu")
+    async function stop(){
+        const res = await fetch(urlStop);
+        dadosOdf = await res.json();
+    }
+
+    async function pause(){
+        const res = await fetch(urlPause);
+        dadosOdf = await res.json();
     }
 </script>
 
 <main>
     <ul class="nav2">
+        <li>Parcial</li>
         <li>Faltante</li>
         <li>Retrabalhar</li>
         <li>Inspeção</li>
@@ -55,10 +69,16 @@
     </ul>
     <div class="nav">
         <button
+            on:click={getParcial}
+            type="button"
+            class="sideButton"
+            name="parcial"
+            >Parcial
+        </button>
+        <button
             on:click={getMissingFeed}
             type="button"
             class="sideButton"
-            id="missingFeed"
             name="missing"
             >Faltante
         </button>
@@ -66,7 +86,6 @@
             on:click={getReworkFeed}
             type="button"
             class="sideButton"
-            id="reworkFeed"
             name="rework"
             >Retrabalhar
         </button>
@@ -90,9 +109,9 @@
             <div class="btns">
                 <button on:click={stop}>DOR DE BARRIGA</button>
                 <button on:click={stop}>CAGANEIRA</button>
-                <button on:click={stop}>FEIJOADA DEMAIS</button>
-                <button on:click={stop}>ESTUFADO</button>
-                <button on:click={stop}>SONO</button>
+                <button on:click={pause}>FEIJOADA DEMAIS</button>
+                <button on:click={pause}>ESTUFADO</button>
+                <button on:click={pause}>SONO</button>
 
             </div>
         </div>

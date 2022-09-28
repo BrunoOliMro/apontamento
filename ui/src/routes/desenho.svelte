@@ -19,14 +19,6 @@
             imagemBack[0].img;
         });
     });
-    // const some = resultado.then(() => {
-    //     const atributeSrcImg = imagemBack[0].img;
-    //     let divSelector = document.querySelector("div");
-    //     let imgElement = document.createElement("img");
-    //     divSelector.appendChild(imgElement);
-    //     imgElement.setAttribute("src", atributeSrcImg);
-    //     imgElement.setAttribute("alt", "ferramenta");
-    // });
 
     function right() {
         rotation += 90;
@@ -63,47 +55,67 @@
 </script>
 
 <main class="main">
-    <Breadcrumb />
+    <div class="breadCrumb">
+        <Breadcrumb />
+    </div>
     <div id="subtitle" class="subtitle">{Subtitle}</div>
     <div id="buttons">
-        <button
-            type="button"
-            class="btn btn-primary"
-            id="right"
-            on:click={right}>DIREITA</button
+        <button type="button" class="sideButton" id="right" on:click={right}
+            >DIREITA</button
         >
-        <button type="button" class="btn btn-primary" id="left" on:click={left}
+        <button type="button" class="sideButton" id="left" on:click={left}
             >ESQUERDA</button
         >
-        <button
-            type="button"
-            class="btn btn-primary"
-            id="zoomIn"
-            on:click={zoomIn}>ZOOM +</button
+        <button type="button" class="sideButton" id="zoomIn" on:click={zoomIn}
+            >ZOOM +</button
+        >
+        <button type="button" class="sideButton" id="zoomOut" on:click={zoomOut}
+            >ZOOM -</button
         >
         <button
             type="button"
-            class="btn btn-primary"
-            id="zoomOut"
-            on:click={zoomOut}>ZOOM -</button
-        >
-        <button
-            type="button"
-            class="btn btn-primary"
+            class="sideButton"
             id="print"
             on:click={print}>IMPRIMIR</button
         >
     </div>
     <div class="newDiv">
-        {#await resultado}
-            <div>...</div>
-        {:then data}
-            <img id="img" class="img" src={imagemBack[0].img} alt="" />
-        {/await}
+        {#if imagemBack.length > 0 }
+        <img
+            media="print"
+            id="img"
+            class="img"
+            src={imagemBack[0].img}
+            alt=""
+        />
+        {:else}
+        <h3>NÃO HÁ DESENHO PARA EXIBIR</h3>
+        {/if}
     </div>
 </main>
 
 <style>
+    .sideButton {
+        margin: 1%;
+        padding: 0%;
+        font-size: 14px;
+        width: 120px;
+        height: 35px;
+        display: flex;
+        justify-content: center;
+        text-align: center;
+        align-items: center;
+        border-radius: 3px;
+        background-color: transparent;
+    }
+
+    .sideButton:hover {
+        outline: none;
+        cursor: pointer;
+        background-color: black;
+        color: white;
+        transition: 1s;
+    }
     div {
         margin: 5%;
         display: flex;
@@ -130,6 +142,7 @@
     .img {
         display: flex;
         min-width: 10%;
+        max-width: 90%;
         border-radius: 3px;
         margin: 1%;
         padding: 0%;
@@ -174,6 +187,20 @@
         justify-content: center;
         align-items: center;
         text-align: center;
+    }
+    .breadCrumb{
+        margin: 0%;
+    }
+    @media print {
+        #buttons{
+            display: none;
+        }
+        .breadCrumb{
+            display: none;
+        }
+        .subtitle{
+            display: none;
+        }
     }
 
     @media screen and (max-width: 550px) {

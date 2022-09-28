@@ -1,7 +1,7 @@
 <script>
 </script>
 
-<main>
+<main class="logobar">
     <img src="/images/LogoCIM.png" alt="" />
 </main>
 
@@ -19,6 +19,12 @@
     img {
         width: 110px;
         height: 60px;
+    }
+
+    @media print{
+        .logobar{
+            display: none;
+        }
     }
 
     @media screen and (max-width: 500px) {
