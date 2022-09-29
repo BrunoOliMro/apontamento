@@ -1,36 +1,33 @@
 <script>
+  import { each } from "svelte/internal";
   import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
-  export let Subtitle = "Selecione as Ferramentas necessarias: ";
-  // const dataFromBarcode = localStorage.getItem("barcodeData");
-  // let APT_TEMPO_OPERACAO = "";
   let fetchItem = [];
-  let urlString = `/api/v1/ferramenta?fetchItem=${fetchItem}`;
-  const headers = new Headers();
-  headers.append("Content-Type", "application/json");
+  let urlString = `/api/v1/ferramenta?fetchItem${fetchItem}`;
 
   async function getfetchItem() {
     const res = await fetch(urlString);
     fetchItem = await res.json();
-    console.log(fetchItem);
     return fetchItem;
   }
   let resultado = getfetchItem();
 
-  resultado.then(() => {
-    const atributeSrcImg = fetchItem[0].img;
-    // let imgFromBack = [`/images/04350563.jpg` , `/images/04350243-1.jpg`];
-    fetchItem.forEach((element) => {
-      let divSelector = document.querySelector("div");
-      let imgElement = document.createElement("img");
-      divSelector.appendChild(imgElement);
-      imgElement.setAttribute("src", atributeSrcImg);
-      imgElement.setAttribute("alt", "ferramenta");
-      imgElement.style.width = "170px";
-      imgElement.style.height = "170px";
-      imgElement.style.margin = "2%";
-      imgElement.style.borderRadius = "3px";
-    });
-  });
+  let toolMsg = "";
+  if (window.location.href.includes("?")) {
+    toolMsg = window.location.href.split("?")[1].split("=")[1];
+  }
+
+  let everCheck = false;
+  let arrayComp = [];
+  function checkIfclicked() {
+    arrayComp.push(1);
+    if (fetchItem.length === arrayComp.length) {
+      everCheck = true;
+    }
+  }
+
+  function redirect() {
+    window.location.href = "/#/codigobarras/apontamento";
+  }
 </script>
 
 <div>
@@ -41,28 +38,87 @@
       </li>
     </ol>
   </nav>
-  <div class="subtitle">{Subtitle}</div>
   <div class="content">
-
-    {#each fetchItem as row }
-      {row}
-    {/each}
+    {#if fetchItem.length === 0}
+      <h3>Não há Ferramentas para exibir</h3>
+    {/if}
 
     {#if fetchItem.length > 0}
-      <h3>Selecione as Ferramentas para a produção</h3>
+      {#if everCheck === false}
+        <h3>Selecione as Ferramentas para a produção</h3>
+      {/if}
     {/if}
 
-    {#if fetchItem.length === 1}
-      <h3>Ferramentas selecionadas inicie agora a produção</h3>
+    {#if everCheck === true}
+      <h3 class="incializeProd">Retorne quando terminar a produção</h3>
+      <button class="sideButton" on:click={redirect}>Apontar</button>
     {/if}
 
-    {#if fetchItem.length === 0}
-      <h3>Não há Ferramentas para exibir </h3>
-    {/if}
+    <div class="itens">
+      {#each fetchItem as column}
+        {#if fetchItem.length > 0}
+          {#if everCheck === false}
+            <img
+              on:click={checkIfclicked}
+              id="img"
+              class="img"
+              src={column}
+              alt=""
+            />
+          {/if}
+        {/if}
+      {/each}
+    </div>
   </div>
 </div>
 
 <style>
+  .sideButton {
+    margin: 1%;
+    padding: 0%;
+    font-size: 22px;
+    width: 250px;
+    height: 70px;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    align-items: center;
+    border-radius: 3px;
+    background-color: transparent;
+  }
+
+  .sideButton:hover {
+    outline: none;
+    cursor: pointer;
+    background-color: black;
+    color: white;
+    transition: 1s;
+  }
+  .incializeProd {
+    font-size: 55px;
+  }
+  .itens {
+    display: flex;
+    flex-direction: row;
+  }
+  .img {
+    display: flex;
+    flex-direction: row;
+    width: 200px;
+    height: 200px;
+    margin: 1%;
+    border-radius: 3px;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .img:hover {
+    outline: none;
+    cursor: pointer;
+    transition: 1s;
+  }
+
   .btnA {
     color: black;
   }
@@ -73,15 +129,12 @@
     align-items: center;
     text-align: center;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
   }
 
   div {
     margin: 1%;
     border-radius: 5px;
-  }
-  .subtitle {
-    font-size: 20px;
   }
 
   @media (max-width: 820px) {

@@ -10,24 +10,22 @@ const pictures_1 = require("./pictures");
 const apiRouter = (0, express_1.Router)();
 apiRouter.route("/apontamento")
     .post(async (req, res) => {
-    var NUMERO_ODF = '1232975';
     req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
     let barcode = req.body["codigoBarras"];
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
         return input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
     }
-    if (barcode === '') {
-        res.status(400).redirect("/#/codigobarras");
+    if (barcode == '') {
+        res.status(400).redirect("/#/codigobarras?error=invalidBarcode");
     }
-    else {
-        const dados = {
-            numOdf: Number(barcode.slice(10)),
-            numOper: String(barcode.slice(0, 5)),
-            codMaq: String(barcode.slice(5, 10)),
-        };
-        const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-        const resource = await connection.query(`
+    const dados = {
+        numOdf: Number(barcode.slice(10)),
+        numOper: String(barcode.slice(0, 5)),
+        codMaq: String(barcode.slice(5, 10)),
+    };
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    const resource = await connection.query(`
                         SELECT TOP 1
                         [NUMERO_ODF], 
                         [CODIGO_MAQUINA],
@@ -42,102 +40,80 @@ apiRouter.route("/apontamento")
                         AND [CODIGO_PECA] IS NOT NULL
                         ORDER BY NUMERO_OPERACAO ASC
                         `.trim()).then(result => result.recordset);
-        let NUMERO_ODF = resource.map(item => item.NUMERO_ODF);
-        let CODIGO_PECA = resource.map(item => item.CODIGO_PECA);
-        let CODIGO_MAQUINA = resource.map(item => item.CODIGO_MAQUINA);
-        res.cookie("NUMERO_ODF", NUMERO_ODF);
-        res.cookie("CODIGO_PECA", CODIGO_PECA);
-        res.cookie("CODIGO_MAQUINA", CODIGO_MAQUINA);
+    res.cookie("NUMERO_ODF", dados.numOdf);
+    res.cookie("CODIGO_PECA", resource[0].CODIGO_PECA);
+    if (resource.length > 0) {
         try {
-            const resource = await connection.query(`
-                        SELECT TOP 1
-                        [NUMERO_ODF], 
-                        [CODIGO_MAQUINA],
-                        [NUMERO_OPERACAO],
-                        [CODIGO_PECA]
-                        FROM            
-                        PCP_PROGRAMACAO_PRODUCAO
-                        WHERE 1 = 1
-                        AND [NUMERO_ODF] = ${dados.numOdf}
-                        AND [CODIGO_MAQUINA] = '${dados.codMaq}'
-                        AND [NUMERO_OPERACAO] = ${dados.numOper}
-                        AND [CODIGO_PECA] IS NOT NULL
-                        ORDER BY NUMERO_OPERACAO ASC
+            const resource2 = await connection.query(`
+                        SELECT DISTINCT                 
+                           OP.NUMITE,                 
+                           CAST(OP.EXECUT AS INT) AS EXECUT,       
+                           CAST(E.SALDOREAL AS INT) AS SALDOREAL,                 
+                           CAST(((E.SALDOREAL - ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO AND CA.ODF = PCP.NUMERO_ODF),0)) / ISNULL(OP.EXECUT,0)) AS INT) AS QTD_LIBERADA_PRODUZIR,
+                           ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO),0) as saldo_alocado
+                           FROM PROCESSO PRO (NOLOCK)                  
+                           INNER JOIN OPERACAO OP (NOLOCK) ON OP.RECNO_PROCESSO = PRO.R_E_C_N_O_                  
+                           INNER JOIN ESTOQUE E (NOLOCK) ON E.CODIGO = OP.NUMITE                
+                           INNER JOIN PCP_PROGRAMACAO_PRODUCAO PCP (NOLOCK) ON PCP.CODIGO_PECA = OP.NUMPEC                
+                           WHERE 1=1                    
+                           AND PRO.ATIVO ='S'                   
+                           AND PRO.CONCLUIDO ='T'                
+                           AND OP.CONDIC ='P'                 
+                           AND PCP.NUMERO_ODF = '${dados.numOdf}'    
                         `.trim()).then(result => result.recordset);
-            if (resource.length > 0) {
-                res.cookie("NUMERO_ODF", resource[0].NUMERO_ODF);
-                res.cookie("CODIGO_MAQUINA", resource[0].CODIGO_MAQUINA);
-                res.cookie("NUMERO_OPERACAO", resource[0].NUMERO_OPERACAO);
-                res.cookie("CODIGO_PECA", resource[0].CODIGO_PECA);
-                try {
-                    const resource = await connection.query(`
-                            SELECT DISTINCT                 
-                               OP.NUMITE,                 
-                               CAST(OP.EXECUT AS INT) AS EXECUT,       
-                               CAST(E.SALDOREAL AS INT) AS SALDOREAL,                 
-                               CAST(((E.SALDOREAL - ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO AND CA.ODF = PCP.NUMERO_ODF),0)) / ISNULL(OP.EXECUT,0)) AS INT) AS QTD_LIBERADA_PRODUZIR,
-                               ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO),0) as saldo_alocado
-                               FROM PROCESSO PRO (NOLOCK)                  
-                               INNER JOIN OPERACAO OP (NOLOCK) ON OP.RECNO_PROCESSO = PRO.R_E_C_N_O_                  
-                               INNER JOIN ESTOQUE E (NOLOCK) ON E.CODIGO = OP.NUMITE                
-                               INNER JOIN PCP_PROGRAMACAO_PRODUCAO PCP (NOLOCK) ON PCP.CODIGO_PECA = OP.NUMPEC                
-                               WHERE 1=1                    
-                               AND PRO.ATIVO ='S'                   
-                               AND PRO.CONCLUIDO ='T'                
-                               AND OP.CONDIC ='P'                 
-                               AND PCP.NUMERO_ODF = '${NUMERO_ODF}'    
-                            `.trim()).then(result => result.recordset);
-                    function calMaxQuant(qtdNecessPorPeca, saldoReal) {
-                        const pecasPaiPorComponente = qtdNecessPorPeca.map((qtdPorPeca, i) => {
-                            return Math.floor((saldoReal[i] || 0) / qtdPorPeca);
-                        });
-                        const qtdMaxProduzivel = pecasPaiPorComponente.reduce((qtdMax, pecasPorComp) => {
-                            return Math.min(qtdMax, pecasPorComp);
-                        }, Infinity);
-                        Math.round(qtdMaxProduzivel);
-                        return (qtdMaxProduzivel === Infinity ? 0 : qtdMaxProduzivel);
-                    }
-                    const execut = resource.map(item => item.EXECUT);
-                    const saldoReal = resource.map(item => item.SALDOREAL);
-                    let qtdTotal = calMaxQuant(execut, saldoReal);
-                    const reservedItens = execut.map((quantItens) => {
-                        return Math.floor((qtdTotal || 0) * quantItens);
-                    }, Infinity);
-                    let quan = [1, 2];
-                    let str = ["105830489-1", "105830489-2"];
-                    const codigoFilho = resource.map(item => item.NUMITE);
-                    let updateTable = reservedItens.map(function (quan, i) {
-                        try {
-                            const resource = connection.query(`
-                                    UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${quan} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${str[i]}'`);
-                            res.json();
-                        }
-                        catch (error) {
-                            console.log(error);
-                            res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
-                        }
-                    });
-                    console.log(updateTable);
-                }
-                catch (error) {
-                    console.log(error);
-                }
-                finally {
-                    await connection.close();
-                }
+            console.log("resource2:78", resource2);
+            function calMaxQuant(qtdNecessPorPeca, saldoReal) {
+                const pecasPaiPorComponente = qtdNecessPorPeca.map((qtdPorPeca, i) => {
+                    return Math.floor((saldoReal[i] || 0) / qtdPorPeca);
+                });
+                const qtdMaxProduzivel = pecasPaiPorComponente.reduce((qtdMax, pecasPorComp) => {
+                    return Math.min(qtdMax, pecasPorComp);
+                }, Infinity);
+                Math.round(qtdMaxProduzivel);
+                return (qtdMaxProduzivel === Infinity ? 0 : qtdMaxProduzivel);
             }
-            else {
-                res.status(400).send("ODF nao ienwurwbv!");
+            const execut = resource2.map(item => item.EXECUT);
+            const saldoReal = resource2.map(item => item.SALDOREAL);
+            console.log("execut:99", execut, "saldoReal:99", saldoReal);
+            let qtdTotal = calMaxQuant(execut, saldoReal);
+            console.log("qtdTotal", qtdTotal);
+            const reservedItens = execut.map((quantItens) => {
+                return Math.floor((qtdTotal || 0) * quantItens);
+            }, Infinity);
+            console.log(reservedItens);
+            const codigoFilho = resource2.map(item => item.NUMITE);
+            console.log("codigoFilho:115", codigoFilho);
+            try {
+                const updateQtyQuery = [];
+                const updateQtyRes = [];
+                for (const [i, qtdItem] of reservedItens.entries()) {
+                    updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
+                }
+                const updateQty = await connection.query(updateQtyQuery.join("\n"));
+                for (const [i, qtdItem] of reservedItens.entries()) {
+                    updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
+                }
+                const updateRes = await connection.query(updateQtyRes.join("\n"));
+                console.log("updateQty:132", updateQty);
+                console.log("updateRes:142", updateRes);
+                return res.status(200).redirect("/#/ferramenta");
+            }
+            catch (err) {
+                console.log("Erro:135", err);
+                return res.status(400).redirect("/#/codigobarras?error=invalidBarcode");
             }
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send("Dados não encontrados!");
+            console.log("erro linha 138", error);
+            return res.status(400).redirect("/#/codigobarras?error=invalidBarcode");
         }
         finally {
-            res.status(200).redirect("/#/ferramenta");
             await connection.close();
         }
+    }
+    else {
+        console.log("Não encontrou ODF com esse número");
+        return res.status(400).redirect("/#/codigobarras?error=invalidBarcode");
     }
 });
 apiRouter.route("/apontamentoCracha")
@@ -149,13 +125,12 @@ apiRouter.route("/apontamentoCracha")
         const allowedChars = /[A-Za-z0-9]/;
         return MATRIC.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
     }
-    if (MATRIC === '') {
-        res.status(404).send("FUNCIONARIO DESTA MATRICULA NAO ENCONTRADO" + MATRIC);
+    if (MATRIC == '') {
+        res.status(400).redirect("/#/codigobarras?error=invalidBadge");
     }
-    else {
-        const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-        try {
-            const resource = await connection.query(` 
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    try {
+        const resource = await connection.query(` 
                 SELECT TOP 1
                 [MATRIC],
                 [FUNCIONARIO]
@@ -163,25 +138,24 @@ apiRouter.route("/apontamentoCracha")
                 WHERE 1 = 1
                 AND [MATRIC] = ${MATRIC}
                 `.trim()).then(result => result.recordset);
-            if (resource.length > 0) {
-                let start = new Date();
-                let mili = start.getMilliseconds();
-                console.log(mili / 1000);
-                res.cookie("starterBarcode", start.getTime());
-                res.cookie("MATRIC", resource[0].MATRIC, { httpOnly: true, maxAge: maxRange });
-                res.cookie("FUNCIONARIO", resource[0].FUNCIONARIO);
-                res.status(200).redirect("/#/codigobarras");
-            }
-            else {
-                res.status(404).redirect("/#/codigobarras");
-            }
+        if (resource.length > 0) {
+            let start = new Date();
+            let mili = start.getMilliseconds();
+            console.log(mili / 1000);
+            res.cookie("starterBarcode", start.getTime());
+            res.cookie("MATRIC", resource[0].MATRIC, { httpOnly: true, maxAge: maxRange });
+            res.cookie("FUNCIONARIO", resource[0].FUNCIONARIO);
+            res.status(200).redirect("/#/codigobarras?status=ok");
         }
-        catch (error) {
-            res.status(404).send("Erro");
+        else {
+            res.status(404).redirect("/#/codigobarras?error=invalidBadge");
         }
-        finally {
-            await connection.close();
-        }
+    }
+    catch (error) {
+        res.status(404).redirect("/#/codigobarras?error=invalidBadge");
+    }
+    finally {
+        await connection.close();
     }
 });
 apiRouter.route("/odf")
@@ -237,18 +211,20 @@ apiRouter.route("/IMAGEM")
             AND NUMPEC = '${NUMPEC}'
             AND IMAGEM IS NOT NULL
             `);
-        const result = resource.recordset.map(record => {
-            const imgPath = pictures_1.pictures.getPicturePath(record[`NUMPEC`], record["IMAGEM"], (statusImg));
+        const result = resource.recordset.map((record, i) => {
+            const imgPath = pictures_1.pictures.getPicturePath(record[`NUMPEC`], record["IMAGEM"], statusImg, i);
             return {
                 img: imgPath,
-                sufixo: record["sufixo"]
+                numpec: record["NUMPEC"],
+                sufixo: record["sufixo"],
+                i: i
             };
         });
         res.json(result);
     }
     catch (error) {
         console.log(error);
-        res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
+        res.status(500).json({ error: true, message: "Erro no servidor." });
     }
     finally {
         await connection.close();
@@ -272,48 +248,49 @@ apiRouter.route("/HISTORICO")
     }
     catch (error) {
         console.log(error);
-        res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
+        res.status(500).json({ error: true, message: "Erro no servidor." });
     }
     finally {
         await connection.close();
     }
 });
 apiRouter.route("/ferramenta")
-    .get(async (req, res, next) => {
-    const CODIGO = '00240347';
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let ferramenta = "_ferr";
+    .get(async (req, res) => {
     let startProd = new Date();
     let mili = startProd.getMilliseconds();
     res.cookie("startProd", startProd.getTime());
+    let CODIGO = '00241888';
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    let ferramenta = "_ferr";
     try {
         const resource = await connection.query(`
-            SELECT 
-            [IMAGEM], 
-            [CODIGO]
+            SELECT
+            [CODIGO],
+            [IMAGEM]
             FROM VIEW_APTO_FERRAMENTAL 
-            WHERE 1 = 1
+            WHERE 1 = 1 
             AND CODIGO = '${CODIGO}'
-            AND IMAGEM IS NOT NULL
-
-            `.trim());
-        const result = resource.recordset.map(record => {
-            const imgPath = pictures_1.pictures.getPicturePath(record["CODIGO"], record["IMAGEM"], (ferramenta));
+            AND IMAGEM IS NOT NULL`);
+        const result = resource.recordset.map((record, i) => {
+            const imgPath = pictures_1.pictures.getPicturePath(record[`CODIGO`], record["IMAGEM"], ferramenta, i);
             return {
                 img: imgPath,
+                codigo: record[`CODIGO`],
+                sufixo: record["sufixo"],
+                i: i
             };
         });
-        let s = Object.values(result);
-        if (s.length > 0) {
-            res.sendStatus(200).redirect("/#/ferramenta");
+        if (result.length > 0) {
+            let imgName = result.map(e => e.img);
+            return res.status(200).json(imgName);
         }
         else {
-            res.sendStatus(500).redirect("/#/apontamento");
+            return res.status(400).redirect("/#/codigobarras/apontamento");
         }
     }
     catch (error) {
         console.log(error);
-        res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
+        res.status(500).json({ error: true, message: "Erro no servidor." });
     }
     finally {
         let end = new Date();
@@ -375,7 +352,7 @@ apiRouter.route("/apontar")
     }
     catch (error) {
         console.log(error);
-        res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
+        res.status(500).json({ error: true, message: "Erro no servidor." });
     }
     finally {
         await connection.close();
@@ -394,7 +371,7 @@ apiRouter.route("/apontar")
         const insertSqlTimer = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + finalProdTimer + ')');
         const resourceReserved = await connection.query(`UPDATE CST_ALOCAÇÃO SET  QUANTIDADE AS RESERVA = RESERVA - '${QTDE_APONTADA}' WHERE 1= 1 AND ODF= '${NUMERO_ODF}'`);
         const resourceSaldoReal = await connection.query(`UPDATE CST_ALOCAÇÃO SET  SALDOREAL = SALDOREAL - '${QTDE_APONTADA}' WHERE 1= 1 AND ODF= '${NUMERO_ODF}'`);
-        res.sendStatus(200).redirect(`/#/rip`);
+        res.status(200).redirect(`/#/rip`);
     }
     catch (error) {
         res.redirect(`/#/rip`);
@@ -585,19 +562,21 @@ apiRouter.route("/desenho")
             WHERE 1 = 1 
             AND NUMPEC = '${NUMPEC}'
             AND IMAGEM IS NOT NULL`);
-        const result = resource.recordset.map(record => {
-            const imgPath = pictures_1.pictures.getPicturePath(record[`NUMPEC`], record["IMAGEM"], desenho);
+        const result = resource.recordset.map((record, i) => {
+            const imgPath = pictures_1.pictures.getPicturePath(record[`NUMPEC`], record["IMAGEM"], desenho, i);
             return {
                 img: imgPath,
                 codigoInterno: record[`NUMPEC`],
                 sufixo: record["sufixo"],
+                i: i
             };
         });
-        res.json(result);
+        let drawRes = result.map(e => e.img);
+        res.json(drawRes);
     }
     catch (error) {
         console.log(error);
-        res.sendStatus(500).json({ error: true, message: "Erro no servidor." });
+        res.status(500).json({ error: true, message: "Erro no servidor." });
     }
     finally {
         await connection.close();

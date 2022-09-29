@@ -7,7 +7,18 @@
   let result = {};
   let urlS = `/api/v1/apontamento`;
   let urlBagde = `/api/v1/apontamentoCracha`;
-  let cracha = '';
+  let cracha = "";
+
+  let barcodeMsg = "";
+  if (window.location.href.includes("?")) {
+    barcodeMsg = window.location.href.split("?")[1].split("=")[1];
+  }
+
+  let badgeMsg = "";
+  if (window.location.href.includes("?")) {
+    badgeMsg = window.location.href.split("?")[1].split("=")[1];
+  }
+
   // function handleSubmit() {
   //   result = doPost();
   // }
@@ -67,22 +78,21 @@
     });
   };
 
-
   let resultado = doPost;
 </script>
 
 <main>
   <div>
     <Title />
-    {#if resultado.length == 0}
-      <h5>Codigo de barras Invalido</h5>
+    {#if barcodeMsg === "invalidBarcode"}
+      <h5 class="invalidBarcode">Codigo de barras Invalido</h5>
     {/if}
 
-    {#if resultado.length == 0}
-      <h5>Crachá Invalido</h5>
+    {#if badgeMsg === "invalidBadge"}
+      <h5 class="invalidBadge">Crachá Invalido</h5>
     {/if}
 
-    {#if resultado.length !== 0}
+    {#if barcodeMsg === "ok" || barcodeMsg === "invalidBarcode"}
       <form action="/api/v1/apontamento" method="POST" on:submit={doPost}>
         <div class="bar" id="title">Código de barras</div>
         <!-- on:input={setValues} -->
@@ -93,25 +103,37 @@
       </form>
     {/if}
 
-    <form action="/api/v1/apontamentoCracha" method="POST" on:submit={checkBagde}>
-      <div id="popUpCracha">
-        <!-- on:input={blockForbiddenChars} -->
-        <div id="title">Colaborador</div>
-        <input name="MATRIC" id="MATRIC" type="text" />
-      </div>
-    </form>
-    <!-- <button
-    type="button"
-    class="btn btn-primary"
-    data-bs-toggle="modal"
-    data-bs-target="#exampleModalCenter"
-  >
-    Codigo de barras Invalido
-  </button> -->
+    {#if badgeMsg === "" || badgeMsg === "invalidBadge"}
+      <form
+        action="/api/v1/apontamentoCracha"
+        method="POST"
+        on:submit={checkBagde}
+      >
+        <div id="popUpCracha">
+          <!-- on:input={blockForbiddenChars} -->
+          <div id="title">Colaborador</div>
+          <input name="MATRIC" id="MATRIC" type="text" />
+        </div>
+      </form>
+    {/if}
   </div>
 </main>
 
 <style>
+  .invalidBadge {
+    font-size: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  .invalidBarcode {
+    font-size: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
   main {
     margin: 1%;
   }

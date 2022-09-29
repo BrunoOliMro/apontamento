@@ -10,15 +10,10 @@
     async function getIMAGEM() {
         const res = await fetch(urlString);
         imagemBack = await res.json();
-        return imagemBack[0].img;
+        return imagemBack;
     }
 
     let resultado = getIMAGEM();
-    resultado.then(() => {
-        imagemBack.forEach((element) => {
-            imagemBack[0].img;
-        });
-    });
 
     function right() {
         rotation += 90;
@@ -60,37 +55,31 @@
     </div>
     <div id="subtitle" class="subtitle">{Subtitle}</div>
     <div id="buttons">
-        <button type="button" class="sideButton" id="right" on:click={right}
+        <button type="button" class="sideButton" on:click={right}
             >DIREITA</button
         >
-        <button type="button" class="sideButton" id="left" on:click={left}
+        <button type="button" class="sideButton" on:click={left}
             >ESQUERDA</button
         >
-        <button type="button" class="sideButton" id="zoomIn" on:click={zoomIn}
+        <button type="button" class="sideButton" on:click={zoomIn}
             >ZOOM +</button
         >
-        <button type="button" class="sideButton" id="zoomOut" on:click={zoomOut}
+        <button type="button" class="sideButton" on:click={zoomOut}
             >ZOOM -</button
         >
-        <button
-            type="button"
-            class="sideButton"
-            id="print"
-            on:click={print}>IMPRIMIR</button
+        <button type="button" class="sideButton" on:click={print}
+            >IMPRIMIR</button
         >
     </div>
+
     <div class="newDiv">
-        {#if imagemBack.length > 0 }
-        <img
-            media="print"
-            id="img"
-            class="img"
-            src={imagemBack[0].img}
-            alt=""
-        />
-        {:else}
-        <h3>NÃO HÁ DESENHO PARA EXIBIR</h3>
-        {/if}
+        {#each imagemBack as column}
+            {#if imagemBack.length > 0}
+                <img  media="print" id="img" class="img" src={column} alt="" />
+            {:else}
+                <h3>NÃO HÁ DESENHO PARA EXIBIR</h3>
+            {/if}
+        {/each}
     </div>
 </main>
 
@@ -98,8 +87,8 @@
     .sideButton {
         margin: 1%;
         padding: 0%;
-        font-size: 14px;
-        width: 120px;
+        font-size: 13px;
+        width: 150px;
         height: 35px;
         display: flex;
         justify-content: center;
@@ -157,49 +146,21 @@
         align-items: center;
         text-align: center;
     }
-    #right {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-    }
-
-    #left {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-    }
-    #zoomIn {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-    }
-    #zoomOut {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-    }
-    #print {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-    }
-    .breadCrumb{
+    .breadCrumb {
         margin: 0%;
     }
     @media print {
-        #buttons{
+        #buttons {
             display: none;
         }
-        .breadCrumb{
+        .breadCrumb {
             display: none;
         }
-        .subtitle{
+        .subtitle {
             display: none;
+        }
+        .img {
+            max-width: 100%;
         }
     }
 

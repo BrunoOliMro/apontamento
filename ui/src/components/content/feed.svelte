@@ -1,5 +1,6 @@
 <script>
     import showBtnParcial from "./nav.svelte";
+    import paradaMaq from "../content/nav.svelte";
     const dataFromBarcode = localStorage.getItem("barcodeData");
     let NUMERO_ODF = Number(dataFromBarcode.slice(10));
     let NUMERO_OPERACAO = String(dataFromBarcode.slice(0, 5));
@@ -12,7 +13,6 @@
 
     let urlS = `/api/v1/apontar`;
 
-    import paradaMaq from "../content/nav.svelte";
     let urlString = `/api/v1/odf?NUMERO_ODF=${NUMERO_ODF}&CODIGO_MAQUINA=${CODIGO_MAQUINA}&NUMERO_OPERACAO=${NUMERO_OPERACAO}`;
     let dadosOdf = [];
 
@@ -82,7 +82,7 @@
                 id="button"
                 on:click={doPost}
                 type="submit"
-                class="btn btn-primary">Apontar</button
+                class="sideButton">Apontar</button
             >
         </form>
     {:else}
@@ -91,6 +91,27 @@
 </main>
 
 <style>
+.sideButton {
+    margin: 1%;
+    padding: 0%;
+    font-size: 14px;
+    width: 100px;
+    height:220px;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    align-items: center;
+    border-radius: 3px;
+    background-color: transparent;
+}
+
+.sideButton:hover {
+    outline: none;
+    cursor: pointer;
+    background-color: black;
+    color: white;
+    transition: 1s;
+}
     #parcialFeed{
         display: none;
     }
