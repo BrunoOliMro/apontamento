@@ -3,7 +3,7 @@
     import TableRow from "../components/Tables/TableRipRow.svelte";
     import { onMount } from "svelte";
     import TableRipRow from "../components/Tables/TableRipRow.svelte";
-    
+
     let urlS = `/api/v1/lancamentoRip`;
     let urlString = `/api/v1/rip`;
 
@@ -45,6 +45,13 @@
                 M4: M4,
                 M5: M5,
                 M6: M6,
+                M7: M7,
+                M8: M8,
+                M9: M9,
+                M10: M10,
+                M11: M11,
+                M12: M12,
+                M13: M13,
             }),
             headers,
         });
@@ -60,10 +67,17 @@
 
     let showmodal = false;
     function returnValue() {
-        if(showmodal === false){
-            showmodal = true
+        if (showmodal === false) {
+            showmodal = true;
         } else {
-            showmodal = false
+            showmodal = false;
+        }
+    }
+    function closePop() {
+        if (showmodal === false) {
+            showmodal = true;
+        } else {
+            showmodal = false;
         }
     }
 </script>
@@ -81,21 +95,6 @@
         <button on:click={returnValue} class="sideButton" type="submit">
             Estornar Valores
         </button>
-
-        {#if showmodal === true}
-            <form
-                action="/api/v1/returnedValue"
-                method="POST"
-                class="returnValue"
-            >
-                <h2 class="modalTitle">Codigo do Supervisor</h2>
-                <input type="text" id="returnValue" name="returnValue"/>
-                <h2 class="modalTitle">
-                    Insira a quantidade que deseja estornar
-                </h2>
-                <input type="text" />
-            </form>
-        {/if}
     </div>
     <div class="title">{Subtitle}</div>
     {#if ripTable.length !== 0}
@@ -134,27 +133,75 @@
                 </table>
             </div>
         </form>
+        {#if showmodal === true}
+            <div class="fundo">
+                <form
+                    action="/api/v1/returnedValue"
+                    method="POST"
+                    class="returnValue"
+                >
+                    <div class="header">
+                        <h2>Codigo do Supervisor</h2>
+                        <input type="text" name="returnValue" />
+                        <h2>Insira a quantidade que deseja estornar</h2>
+                        <input type="text" />
+                        <p on:click={closePop}>Fechar</p>
+                    </div>
+                </form>
+            </div>
+        {/if}
     {:else}
-        <h3>Não há histórico para exibir</h3>
+        <h2>Não há histórico para exibir</h2>
     {/if}
 </main>
 
 <style>
-
     h2 {
-        font-size: 20px;
+        font-size: 30px;
+    }
+    p {
+        font-size: 25px;
+    }
+
+    .fundo {
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: rgba(17, 17, 17, 0.618);
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+    }
+    .header {
+        color: white;
+        background-color: black;
+        width: 500px;
+        height: 250px;
+        /* position: absolute;
+        top: 20%;
+        left: 40%; */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        border-radius: 3px;
+    }
+    input {
+        width: 300px;
+        border-radius: 3px;
     }
     .returnValue {
         justify-content: center;
         align-items: center;
         text-align: center;
-        width: 350px;
-        height: 250px;
+        width: 500px;
+        height: 100px;
         border-radius: 3px;
-        vertical-align: middle;
         position: absolute;
-        left: 40%;
-        top: 20%;
         color: white;
         background-color: black;
     }

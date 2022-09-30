@@ -10,6 +10,7 @@
     async function getIMAGEM() {
         const res = await fetch(urlString);
         imagemBack = await res.json();
+        console.log(imagemBack)
         return imagemBack;
     }
 

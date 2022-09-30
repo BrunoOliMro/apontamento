@@ -5,11 +5,11 @@
     import ruins from "../content/feed.svelte";
     import retrabalhar from "../content/feed.svelte";
     import faltante from "../content/feed.svelte";
-    import parcialFeed from "../content/feed.svelte"
+    import parcialFeed from "../content/feed.svelte";
 
     let urlStop = `/api/v1/parada`;
     let urlPause = `/api/v1/pause`;
-    let dadosOdf = []
+    let dadosOdf = [];
 
     const getMissingFeed = async () => {
         document.getElementById("faltante").style.display = "block";
@@ -27,14 +27,13 @@
         document.getElementById("parcialFeed").style.display = "none";
     };
 
-    const getParcial = async () =>{
+    const getParcial = async () => {
         document.getElementById("faltante").style.display = "none";
         document.getElementById("retrabalhar").style.display = "none";
         document.getElementById("ruins").style.display = "none";
         document.getElementById("badFeed").style.display = "none";
         document.getElementById("parcialFeed").style.display = "block";
-    }
-
+    };
 
     let showmodal = false;
     //let showBtnParcial = false;
@@ -46,14 +45,22 @@
         }
     }
 
-    async function stop(){
+    async function stop() {
         const res = await fetch(urlStop);
         dadosOdf = await res.json();
     }
 
-    async function pause(){
+    async function pause() {
         const res = await fetch(urlPause);
         dadosOdf = await res.json();
+    }
+
+    function closePop() {
+        if (showmodal === false) {
+            showmodal = true;
+        } else {
+            showmodal = false;
+        }
     }
 </script>
 
@@ -89,56 +96,89 @@
             name="rework"
             >Retrabalhar
         </button>
-        <a href="/#/rip/"
+        <a class="out" href="/#/rip/"
             ><button type="button" class="sideButton">Inspeção</button></a
         >
-        <a href="/#/historico/"
+        <a class="out" href="/#/historico/"
             ><button type="button" class="sideButton"> Historico </button>
         </a>
         <button type="button" class="sideButton" on:click={returnValue}>
             Parada
         </button>
 
-        <a href="/#/desenho/"
+        <a class="out" href="/#/desenho/"
             ><button type="button" class="sideButton">Desenho</button></a
         >
 
         {#if showmodal === true}
-        <div class="li">
-            <h2>Motivo da Parada</h2>
-            <div class="btns">
-                <button on:click={stop}>DOR DE BARRIGA</button>
-                <button on:click={stop}>CAGANEIRA</button>
-                <button on:click={pause}>FEIJOADA DEMAIS</button>
-                <button on:click={pause}>ESTUFADO</button>
-                <button on:click={pause}>SONO</button>
-
+            <div class="fundo">
+                <div class="header">
+                    <h2>Motivo da Parada</h2>
+                    <h2 on:click={stop}>DOR</h2>
+                    <h2 on:click={stop}>DOR</h2>
+                    <h2 on:click={pause}>DOR</h2>
+                    <h2 on:click={pause}>ESTUFADO</h2>
+                    <h2 on:click={pause}>SONO</h2>
+                    <p on:click={closePop}>Fechar</p>
+                </div>
             </div>
-        </div>
         {/if}
     </div>
 </main>
 
 <style>
-    .btns{
+    .fundo {
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: rgba(17, 17, 17, 0.618);
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+    }
+    ul {
+        font-size: 20px;
+    }
+    .header {
+        color: white;
+        background-color: black;
+        width: 500px;
+        height: 350px;
+        /* position: absolute;
+        top: 20%;
+        left: 40%; */
         display: flex;
         flex-direction: column;
-    }
-    .li {
-        display: inline-block;
-        position: fixed; /* Stay in place */
-        left: 40%;
-        top: 25%;
-        width: 350px; /* Full width */
-        height: 230px; /* Full height */
-        background-color:black; /* Fallback color */
-        color: white;
-        border-radius: 3px;
         justify-content: center;
         align-items: center;
         text-align: center;
+        border-radius: 3px;
+    }
+    .out {
+        text-decoration: none;
+        outline: none;
+    }
+    a {
+        text-decoration: none;
+        outline: none;
+    }
+    a:focus {
+        text-decoration: none;
+        outline: none;
+    }
+    a:hover {
+        text-decoration: none;
+        outline: none;
+    }
+    .btns {
+        display: flex;
+        flex-direction: column;
     }
     .sideButton {
+        outline: none;
         margin: 1%;
         padding: 0%;
         font-size: 14px;

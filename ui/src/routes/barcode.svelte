@@ -76,20 +76,44 @@
       }),
       headers,
     });
+    console.log(res)
   };
 
   let resultado = doPost;
+
+  function red (){
+    if(barcodeMsg === "red") {
+      window.location.href = "/#/ferramenta";
+    }
+  }
+  let s = red()
+
+  function closePop() {
+    document.getElementById("s").style.display = "none";
+    window.location.href = "/#/codigobarras";
+    location.reload()
+  }
 </script>
 
 <main>
   <div>
     <Title />
     {#if barcodeMsg === "invalidBarcode"}
-      <h5 class="invalidBarcode">Codigo de barras Invalido</h5>
+      <div class="fundo">
+        <div class="invalidBarcode" id="s">
+          <h5>Codigo de barras Invalido</h5>
+          <p on:click={closePop}>Fechar</p>
+        </div>
+      </div>
     {/if}
 
     {#if badgeMsg === "invalidBadge"}
-      <h5 class="invalidBadge">Crachá Invalido</h5>
+      <div class="fundo">
+        <div class="invalidBadge" id="s">
+          <h5>Crachá Invalido</h5>
+          <p on:click={closePop}>Fechar</p>
+        </div>
+      </div>
     {/if}
 
     {#if barcodeMsg === "ok" || barcodeMsg === "invalidBarcode"}
@@ -120,19 +144,56 @@
 </main>
 
 <style>
-  .invalidBadge {
-    font-size: 40px;
+  #MATRIC{
+    margin: 1%;
+  }
+  .fundo {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: rgba(17, 17, 17, 0.618);
+    height: 100vh;
+    width: 100vw;
     display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  }
+  p {
+    font-size: 35px;
+  }
+  h5 {
+    font-size: 45px;
+  }
+  .invalidBadge {
+    color: white;
+    background-color: black;
+    width: 500px;
+    height: 250px;
+    /* position: absolute;
+        top: 20%;
+        left: 40%; */
+    display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
+    border-radius: 3px;
   }
   .invalidBarcode {
-    font-size: 40px;
+    color: white;
+    background-color: black;
+    width: 500px;
+    height: 250px;
+    /* position: absolute;
+    top: 20%;
+    left: 40%; */
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
+    border-radius: 3px;
   }
   main {
     margin: 1%;
@@ -141,6 +202,8 @@
     font-size: 35px;
     display: flex;
     justify-content: center;
+    align-items: center;
+    text-align: center;
     margin: 1%;
   }
   .input {

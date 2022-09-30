@@ -18,10 +18,21 @@
 
   let everCheck = false;
   let arrayComp = [];
-  function checkIfclicked() {
-    arrayComp.push(1);
+
+  let adicionados = 0;
+  function checkIfclicked(column, imgId) {
+  if(!arrayComp.includes(column)) {
+    arrayComp.push(column);
+    document.getElementById(imgId).style.border = "1px solid green";
+    document.getElementById(imgId).style.transition = "1px";
+    adicionados += 1;
+  }
     if (fetchItem.length === arrayComp.length) {
       everCheck = true;
+      window.location.href = "/#/codigobarras/apontamento";
+    }
+    if(fetchItem.length === 0){
+      window.location.href = "/#/codigobarras/apontamento";
     }
   }
 
@@ -31,13 +42,6 @@
 </script>
 
 <div>
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item">
-        <a class="btnA" href="/#/codigobarras/apontamento">Apontamento</a>
-      </li>
-    </ol>
-  </nav>
   <div class="content">
     {#if fetchItem.length === 0}
       <h3>Não há Ferramentas para exibir</h3>
@@ -49,18 +53,20 @@
       {/if}
     {/if}
 
-    {#if everCheck === true}
-      <h3 class="incializeProd">Retorne quando terminar a produção</h3>
+    <!-- {#if everCheck === true}
+    <div class="loader">
+      <div class="spinner"></div>
+    </div>
       <button class="sideButton" on:click={redirect}>Apontar</button>
-    {/if}
+    {/if} -->
 
     <div class="itens">
-      {#each fetchItem as column}
+      {#each fetchItem as column, i}
         {#if fetchItem.length > 0}
           {#if everCheck === false}
             <img
-              on:click={checkIfclicked}
-              id="img"
+              on:click={checkIfclicked(column, `img-${i}`)}
+              id="img-{i}"
               class="img"
               src={column}
               alt=""
@@ -73,6 +79,37 @@
 </div>
 
 <style>
+
+.loader {
+  display: flex;
+  height: 50vh;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinner {
+  height: 5vh;
+  width: 5vh;
+  border: 6px solid rgba(0, 0, 0, 0.2);
+  border-top-color: rgba(255, 255, 255, 0.8);
+  border-radius: 100%;
+  animation: rotation 0.6s infinite linear 0.25s;
+
+  /* the opacity is used to lazyload the spinner, see animation delay */
+  /* this avoid the spinner to be displayed when visible for a very short period of time */
+  opacity: 0;
+}
+
+@keyframes rotation {
+  from {
+    opacity: 1;
+    transform: rotate(0deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(359deg);
+  }
+}
   .sideButton {
     margin: 1%;
     padding: 0%;

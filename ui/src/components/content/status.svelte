@@ -1,46 +1,74 @@
 <script>
-    let status = 0;
-    let IMAGEM = "";
-    let urlString = `/api/v1/IMAGEM`;
+    import { onMount } from "svelte";
+    let tempoDecorrido = 0;
+    let tempodePro = [];
+    let urlString = `/api/v1/STATUS`;
+    let url = `/api/v1/imagem`;
+    let tempoMax = null;
+    let imagem = [];
+    let shwowSuper = false;
 
-    setInterval(() => {
-        status++;
-    }, 200);
-
-    async function getIMAGEM() {
+    onMount(async () => {
         const res = await fetch(urlString);
-        IMAGEM = await res.json();
-    }
+        tempodePro = await res.json();
+        tempoMax = Number(tempodePro);
+        console.log(tempoMax);
+        setInterval(() => {
+            shwowSuper = false
+            if (tempoDecorrido > tempoMax) {
+                shwowSuper = true;
+            } else {
+                shwowSuper = false;
+                tempoDecorrido++;
+            }
+        }, 1000);;
+    });
 
-    let resultado = getIMAGEM();
+    onMount(async () => {
+        const res = await fetch(url);
+        imagem = await res.json();
+        console.log(imagem[0].img);
+        return imagem[0].img
+    });
 </script>
 
 <div class="content">
-    {#if IMAGEM.length !== 0 }
-        {#if status <= 50}
-            <div class="item" style="background-color:black" id="status">
+    {#if tempodePro.length !== 0}
+        {#if tempoDecorrido <= tempoMax}
+            <div
+                class="item"
+                style="background-color:black"
+                id="tempoDecorrido"
+            >
                 <!-- {dadosOdf[0].APT_TEMPO_OPERACAO} -->
             </div>
         {/if}
-        {#if status > 50 && status < 100}
-            <div class="item" style="background-color:blue" id="status">
+        {#if tempoDecorrido > tempoMax && tempoDecorrido < tempoMax}
+            <div class="item" style="background-color:blue" id="tempoDecorrido">
                 <!-- {dadosOdf[0].APT_TEMPO_OPERACAO} -->
             </div>
         {/if}
-        {#if status > 100 && status < 150}
-            <div class="item" style="background-color:red" id="status">
+        {#if tempoDecorrido > tempoMax && tempoDecorrido < tempoMax}
+            <div class="item" style="background-color:red" id="tempoDecorrido">
                 <!-- {dadosOdf[0].APT_TEMPO_OPERACAO} -->
             </div>
         {/if}
-        {#if status > 150}
-            <div class="item" style="background-color:gray" id="status">
+        {#if tempoDecorrido > tempoMax}
+            <div class="item" style="background-color:gray" id="tempoDecorrido">
                 <!-- {dadosOdf[0].APT_TEMPO_OPERACAO} -->
             </div>
         {/if}
-        <img class="img" src={IMAGEM[0].img} alt="" />
-        {:else}
+        <img class="img" src={imagem[0].img} alt="" />
+    {:else}
         <h3>Não há histórico para exibir</h3>
-        {/if}
+    {/if}
+    
+    {#if shwowSuper === true}
+        <div>
+            <h3>tempo acabo my friend</h3>
+            <input type="text" />
+        </div>
+    {/if}
 </div>
 
 <style>
@@ -50,8 +78,8 @@
         margin-right: 2%;
     }
     .item {
-            width: 20px;
-        }
+        width: 20px;
+    }
 
     img {
         width: 18rem;
@@ -71,13 +99,13 @@
             justify-content: left;
             align-items: left;
             text-align: left;
-           }
-           .item{
+        }
+        .item {
             margin-left: 1%;
             width: 30px;
         }
     }
-        
+
     @media screen and (min-width: 575px) {
         .img {
             border-radius: 3px;
@@ -91,11 +119,11 @@
             align-items: left;
             text-align: left;
         }
-        .item{
+        .item {
             width: 30px;
             margin-left: 1%;
         }
-        .content{
+        .content {
             margin-left: 5%;
         }
     }
@@ -112,7 +140,7 @@
             align-items: left;
             text-align: left;
         }
-        .item{
+        .item {
             width: 30px;
         }
     }
@@ -129,7 +157,7 @@
             align-items: left;
             text-align: left;
         }
-        .item{
+        .item {
             width: 30px;
         }
     }
@@ -146,11 +174,11 @@
             align-items: left;
             text-align: left;
         }
-        .item{
+        .item {
             width: 28px;
         }
     }
-    
+
     @media (min-width: 1600px) {
         .img {
             width: 350px;
