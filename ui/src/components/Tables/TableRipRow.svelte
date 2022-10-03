@@ -1,12 +1,8 @@
 <script>
-    import { init } from "svelte/internal";
-
-
-    // @ts-nocheck
-
     export let dados;
     export let indice;
     export let extraColumns;
+    let id;
     let value = [];
     let some = 10;
 
@@ -21,9 +17,13 @@
             document.getElementById(i).style.borderColor = "red";
         } else if (userInput > lsd && userInput.length !== 0) {
             document.getElementById(i).style.borderColor = "red";
-        } else if (userInput > lie && userInput < lsd && userInput.length !==0) {
+        } else if (
+            userInput > lie &&
+            userInput < lsd &&
+            userInput.length !== 0
+        ) {
             document.getElementById(i).style.borderColor = "green";
-        } else if(userInput.length === 0) {
+        } else if (userInput.length === 0) {
             document.getElementById(i).style.borderColor = "black";
         }
     }

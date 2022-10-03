@@ -1,52 +1,53 @@
 <script>
+  import TableHistorico from "../components/Tables/TableHistorico.svelte";
   import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
   let subtitle = "Historico de Apontamento";
   let HISTORICO = [];
-  let urlString = `/api/v1/HISTORICO?&HISTORICO=${HISTORICO}`;
+  let urlString = `/api/v1/HISTORICO`;
 
   async function getHISTORICO() {
     const res = await fetch(urlString);
     HISTORICO = await res.json();
+    console.log(HISTORICO);
   }
-  let res = getHISTORICO();
+  let resultado = getHISTORICO();
 </script>
 
 <main>
   <Breadcrumb />
   <div class="subtitle">{subtitle}</div>
-  <div class="main">
-      {#if HISTORICO.length !== 0 }
+  {#if HISTORICO.length !== 0}
+    <div class="tabela table-responsive">
       <table class="table table-hover table-striped caption-top">
         <thead>
           <tr id="header">
             <th scope="col">OP</th>
-            <th scope="col">ODF</th>
             <th scope="col">MAQUINA</th>
             <th scope="col">BOAS</th>
             <th scope="col">REFUGO</th>
             <th scope="col">FALTANTE</th>
+            <th scope="col">ODF</th>
           </tr>
         </thead>
         <tbody id="corpoTabela">
-          {#each HISTORICO as row, i}
-          <td>{HISTORICO[0].OP === null || !HISTORICO[0].OP ? "S/I" : HISTORICO[0].OP}</td>
-          <td>{HISTORICO[0].ODF === null || !HISTORICO[0].ODF ? "S/I" : HISTORICO[0].ODF}</td>
-          <td>{HISTORICO[0].MAQUINA === null || !HISTORICO[0].MAQUINA ? "S/I" : HISTORICO[0].MAQUINA}</td>
-          <td>{HISTORICO[0].BOAS === null || !HISTORICO[0].BOAS ? "S/I" : HISTORICO[0].BOAS}</td>
-          <td>{HISTORICO[0].REFUGO === null || !HISTORICO[0].REFUGO ? "S/I" : HISTORICO[0].REFUGO}</td>
-          <td>{HISTORICO[0].PC_FALTANTE === null || !HISTORICO[0].PC_FALTANTE ? "S/I" : HISTORICO[0].PC_FALTANTE}</td>
+          {#each HISTORICO as column, i}
+            <TableHistorico dados={column} />
           {/each}
         </tbody>
       </table>
-      {:else}
-        <h3>Não há histórico para exibir</h3>
-      {/if}
-  </div>
+    </div>
+  {:else}
+    <h2>Não há histórico para exibir</h2>
+  {/if}
 </main>
 
 <style>
+
   main {
     margin: 1%;
+  }
+  th {
+    text-align: center;
   }
 
   @media screen and (max-width: 550px) {

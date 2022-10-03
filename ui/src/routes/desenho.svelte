@@ -4,14 +4,11 @@
     let zoomNumber = 400;
     let rotation = 0;
     let imagemBack = [];
-
-    let urlString = `/api/v1/desenho?=imagemBack${imagemBack}`;
+    let urlString = `/api/v1/desenho?`
 
     async function getIMAGEM() {
         const res = await fetch(urlString);
         imagemBack = await res.json();
-        console.log(imagemBack)
-        return imagemBack;
     }
 
     let resultado = getIMAGEM();
@@ -74,14 +71,26 @@
     </div>
 
     <div class="newDiv">
-        {#each imagemBack as column}
-            {#if imagemBack.length > 0}
-                <img  media="print" id="img" class="img" src={column} alt="" />
-            {:else}
-                <h3>NÃO HÁ DESENHO PARA EXIBIR</h3>
-            {/if}
-        {/each}
+        {#await resultado}
+            <div>AGUARDE...</div>
+        {:then item}
+            {#each imagemBack as column}
+                {#if imagemBack.length > 0}
+                    <img
+                        media="print"
+                        id="img"
+                        class="img"
+                        src={column}
+                        alt=""
+                    />
+                {/if}
+            {/each}
+        {/await}
     </div>
+
+    {#if imagemBack == "/images/sem_imagem.gif"}
+        <h3>Não existe imagem</h3>
+    {/if}
 </main>
 
 <style>

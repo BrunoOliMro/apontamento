@@ -42,6 +42,8 @@ apiRouter.route("/apontamento")
                         `.trim()).then(result => result.recordset);
     res.cookie("NUMERO_ODF", dados.numOdf);
     res.cookie("CODIGO_PECA", resource[0].CODIGO_PECA);
+    res.cookie("CODIGO_MAQUINA", resource[0].CODIGO_MAQUINA);
+    res.cookie("NUMERO_OPERACAO", resource[0].NUMERO_OPERACAO);
     if (resource.length > 0) {
         try {
             const resource2 = await connection.query(`
@@ -80,8 +82,8 @@ apiRouter.route("/apontamento")
             const reservedItens = execut.map((quantItens) => {
                 return Math.floor((qtdTotal || 0) * quantItens);
             }, Infinity);
-            res.cookie("reservedItens", reservedItens);
-            console.log(reservedItens);
+            let reserved = res.cookie("reservedItens", reservedItens);
+            Number(reserved);
             const codigoFilho = resource2.map(item => item.NUMITE);
             res.cookie("codigoFilho", codigoFilho);
             console.log("codigoFilho:115", codigoFilho);
@@ -123,10 +125,11 @@ apiRouter.route("/apontamentoCracha")
     let finalTimer = 6000000;
     let maxRange = finalTimer;
     let MATRIC = req.body["MATRIC"].trim();
-    function sanitize(MATRIC) {
+    function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
-        return MATRIC.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
+        return input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
     }
+    MATRIC = sanitize(MATRIC);
     if (MATRIC == '') {
         res.status(400).redirect("/#/codigobarras?error=invalidBadge");
     }
@@ -162,18 +165,15 @@ apiRouter.route("/apontamentoCracha")
 });
 apiRouter.route("/odf")
     .get(async (req, res) => {
-    let NUMERO_ODF = req.query["NUMERO_ODF"].trim() || undefined;
-    let CODIGO_MAQUINA = req.query["CODIGO_MAQUINA"].trim() || undefined;
-    let NUMERO_OPERACAO = req.query["NUMERO_OPERACAO"].trim() || undefined;
+    let NUMERO_ODF = req.cookies["NUMERO_ODF"];
+    let CODIGO_MAQUINA = req.cookies["CODIGO_MAQUINA"];
+    let NUMERO_OPERACAO = req.cookies["NUMERO_OPERACAO"];
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const resource = await connection.query(`
                 SELECT TOP 1
-                [NUMERO_ODF], 
-                [CODIGO_MAQUINA], 
-                [NUMERO_OPERACAO],
-                [QTDE_ODF],
                 [CODIGO_CLIENTE],
+                [QTDE_ODF],
                 [CODIGO_PECA],
                 [DT_INICIO_OP],
                 [DT_FIM_OP],
@@ -200,7 +200,7 @@ apiRouter.route("/odf")
 });
 apiRouter.route("/imagem")
     .get(async (req, res) => {
-    const NUMPEC = await req.cookies["CODIGO_PECA"];
+    const NUMPEC = req.cookies["CODIGO_PECA"];
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let statusImg = "_status";
     try {
@@ -212,17 +212,14 @@ apiRouter.route("/imagem")
             WHERE 1 = 1
             AND NUMPEC = '${NUMPEC}'
             AND IMAGEM IS NOT NULL
-            `);
-        const result = resource.recordset.map((record, i) => {
-            const imgPath = pictures_1.pictures.getPicturePath(record[`NUMPEC`], record["IMAGEM"], statusImg, i);
-            return {
-                img: imgPath,
-                numpec: record["NUMPEC"],
-                sufixo: record["sufixo"],
-                i: i
-            };
-        });
-        res.json(result);
+            `).then(res => res.recordset);
+        let imgResult = [];
+        for await (let [i, record] of resource.entries()) {
+            const rec = await record;
+            const path = await pictures_1.pictures.getPicturePath(rec["NUMPEC"], rec["IMAGEM"], statusImg, String(i));
+            imgResult.push(path);
+        }
+        res.json(imgResult);
     }
     catch (error) {
         console.log(error);
@@ -232,17 +229,19 @@ apiRouter.route("/imagem")
         await connection.close();
     }
 });
-apiRouter.route("/STATUS")
+apiRouter.route("/status")
     .get(async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const resource = await connection.query(`
             SELECT TOP 1 EXECUT FROM OPERACAO
             `).then(record => record.recordset);
+        res.cookie("Tempo Execucao", resource[0].EXECUT);
         let reservedItens = req.cookies["reservedItens"];
+        Number(reservedItens);
+        console.log(reservedItens);
         let result = Number(resource[0].EXECUT * 1000);
-        console.log(result);
-        let newR = Number(result * 2);
+        let newR = Number(result * 5);
         console.log(newR);
         res.json(newR);
     }
@@ -255,7 +254,7 @@ apiRouter.route("/STATUS")
     }
 });
 apiRouter.route("/HISTORICO")
-    .get(async (req, res, next) => {
+    .get(async (req, res) => {
     let NUMERO_ODF = req.cookies["NUMERO_ODF"];
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
@@ -264,84 +263,86 @@ apiRouter.route("/HISTORICO")
             *
             FROM VW_APP_APONTAMENTO_HISTORICO
             WHERE 1 = 1
-            AND ODF = '195873'
+            AND ODF = '${NUMERO_ODF}'
             `.trim()).then(result => result.recordset);
-        console.log(resource);
-        res.json(resource);
-        return next();
+        return res.json(resource);
     }
     catch (error) {
         console.log(error);
-        res.status(500).json({ error: true, message: "Erro no servidor." });
+        return res.status(500).json({ error: true, message: "Erro no servidor." });
     }
     finally {
         await connection.close();
     }
 });
 apiRouter.route("/ferramenta")
-    .get(async (req, res) => {
+    .get(async (_req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let startProd = new Date();
-    let mili = startProd.getMilliseconds();
+    startProd.getMilliseconds();
     res.cookie("startProd", startProd.getTime());
     let CODIGO = '00241888';
     let ferramenta = "_ferr";
-    async function s() {
-        try {
-            const resource = await connection.query(`
-            SELECT
-            [CODIGO],
-            [IMAGEM]
-            FROM VIEW_APTO_FERRAMENTAL 
-            WHERE 1 = 1 
-            AND CODIGO = '${CODIGO}'
-            AND IMAGEM IS NOT NULL`);
-            const result = resource.recordset.map((record, i) => {
-                const imgPath = pictures_1.pictures.getPicturePath(record[`CODIGO`], record["IMAGEM"], ferramenta, i);
-                return {
-                    img: imgPath,
-                    codigo: record[`CODIGO`],
-                    sufixo: record["sufixo"],
-                    i: i
-                };
-            });
-            if (result.length > 0) {
-                let imgName = result.map(e => e.img);
-                return res.status(200).json(imgName);
-            }
-            else {
-                return res.status(400).redirect("/#/codigobarras/apontamento");
-            }
+    try {
+        const resource = await connection.query(`
+                SELECT
+                    [CODIGO],
+                    [IMAGEM]
+                FROM VIEW_APTO_FERRAMENTAL 
+                WHERE 1 = 1 
+                    AND IMAGEM IS NOT NULL
+                    AND CODIGO = '${CODIGO}'
+            `).then(res => res.recordset);
+        let result = [];
+        for await (let [i, record] of resource.entries()) {
+            const rec = await record;
+            const path = await pictures_1.pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], ferramenta, String(i));
+            result.push(path);
         }
-        catch (error) {
-            console.log(error);
-            res.status(500).json({ error: true, message: "Erro no servidor." });
-        }
-        finally {
-            let end = new Date();
-            let start = req.cookies["starterBarcode"];
-            let final = end.getTime() - Number(start);
-            const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + final + ')');
-            await connection.close();
-        }
+        return res.status(200).json(result);
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: true, message: "Erro no servidor." });
+    }
+    finally {
+        await connection.close();
+    }
+});
+apiRouter.route("/ferselecionadas")
+    .get(async (req, res) => {
+    console.log("ta aqui");
+    let final = '0.0040';
+    let numero_odf = '1378773';
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    try {
+        let end = new Date();
+        let start = req.cookies["starterBarcode"];
+        const insertSql = await connection.query(`UPDATE HISAPONTA SET TEMPO_SETUP = TEMPO_SETUP + '${final}' WHERE 1 = 1 AND ODF = '${numero_odf}'`);
+        console.log("Insert: linha 356:", insertSql);
+        return res.status(200).json();
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(400).redirect("/#/ferramenta");
+    }
+    finally {
+        await connection.close();
     }
 });
 apiRouter.route("/apontar")
     .post(async (req, res) => {
-    let status = '';
     let NUMERO_ODF = req.cookies["NUMERO_ODF"].trim();
     let NUMERO_OPERACAO = req.cookies["NUMERO_OPERACAO"].trim();
     let CODIGO_MAQUINA = req.cookies["CODIGO_MAQUINA"].trim();
     let EMPRESA_RECNO = 1;
-    let NUMPEC = req.cookies["CODIGO_PECA"].trim();
     let QTDE_APONTADA = req.body["goodFeed"].trim();
     let QTD_REFUGO = req.body["badfeed"].trim();
     let CST_PC_FALTANTE = req.body["reworkFeed"].trim();
     let CST_QTD_RETRABALHADA = req.body["missingFeed"].trim();
-    let parcialFeed = req.body["parcialFeed"].trim();
     let startRip = new Date();
     let mili = startRip.getMilliseconds();
-    console.log(mili / 1000);
+    console.log("mili: linha 428", mili / 1000);
     res.cookie("startRip", startRip.getTime());
     let input = req.body.trim();
     function sanitize(input) {
@@ -351,46 +352,19 @@ apiRouter.route("/apontar")
             .map((char) => (allowedChars.test(char) ? char : ""))
             .join("");
     }
-    let endProdTimer = new Date();
-    let startProd = req.cookies["startProd"];
-    let finalProdTimer = endProdTimer.getTime() - Number(startProd);
-    console.log("Primeira operação: " + finalProdTimer / 1000 + " segundos");
+    input = sanitize(input);
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    try {
-        const resource = await connection.query(`
-                SELECT TOP 1
-                [ODF],
-                [PECA],
-                [REVISAO],
-                [ITEM],
-                [PC_BOAS],
-                [PC_REFUGA],
-                [REVISAO]
-                FROM            
-                HISAPONTA
-                WHERE 1 = 1
-                AND [ODF] = ${NUMERO_ODF}
-                AND [PECA] =${NUMPEC}
-                ORDER BY DATAHORA DESC
-                `.trim()).then(result => result.recordset);
-    }
-    catch (error) {
-        console.log(error);
-    }
-    finally {
-        await connection.close();
-    }
     var codigoFilho = req.cookies['codigoFilho'];
     var reservedItens = req.cookies['reservedItens'];
     try {
         const updateQtyQuery = [];
         const updateQtyRes = [];
         for (const [i, qtdItem] of reservedItens.entries()) {
-            updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
+            updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
         }
         const updateQty = await connection.query(updateQtyQuery.join("\n"));
         for (const [i, qtdItem] of reservedItens.entries()) {
-            updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
+            updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
         }
         const updateRes = await connection.query(updateQtyRes.join("\n"));
         console.log("updateQty:132", updateQty);
@@ -406,17 +380,16 @@ apiRouter.route("/apontar")
         let startProd = req.cookies["startProd"];
         let finalProdTimer = endProdTimer.getTime() - Number(startProd);
         console.log("Primeira operação: " + finalProdTimer / 1000 + " segundos");
-        let startRip = new Date();
-        let mili = startRip.getMilliseconds();
-        console.log(mili / 1000);
-        res.cookie("startRip", startRip.getTime());
         const insertSqlRework = await connection.query('INSERT INTO HISAPONTA(CST_PC_FALTANTE, CST_QTD_RETRABALHADA) VALUES (' + CST_PC_FALTANTE + ',' + CST_QTD_RETRABALHADA + ')');
-        const insertSql = await connection.query('INSERT INTO PCP_PROGRAMACAO_PRODUCAO(NUMERO_ODF,NUMERO_OPERACAO,CODIGO_MAQUINA,EMPRESA_RECNO, QTDE_APONTADA, QTD_REFUGO) VALUES (' + NUMERO_ODF + ',' + NUMERO_OPERACAO + ',' + CODIGO_MAQUINA + ',' + EMPRESA_RECNO + ',' + totalPecas + ',' + totalRefugo + ')');
+        console.log(insertSqlRework);
+        const insertSql = await connection.query('INSERT INTO PCP_PROGRAMACAO_PRODUCAO(NUMERO_ODF,NUMERO_OPERACAO,CODIGO_MAQUINA,EMPRESA_RECNO, QTDE_APONTADA, QTD_REFUGO) VALUES (' + NUMERO_ODF + ',' + NUMERO_OPERACAO + ',' + CODIGO_MAQUINA + ',' + EMPRESA_RECNO + ',' + QTDE_APONTADA + ',' + QTD_REFUGO + ')');
+        console.log(insertSql);
         const insertSqlTimer = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + finalProdTimer + ')');
+        console.log(insertSqlTimer);
         res.status(200).redirect(`/#/rip`);
     }
     catch (error) {
-        res.redirect(`/#/rip`);
+        res.redirect(`/#/codigobarras/apontamento?erro=apontamentoInvalido`);
     }
     finally {
         await connection.close();
@@ -428,6 +401,10 @@ apiRouter.route("/rip")
     let NUMPEC = '00240070';
     let REVISAO = '02';
     let NUMCAR = '2999';
+    let startRip = new Date();
+    let mili = startRip.getMilliseconds();
+    console.log(mili / 1000);
+    res.cookie("startRip", startRip.getTime());
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const resource = await connection.query(`
@@ -471,6 +448,7 @@ apiRouter.route("/rip")
                    AND OP.CONDIC ='P'                 
                    AND PCP.NUMERO_ODF = '${NUMERO_ODF}'    
                 `.trim()).then(result => result.recordset);
+            console.log("resource: linha 606", resource);
         }
         catch (error) {
             console.log(error);
@@ -481,9 +459,11 @@ apiRouter.route("/rip")
         let end = new Date();
         let start = req.cookies["starterBarcode"];
         let final = end.getTime() - Number(start);
+        console.log("Final: linha 616", final);
         let endProdRip = new Date();
         let startRip = req.cookies["startRip"];
         let finalProdRip = endProdRip.getTime() - Number(startRip);
+        console.log("finalProdRip: linha 616", finalProdRip);
         res.json(resource);
     }
     catch (error) {
@@ -495,8 +475,6 @@ apiRouter.route("/rip")
 });
 apiRouter.route("/lancamentoRip")
     .post(async (req, res) => {
-    let returnedvalue = req.body["returnValue"].trim();
-    let NUMERO_ODF = req.cookies["NUMERO_ODF"];
     let SETUP = req.body["SETUP"].trim();
     let M2 = req.body["M2"].trim();
     let M3 = req.body["M3"].trim();
@@ -510,6 +488,7 @@ apiRouter.route("/lancamentoRip")
             .map((char) => (allowedChars.test(char) ? char : ""))
             .join("");
     }
+    SETUP = sanitize(SETUP);
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const resource = await connection.query('INSERT INTO CST_RIP_ODF_PRODUCAO(SETUP, M2,M3,M4,M5,M6) VALUES ('
@@ -534,6 +513,7 @@ apiRouter.route("/returnedValue")
     .post(async (req, res) => {
     let returnedvalue = req.body["returnValue"].trim();
     let NUMERO_ODF = req.cookies["returnValue"].trim();
+    returnedvalue = sanitize(returnedvalue);
     function sanitize(returnedvalue) {
         const allowedChars = /[A-Za-z0-9]/;
         return returnedvalue
@@ -545,7 +525,6 @@ apiRouter.route("/returnedValue")
     try {
         const resource = await connection.query(`
                     UPDATE CST_ALOCACAO  SET SALDOREAL =  SALDOREAL - '${returnedvalue}' WHERE 1 = 1 AND ODF = '${NUMERO_ODF}'`);
-        const result = resource.recordset.map(() => { });
         console.log(resource);
         res.status(200).json(resource);
     }
@@ -558,11 +537,12 @@ apiRouter.route("/returnedValue")
 });
 apiRouter.route("/parada")
     .get(async (req, res) => {
+    let numeroOdf = req.cookies["NUMERO_ODF"];
+    let returnedvalue = req.cookies["returnedValue"];
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const resource = await connection.query(`
-                    UPDATE CST_ALOCACAO  SET SALDOREAL =  SALDOREAL - '${returnedvalue}' WHERE 1 = 1 AND ODF = '${NUMERO_ODF}'`);
-        const result = resource.recordset.map(() => { });
+                    UPDATE CST_ALOCACAO  SET SALDOREAL =  SALDOREAL - '${returnedvalue}' WHERE 1 = 1 AND ODF = '${numeroOdf}'`);
         console.log(resource);
         res.status(200).json(resource);
     }
@@ -575,11 +555,12 @@ apiRouter.route("/parada")
 });
 apiRouter.route("/pausa")
     .get(async (req, res) => {
+    let numeroOdf = req.cookies["NUMERO_ODF"];
+    let returnedvalue = req.cookies["returnedValue"];
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const resource = await connection.query(`
-                    UPDATE CST_ALOCACAO  SET SALDOREAL =  SALDOREAL - '${returnedvalue}' WHERE 1 = 1 AND ODF = '${NUMERO_ODF}'`);
-        const result = resource.recordset.map(() => { });
+                    UPDATE CST_ALOCACAO  SET SALDOREAL =  SALDOREAL - '${returnedvalue}' WHERE 1 = 1 AND ODF = '${numeroOdf}'`);
         console.log(resource);
         res.status(200).json(resource);
     }
@@ -591,38 +572,34 @@ apiRouter.route("/pausa")
     }
 });
 apiRouter.route("/desenho")
-    .get(async (req, res) => {
-    const revisao = 3;
-    const NUMPEC = '00246887';
+    .get(async (_req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    const revisao = 3;
+    const numpec = _req.cookies["CODIGO_PECA"];
     let desenho = "_desenho";
     try {
         const resource = await connection.query(`
             SELECT
             DISTINCT
-            [NUMPEC],
-            [IMAGEM],
-            [REVISAO]
+                [NUMPEC],
+                [IMAGEM],
+                [REVISAO]
             FROM  QA_LAYOUT(NOLOCK) 
             WHERE 1 = 1 
-            AND NUMPEC = '${NUMPEC}'
-            AND REVISAO = ${revisao}
-            AND IMAGEM IS NOT NULL`);
-        const result = resource.recordset.map((record, i) => {
-            const imgPath = pictures_1.pictures.getPicturePath(record[`NUMPEC`], record["IMAGEM"], desenho, i);
-            return {
-                img: imgPath,
-                codigoInterno: record[`NUMPEC`],
-                sufixo: record["sufixo"],
-                i: i
-            };
-        });
-        let drawRes = result.map(e => e.img);
-        res.json(drawRes);
+                AND NUMPEC = '${numpec}'
+                AND REVISAO = ${revisao}
+                AND IMAGEM IS NOT NULL`).then(res => res.recordset);
+        let imgResult = [];
+        for await (let [i, record] of resource.entries()) {
+            const rec = await record;
+            const path = await pictures_1.pictures.getPicturePath(rec["NUMPEC"], rec["IMAGEM"], desenho, String(i));
+            imgResult.push(path);
+        }
+        return res.status(200).json(imgResult);
     }
     catch (error) {
         console.log(error);
-        res.status(500).json({ error: true, message: "Erro no servidor." });
+        return res.status(500).json({ error: true, message: "Erro no servidor." });
     }
     finally {
         await connection.close();

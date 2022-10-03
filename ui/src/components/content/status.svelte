@@ -1,77 +1,131 @@
 <script>
-    import { onMount } from "svelte";
     let tempoDecorrido = 0;
     let tempodePro = [];
-    let urlString = `/api/v1/STATUS`;
+    let urlString = `/api/v1/status`;
     let url = `/api/v1/imagem`;
     let tempoMax = null;
     let imagem = [];
     let shwowSuper = false;
 
-    onMount(async () => {
+    async function getTempo() {
         const res = await fetch(urlString);
         tempodePro = await res.json();
         tempoMax = Number(tempodePro);
-        console.log(tempoMax);
-        setInterval(() => {
-            shwowSuper = false
-            if (tempoDecorrido > tempoMax) {
-                shwowSuper = true;
-            } else {
-                shwowSuper = false;
-                tempoDecorrido++;
-            }
-        }, 1000);;
-    });
+    }
 
-    onMount(async () => {
+    let resultado = getTempo();
+
+    async function getImagem() {
         const res = await fetch(url);
         imagem = await res.json();
-        console.log(imagem[0].img);
-        return imagem[0].img
-    });
+    }
+    let callImagem = getImagem();
+
+    let showRed = false;
+    let showGreen = false;
+    let showBlue = false;
+
+    setInterval(() => {
+        let menorFif = (Number(50) * Number(tempoMax)) / Number(100);
+        let maiorFif = (Number(75) * Number(tempoMax)) / Number(100);
+        let excedido = (Number(100) * Number(tempoMax)) / Number(100);
+        tempoDecorrido++;
+        if (tempoDecorrido <= menorFif) {
+            showGreen = true;
+            showRed = false;
+            showBlue = false;
+            shwowSuper = false;
+        }
+        if (tempoDecorrido >= menorFif && tempoDecorrido <= maiorFif) {
+            showGreen = false;
+            showBlue = true;
+            showRed = false;
+            shwowSuper = false;
+        }
+        if (tempoDecorrido >= maiorFif) {
+            showRed = true;
+            showGreen = false;
+            showBlue = false;
+        }
+        if (tempoDecorrido >= excedido) {
+            shwowSuper = true;
+        } else {
+            shwowSuper = false;
+        }
+    }, 1000);
 </script>
 
 <div class="content">
-    {#if tempodePro.length !== 0}
-        {#if tempoDecorrido <= tempoMax}
+    {#await resultado}
+        <div>...</div>
+    {:then itens}
+        {#if showGreen === true}
             <div
                 class="item"
-                style="background-color:black"
+                style="background-color:green"
                 id="tempoDecorrido"
-            >
-                <!-- {dadosOdf[0].APT_TEMPO_OPERACAO} -->
-            </div>
+            />
         {/if}
-        {#if tempoDecorrido > tempoMax && tempoDecorrido < tempoMax}
-            <div class="item" style="background-color:blue" id="tempoDecorrido">
-                <!-- {dadosOdf[0].APT_TEMPO_OPERACAO} -->
-            </div>
+        {#if showBlue === true}
+            <div
+                class="item"
+                style="background-color:blue"
+                id="tempoDecorrido"
+            />
         {/if}
-        {#if tempoDecorrido > tempoMax && tempoDecorrido < tempoMax}
-            <div class="item" style="background-color:red" id="tempoDecorrido">
-                <!-- {dadosOdf[0].APT_TEMPO_OPERACAO} -->
-            </div>
+        {#if showRed === true}
+            <div
+                class="item"
+                style="background-color:red"
+                id="tempoDecorrido"
+            />
         {/if}
-        {#if tempoDecorrido > tempoMax}
-            <div class="item" style="background-color:gray" id="tempoDecorrido">
-                <!-- {dadosOdf[0].APT_TEMPO_OPERACAO} -->
-            </div>
-        {/if}
-        <img class="img" src={imagem[0].img} alt="" />
-    {:else}
-        <h3>Não há histórico para exibir</h3>
-    {/if}
-    
+        <img class="img" src={String(imagem)} alt="" />
+    {/await}
+
     {#if shwowSuper === true}
-        <div>
-            <h3>tempo acabo my friend</h3>
-            <input type="text" />
+        <div class="fundo">
+            <div class="timeOver">
+                <h3>Tempo Excedido</h3>
+                <form action="api/v1/apontar" method="POST" />
+                <p>Insira um supervisor para continuar</p>
+                <input type="text" />
+            </div>
         </div>
     {/if}
 </div>
 
 <style>
+    .timeOver {
+        color: white;
+        background-color: black;
+        width: 500px;
+        height: 250px;
+        /* position: absolute;
+        top: 20%;
+        left: 40%; */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        border-radius: 3px;
+    }
+    input {
+        border-radius: 3px;
+    }
+    .fundo {
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: rgba(17, 17, 17, 0.618);
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+    }
     div {
         display: flex;
         margin-top: 5%;

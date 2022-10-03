@@ -1,12 +1,11 @@
 <script>
     import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
-    import TableRow from "../components/Tables/TableRipRow.svelte";
     import { onMount } from "svelte";
     import TableRipRow from "../components/Tables/TableRipRow.svelte";
+    import id from "../components/Tables/TableRipRow.svelte"
 
     let urlS = `/api/v1/lancamentoRip`;
     let urlString = `/api/v1/rip`;
-
     let Subtitle = "RIP - RELATÓRIO DE INSPEÇÃO DE PROCESSOS";
 
     let SETUP = "";
@@ -27,7 +26,6 @@
     onMount(async () => {
         const res = await fetch(urlString);
         ripTable = await res.json();
-        console.log(ripTable[0]);
     });
 
     const doPost = async (
@@ -39,19 +37,7 @@
         res = await fetch(urlS, {
             method: "POST",
             body: JSON.stringify({
-                SETUP: SETUP,
-                M2: M2,
-                M3: M3,
-                M4: M4,
-                M5: M5,
-                M6: M6,
-                M7: M7,
-                M8: M8,
-                M9: M9,
-                M10: M10,
-                M11: M11,
-                M12: M12,
-                M13: M13,
+                M: id
             }),
             headers,
         });
@@ -118,7 +104,6 @@
                             {#each extraColumns as columnNumber}
                                 <th scope="col">M {columnNumber}</th>
                             {/each}
-                            <!-- <th scope="col">M {numbers}</th> -->
                         </tr>
                     </thead>
                     <tbody id="corpoTabela">
@@ -145,7 +130,9 @@
                         <input type="text" name="returnValue" />
                         <h2>Insira a quantidade que deseja estornar</h2>
                         <input type="text" />
-                        <p on:click={closePop}>Fechar</p>
+                        <div class="close">
+                            <p on:click={closePop}>Fechar</p>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -156,6 +143,12 @@
 </main>
 
 <style>
+    /* .close{
+        display: flex;
+        justify-content: right;
+        text-align: right;
+        align-items: right;
+    } */
     h2 {
         font-size: 30px;
     }

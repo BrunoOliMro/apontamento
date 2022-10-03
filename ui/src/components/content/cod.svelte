@@ -5,7 +5,7 @@
     let NUMERO_ODF = Number(dataFromBarcode.slice(10));
     let NUMERO_OPERACAO = Number(dataFromBarcode.slice(0, 5));
     let CODIGO_MAQUINA = String(dataFromBarcode.slice(5, 10));
-    let urlString = `/api/v1/odf?NUMERO_ODF=${NUMERO_ODF}&CODIGO_MAQUINA=${CODIGO_MAQUINA}&NUMERO_OPERACAO=${NUMERO_OPERACAO}`;
+    let urlString = `/api/v1/odf`;
     let dadosOdf = [];
 
     let employeName = document.cookie
@@ -22,13 +22,14 @@
     async function getOdfData() {
         const res = await fetch(urlString);
         dadosOdf = await res.json();
-        console.log(dadosOdf);
     }
     let resultado = getOdfData();
 </script>
 
-<main>
-    {#if dadosOdf.length !== 0}
+{#await resultado}
+    <div>...</div>
+{:then itens}
+    <main>
         <div class="areaCodigos">
             <div class="odf">ODF:</div>
             <div class="bold">
@@ -66,10 +67,8 @@
                     : dadosOdf[0].QTDE_ODF[0]}
             </div>
         </div>
-    {:else}
-        <h3>Não há histórico para exibir</h3>
-    {/if}
-</main>
+    </main>
+{/await}
 
 <style>
     .bold {
