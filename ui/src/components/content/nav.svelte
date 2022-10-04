@@ -1,4 +1,5 @@
 <script>
+    import { onMount } from "svelte";
     import badFeed from "../content/feed.svelte";
     import reworkFeed from "../content/feed.svelte";
     import missingFeed from "../content/feed.svelte";
@@ -7,9 +8,11 @@
     import faltante from "../content/feed.svelte";
     import parcialFeed from "../content/feed.svelte";
 
+    let apiMotivoParada = "api/v1/motivoParada";
     let urlStop = `/api/v1/parada`;
     let urlPause = `/api/v1/pause`;
     let dadosOdf = [];
+    let dados = [];
 
     const getMissingFeed = async () => {
         document.getElementById("faltante").style.display = "block";
@@ -36,8 +39,7 @@
     };
 
     let showmodal = false;
-    //let showBtnParcial = false;
-    function returnValue() {
+    function parada() {
         if (showmodal === false) {
             showmodal = true;
         } else {
@@ -50,11 +52,6 @@
         dadosOdf = await res.json();
     }
 
-    async function pause() {
-        const res = await fetch(urlPause);
-        dadosOdf = await res.json();
-    }
-
     function closePop() {
         if (showmodal === false) {
             showmodal = true;
@@ -62,17 +59,18 @@
             showmodal = false;
         }
     }
+
+    async function callMotivo() {
+        const res = await fetch(apiMotivoParada);
+        dados = await res.json();
+        console.log(dados);
+    }
+    let resultCall = callMotivo();
 </script>
 
 <main>
     <ul class="nav2">
         <li>Parcial</li>
-        <li>Faltante</li>
-        <li>Retrabalhar</li>
-        <li>Inspeção</li>
-        <li>Historico</li>
-        <li>Parada</li>
-        <li>Desenho</li>
     </ul>
     <div class="nav">
         <button
@@ -102,7 +100,7 @@
         <a class="out" href="/#/historico/"
             ><button type="button" class="sideButton"> Historico </button>
         </a>
-        <button type="button" class="sideButton" on:click={returnValue}>
+        <button type="button" class="sideButton" on:click={parada}>
             Parada
         </button>
 
@@ -114,11 +112,10 @@
             <div class="fundo">
                 <div class="header">
                     <h2>Motivo da Parada</h2>
-                    <h2 on:click={stop}>DOR</h2>
-                    <h2 on:click={stop}>DOR</h2>
-                    <h2 on:click={pause}>DOR</h2>
-                    <h2 on:click={pause}>ESTUFADO</h2>
-                    <h2 on:click={pause}>SONO</h2>
+                    {#each dados as item}
+                        <li>{item}</li>
+                    {/each}
+                    <p on:click={stop}>Confirmar</p>
                     <p on:click={closePop}>Fechar</p>
                 </div>
             </div>

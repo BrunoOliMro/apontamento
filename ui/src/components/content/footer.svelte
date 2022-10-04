@@ -1,8 +1,4 @@
 <script>
-  // var dataFromBarcode = localStorage.getItem("barcodeData");
-  // let NUMERO_ODF = Number(dataFromBarcode.slice(10));
-  // let NUMERO_OPERACAO = String(dataFromBarcode.slice(0, 5));
-  // let CODIGO_MAQUINA = String(dataFromBarcode.slice(5, 10));
   let dadosOdf = [];
   let urlString = `/api/v1/odf`;
 

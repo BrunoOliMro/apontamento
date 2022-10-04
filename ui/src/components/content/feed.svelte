@@ -1,19 +1,16 @@
 <script>
-    import showBtnParcial from "./nav.svelte";
-    import paradaMaq from "../content/nav.svelte";
-    const dataFromBarcode = localStorage.getItem("barcodeData");
-    let NUMERO_ODF = Number(dataFromBarcode.slice(10));
-    let NUMERO_OPERACAO = String(dataFromBarcode.slice(0, 5));
-    let CODIGO_MAQUINA = String(dataFromBarcode.slice(5, 10));
+    import { onMount } from "svelte";
+
     let goodFeed;
     let badFeed;
     let missingFeed;
     let reworkFeed;
     let parcialFeed;
-
     let urlS = `/api/v1/apontar`;
     let urlString = `/api/v1/odf`;
+    let motivoUrl = "/api/vi/motivoRefugo";
     let dadosOdf = [];
+    let dados = [];
 
     let apontamentoMsg = "";
     if (window.location.href.includes("?")) {
@@ -27,6 +24,7 @@
 
     const doPost = async () => {
         const headers = new Headers();
+        console.log(goodFeed);
         const res = await fetch(urlS, {
             method: "POST",
             body: JSON.stringify({
@@ -39,8 +37,13 @@
             headers,
         });
     };
-
     let resultado = getOdfData();
+
+    onMount(async () => {
+        const res = await fetch(motivoUrl);
+        dados = await res.json();
+        console.log(dados)
+    });
 </script>
 
 {#await resultado}
@@ -52,38 +55,23 @@
                 <div class="write">Produzir {dadosOdf[0].QTDE_ODF[0]}</div>
                 <div class="write" id="goodFeed">
                     Boas
-                    <input class="input" id="goodFeed" name="goodFeed" />
+                    <input class="input" name="goodFeed" />
                 </div>
                 <div class="write" id="ruins" name="ruins">
                     Ruins
-                    <input class="input" id="badFeed" name="badFeed" />
+                    <input class="input" name="badFeed" />
                 </div>
                 <div class="write" id="retrabalhar">
                     Retrabalhar
-                    <input
-                        class="input"
-                        type="text"
-                        id="reworkFeed"
-                        name="reworkFeed"
-                    />
+                    <input class="input" type="text" name="reworkFeed" />
                 </div>
                 <div class="write" id="parcialFeed">
                     Parcial
-                    <input
-                        class="input"
-                        type="text"
-                        id="parcial"
-                        name="parcial"
-                    />
+                    <input class="input" type="text" name="parcial" />
                 </div>
                 <div class="write" id="faltante">
                     Faltante
-                    <input
-                        class="input"
-                        type="text"
-                        id="missingFeed"
-                        name="missingFeed"
-                    />
+                    <input class="input" type="text" name="missingFeed" />
                 </div>
                 <button
                     id="button"
@@ -93,21 +81,39 @@
                 >
             </form>
 
-            <!-- {#if apontamentoMsg === "apontamentoInvalido"}
-            <div class="fundo">
-                <div class="apontarInvalido">
-                    <p>Apontamento Invalido tenta novamente</p>
+            {#if 1 === 1}
+                <div class="fundo">
+                    <div class="header">
+                        <p>MOTIVO DO REFUGO</p>
+                        {#each dados as item}
+                            {item}
+                        {/each}
+                        <p>Confirmar</p>
+                    </div>
                 </div>
-            </div>
-        {/if} -->
-            <!-- {:else}
-        <h3>Não há histórico para exibir</h3> -->
+            {/if}
         {/if}
     </main>
 {/await}
 
 <style>
-    /* .fundo {
+    .header {
+        color: white;
+        background-color: black;
+        width: 500px;
+        height: 300px;
+        /* position: absolute;
+        top: 20%;
+        left: 40%; */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        border-radius: 3px;
+    }
+
+    .fundo {
         position: fixed;
         top: 0;
         left: 0;
@@ -133,7 +139,7 @@
         align-items: center;
         text-align: center;
         border-radius: 3px;
-    } */
+    }
     .sideButton {
         margin: 1%;
         padding: 0%;

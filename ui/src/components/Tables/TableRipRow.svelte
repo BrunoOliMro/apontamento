@@ -2,13 +2,13 @@
     export let dados;
     export let indice;
     export let extraColumns;
-    let id;
-    let value = [];
-    let some = 10;
+    let idInput = "M" + indice;
 
     function checkColor(i) {
         // @ts-ignore
         let userInput = document.getElementById(i).value;
+        let userInputI = document.querySelectorAll("[name*=M]");
+        console.log(userInputI);
         console.log(userInput);
         let lie = dados.LIE;
         let lsd = dados.LSE;
@@ -18,8 +18,8 @@
         } else if (userInput > lsd && userInput.length !== 0) {
             document.getElementById(i).style.borderColor = "red";
         } else if (
-            userInput > lie &&
-            userInput < lsd &&
+            userInput >= lie &&
+            userInput <= lsd &&
             userInput.length !== 0
         ) {
             document.getElementById(i).style.borderColor = "green";
@@ -27,6 +27,11 @@
             document.getElementById(i).style.borderColor = "black";
         }
     }
+
+    const s = document.querySelectorAll("[name*='M']");
+    console.log(s)
+    let n = s.forEach(e => e)
+    console.log("debugFront: linha 32", n)
 </script>
 
 <tr class="tabelahistorico">
@@ -41,7 +46,7 @@
         ><input
             on:input={checkColor("SETUP-" + indice)}
             id={"SETUP-" + indice}
-            name="SETUP{indice}"
+            name={idInput}
             type="text"
         /></td
     >
@@ -83,7 +88,7 @@
             <input
                 on:input={checkColor("M-" + indice + columnNumber + i)}
                 id={"M-" + indice + columnNumber + i}
-                name="M{indice}"
+                name="M-{indice}"
                 type="text"
             />
         </td>

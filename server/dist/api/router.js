@@ -123,7 +123,6 @@ apiRouter.route("/apontamento")
 apiRouter.route("/apontamentoCracha")
     .post(async (req, res) => {
     let finalTimer = 6000000;
-    let maxRange = finalTimer;
     let MATRIC = req.body["MATRIC"].trim();
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
@@ -145,10 +144,9 @@ apiRouter.route("/apontamentoCracha")
                 `.trim()).then(result => result.recordset);
         if (resource.length > 0) {
             let start = new Date();
-            let mili = start.getMilliseconds();
-            console.log(mili / 1000);
-            res.cookie("starterBarcode", start.getTime());
-            res.cookie("MATRIC", resource[0].MATRIC, { httpOnly: true, maxAge: maxRange });
+            let mili = start.getMilliseconds() / 1000;
+            res.cookie("starterBarcode", mili);
+            res.cookie("MATRIC", resource[0].MATRIC, { httpOnly: true, maxAge: finalTimer });
             res.cookie("FUNCIONARIO", resource[0].FUNCIONARIO);
             res.status(200).redirect("/#/codigobarras?status=ok");
         }
@@ -189,6 +187,7 @@ apiRouter.route("/odf")
                 AND [CODIGO_MAQUINA] = '${CODIGO_MAQUINA}'
                 AND [NUMERO_OPERACAO] = ${NUMERO_OPERACAO}
                 ORDER BY NUMERO_OPERACAO ASC`.trim()).then(result => result.recordset);
+        res.cookie("qtdProduzir", resource[0].QTDE_ODF);
         res.json(resource);
     }
     catch (error) {
@@ -232,18 +231,19 @@ apiRouter.route("/imagem")
 apiRouter.route("/status")
     .get(async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    let tempoInicio = req.cookies["starterBarcode"];
+    let numpec = req.cookies['CODIGO_PECA'];
+    let maquina = req.cookies['CODIGO_MAQUINA'];
     try {
         const resource = await connection.query(`
-            SELECT TOP 1 EXECUT FROM OPERACAO
+            SELECT TOP 1 EXECUT FROM OPERACAO WHERE NUMPEC = '${numpec}' AND MAQUIN = '${maquina}' ORDER BY REVISAO DESC
             `).then(record => record.recordset);
         res.cookie("Tempo Execucao", resource[0].EXECUT);
-        let reservedItens = req.cookies["reservedItens"];
-        Number(reservedItens);
-        console.log(reservedItens);
+        let qtdProd = req.cookies["qtdProduzir"][0];
         let result = Number(resource[0].EXECUT * 1000);
-        let newR = Number(result * 5);
-        console.log(newR);
-        res.json(newR);
+        let tempoTotalExecução = Number(result * qtdProd);
+        let tempoTotal = Number(tempoTotalExecução) - tempoInicio;
+        res.json(tempoTotal);
     }
     catch (error) {
         console.log(error);
@@ -276,12 +276,12 @@ apiRouter.route("/HISTORICO")
     }
 });
 apiRouter.route("/ferramenta")
-    .get(async (_req, res) => {
+    .get(async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    let CODIGO = req.cookies["CODIGO_PECA"];
     let startProd = new Date();
-    startProd.getMilliseconds();
-    res.cookie("startProd", startProd.getTime());
-    let CODIGO = '00241888';
+    let newStartProd = startProd.getMilliseconds() / 1000;
+    res.cookie("startProd", newStartProd);
     let ferramenta = "_ferr";
     try {
         const resource = await connection.query(`
@@ -311,13 +311,14 @@ apiRouter.route("/ferramenta")
 });
 apiRouter.route("/ferselecionadas")
     .get(async (req, res) => {
-    console.log("ta aqui");
     let final = '0.0040';
     let numero_odf = '1378773';
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         let end = new Date();
+        let newEnd = end.getMilliseconds() / 1000;
         let start = req.cookies["starterBarcode"];
+        let final = Number(newEnd) - Number(start);
         const insertSql = await connection.query(`UPDATE HISAPONTA SET TEMPO_SETUP = TEMPO_SETUP + '${final}' WHERE 1 = 1 AND ODF = '${numero_odf}'`);
         console.log("Insert: linha 356:", insertSql);
         return res.status(200).json();
@@ -332,30 +333,31 @@ apiRouter.route("/ferselecionadas")
 });
 apiRouter.route("/apontar")
     .post(async (req, res) => {
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    var codigoFilho = req.cookies['codigoFilho'];
+    var reservedItens = req.cookies['reservedItens'];
     let NUMERO_ODF = req.cookies["NUMERO_ODF"].trim();
     let NUMERO_OPERACAO = req.cookies["NUMERO_OPERACAO"].trim();
     let CODIGO_MAQUINA = req.cookies["CODIGO_MAQUINA"].trim();
     let EMPRESA_RECNO = 1;
-    let QTDE_APONTADA = req.body["goodFeed"].trim();
-    let QTD_REFUGO = req.body["badfeed"].trim();
-    let CST_PC_FALTANTE = req.body["reworkFeed"].trim();
-    let CST_QTD_RETRABALHADA = req.body["missingFeed"].trim();
-    let startRip = new Date();
-    let mili = startRip.getMilliseconds();
-    console.log("mili: linha 428", mili / 1000);
-    res.cookie("startRip", startRip.getTime());
-    let input = req.body.trim();
+    let NUMPEC = req.cookies["CODIGO_PECA"].trim();
+    let QTDE_APONTADA = req.body.goodFeed.trim();
+    let qtdRefugo = req.body.badFeed.trim();
+    let CST_PC_FALTANTE = req.body.missingFeed.trim();
+    let CST_QTD_RETRABALHADA = req.body.reworkFeed.trim();
+    let parcialFeed = req.body.parcial.trim();
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
-        return input
-            .split("")
-            .map((char) => (allowedChars.test(char) ? char : ""))
-            .join("");
+        return input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
     }
-    input = sanitize(input);
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    var codigoFilho = req.cookies['codigoFilho'];
-    var reservedItens = req.cookies['reservedItens'];
+    QTDE_APONTADA = sanitize(req.body.goodFeed);
+    qtdRefugo = sanitize(req.body.badFeed);
+    CST_PC_FALTANTE = sanitize(req.body.missingFeed);
+    CST_QTD_RETRABALHADA = sanitize(req.body.reworkFeed);
+    parcialFeed = sanitize(req.body.parcial);
+    let startRip = new Date();
+    let mili = startRip.getMilliseconds();
+    res.cookie("startRip", startRip.getTime());
     try {
         const updateQtyQuery = [];
         const updateQtyRes = [];
@@ -363,49 +365,28 @@ apiRouter.route("/apontar")
             updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
         }
         const updateQty = await connection.query(updateQtyQuery.join("\n"));
+        console.log("updateQty: linha 510", updateQty);
         for (const [i, qtdItem] of reservedItens.entries()) {
             updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
         }
         const updateRes = await connection.query(updateQtyRes.join("\n"));
-        console.log("updateQty:132", updateQty);
-        console.log("updateRes:142", updateRes);
+        console.log("updateRes: linha 517", updateRes);
         res.status(200).redirect(`/#/rip`);
     }
     catch (err) {
         console.log("Erro:135", err);
         res.status(400).redirect("/#/codigobarras/apontamento");
     }
-    try {
-        let endProdTimer = new Date();
-        let startProd = req.cookies["startProd"];
-        let finalProdTimer = endProdTimer.getTime() - Number(startProd);
-        console.log("Primeira operação: " + finalProdTimer / 1000 + " segundos");
-        const insertSqlRework = await connection.query('INSERT INTO HISAPONTA(CST_PC_FALTANTE, CST_QTD_RETRABALHADA) VALUES (' + CST_PC_FALTANTE + ',' + CST_QTD_RETRABALHADA + ')');
-        console.log(insertSqlRework);
-        const insertSql = await connection.query('INSERT INTO PCP_PROGRAMACAO_PRODUCAO(NUMERO_ODF,NUMERO_OPERACAO,CODIGO_MAQUINA,EMPRESA_RECNO, QTDE_APONTADA, QTD_REFUGO) VALUES (' + NUMERO_ODF + ',' + NUMERO_OPERACAO + ',' + CODIGO_MAQUINA + ',' + EMPRESA_RECNO + ',' + QTDE_APONTADA + ',' + QTD_REFUGO + ')');
-        console.log(insertSql);
-        const insertSqlTimer = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + finalProdTimer + ')');
-        console.log(insertSqlTimer);
-        res.status(200).redirect(`/#/rip`);
-    }
-    catch (error) {
-        res.redirect(`/#/codigobarras/apontamento?erro=apontamentoInvalido`);
-    }
-    finally {
-        await connection.close();
-    }
 });
 apiRouter.route("/rip")
     .get(async (req, res) => {
-    var NUMERO_ODF = '1232975';
-    let NUMPEC = '00240070';
-    let REVISAO = '02';
-    let NUMCAR = '2999';
-    let startRip = new Date();
-    let mili = startRip.getMilliseconds();
-    console.log(mili / 1000);
-    res.cookie("startRip", startRip.getTime());
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    let NUMPEC = req.cookies["CODIGO_PECA"];
+    let REVISAO = '02';
+    let startRip = new Date();
+    let ripMiliseg = Number(startRip.getMilliseconds() / 1000);
+    res.cookie("startRip", ripMiliseg);
+    console.log(ripMiliseg);
     try {
         const resource = await connection.query(`
             SELECT  DISTINCT
@@ -427,47 +408,14 @@ apiRouter.route("/rip")
             FROM OPERACAO OP (NOLOCK)) AS TBL ON TBL.RECNO_PROCESSO = PROCESSO.R_E_C_N_O_  AND TBL.MAQUIN = QA_CARACTERISTICA.CST_NUMOPE
 			WHERE PROCESSO.NUMPEC = '${NUMPEC}' 
             AND PROCESSO.REVISAO = '${REVISAO}' 
-            AND NUMCAR < '${NUMCAR}'
+            AND NUMCAR < '2999'
             ORDER BY NUMPEC ASC
                 `.trim()).then(result => result.recordset);
-        try {
-            const resource = await connection.query(`
-                SELECT DISTINCT                 
-                   OP.NUMITE,                 
-                   CAST(OP.EXECUT AS INT) AS EXECUT,       
-                   CAST(E.SALDOREAL AS INT) AS SALDOREAL,                 
-                   CAST(((E.SALDOREAL - ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO AND CA.ODF = PCP.NUMERO_ODF),0)) / ISNULL(OP.EXECUT,0)) AS INT) AS QTD_LIBERADA_PRODUZIR,
-                   ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO),0) as saldo_alocado
-                   FROM PROCESSO PRO (NOLOCK)                  
-                   INNER JOIN OPERACAO OP (NOLOCK) ON OP.RECNO_PROCESSO = PRO.R_E_C_N_O_                  
-                   INNER JOIN ESTOQUE E (NOLOCK) ON E.CODIGO = OP.NUMITE                
-                   INNER JOIN PCP_PROGRAMACAO_PRODUCAO PCP (NOLOCK) ON PCP.CODIGO_PECA = OP.NUMPEC                
-                   WHERE 1=1                    
-                   AND PRO.ATIVO ='S'                   
-                   AND PRO.CONCLUIDO ='T'                
-                   AND OP.CONDIC ='P'                 
-                   AND PCP.NUMERO_ODF = '${NUMERO_ODF}'    
-                `.trim()).then(result => result.recordset);
-            console.log("resource: linha 606", resource);
-        }
-        catch (error) {
-            console.log(error);
-        }
-        finally {
-            await connection.close();
-        }
-        let end = new Date();
-        let start = req.cookies["starterBarcode"];
-        let final = end.getTime() - Number(start);
-        console.log("Final: linha 616", final);
-        let endProdRip = new Date();
-        let startRip = req.cookies["startRip"];
-        let finalProdRip = endProdRip.getTime() - Number(startRip);
-        console.log("finalProdRip: linha 616", finalProdRip);
-        res.json(resource);
+        return res.json(resource);
     }
     catch (error) {
         console.log(error);
+        return res.status(400).redirect("/#/codigobarras/apontamento?error=ripnotFound");
     }
     finally {
         await connection.close();
@@ -475,7 +423,9 @@ apiRouter.route("/rip")
 });
 apiRouter.route("/lancamentoRip")
     .post(async (req, res) => {
-    let SETUP = req.body["SETUP"].trim();
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    let SETUP = req.body.SETUP.trim();
+    console.log("debug: linha 603");
     let M2 = req.body["M2"].trim();
     let M3 = req.body["M3"].trim();
     let M4 = req.body["M4"].trim();
@@ -488,8 +438,22 @@ apiRouter.route("/lancamentoRip")
             .map((char) => (allowedChars.test(char) ? char : ""))
             .join("");
     }
-    SETUP = sanitize(SETUP);
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    SETUP = sanitize(req.body.SETUP);
+    console.log("SETUP: LINHA 619", SETUP);
+    let end = new Date();
+    let newNemEnd = Number(end.getMilliseconds() / 1000);
+    let start = req.cookies["starterBarcode"];
+    let final = Number(newNemEnd) - Number(start);
+    console.log("Final: linha 625", final);
+    let endProdRip = new Date();
+    let newendProdRip = Number(endProdRip.getMilliseconds() / 1000);
+    let startRip = req.cookies["startRip"];
+    let finalProdRip = Number(newendProdRip) - Number(startRip);
+    console.log("finalProdRip: linha 638", finalProdRip);
+    const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + finalProdRip + ')');
+    console.log("Rip: " + finalProdRip + " segundos");
+    const insertSql2 = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + final + ')');
+    console.log("Completo: " + final + " segundos");
     try {
         const resource = await connection.query('INSERT INTO CST_RIP_ODF_PRODUCAO(SETUP, M2,M3,M4,M5,M6) VALUES ('
             + SETUP + ','
@@ -511,25 +475,27 @@ apiRouter.route("/lancamentoRip")
 });
 apiRouter.route("/returnedValue")
     .post(async (req, res) => {
-    let returnedvalue = req.body["returnValue"].trim();
-    let NUMERO_ODF = req.cookies["returnValue"].trim();
-    returnedvalue = sanitize(returnedvalue);
-    function sanitize(returnedvalue) {
+    console.log(req.body);
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    let NUMERO_ODF = req.cookies["NUMERO_ODF"].trim();
+    console.log("debug: linha 672");
+    function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
-        return returnedvalue
+        return input
             .split("")
             .map((char) => (allowedChars.test(char) ? char : ""))
             .join("");
     }
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    console.log("debug: linha 684");
     try {
         const resource = await connection.query(`
-                    UPDATE CST_ALOCACAO  SET SALDOREAL =  SALDOREAL - '${returnedvalue}' WHERE 1 = 1 AND ODF = '${NUMERO_ODF}'`);
-        console.log(resource);
-        res.status(200).json(resource);
+            UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + 1 WHERE 1= 1 AND ODF= '1232975' AND CODIGO_FILHO = '105830489-1'`);
+        console.log("resource: linha 690?", resource);
+        return res.status(200).redirect("/#/codigobarras");
     }
     catch (error) {
         console.log(error);
+        return res.status(200).redirect("/#/rip?error=riperror");
     }
     finally {
         await connection.close();
@@ -553,6 +519,39 @@ apiRouter.route("/parada")
         await connection.close();
     }
 });
+apiRouter.route("/motivoParada")
+    .get(async (_req, res) => {
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    try {
+        const resource = await connection.query(`
+                SELECT CODIGO,DESCRICAO FROM APT_PARADA (NOLOCK) ORDER BY DESCRICAO ASC`).then(record => record.recordset);
+        let resoc = resource.map(e => e.DESCRICAO);
+        res.status(200).json(resoc);
+    }
+    catch (error) {
+        console.log(error);
+    }
+    finally {
+        await connection.close();
+    }
+});
+apiRouter.route("/motivoRefugo")
+    .get(async (_req, res) => {
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    try {
+        const resource = await connection.query(`
+            SELECT R_E_C_N_O_,DESCRICAO FROM CST_MOTIVO_REFUGO (NOLOCK) ORDER BY DESCRICAO ASC`).then(record => record.recordset);
+        let resoc = resource.map(e => e.DESCRICAO);
+        console.log(resoc);
+        res.status(200).json(resoc);
+    }
+    catch (error) {
+        console.log(error);
+    }
+    finally {
+        await connection.close();
+    }
+});
 apiRouter.route("/pausa")
     .get(async (req, res) => {
     let numeroOdf = req.cookies["NUMERO_ODF"];
@@ -562,20 +561,20 @@ apiRouter.route("/pausa")
         const resource = await connection.query(`
                     UPDATE CST_ALOCACAO  SET SALDOREAL =  SALDOREAL - '${returnedvalue}' WHERE 1 = 1 AND ODF = '${numeroOdf}'`);
         console.log(resource);
-        res.status(200).json(resource);
+        return res.status(200).json(resource);
     }
     catch (error) {
-        console.log(error);
+        return console.log(error);
     }
     finally {
         await connection.close();
     }
 });
 apiRouter.route("/desenho")
-    .get(async (_req, res) => {
+    .get(async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     const revisao = 3;
-    const numpec = _req.cookies["CODIGO_PECA"];
+    const numpec = req.cookies["CODIGO_PECA"];
     let desenho = "_desenho";
     try {
         const resource = await connection.query(`

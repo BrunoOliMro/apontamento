@@ -6,53 +6,60 @@
     let tempoMax = null;
     let imagem = [];
     let shwowSuper = false;
-
+    let showRed = false;
+    let showGreen = false;
+    let showBlue = false;
     async function getTempo() {
         const res = await fetch(urlString);
         tempodePro = await res.json();
         tempoMax = Number(tempodePro);
     }
-
-    let resultado = getTempo();
-
     async function getImagem() {
         const res = await fetch(url);
         imagem = await res.json();
     }
+    // setInterval(() => {
+    //     if (tempoMax <= 0) {
+    //         shwowSuper = true;
+    //         showRed = true;
+    //     } else {
+    //         let menorFif = (Number(50) * Number(tempoMax)) / Number(100);
+    //         let maiorFif = (Number(75) * Number(tempoMax)) / Number(100);
+    //         let excedido = (Number(100) * Number(tempoMax)) / Number(100);
+    //         tempoDecorrido++;
+    //         if (tempoDecorrido <= menorFif) {
+    //             showGreen = true;
+    //             showRed = false;
+    //             showBlue = false;
+    //             shwowSuper = false;
+    //         }
+    //         if (tempoDecorrido >= menorFif && tempoDecorrido <= maiorFif) {
+    //             showGreen = false;
+    //             showBlue = true;
+    //             showRed = false;
+    //             shwowSuper = false;
+    //         }
+    //         if (tempoDecorrido >= maiorFif) {
+    //             showRed = true;
+    //             showGreen = false;
+    //             showBlue = false;
+    //         }
+    //         if (tempoDecorrido >= excedido) {
+    //             shwowSuper = true;
+    //         } else {
+    //             shwowSuper = false;
+    //         }
+    //     }
+    // }, 1000);
+    function s (){
+        
+    }
+
+    function close() {
+        shwowSuper = false;
+    }
+    let resultado = getTempo();
     let callImagem = getImagem();
-
-    let showRed = false;
-    let showGreen = false;
-    let showBlue = false;
-
-    setInterval(() => {
-        let menorFif = (Number(50) * Number(tempoMax)) / Number(100);
-        let maiorFif = (Number(75) * Number(tempoMax)) / Number(100);
-        let excedido = (Number(100) * Number(tempoMax)) / Number(100);
-        tempoDecorrido++;
-        if (tempoDecorrido <= menorFif) {
-            showGreen = true;
-            showRed = false;
-            showBlue = false;
-            shwowSuper = false;
-        }
-        if (tempoDecorrido >= menorFif && tempoDecorrido <= maiorFif) {
-            showGreen = false;
-            showBlue = true;
-            showRed = false;
-            shwowSuper = false;
-        }
-        if (tempoDecorrido >= maiorFif) {
-            showRed = true;
-            showGreen = false;
-            showBlue = false;
-        }
-        if (tempoDecorrido >= excedido) {
-            shwowSuper = true;
-        } else {
-            shwowSuper = false;
-        }
-    }, 1000);
 </script>
 
 <div class="content">
@@ -90,6 +97,7 @@
                 <form action="api/v1/apontar" method="POST" />
                 <p>Insira um supervisor para continuar</p>
                 <input type="text" />
+                <p on:click={close}>Fechar</p>
             </div>
         </div>
     {/if}

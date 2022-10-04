@@ -25,6 +25,10 @@
     if (fetchItem == "/images/sem_imagem.gif") {
       window.location.href = "/#/codigobarras/apontamento";
     }
+    if(fetchItem.length === 0){
+    ferSelected()
+    window.location.href = "/#/codigobarras/apontamento";
+  }
   }
 
   if (window.location.href.includes("?")) {
@@ -39,7 +43,7 @@
       document.getElementById(imgId).style.transition = "1px";
     }
     if (fetchItem.length === arrayComp.length) {
-      let s  = ferSelected()
+      ferSelected()
       window.location.href = "/#/codigobarras/apontamento";
     }
   }
@@ -51,9 +55,9 @@
   {:then item}
     <h3>Selecione as Ferramentas para a produção</h3>
     <div class="itens">
-      {#if fetchItem.length === 0}
+      <!-- {#if fetchItem.length === 0}
         <h3>Não há Ferramentas para exibir</h3>
-      {/if}
+      {/if} -->
       {#each item as column, i}
         <img
           on:click={checkIfclicked(column, `img-${i}`)}

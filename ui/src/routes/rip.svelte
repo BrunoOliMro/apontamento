@@ -2,11 +2,19 @@
     import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
     import { onMount } from "svelte";
     import TableRipRow from "../components/Tables/TableRipRow.svelte";
-    import id from "../components/Tables/TableRipRow.svelte"
-
+    import id from "../components/Tables/TableRipRow.svelte";
+    import indice from "../components/Tables/TableRipRow.svelte";
+    let seq = "Seq";
+    let extraColumns = [];
     let urlS = `/api/v1/lancamentoRip`;
     let urlString = `/api/v1/rip`;
+    let returnedValueApi = `/api/v1/returnedValue`;
+    let returnValueStorage;
+    let superCracha;
     let Subtitle = "RIP - RELATÓRIO DE INSPEÇÃO DE PROCESSOS";
+    let idInput;
+    let value = "";
+    let showEnd = false
 
     let SETUP = "";
     let M2 = "";
@@ -28,23 +36,25 @@
         ripTable = await res.json();
     });
 
-    const doPost = async (
-        /** @type {any} */ error,
-        /** @type {Response} */ res
-    ) => {
-        const headers = new Headers();
-        headers.append("Content-Type", "application/json");
-        res = await fetch(urlS, {
+    async function doPost() {
+        const res = await fetch(urlS, {
             method: "POST",
             body: JSON.stringify({
-                M: id
+                idInput: idInput,
             }),
-            headers,
         });
-    };
+        showEnd = true
+    }
 
-    let seq = "Seq";
-    let extraColumns = [];
+    async function doReturn() {
+        const res = await fetch(returnedValueApi, {
+            method: "POST",
+            body: JSON.stringify({
+                returnValueStorage: returnValueStorage,
+                superCracha: superCracha,
+            }),
+        });
+    }
     function createCol() {
         if (extraColumns.length < 7) {
             extraColumns = [...extraColumns, extraColumns.length + 6];
@@ -78,7 +88,7 @@
             >Enviar dados</button
         >
 
-        <button on:click={returnValue} class="sideButton" type="submit">
+        <button on:click={returnValue} class="sideButton">
             Estornar Valores
         </button>
     </div>
@@ -123,13 +133,22 @@
                 <form
                     action="/api/v1/returnedValue"
                     method="POST"
-                    class="returnValue"
+                    on:submit={doReturn}
                 >
                     <div class="header">
                         <h2>Codigo do Supervisor</h2>
-                        <input type="text" name="returnValue" />
+                        <input bind:value type="text" name="superCracha" />
                         <h2>Insira a quantidade que deseja estornar</h2>
-                        <input type="text" />
+                        <input
+                            bind:value
+                            type="text"
+                            name="returnValueStorage"
+                        />
+                        <div>
+                            <p on:click={doReturn} type="submit">
+                                Confirma Devolução de Estoque?
+                            </p>
+                        </div>
                         <div class="close">
                             <p on:click={closePop}>Fechar</p>
                         </div>
@@ -139,6 +158,9 @@
         {/if}
     {:else}
         <h2>Não há histórico para exibir</h2>
+    {/if}
+    {#if showEnd === true}
+        <h3>ODF FINALIZADA</h3>
     {/if}
 </main>
 
@@ -172,7 +194,7 @@
         color: white;
         background-color: black;
         width: 500px;
-        height: 250px;
+        height: 300px;
         /* position: absolute;
         top: 20%;
         left: 40%; */
