@@ -19,7 +19,7 @@
         document.getElementById("retrabalhar").style.display = "none";
         document.getElementById("ruins").style.display = "none";
         document.getElementById("badFeed").style.display = "none";
-        document.getElementById("parcialFeed").style.display = "none";
+        document.getElementById("parcialfeed").style.display = "none";
     };
 
     const getReworkFeed = async () => {
@@ -27,7 +27,7 @@
         document.getElementById("retrabalhar").style.display = "block";
         document.getElementById("ruins").style.display = "none";
         document.getElementById("badFeed").style.display = "none";
-        document.getElementById("parcialFeed").style.display = "none";
+        document.getElementById("parcialfeed").style.display = "none";
     };
 
     const getParcial = async () => {
@@ -35,7 +35,7 @@
         document.getElementById("retrabalhar").style.display = "none";
         document.getElementById("ruins").style.display = "none";
         document.getElementById("badFeed").style.display = "none";
-        document.getElementById("parcialFeed").style.display = "block";
+        document.getElementById("parcialfeed").style.display = "block";
     };
 
     let showmodal = false;
@@ -77,6 +77,7 @@
             on:click={getParcial}
             type="button"
             class="sideButton"
+            id="parcial"
             name="parcial"
             >Parcial
         </button>
@@ -103,19 +104,26 @@
         <button type="button" class="sideButton" on:click={parada}>
             Parada
         </button>
-
         <a class="out" href="/#/desenho/"
             ><button type="button" class="sideButton">Desenho</button></a
         >
-
         {#if showmodal === true}
             <div class="fundo">
                 <div class="header">
                     <h2>Motivo da Parada</h2>
-                    {#each dados as item}
-                        <li>{item}</li>
-                    {/each}
-                    <p on:click={stop}>Confirmar</p>
+                    <div class="c">
+                        <div class="dd">
+                            <div class="dd-p"><span>Opções</span></div>
+                            <input type="checkbox" />
+                            <div class="dd-c">
+                                {#each dados as item}
+                                    <ul>
+                                        <li><p href="#">{item}</p></li>
+                                    </ul>
+                                {/each}
+                            </div>
+                        </div>
+                    </div>
                     <p on:click={closePop}>Fechar</p>
                 </div>
             </div>
@@ -124,6 +132,150 @@
 </main>
 
 <style>
+    .dd-p {
+        padding: 10px;
+        background: black;
+        position: relative;
+        -webkit-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.75);
+        -moz-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.75);
+        box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.75);
+        transition-duration: 0.2s;
+        -webkit-transition-duration: 0.2s;
+    }
+    .dd input:after {
+        content: "";
+        width: 100%;
+        height: 2px;
+        position: absolute;
+        display: block;
+        background: #c63d0f;
+        bottom: 0;
+        left: 0;
+        transform: scaleX(0);
+        transform-origin: bottom left;
+        transition-duration: 0.2s;
+        -webkit-transform: scaleX(0);
+        -webkit-transform-origin: bottom left;
+        -webkit-transition-duration: 0.2s;
+    }
+    .dd input {
+        top: 0;
+        opacity: 0;
+        display: block;
+        padding: 0;
+        margin: 0;
+        border: 0;
+        position: absolute;
+        height: 100%;
+        width: 100%;
+    }
+    .dd input:hover {
+        cursor: pointer;
+    }
+    /* .dd input:hover ~ .dd-p {
+        -webkit-box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.75);
+        -moz-box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.75);
+        box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.75);
+    } */
+    .dd input:checked:after {
+        transform: scaleX(1);
+        -webkit-transform: scaleX(1);
+    }
+    .dd input:checked ~ .dd-c {
+        transform: scaleY(1);
+        -webkit-transform: scaleY(1);
+    }
+    /* .dd-p span {
+        color: #c63d0f;
+    } */
+    .dd-c {
+        display: block;
+        position: absolute;
+        background: black;
+        height: auto;
+        transform: scaleY(0);
+        transform-origin: top left;
+        transition-duration: 0.2s;
+        -webkit-transform: scaleY(0);
+        -webkit-transform-origin: top left;
+        -webkit-transition-duration: 0.2s;
+    }
+    .dd-c ul {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+    }
+    .dd-c li {
+        margin-bottom: 5px;
+        word-break: keep-all;
+        white-space: nowrap;
+        display: block;
+        position: relative;
+    }
+    p {
+        display: block;
+        position: relative;
+        text-decoration: none;
+        padding: 5px;
+        background: black;
+        color: white;
+    }
+    /* p:before {
+        z-index: 0;
+        content: "";
+        position: absolute;
+        display: block;
+        height: 100%;
+        width: 100%;
+        -webkit-transition-duration: 0.2s;
+        transition-duration: 0.2s;
+        transform-origin: top left;
+        -webkit-transform-origin: top left;
+        background: black;
+        top: 0;
+        left: 0;
+        transform: scaleX(0);
+        -webkit-transform: scaleX(0);
+    } */
+    /* p, span {
+        display: block;
+        position: relative;
+        -webkit-transition-duration: 0.2s;
+        transition-duration: 0.2s;
+    } */
+    /* p:hover:before {
+        transform: scaleX(1);
+        -webkit-transform: scaleX(1);
+    } */
+    /* p, span:hover {
+        color: white;
+    } */
+
+    /* #li:focus ~ li {
+        background-color: red;
+        transition: 1s;
+    }
+
+    #li:active ~ ul {
+        visibility: hidden;
+        opacity: 0;
+    }
+    #li {
+        display: none;
+    }
+    #li:not(:active) ~ ul {
+        opacity: 1;
+        transition: 0.3s ease-in-out;
+    } */
+
+    main {
+        display: flex;
+        margin: 0%;
+        padding: 0%;
+        justify-content: left;
+        text-align: left;
+        align-items: left;
+    }
     .fundo {
         position: fixed;
         top: 0;
@@ -135,9 +287,6 @@
         flex-direction: row;
         align-items: center;
         justify-content: center;
-    }
-    ul {
-        font-size: 20px;
     }
     .header {
         color: white;
@@ -170,13 +319,9 @@
         text-decoration: none;
         outline: none;
     }
-    .btns {
-        display: flex;
-        flex-direction: column;
-    }
     .sideButton {
         outline: none;
-        margin: 1%;
+        margin: 0%;
         padding: 0%;
         font-size: 14px;
         width: 120px;
@@ -187,6 +332,10 @@
         align-items: center;
         border-radius: 3px;
         background-color: transparent;
+        border: none;
+        /* border-color: grey;
+        box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4); */
+        letter-spacing: 1px;
     }
 
     .sideButton:hover {
@@ -200,10 +349,14 @@
         margin: 0%;
         padding: 0%;
         width: 100%;
-        height: 10%;
+        display: flex;
         justify-content: space-between;
         align-items: center;
         text-align: center;
+        background-color: transparent;
+        border: none;
+        /* border-color: grey;
+        box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4); */
     }
 
     @media screen and (max-width: 500px) {
@@ -230,7 +383,8 @@
     }
     @media screen and (min-width: 821px) {
         .nav {
-            margin-bottom: 2%;
+            margin-bottom: 15px;
+            border-radius: 3px;
         }
         .nav2 {
             display: none;

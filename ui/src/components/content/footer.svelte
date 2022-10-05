@@ -15,18 +15,16 @@
 {:then itens}
   <main class="main">
     <div class="div1">
-      <div class="title">INICIO:</div>
+      <div class="title">INICIO</div>
       {dadosOdf[0].DT_INICIO_OP.slice(6, 8)} /
       {dadosOdf[0].DT_INICIO_OP.slice(4, 6)} /
       {dadosOdf[0].DT_INICIO_OP.slice(0, 4)}
       - {(dadosOdf[0].HORA_INICIO =
-        dadosOdf[0].HORA_INICIO === null
-          ? "S/I"
-          : dadosOdf[0].HORA_INICIO)}
+        dadosOdf[0].HORA_INICIO === null ? "S/I" : dadosOdf[0].HORA_INICIO)}
     </div>
 
     <div class="div2">
-      <div class="title">FINAL:</div>
+      <div class="title">FINAL</div>
       {dadosOdf[0].DT_FIM_OP.slice(6, 8)} /
       {dadosOdf[0].DT_FIM_OP.slice(4, 6)} /
       {dadosOdf[0].DT_FIM_OP.slice(0, 4)} -
@@ -38,13 +36,27 @@
 
 <style>
   main {
-    display: flex;
     font-weight: bold;
-    margin-top: 3%;
+    margin: 1% 0%;
     justify-content: space-around;
+    flex-direction: row;
+    display: flex;
+    letter-spacing: 1px;
+    border-color: grey;
+    box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
+    border-radius: 5px;
+  }
+  div {
+    margin: 1%;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  .title{
+    font-weight: normal;
   }
 
-  @media screen and (max-width: 574px) {
+  /* @media screen and (max-width: 574px) {
     .main {
       margin-top: 6%;
       font-size: 15px;
@@ -65,8 +77,6 @@
   }
   @media screen and (min-width: 575px) {
     .main {
-      margin-left: 1%;
-      margin-right: 1%;
       justify-content: space-around;
       text-align: left;
       align-items: left;
@@ -84,8 +94,6 @@
   @media screen and (min-width: 860px) {
     .main {
       font-size: 20px;
-      margin-left: 1%;
-      margin-right: 1%;
       justify-content: space-around;
       text-align: left;
       align-items: left;
@@ -98,8 +106,6 @@
   @media screen and (min-width: 1000px) {
     .main {
       font-size: 20px;
-      margin-left: 1%;
-      margin-right: 1%;
       justify-content: space-around;
       text-align: left;
       align-items: left;
@@ -111,8 +117,6 @@
   @media screen and (min-width: 1200px) {
     .main {
       font-size: 20px;
-      margin-left: 1%;
-      margin-right: 1%;
       justify-content: space-around;
       text-align: left;
       align-items: left;
@@ -125,8 +129,6 @@
   @media screen and (min-width: 1600px) {
     .main {
       font-size: 25px;
-      margin-left: 1%;
-      margin-right: 1%;
       justify-content: space-around;
       text-align: left;
       align-items: left;
@@ -134,5 +136,5 @@
     .title {
       font-weight: normal;
     }
-  }
+  } */
 </style>

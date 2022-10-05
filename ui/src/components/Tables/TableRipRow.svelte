@@ -106,6 +106,7 @@
     tr {
         background-color: white;
         text-align: center;
+        letter-spacing: 1px;
     }
     td {
         /* width: 100%; */

@@ -18,42 +18,40 @@
         const res = await fetch(url);
         imagem = await res.json();
     }
-    // setInterval(() => {
-    //     if (tempoMax <= 0) {
-    //         shwowSuper = true;
-    //         showRed = true;
-    //     } else {
-    //         let menorFif = (Number(50) * Number(tempoMax)) / Number(100);
-    //         let maiorFif = (Number(75) * Number(tempoMax)) / Number(100);
-    //         let excedido = (Number(100) * Number(tempoMax)) / Number(100);
-    //         tempoDecorrido++;
-    //         if (tempoDecorrido <= menorFif) {
-    //             showGreen = true;
-    //             showRed = false;
-    //             showBlue = false;
-    //             shwowSuper = false;
-    //         }
-    //         if (tempoDecorrido >= menorFif && tempoDecorrido <= maiorFif) {
-    //             showGreen = false;
-    //             showBlue = true;
-    //             showRed = false;
-    //             shwowSuper = false;
-    //         }
-    //         if (tempoDecorrido >= maiorFif) {
-    //             showRed = true;
-    //             showGreen = false;
-    //             showBlue = false;
-    //         }
-    //         if (tempoDecorrido >= excedido) {
-    //             shwowSuper = true;
-    //         } else {
-    //             shwowSuper = false;
-    //         }
-    //     }
-    // }, 1000);
-    function s (){
-        
-    }
+    setInterval(() => {
+        if (tempoMax <= 0) {
+            shwowSuper = true;
+            showRed = true;
+        } else {
+            let menorFif = (Number(50) * Number(tempoMax)) / Number(100);
+            let maiorFif = (Number(75) * Number(tempoMax)) / Number(100);
+            let excedido = (Number(100) * Number(tempoMax)) / Number(100);
+            tempoDecorrido++;
+            if (tempoDecorrido <= menorFif) {
+                showGreen = true;
+                showRed = false;
+                showBlue = false;
+                shwowSuper = false;
+            }
+            if (tempoDecorrido >= menorFif && tempoDecorrido <= maiorFif) {
+                showGreen = false;
+                showBlue = true;
+                showRed = false;
+                shwowSuper = false;
+            }
+            if (tempoDecorrido >= maiorFif) {
+                showRed = true;
+                showGreen = false;
+                showBlue = false;
+            }
+            if (tempoDecorrido >= excedido) {
+                shwowSuper = true;
+            } else {
+                shwowSuper = false;
+            }
+        }
+    }, 1000);
+    function s() {}
 
     function close() {
         shwowSuper = false;
@@ -104,6 +102,21 @@
 </div>
 
 <style>
+    #tempoDecorrido{
+        margin: 0%;
+        padding: 0%;
+        border-radius: 4px 0px 0px 4px;
+        border-color: grey;
+        box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
+    }
+    div {
+        margin: 0%;
+        padding: 0%;
+    }
+    .content {
+        margin: 0%;
+        padding: 0%;
+    }
     .timeOver {
         color: white;
         background-color: black;
@@ -145,11 +158,11 @@
 
     img {
         width: 18rem;
-        height: 18rem;
+        height: 270px;
         border-radius: 3px;
     }
 
-    @media (max-width: 574px) {
+    /* @media (max-width: 574px) {
         .img {
             border-radius: 3px;
             width: 250px;
@@ -261,5 +274,5 @@
         .item {
             width: 30px;
         }
-    }
+    } */
 </style>

@@ -42,9 +42,6 @@
 
 <style>
 
-  main {
-    margin: 1%;
-  }
   th {
     text-align: center;
   }

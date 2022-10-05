@@ -7,7 +7,14 @@
 </main>
 
 <style>
-	@media screen and (max-width: 500px) {
+	main{
+		margin-top: 5px;
+	}
+	h1{
+		margin: 0%;
+		padding: 0%;
+	}
+	/* @media screen and (max-width: 500px) {
 		#title {
 		font-size: 25px;
 		margin-top: 1%;
@@ -58,5 +65,5 @@
 		margin-left: 1%;
 		padding: 0px;
 	}
-}
+} */
 </style>

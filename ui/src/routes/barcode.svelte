@@ -8,6 +8,10 @@
   let urlS = `/api/v1/apontamento`;
   let urlBagde = `/api/v1/apontamentoCracha`;
   let cracha = "";
+  let showmodal = false;
+  let returnedValueApi = `/api/v1/returnedValue`;
+  let returnValueStorage;
+  let superCracha;
 
   let barcodeMsg = "";
   if (window.location.href.includes("?")) {
@@ -76,28 +80,58 @@
       }),
       headers,
     });
-    console.log(res)
+    console.log(res);
   };
 
   let resultado = doPost;
 
-  function red (){
-    if(barcodeMsg === "red") {
+  function red() {
+    if (barcodeMsg === "red") {
       window.location.href = "/#/ferramenta";
     }
   }
-  let s = red()
+  let s = red();
 
   function closePop() {
     document.getElementById("s").style.display = "none";
     window.location.href = "/#/codigobarras";
-    location.reload()
+    location.reload();
+  }
+  function returnValue() {
+    if (showmodal === false) {
+      showmodal = true;
+    } else {
+      showmodal = false;
+    }
+  }
+  function closePopConfir() {
+    if (showmodal === false) {
+      showmodal = true;
+    } else {
+      showmodal = false;
+    }
+  }
+  async function doReturn() {
+    const res = await fetch(returnedValueApi, {
+      method: "POST",
+      body: JSON.stringify({
+        returnValueStorage: returnValueStorage,
+        superCracha: superCracha,
+      }),
+    });
   }
 </script>
 
 <main>
   <div>
-    <Title />
+    <div>
+      <Title />
+      <div class="return">
+        <button on:click={returnValue} class="sideButton">
+          Estornar Valores
+        </button>
+      </div>
+    </div>
     {#if barcodeMsg === "invalidBarcode"}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
@@ -140,11 +174,93 @@
         </div>
       </form>
     {/if}
+    {#if showmodal === true}
+      <div class="fundo">
+        <form action="/api/v1/returnedValue" method="POST" on:submit={doReturn}>
+          <div class="header">
+            <p>Codigo do Supervisor</p>
+            <input bind:value type="text" name="superCracha" />
+            <p>Insira a quantidade que deseja estornar</p>
+            <input bind:value type="text" name="returnValueStorage" />
+            <p>Qual irá retornar</p>
+            <p>BOAS</p>
+            <p>RUINS</p>
+            <p>PARCIAL</p>
+            <p>FALTANTE</p>
+            <div>
+              <p on:click={doReturn} type="submit">
+                Confirma Devolução de Estoque?
+              </p>
+            </div>
+            <div class="close">
+              <p on:click={closePopConfir}>Fechar</p>
+            </div>
+          </div>
+        </form>
+      </div>
+    {/if}
   </div>
 </main>
 
 <style>
-  #MATRIC{
+  .fundo {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: rgba(17, 17, 17, 0.618);
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  }
+  .header {
+    font-size: 10px;
+    color: white;
+    background-color: black;
+    width: 500px;
+    height: 300px;
+    /* position: absolute;
+        top: 20%;
+        left: 40%; */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-radius: 3px;
+  }
+  .return {
+    display: flex;
+    justify-content: flex-end;
+    text-align: center;
+    align-items: center;
+  }
+  .sideButton {
+    margin: 1%;
+    padding: 0%;
+    font-size: 14px;
+    width: 132px;
+    height: 35px;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    align-items: center;
+    border-radius: 3px;
+    background-color: transparent;
+    letter-spacing: 1px;
+    border-color: grey;
+    box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
+  }
+
+  .sideButton:hover {
+    cursor: pointer;
+    background-color: black;
+    color: white;
+    transition: 1s;
+  }
+  #MATRIC {
     margin: 1%;
   }
   .fundo {

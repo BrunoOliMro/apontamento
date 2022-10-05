@@ -7,7 +7,6 @@
   let urlFer = `/api/v1/ferselecionadas`;
   let fer = [];
   let adicionados = 0;
-  let everCheck = false;
   let arrayComp = [];
   let toolMsg = "";
 
@@ -118,6 +117,7 @@
   div {
     margin: 1%;
     border-radius: 5px;
+    letter-spacing: 1px;
   }
 
   @media (max-width: 820px) {

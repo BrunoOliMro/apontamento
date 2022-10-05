@@ -371,11 +371,11 @@ apiRouter.route("/apontar")
         }
         const updateRes = await connection.query(updateQtyRes.join("\n"));
         console.log("updateRes: linha 517", updateRes);
-        res.status(200).redirect(`/#/rip`);
+        return res.status(200).redirect(`/#/rip`);
     }
     catch (err) {
         console.log("Erro:135", err);
-        res.status(400).redirect("/#/codigobarras/apontamento");
+        return res.status(400).redirect("/#/codigobarras/apontamento");
     }
 });
 apiRouter.route("/rip")
@@ -535,18 +535,19 @@ apiRouter.route("/motivoParada")
         await connection.close();
     }
 });
-apiRouter.route("/motivoRefugo")
+apiRouter.route("/motivorefugo")
     .get(async (_req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    console.log("object");
     try {
         const resource = await connection.query(`
             SELECT R_E_C_N_O_,DESCRICAO FROM CST_MOTIVO_REFUGO (NOLOCK) ORDER BY DESCRICAO ASC`).then(record => record.recordset);
         let resoc = resource.map(e => e.DESCRICAO);
         console.log(resoc);
-        res.status(200).json(resoc);
+        return res.status(200).json(resoc);
     }
     catch (error) {
-        console.log(error);
+        return console.log(error);
     }
     finally {
         await connection.close();

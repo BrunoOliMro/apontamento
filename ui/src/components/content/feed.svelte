@@ -1,6 +1,4 @@
 <script>
-    import { onMount } from "svelte";
-
     let goodFeed;
     let badFeed;
     let missingFeed;
@@ -8,9 +6,10 @@
     let parcialFeed;
     let urlS = `/api/v1/apontar`;
     let urlString = `/api/v1/odf`;
-    let motivoUrl = "/api/vi/motivoRefugo";
+    let motivoUrl = "/api/vi/motivorefugo";
     let dadosOdf = [];
     let dados = [];
+    let showConfirm = false;
 
     let apontamentoMsg = "";
     if (window.location.href.includes("?")) {
@@ -23,6 +22,7 @@
     }
 
     const doPost = async () => {
+        showConfirm = true;
         const headers = new Headers();
         console.log(goodFeed);
         const res = await fetch(urlS, {
@@ -37,51 +37,67 @@
             headers,
         });
     };
-    let resultado = getOdfData();
 
-    onMount(async () => {
+    async function callRefugo() {
         const res = await fetch(motivoUrl);
         dados = await res.json();
-        console.log(dados)
-    });
+        console.log(dados);
+    }
+    let resRefugo = callRefugo();
+    let resultado = getOdfData();
 </script>
 
 {#await resultado}
     <div>...</div>
 {:then itens}
-    <main id="main" class="align-self-center">
+    <main class="main">
         {#if dadosOdf.length !== 0}
-            <form action="/api/v1/apontar" method="POST">
-                <div class="write">Produzir {dadosOdf[0].QTDE_ODF[0]}</div>
-                <div class="write" id="goodFeed">
-                    Boas
-                    <input class="input" name="goodFeed" />
-                </div>
-                <div class="write" id="ruins" name="ruins">
-                    Ruins
-                    <input class="input" name="badFeed" />
-                </div>
-                <div class="write" id="retrabalhar">
-                    Retrabalhar
-                    <input class="input" type="text" name="reworkFeed" />
-                </div>
-                <div class="write" id="parcialFeed">
-                    Parcial
-                    <input class="input" type="text" name="parcial" />
-                </div>
-                <div class="write" id="faltante">
-                    Faltante
-                    <input class="input" type="text" name="missingFeed" />
-                </div>
-                <button
-                    id="button"
-                    on:click={doPost}
-                    type="submit"
-                    class="sideButton">Apontar</button
-                >
-            </form>
+            <div class="fullForm">
+                <form action="/api/v1/apontar" method="POST" class="form">
+                    <div id="prod" class="write">
+                        <p>PRODUZIR</p>
+                        <div>
+                            {dadosOdf[0].QTDE_ODF[0]}
+                        </div>
+                    </div>
+                    <div class="write" id="goodFeed">
+                        <p>BOAS</p>
+                        <input class="input" id="goodFeed" name="goodFeed" />
+                    </div>
+                    <div class="write" id="ruins" name="ruins">
+                        <p>RUINS</p>
+                        <input class="input" id="badFeed" name="badFeed" />
+                    </div>
+                    <div class="write" id="retrabalhar">
+                        <p>RETRABALHAR</p>
+                        <input class="input" id="retrabalhar"  type="text" name="reworkFeed" />
+                    </div>
+                    <div class="write" id="parcial">
+                        <p>PARCIAL</p>
+                        <input class="input" id="parcialfeed" type="text" name="parcial" />
+                    </div>
+                    <div class="write" id="faltante">
+                        <p>FALTANTE</p>
+                        <input class="input" id="faltante" type="text" name="missingFeed" />
+                    </div>
+                </form>
 
-            {#if 1 === 1}
+                <a id="apontar" on:click={doPost} type="submit">
+                    <span />
+                    <span />
+                    <span />
+                    <span />
+                    APONTAR
+                </a>
+            </div>
+
+            {#if showConfirm === true}
+                <h3>Confirma?</h3>
+            {/if}
+
+            <!-- {#await resRefugo}
+                <div>...</div>
+            {:then itens}
                 <div class="fundo">
                     <div class="header">
                         <p>MOTIVO DO REFUGO</p>
@@ -91,12 +107,246 @@
                         <p>Confirmar</p>
                     </div>
                 </div>
-            {/if}
+            {/await} -->
+
+
+            {#await resRefugo}
+                <div>...</div>
+            {:then item} 
+            <div class="fundo">
+                <div class="header">
+                    <p>MOTIVO DO REFUGO</p>
+                    <div class="c">
+                        <div class="dd">
+                            <div class="dd-p"><span>Opções</span></div>
+                            <input type="checkbox" />
+                            <div class="dd-c">
+                                {#each dados as item}
+                                    <ul>
+                                        <li><span href="#">{item}</span></li>
+                                    </ul>
+                                {/each}
+                                <p>Confirmar</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {/await}
         {/if}
     </main>
 {/await}
 
 <style>
+    /* .dd-p {
+        padding: 10px;
+        background: black;
+        position: relative;
+        -webkit-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.75);
+        -moz-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.75);
+        box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.75);
+        transition-duration: 0.2s;
+        -webkit-transition-duration: 0.2s;
+    }
+    .dd input:after {
+        content: "";
+        width: 100%;
+        height: 2px;
+        position: absolute;
+        display: block;
+        background: #c63d0f;
+        bottom: 0;
+        left: 0;
+        transform: scaleX(0);
+        transform-origin: bottom left;
+        transition-duration: 0.2s;
+        -webkit-transform: scaleX(0);
+        -webkit-transform-origin: bottom left;
+        -webkit-transition-duration: 0.2s;
+    }
+    .dd input {
+        top: 0;
+        opacity: 0;
+        display: block;
+        padding: 0;
+        margin: 0;
+        border: 0;
+        position: absolute;
+        height: 100%;
+        width: 100%;
+    }
+    .dd input:hover {
+        cursor: pointer;
+    }
+    /* .dd input:hover ~ .dd-p {
+        -webkit-box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.75);
+        -moz-box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.75);
+        box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.75);
+    } */
+    /* .dd input:checked:after {
+        transform: scaleX(1);
+        -webkit-transform: scaleX(1);
+    }
+    .dd input:checked ~ .dd-c {
+        transform: scaleY(1);
+        -webkit-transform: scaleY(1);
+    }  */
+    /* .dd-p span {
+        color: #c63d0f;
+    } */
+    /* .dd-c {
+        display: block;
+        position: absolute;
+        background: black;
+        height: auto;
+        transform: scaleY(0);
+        transform-origin: top left;
+        transition-duration: 0.2s;
+        -webkit-transform: scaleY(0);
+        -webkit-transform-origin: top left;
+        -webkit-transition-duration: 0.2s;
+    }
+    .dd-c ul {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+    }
+    .dd-c li {
+        margin-bottom: 5px;
+        word-break: keep-all;
+        white-space: nowrap;
+        display: block;
+        position: relative;
+    }
+
+
+    p {
+        display: block;
+        position: relative;
+        text-decoration: none;
+        padding: 5px;
+        background: white;
+        color: black;
+    } */
+
+    a {
+        position: relative;
+        display: inline-block;
+        padding: 10px 20px;
+        color: black;
+        font-size: 16px;
+        text-decoration: none;
+        text-transform: uppercase;
+        overflow: hidden;
+        transition: 0.5s;
+        margin-top: 40px;
+        letter-spacing: 4px;
+    }
+    a:hover {
+        background: black;
+        color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 0 2.5px black, 0 0 12.5px black, 0 0 25px black,
+            0 0 1px black;
+    }
+    a span {
+        position: absolute;
+        display: block;
+    }
+    a span:nth-child(1) {
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, black);
+        animation: btn-anim1 2s linear infinite;
+    }
+    @keyframes btn-anim1 {
+        0% {
+            left: -100%;
+        }
+        50%,
+        100% {
+            left: 100%;
+        }
+    }
+    a span:nth-child(2) {
+        top: -100%;
+        right: 0;
+        width: 2px;
+        height: 100%;
+        background: linear-gradient(180deg, transparent, black);
+        animation: btn-anim2 2s linear infinite;
+        animation-delay: 0.25s;
+    }
+    @keyframes btn-anim2 {
+        0% {
+            top: -100%;
+        }
+        50%,
+        100% {
+            top: 100%;
+        }
+    }
+    a span:nth-child(3) {
+        bottom: 0;
+        right: -100%;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(270deg, transparent, black);
+        animation: btn-anim3 2s linear infinite;
+        animation-delay: 0.5s;
+    }
+    @keyframes btn-anim3 {
+        0% {
+            right: -100%;
+        }
+        50%,
+        100% {
+            right: 100%;
+        }
+    }
+    a span:nth-child(4) {
+        bottom: -100%;
+        left: 0;
+        width: 2px;
+        height: 100%;
+        background: linear-gradient(360deg, transparent, black);
+        animation: btn-anim4 2s linear infinite;
+        animation-delay: 0.75s;
+    }
+    @keyframes btn-anim4 {
+        0% {
+            bottom: -100%;
+        }
+        50%,
+        100% {
+            bottom: 100%;
+        }
+    }
+
+    .main {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        margin-left: 10%;
+    }
+    .write {
+        margin: 0%;
+        /* padding: 0px 30px; */
+        font-size: 44px;
+    }
+    #prod,
+    #goodFeed {
+        padding: 0px 60px 0px 0px;
+    }
+
+    input {
+        border-color: grey;
+        border-radius: 3px;
+        width: 100%;
+    }
     .header {
         color: white;
         background-color: black;
@@ -125,56 +375,25 @@
         align-items: center;
         justify-content: center;
     }
-    .apontarInvalido {
-        color: white;
-        background-color: black;
-        width: 500px;
-        height: 250px;
-        position: absolute;
-        top: 20%;
-        left: 40%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        border-radius: 3px;
-    }
-    .sideButton {
-        margin: 1%;
-        padding: 0%;
-        font-size: 14px;
-        width: 100px;
-        height: 220px;
-        display: flex;
-        justify-content: center;
-        text-align: center;
-        align-items: center;
-        border-radius: 3px;
-        background-color: transparent;
-    }
-
-    .sideButton:hover {
-        outline: none;
-        cursor: pointer;
-        background-color: black;
-        color: white;
-        transition: 1s;
-    }
     #parcialFeed {
         display: none;
     }
     main {
-        font-size: 55px;
         justify-content: center;
-        align-items: center;
-        text-align: center;
         display: flex;
         font-weight: bold;
+        letter-spacing: 1px;
+    }
+    p {
+        margin: 1%;
+        padding: 0%;
     }
 
     input {
-        width: 200px;
+        width: 130px;
+        height: 50px;
+        margin: 0%;
+        padding: 0%;
     }
 
     form {
@@ -188,7 +407,11 @@
     #faltante {
         display: none;
     }
-
+    div {
+        margin-left: 8%;
+        padding: 0%;
+    }
+    /* 
     @media screen and (max-width: 574px) {
         .write {
             font-size: 20px;
@@ -286,5 +509,5 @@
             height: 100%;
             margin: 0;
         }
-    }
+    } */
 </style>

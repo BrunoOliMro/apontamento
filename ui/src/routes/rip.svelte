@@ -14,7 +14,7 @@
     let Subtitle = "RIP - RELATÓRIO DE INSPEÇÃO DE PROCESSOS";
     let idInput;
     let value = "";
-    let showEnd = false
+    let showEnd = false;
 
     let SETUP = "";
     let M2 = "";
@@ -43,7 +43,7 @@
                 idInput: idInput,
             }),
         });
-        showEnd = true
+        showEnd = true;
     }
 
     async function doReturn() {
@@ -79,7 +79,9 @@
 </script>
 
 <main>
-    <Breadcrumb />
+    <div class="bread">
+        <Breadcrumb />
+    </div>
     <div class="divBtn">
         <button on:click={createCol} class="sideButton" type="submit"
             >Adicionar coluna</button
@@ -87,10 +89,6 @@
         <button on:click={doPost} class="sideButton" type="submit"
             >Enviar dados</button
         >
-
-        <button on:click={returnValue} class="sideButton">
-            Estornar Valores
-        </button>
     </div>
     <div class="title">{Subtitle}</div>
     {#if ripTable.length !== 0}
@@ -128,34 +126,6 @@
                 </table>
             </div>
         </form>
-        {#if showmodal === true}
-            <div class="fundo">
-                <form
-                    action="/api/v1/returnedValue"
-                    method="POST"
-                    on:submit={doReturn}
-                >
-                    <div class="header">
-                        <h2>Codigo do Supervisor</h2>
-                        <input bind:value type="text" name="superCracha" />
-                        <h2>Insira a quantidade que deseja estornar</h2>
-                        <input
-                            bind:value
-                            type="text"
-                            name="returnValueStorage"
-                        />
-                        <div>
-                            <p on:click={doReturn} type="submit">
-                                Confirma Devolução de Estoque?
-                            </p>
-                        </div>
-                        <div class="close">
-                            <p on:click={closePop}>Fechar</p>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        {/if}
     {:else}
         <h2>Não há histórico para exibir</h2>
     {/if}
@@ -165,6 +135,16 @@
 </main>
 
 <style>
+    .bread {
+        margin-left: 1%;
+        margin-top: 5px;
+    }
+    .divBtn {
+        letter-spacing: 1px;
+    }
+    main {
+        letter-spacing: 1px;
+    }
     /* .close{
         display: flex;
         justify-content: right;
@@ -235,7 +215,7 @@
         margin: 1%;
         padding: 0%;
         font-size: 14px;
-        width: 120px;
+        width: 132px;
         height: 35px;
         display: flex;
         justify-content: center;
@@ -243,6 +223,9 @@
         align-items: center;
         border-radius: 3px;
         background-color: transparent;
+        letter-spacing: 1px;
+        border-color: grey;
+        box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
     }
 
     .sideButton:hover {
@@ -250,9 +233,6 @@
         background-color: black;
         color: white;
         transition: 1s;
-    }
-    main {
-        margin: 1%;
     }
     .tabela {
         width: 100%;

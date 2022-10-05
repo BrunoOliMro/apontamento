@@ -31,31 +31,31 @@
 {:then itens}
     <main>
         <div class="areaCodigos">
-            <div class="odf">ODF:</div>
-            <div class="bold">
+            <p class="odf">ODF:</p>
+            <p class="bold">
                 {NUMERO_ODF === null || !NUMERO_ODF ? "S/I" : NUMERO_ODF}
-            </div>
-            <div class="odf">Cód. Interno:</div>
-            <div class="bold">
+            </p>
+            <p class="odf">Cód. Interno:</p>
+            <p class="bold">
                 {dadosOdf[0].CODIGO_PECA === null || !dadosOdf[0].CODIGO_PECA
                     ? "S/I"
                     : dadosOdf[0].CODIGO_PECA}
-            </div>
-            <div class="odf">Cód. do Cliente:</div>
-            <div class="bold">
+            </p>
+            <p class="odf">Cód. do Cliente:</p>
+            <p class="bold">
                 {dadosOdf[0].CODIGO_CLIENTE === null ||
                 !dadosOdf[0].CODIGO_CLIENTE
                     ? "S/I"
                     : dadosOdf[0].CODIGO_CLIENTE}
-            </div>
-            <div class="odf">Operador:</div>
-            <div class="bold">
+            </p>
+            <p class="odf">Operador:</p>
+            <p class="bold">
                 {employeName.FUNCIONARIO === null || !employeName.FUNCIONARIO
                     ? "S/I"
                     : employeName.FUNCIONARIO}
-            </div>
-            <div class="odf">OP:</div>
-            <div class="bold">
+            </p>
+            <p class="odf">OP:</p>
+            <p class="bold">
                 {NUMERO_OPERACAO === null || !NUMERO_OPERACAO
                     ? "S/I"
                     : NUMERO_OPERACAO} -
@@ -65,17 +65,45 @@
                 {dadosOdf[0].QTDE_ODF[0] === null || !dadosOdf[0].QTDE_ODF[0]
                     ? "S/I"
                     : dadosOdf[0].QTDE_ODF[0]}
-            </div>
+            </p>
         </div>
     </main>
 {/await}
 
 <style>
+    main {
+        letter-spacing: 1px;
+    }
     .bold {
         font-weight: bold;
     }
+    .areaCodigos {
+        margin-left: 5px;
+        padding: 0%;
+        justify-content: flex-start;
+        align-items: left;
+        text-align: left;
+    }
+    div {
+        margin: 0%;
+        padding: 0%;
+    }
+    .odf {
+        margin: 0%;
+        padding: 0%;
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-start;
+        text-align: flex-start;
+    }
 
-    @media screen and (max-width: 550px) {
+    p {
+        margin: 0%;
+        padding: 0%;
+        font-size: 18px;
+    }
+
+    /* @media screen and (max-width: 550px) {
         .odf {
             font-size: 12px;
         }
@@ -190,5 +218,5 @@
             align-items: left;
             text-align: left;
         }
-    }
+    } */
 </style>

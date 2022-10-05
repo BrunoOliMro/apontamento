@@ -16,10 +16,9 @@
 
 <style>
    main {
-      font-size: 20px;
       margin-left: 1%;
       margin-right: 1%;
-      margin-top: 1%;
+      margin-top: 5px;
       padding: 0%;
    }
 </style>
