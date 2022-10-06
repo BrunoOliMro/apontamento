@@ -6,7 +6,7 @@
     let parcialFeed;
     let urlS = `/api/v1/apontar`;
     let urlString = `/api/v1/odf`;
-    let motivoUrl = "/api/vi/motivorefugo";
+    let motivoUrl = `/api/v1/motivorefugo`;
     let dadosOdf = [];
     let dados = [];
     let showConfirm = false;
@@ -38,6 +38,23 @@
         });
     };
 
+    function blockForbiddenChars(e) {
+        let value = e.target.value;
+        e.target.value = preSanitize(value);
+    }
+
+    // /**
+    //  * @param {string} input
+    //  */
+    function preSanitize(input) {
+        const allowedChars = /[0-9]/;
+        const sanitizedOutput = input
+            .split("")
+            .map((char) => (allowedChars.test(char) ? char : ""))
+            .join("");
+        return sanitizedOutput;
+    }
+
     async function callRefugo() {
         const res = await fetch(motivoUrl);
         dados = await res.json();
@@ -62,23 +79,51 @@
                     </div>
                     <div class="write" id="goodFeed">
                         <p>BOAS</p>
-                        <input class="input" id="goodFeed" name="goodFeed" />
+                        <input
+                            on:input={blockForbiddenChars}
+                            class="input"
+                            id="goodFeed"
+                            name="goodFeed"
+                        />
                     </div>
                     <div class="write" id="ruins" name="ruins">
                         <p>RUINS</p>
-                        <input class="input" id="badFeed" name="badFeed" />
+                        <input
+                            on:input={blockForbiddenChars}
+                            class="input"
+                            id="badFeed"
+                            name="badFeed"
+                        />
                     </div>
                     <div class="write" id="retrabalhar">
                         <p>RETRABALHAR</p>
-                        <input class="input" id="retrabalhar"  type="text" name="reworkFeed" />
+                        <input
+                            on:input={blockForbiddenChars}
+                            class="input"
+                            id="reworkFeed"
+                            type="text"
+                            name="reworkFeed"
+                        />
                     </div>
-                    <div class="write" id="parcial">
+                    <div class="write" id="parcialDiv">
                         <p>PARCIAL</p>
-                        <input class="input" id="parcialfeed" type="text" name="parcial" />
+                        <input
+                            on:input={blockForbiddenChars}
+                            class="input"
+                            id="parcialfeed"
+                            type="text"
+                            name="parcial"
+                        />
                     </div>
                     <div class="write" id="faltante">
                         <p>FALTANTE</p>
-                        <input class="input" id="faltante" type="text" name="missingFeed" />
+                        <input
+                            on:input={blockForbiddenChars}
+                            class="input"
+                            id="missingFeed"
+                            type="text"
+                            name="missingFeed"
+                        />
                     </div>
                 </form>
 
@@ -95,43 +140,30 @@
                 <h3>Confirma?</h3>
             {/if}
 
-            <!-- {#await resRefugo}
+            {#await resRefugo}
                 <div>...</div>
-            {:then itens}
+            {:then item}
                 <div class="fundo">
                     <div class="header">
                         <p>MOTIVO DO REFUGO</p>
-                        {#each dados as item}
-                            {item}
-                        {/each}
-                        <p>Confirmar</p>
-                    </div>
-                </div>
-            {/await} -->
-
-
-            {#await resRefugo}
-                <div>...</div>
-            {:then item} 
-            <div class="fundo">
-                <div class="header">
-                    <p>MOTIVO DO REFUGO</p>
-                    <div class="c">
-                        <div class="dd">
-                            <div class="dd-p"><span>Opções</span></div>
-                            <input type="checkbox" />
-                            <div class="dd-c">
-                                {#each dados as item}
-                                    <ul>
-                                        <li><span href="#">{item}</span></li>
-                                    </ul>
-                                {/each}
-                                <p>Confirmar</p>
+                        <div class="c">
+                            <div class="dd">
+                                <div class="dd-p"><span>Opções</span></div>
+                                <input type="checkbox" />
+                                <div class="dd-c">
+                                    {#each dados as item}
+                                        <ul>
+                                            <li>
+                                                <span href="#">{item}</span>
+                                            </li>
+                                        </ul>
+                                    {/each}
+                                    <p>Confirmar</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
             {/await}
         {/if}
     </main>
@@ -233,7 +265,7 @@
         position: relative;
         display: inline-block;
         padding: 10px 20px;
-        color: black;
+        color: #fff;
         font-size: 16px;
         text-decoration: none;
         text-transform: uppercase;
@@ -241,6 +273,8 @@
         transition: 0.5s;
         margin-top: 40px;
         letter-spacing: 4px;
+        border-radius: 5px;
+        background-color: black;
     }
     a:hover {
         background: black;
@@ -257,8 +291,8 @@
         top: 0;
         left: -100%;
         width: 100%;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, black);
+        height: 3px;
+        background: linear-gradient(90deg, transparent, #038c6b);
         animation: btn-anim1 2s linear infinite;
     }
     @keyframes btn-anim1 {
@@ -273,9 +307,9 @@
     a span:nth-child(2) {
         top: -100%;
         right: 0;
-        width: 2px;
+        width: 3px;
         height: 100%;
-        background: linear-gradient(180deg, transparent, black);
+        background: linear-gradient(180deg, transparent, #038c6b);
         animation: btn-anim2 2s linear infinite;
         animation-delay: 0.25s;
     }
@@ -292,8 +326,8 @@
         bottom: 0;
         right: -100%;
         width: 100%;
-        height: 2px;
-        background: linear-gradient(270deg, transparent, black);
+        height: 3px;
+        background: linear-gradient(270deg, transparent, #038c6b);
         animation: btn-anim3 2s linear infinite;
         animation-delay: 0.5s;
     }
@@ -309,9 +343,9 @@
     a span:nth-child(4) {
         bottom: -100%;
         left: 0;
-        width: 2px;
+        width: 3px;
         height: 100%;
-        background: linear-gradient(360deg, transparent, black);
+        background: linear-gradient(360deg, transparent, #038c6b);
         animation: btn-anim4 2s linear infinite;
         animation-delay: 0.75s;
     }
@@ -375,7 +409,7 @@
         align-items: center;
         justify-content: center;
     }
-    #parcialFeed {
+    #parcialDiv {
         display: none;
     }
     main {

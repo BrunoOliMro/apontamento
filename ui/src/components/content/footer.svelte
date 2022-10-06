@@ -1,12 +1,17 @@
 <script>
   let dadosOdf = [];
   let urlString = `/api/v1/odf`;
-
+  let horaInicio = "";
+  let horaFinal = "";
+  let data = null
   async function getOdfData() {
     const res = await fetch(urlString);
     dadosOdf = await res.json();
-    console.log(dadosOdf);
+    data = dadosOdf
+    horaInicio = data[0].HORA_INICIO.slice(11, 19);
+    horaFinal = data[0].HORA_FIM.slice(11, 19);
   }
+  
   let resultado = getOdfData();
 </script>
 
@@ -19,8 +24,7 @@
       {dadosOdf[0].DT_INICIO_OP.slice(6, 8)} /
       {dadosOdf[0].DT_INICIO_OP.slice(4, 6)} /
       {dadosOdf[0].DT_INICIO_OP.slice(0, 4)}
-      - {(dadosOdf[0].HORA_INICIO =
-        dadosOdf[0].HORA_INICIO === null ? "S/I" : dadosOdf[0].HORA_INICIO)}
+      - {(horaInicio = horaInicio === null ? "S/I" : horaInicio)}
     </div>
 
     <div class="div2">
@@ -28,8 +32,7 @@
       {dadosOdf[0].DT_FIM_OP.slice(6, 8)} /
       {dadosOdf[0].DT_FIM_OP.slice(4, 6)} /
       {dadosOdf[0].DT_FIM_OP.slice(0, 4)} -
-      {(dadosOdf[0].HORA_FIM =
-        dadosOdf[0].HORA_FIM === null ? "S/I" : dadosOdf[0].HORA_FIM)}
+      {(horaFinal = horaFinal === null ? "S/I" : horaFinal)}
     </div>
   </main>
 {/await}
@@ -52,7 +55,7 @@
     align-items: center;
     text-align: center;
   }
-  .title{
+  .title {
     font-weight: normal;
   }
 

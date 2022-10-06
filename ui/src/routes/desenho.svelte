@@ -1,7 +1,7 @@
 <script>
     import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
     export let Subtitle = "DESENHO";
-    let zoomNumber = 400;
+    let zoomNumber = 100;
     let rotation = 0;
     let imagemBack = [];
     let urlString = `/api/v1/desenho?`;
@@ -28,20 +28,14 @@
             "img"
         ).style.transform = `rotate(${rotation}deg)`;
     }
-    1;
 
     function zoomIn() {
-        var img = document.getElementById("img");
-        var width = img.clientWidth;
-        img.style.width = width + zoomNumber + "px";
+        zoomNumber += 10
     }
 
     function zoomOut() {
-        var img = document.getElementById("img");
-        var width = img.clientWidth;
-        img.style.width = width - zoomNumber + "px";
+        zoomNumber -= 10
     }
-
     function print() {
         window.print();
     }
@@ -74,6 +68,7 @@
         {#await resultado}
             <div>AGUARDE...</div>
         {:then item}
+        <div class="frame">
             {#each imagemBack as column}
                 {#if imagemBack.length > 0}
                     <img
@@ -82,18 +77,27 @@
                         class="img"
                         src={column}
                         alt=""
+                        style="zoom:{zoomNumber}%"
                     />
-                {/if}
-            {/each}
+                    {/if}
+                    {/each}
+                </div>
         {/await}
     </div>
 
-    {#if imagemBack == "/images/sem_imagem.gif"}
+    <!-- {#if imagemBack == "/images/sem_imagem.gif"}
         <h3>Não existe imagem</h3>
-    {/if}
+    {/if} -->
 </main>
 
 <style>
+    .frame{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
     .sideButton {
         margin: 1%;
         padding: 0%;
@@ -174,7 +178,7 @@
         }
     }
 
-    @media screen and (max-width: 550px) {
+    /* @media screen and (max-width: 550px) {
         .subtitle {
             font-size: 20px;
         }
@@ -211,5 +215,5 @@
         .subtitle {
             font-size: 55px;
         }
-    }
+    } */
 </style>

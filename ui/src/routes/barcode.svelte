@@ -4,7 +4,6 @@
   import Title from "../components/title/title.svelte";
   let value = "";
   let codigoBarras = "";
-  let result = {};
   let urlS = `/api/v1/apontamento`;
   let urlBagde = `/api/v1/apontamentoCracha`;
   let cracha = "";
@@ -23,42 +22,25 @@
     badgeMsg = window.location.href.split("?")[1].split("=")[1];
   }
 
-  // function handleSubmit() {
-  //   result = doPost();
-  // }
-
-  // function blockForbiddenChars(e) {
-  //   let value = e.target.value;
-  //   e.target.value = preSanitize(value);
-  // }
-
-  // /**
-  //  * @param {string} input
-  //  */
-  // function preSanitize(input) {
-  //   const allowedChars = /[A-Za-z0-9]/;
-  //   const sanitizedOutput = input
-  //     .split("")
-  //     .map((char) => (allowedChars.test(char) ? char : ""))
-  //     .join("");
-  //   return sanitizedOutput;
-  // }
-
-  // function setValues() {
-  //   var values = value;
-  //   localStorage.setItem("barcodeData", values);
-  // }
-
-  // async function doPost() {
-  // value = preSanitize(value);
-
-  const doPost = async (
-    /** @type {any} */ error,
-    /** @type {Response} */ res
-  ) => {
+  function blockForbiddenChars(e) {
+    let value = e.target.value;
+    e.target.value = preSanitize(value);
+  }
+  /**
+   * @param {string} input
+   */
+  function preSanitize(input) {
+    const allowedChars = /[A-Za-z0-9]/;
+    const sanitizedOutput = input
+      .split("")
+      .map((char) => (allowedChars.test(char) ? char : ""))
+      .join("");
+    return sanitizedOutput;
+  }
+  const doPost = async () => {
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
-    res = await fetch(urlS, {
+    const res = await fetch(urlS, {
       method: "POST",
       body: JSON.stringify({
         codigoBarras: !codigoBarras ? "" : codigoBarras,
@@ -67,13 +49,10 @@
     });
   };
 
-  const checkBagde = async (
-    /** @type {any} */ error,
-    /** @type {Response} */ res
-  ) => {
+  const checkBagde = async () => {
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
-    res = await fetch(urlBagde, {
+    const res = await fetch(urlBagde, {
       method: "POST",
       body: JSON.stringify({
         cracha: !cracha ? "" : cracha,
@@ -82,8 +61,6 @@
     });
     console.log(res);
   };
-
-  let resultado = doPost;
 
   function red() {
     if (barcodeMsg === "red") {
@@ -132,6 +109,16 @@
         </button>
       </div>
     </div>
+
+    {#if barcodeMsg === "anotherodfexpected"}
+      <div class="fundo">
+        <div class="invalidBarcode" id="s">
+          <h5>Outra Odf Esperada</h5>
+          <p on:click={closePop}>Fechar</p>
+        </div>
+      </div>
+    {/if}
+
     {#if barcodeMsg === "invalidBarcode"}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
@@ -154,9 +141,15 @@
       <form action="/api/v1/apontamento" method="POST" on:submit={doPost}>
         <div class="bar" id="title">Código de barras</div>
         <!-- on:input={setValues} -->
-        <!-- on:input={blockForbiddenChars} -->
         <label class="input">
-          <input bind:value id="codigoBarras" name="codigoBarras" type="text" />
+          <input
+            on:input={blockForbiddenChars}
+            onkeyup="this.value = this.value.toUpperCase()"
+            bind:value
+            id="codigoBarras"
+            name="codigoBarras"
+            type="text"
+          />
         </label>
       </form>
     {/if}
@@ -168,9 +161,14 @@
         on:submit={checkBagde}
       >
         <div id="popUpCracha">
-          <!-- on:input={blockForbiddenChars} -->
           <div id="title">Colaborador</div>
-          <input name="MATRIC" id="MATRIC" type="text" />
+          <input
+            on:input={blockForbiddenChars}
+            onkeyup="this.value = this.value.toUpperCase()"
+            name="MATRIC"
+            id="MATRIC"
+            type="text"
+          />
         </div>
       </form>
     {/if}
@@ -179,9 +177,20 @@
         <form action="/api/v1/returnedValue" method="POST" on:submit={doReturn}>
           <div class="header">
             <p>Codigo do Supervisor</p>
-            <input bind:value type="text" name="superCracha" />
+            <input
+              on:input={blockForbiddenChars}
+              onkeyup="this.value = this.value.toUpperCase()"
+              bind:value
+              type="text"
+              name="superCracha"
+            />
             <p>Insira a quantidade que deseja estornar</p>
-            <input bind:value type="text" name="returnValueStorage" />
+            <input
+              onkeyup="this.value = this.value.toUpperCase()"
+              bind:value
+              type="text"
+              name="returnValueStorage"
+            />
             <p>Qual irá retornar</p>
             <p>BOAS</p>
             <p>RUINS</p>

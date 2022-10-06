@@ -51,7 +51,6 @@
             }
         }
     }, 1000);
-    function s() {}
 
     function close() {
         shwowSuper = false;

@@ -7,6 +7,7 @@
     import retrabalhar from "../content/feed.svelte";
     import faltante from "../content/feed.svelte";
     import parcialFeed from "../content/feed.svelte";
+    import parcialDiv from "../content/feed.svelte";
 
     let apiMotivoParada = "api/v1/motivoParada";
     let urlStop = `/api/v1/parada`;
@@ -16,18 +17,20 @@
 
     const getMissingFeed = async () => {
         document.getElementById("faltante").style.display = "block";
+        document.getElementById("missingFeed").style.display = "block";
         document.getElementById("retrabalhar").style.display = "none";
         document.getElementById("ruins").style.display = "none";
         document.getElementById("badFeed").style.display = "none";
-        document.getElementById("parcialfeed").style.display = "none";
+        document.getElementById("parcialDiv").style.display = "none";
     };
 
     const getReworkFeed = async () => {
         document.getElementById("faltante").style.display = "none";
         document.getElementById("retrabalhar").style.display = "block";
+        document.getElementById("reworkFeed").style.display = "block";
         document.getElementById("ruins").style.display = "none";
         document.getElementById("badFeed").style.display = "none";
-        document.getElementById("parcialfeed").style.display = "none";
+        document.getElementById("parcialDiv").style.display = "none";
     };
 
     const getParcial = async () => {
@@ -35,6 +38,7 @@
         document.getElementById("retrabalhar").style.display = "none";
         document.getElementById("ruins").style.display = "none";
         document.getElementById("badFeed").style.display = "none";
+        document.getElementById("parcialDiv").style.display = "block";
         document.getElementById("parcialfeed").style.display = "block";
     };
 
@@ -45,11 +49,6 @@
         } else {
             showmodal = false;
         }
-    }
-
-    async function stop() {
-        const res = await fetch(urlStop);
-        dadosOdf = await res.json();
     }
 
     function closePop() {

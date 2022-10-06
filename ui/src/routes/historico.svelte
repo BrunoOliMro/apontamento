@@ -55,12 +55,6 @@
       font-size: 23px;
       margin: 1%;
     }
-    .main {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-    }
   }
 
   @media screen and (min-width: 551px) {
@@ -72,12 +66,12 @@
       font-size: 25px;
       margin: 1%;
     }
-    .main {
+    /* .main {
       display: flex;
       justify-content: center;
       align-items: center;
       text-align: center;
-    }
+    } */
   }
 
   @media screen and (min-width: 860px) {
@@ -89,12 +83,12 @@
       font-size: 28px;
       margin: 1%;
     }
-    .main {
+    /* .main {
       display: flex;
       justify-content: center;
       align-items: center;
       text-align: center;
-    }
+    } */
   }
   @media screen and (min-width: 1000px) {
     main {
@@ -105,24 +99,24 @@
       font-size: 30px;
       margin: 1%;
     }
-    .main {
+    /* .main {
       display: flex;
       justify-content: center;
       align-items: center;
       text-align: center;
-    }
+    } */
   }
   @media screen and (min-width: 1200px) {
     main {
       margin: 1%;
     }
 
-    .main {
+    /* .main {
       display: flex;
       justify-content: center;
       align-items: center;
       text-align: center;
-    }
+    } */
     .subtitle {
       font-size: 35px;
       margin: 1%;
@@ -133,12 +127,12 @@
       margin: 1%;
     }
 
-    .main {
+    /* .main {
       display: flex;
       justify-content: center;
       align-items: center;
       text-align: center;
-    }
+    } */
     .subtitle {
       font-size: 35px;
       margin: 1%;
@@ -150,12 +144,12 @@
       margin: 1%;
     }
 
-    .main {
+    /* .main {
       display: flex;
       justify-content: center;
       align-items: center;
       text-align: center;
-    }
+    } */
     .subtitle {
       font-size: 35px;
       margin: 1%;
