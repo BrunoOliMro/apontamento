@@ -52,7 +52,13 @@ apiRouter.route("/apontamento")
         console.log(queryGrupoOdf);
         console.log("tamanho do array: ", queryGrupoOdf.length);
 
-        let e = queryGrupoOdf.map(e => {'000'+e.NUMERO_OPERACAO})
+        let e = queryGrupoOdf.map(e =>  e.NUMERO_OPERACAO)
+        let q = e.toString()
+        console.log(q);
+        let w = q.split("")
+        console.log(w);
+        //let q = e.map(e => e)
+
         let s = dados.numOper
         console.log(s);
         console.log(e);
@@ -76,13 +82,13 @@ apiRouter.route("/apontamento")
         // console.log("QTDE_ODF", QTDE_ODF);
 
 
-        // let x = op.map((e) => {
-        //     if (e === dados.numOper) {
-        //         console.log("ok")
-        //     }
-        //     return [e, dados.numOper]
-        // })
-        // console.log(x);
+        let x = e.map((e) => {
+            if (e === s) {
+                console.log("ok")
+            }
+            return [e, s]
+        })
+        console.log(x);
 
 
         // const ee = await connection.query(`

@@ -42,10 +42,21 @@ apiRouter.route("/apontamento")
                         `.trim()).then(result => result.recordset);
     console.log(queryGrupoOdf);
     console.log("tamanho do array: ", queryGrupoOdf.length);
-    let e = queryGrupoOdf.map(e => { '000' + e.NUMERO_OPERACAO; });
+    let e = queryGrupoOdf.map(e => e.NUMERO_OPERACAO);
+    let q = e.toString();
+    console.log(q);
+    let w = q.split("");
+    console.log(w);
     let s = dados.numOper;
     console.log(s);
     console.log(e);
+    let x = e.map((e) => {
+        if (e === s) {
+            console.log("ok");
+        }
+        return [e, s];
+    });
+    console.log(x);
     if (resourc2e > 0) {
         return;
     }
