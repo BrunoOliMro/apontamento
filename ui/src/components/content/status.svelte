@@ -13,6 +13,7 @@
         const res = await fetch(urlString);
         tempodePro = await res.json();
         tempoMax = Number(tempodePro);
+        console.log(tempoMax);
     }
     async function getImagem() {
         const res = await fetch(url);
@@ -52,9 +53,6 @@
         }
     }, 1000);
 
-    function close() {
-        shwowSuper = false;
-    }
     let resultado = getTempo();
     let callImagem = getImagem();
 </script>
@@ -94,7 +92,6 @@
                 <form action="api/v1/apontar" method="POST" />
                 <p>Insira um supervisor para continuar</p>
                 <input type="text" />
-                <p on:click={close}>Fechar</p>
             </div>
         </div>
     {/if}
@@ -121,9 +118,6 @@
         background-color: black;
         width: 500px;
         height: 250px;
-        /* position: absolute;
-        top: 20%;
-        left: 40%; */
         display: flex;
         flex-direction: column;
         justify-content: center;

@@ -2,7 +2,7 @@
 </script>
 
 <main class="logobar">
-    <img src="/images/LogoCIM.png" alt="" />
+    <a href="/#/codigobarras"><img src="/images/LogoCIM.png" alt="" /></a>
 </main>
 
 <style>
@@ -21,8 +21,8 @@
         height: 60px;
     }
 
-    @media print{
-        .logobar{
+    @media print {
+        .logobar {
             display: none;
         }
     }

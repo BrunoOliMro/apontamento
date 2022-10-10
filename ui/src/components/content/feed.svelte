@@ -1,5 +1,5 @@
 <script>
-    let goodFeed;
+    let feed;
     let badFeed;
     let missingFeed;
     let reworkFeed;
@@ -22,17 +22,13 @@
     }
 
     const doPost = async () => {
-        showConfirm = true;
+        //showConfirm = true;
         const headers = new Headers();
-        console.log(goodFeed);
+        console.log(feed);
         const res = await fetch(urlS, {
             method: "POST",
             body: JSON.stringify({
-                goodFeed: goodFeed,
-                badFeed: badFeed,
-                reworkFeed: reworkFeed,
-                missingFeed: missingFeed,
-                parcialFeed: parcialFeed,
+                feed: feed,
             }),
             headers,
         });
@@ -77,13 +73,13 @@
                             {dadosOdf[0].QTDE_ODF[0]}
                         </div>
                     </div>
-                    <div class="write" id="goodFeed">
+                    <div class="write" id="feed">
                         <p>BOAS</p>
                         <input
                             on:input={blockForbiddenChars}
                             class="input"
-                            id="goodFeed"
-                            name="goodFeed"
+                            id="feed"
+                            name="feed"
                         />
                     </div>
                     <div class="write" id="ruins" name="ruins">
@@ -136,11 +132,11 @@
                 </a>
             </div>
 
-            {#if showConfirm === true}
+            <!-- {#if showConfirm === true}
                 <h3>Confirma?</h3>
-            {/if}
+            {/if} -->
 
-            {#await resRefugo}
+            <!-- {#await resRefugo}
                 <div>...</div>
             {:then item}
                 <div class="fundo">
@@ -164,7 +160,7 @@
                         </div>
                     </div>
                 </div>
-            {/await}
+            {/await} -->
         {/if}
     </main>
 {/await}
@@ -372,7 +368,7 @@
         font-size: 44px;
     }
     #prod,
-    #goodFeed {
+    #feed {
         padding: 0px 60px 0px 0px;
     }
 

@@ -22,21 +22,18 @@
     badgeMsg = window.location.href.split("?")[1].split("=")[1];
   }
 
-  function blockForbiddenChars(e) {
-    let value = e.target.value;
-    e.target.value = preSanitize(value);
-  }
-  /**
-   * @param {string} input
-   */
-  function preSanitize(input) {
-    const allowedChars = /[A-Za-z0-9]/;
-    const sanitizedOutput = input
-      .split("")
-      .map((char) => (allowedChars.test(char) ? char : ""))
-      .join("");
-    return sanitizedOutput;
-  }
+  // function blockForbiddenChars(e) {
+  //   let value = e.target.value;
+  //   e.target.value = preSanitize(value);
+  // }
+  // function preSanitize(input) {
+  //   const allowedChars = /[A-Za-z0-9]/;
+  //   const sanitizedOutput = input
+  //     .split("")
+  //     .map((char) => (allowedChars.test(char) ? char : ""))
+  //     .join("");
+  //   return sanitizedOutput;
+  // }
   const doPost = async () => {
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
@@ -47,6 +44,9 @@
       }),
       headers,
     });
+    if (barcodeMsg === "red") {
+      window.location.href = "/#/ferramenta";
+    }
   };
 
   const checkBagde = async () => {
@@ -59,15 +59,7 @@
       }),
       headers,
     });
-    console.log(res);
   };
-
-  function red() {
-    if (barcodeMsg === "red") {
-      window.location.href = "/#/ferramenta";
-    }
-  }
-  let s = red();
 
   function closePop() {
     document.getElementById("s").style.display = "none";
@@ -97,6 +89,12 @@
       }),
     });
   }
+  // function red() {
+  //   if (barcodeMsg === "red") {
+  //     window.location.href = "/#/ferramenta";
+  //   }
+  // }
+  // let s = red();
 </script>
 
 <main>
@@ -143,7 +141,6 @@
         <!-- on:input={setValues} -->
         <label class="input">
           <input
-            on:input={blockForbiddenChars}
             onkeyup="this.value = this.value.toUpperCase()"
             bind:value
             id="codigoBarras"
