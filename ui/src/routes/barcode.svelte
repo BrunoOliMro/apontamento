@@ -73,13 +73,6 @@
       showmodal = false;
     }
   }
-  function closePopConfir() {
-    if (showmodal === false) {
-      showmodal = true;
-    } else {
-      showmodal = false;
-    }
-  }
   async function doReturn() {
     const res = await fetch(returnedValueApi, {
       method: "POST",
@@ -89,23 +82,19 @@
       }),
     });
   }
-  // function red() {
-  //   if (barcodeMsg === "red") {
-  //     window.location.href = "/#/ferramenta";
-  //   }
-  // }
-  // let s = red();
 </script>
 
 <main>
   <div>
     <div>
       <Title />
-      <div class="return">
-        <button on:click={returnValue} class="sideButton">
-          Estornar Valores
-        </button>
-      </div>
+      {#if barcodeMsg === "ok"}
+        <div class="return">
+          <button on:click={returnValue} class="sideButton">
+            Estornar Valores
+          </button>
+        </div>
+      {/if}
     </div>
 
     {#if barcodeMsg === "anotherodfexpected"}
@@ -137,17 +126,19 @@
 
     {#if barcodeMsg === "ok" || barcodeMsg === "invalidBarcode"}
       <form action="/api/v1/apontamento" method="POST" on:submit={doPost}>
-        <div class="bar" id="title">Código de barras</div>
-        <!-- on:input={setValues} -->
-        <label class="input">
-          <input
-            onkeyup="this.value = this.value.toUpperCase()"
-            bind:value
-            id="codigoBarras"
-            name="codigoBarras"
-            type="text"
-          />
-        </label>
+        <div class="form">
+          <div class="bar" id="title">Código de barras</div>
+          <!-- on:input={setValues} -->
+          <label class="input">
+            <input
+              onkeyup="this.value = this.value.toUpperCase()"
+              bind:value
+              id="codigoBarras"
+              name="codigoBarras"
+              type="text"
+            />
+          </label>
+        </div>
       </form>
     {/if}
 
@@ -169,47 +160,100 @@
         </div>
       </form>
     {/if}
-    {#if showmodal === true}
-      <div class="fundo">
-        <form action="/api/v1/returnedValue" method="POST" on:submit={doReturn}>
-          <div class="header">
-            <p>Codigo do Supervisor</p>
-            <input
-              on:input={blockForbiddenChars}
-              onkeyup="this.value = this.value.toUpperCase()"
-              bind:value
-              type="text"
-              name="superCracha"
-            />
-            <p>Insira a quantidade que deseja estornar</p>
-            <input
-              onkeyup="this.value = this.value.toUpperCase()"
-              bind:value
-              type="text"
-              name="returnValueStorage"
-            />
-            <p>Qual irá retornar</p>
-            <p>BOAS</p>
-            <p>RUINS</p>
-            <p>PARCIAL</p>
-            <p>FALTANTE</p>
-            <div>
-              <p on:click={doReturn} type="submit">
-                Confirma Devolução de Estoque?
-              </p>
-            </div>
-            <div class="close">
-              <p on:click={closePopConfir}>Fechar</p>
-            </div>
-          </div>
-        </form>
-      </div>
-    {/if}
   </div>
+  {#if showmodal === true}
+    <form action="/api/v1/returnedValue" method="POST" on:submit={doReturn}>
+      <div class="fundo">
+        <div class="header">
+          <div class="close">
+            <h4>Codigo do Supervisor</h4>
+          </div>
+          <input
+            class="returnInput"
+            on:input={blockForbiddenChars}
+            onkeyup="this.value = this.value.toUpperCase()"
+            bind:value
+            type="text"
+            name="superCracha"
+          />
+          <h4>Qual irá retornar</h4>
+          <div class="options">
+            <select name="id" id="id">
+              <option>BOAS</option>
+              <option>RUINS</option>
+              <option>PARCIAL</option>
+              <option>FALTANTE</option>
+            </select>
+          </div>
+          <h4>Insira a quantidade que deseja estornar</h4>
+          <input
+            class="returnInput"
+            onkeyup="this.value = this.value.toUpperCase()"
+            bind:value
+            type="text"
+            name="returnValueStorage"
+          />
+
+          <div>
+            <p on:click={doReturn} type="submit">Confirmar</p>
+          </div>
+        </div>
+      </div>
+    </form>
+  {/if}
 </main>
 
 <style>
+  div {
+    margin: 0%;
+    padding: 0%;
+  }
+  input {
+    margin: 1%;
+    padding: 0%;
+    border-radius: 3px;
+  }
+  h4 {
+    width: 400px;
+    margin: 0%;
+    padding: 0%;
+  }
+  .close {
+    margin: 0%;
+    padding: 0%;
+    width: 400px;
+    display: flex;
+  }
+  select {
+    margin: 1%;
+    padding: 0%;
+    width: 150px;
+    border-radius: 3px;
+    color: #fff;
+    background-color: #252525;
+  }
+  .returnInput {
+    height: 30px;
+    width: 100px;
+  }
+  p {
+    margin: 0%;
+    padding: 0%;
+    display: flex;
+    justify-content: center;
+    text-decoration: none;
+    background: #252525;
+    color: #fff;
+  }
+  .form {
+    height: 180px;
+    letter-spacing: 1px;
+    border-color: grey;
+    box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
+  }
   .fundo {
+    margin: 0%;
+    padding: 0%;
     position: fixed;
     top: 0;
     left: 0;
@@ -220,22 +264,22 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
+    z-index: 8;
   }
   .header {
-    font-size: 10px;
+    margin: 0%;
+    padding: 0%;
     color: white;
-    background-color: black;
-    width: 500px;
+    background-color: #252525;
+    width: 450px;
     height: 300px;
-    /* position: absolute;
-        top: 20%;
-        left: 40%; */
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
     border-radius: 3px;
+    z-index: 9;
   }
   .return {
     display: flex;
@@ -255,9 +299,6 @@
     align-items: center;
     border-radius: 3px;
     background-color: transparent;
-    letter-spacing: 1px;
-    border-color: grey;
-    box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
   }
 
   .sideButton:hover {
@@ -268,21 +309,6 @@
   }
   #MATRIC {
     margin: 1%;
-  }
-  .fundo {
-    position: fixed;
-    top: 0;
-    left: 0;
-    background-color: rgba(17, 17, 17, 0.618);
-    height: 100vh;
-    width: 100vw;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-  }
-  p {
-    font-size: 35px;
   }
   h5 {
     font-size: 45px;
@@ -337,12 +363,22 @@
   }
 
   #popUpCracha {
+    margin: 1%;
+    padding: 0%;
     padding: 15px;
+    height: 180px;
     font-size: 35px;
     border-radius: 5px;
     color: black;
     justify-content: center;
     text-align: center;
     align-items: center;
+  }
+  form {
+    border-radius: 3px;
+    height: 180px;
+    letter-spacing: 1px;
+    border-color: grey;
+    box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
   }
 </style>

@@ -58,6 +58,16 @@
 </script>
 
 <div class="content">
+    {#if shwowSuper === true}
+        <div class="fundo">
+            <div class="timeOver">
+                <h3>Tempo Excedido</h3>
+                <form action="api/v1/apontar" method="POST" />
+                <p>Insira um supervisor para continuar</p>
+                <input type="text" />
+            </div>
+        </div>
+    {/if}
     {#await resultado}
         <div>...</div>
     {:then itens}
@@ -84,21 +94,10 @@
         {/if}
         <img class="img" src={String(imagem)} alt="" />
     {/await}
-
-    {#if shwowSuper === true}
-        <div class="fundo">
-            <div class="timeOver">
-                <h3>Tempo Excedido</h3>
-                <form action="api/v1/apontar" method="POST" />
-                <p>Insira um supervisor para continuar</p>
-                <input type="text" />
-            </div>
-        </div>
-    {/if}
 </div>
 
 <style>
-    #tempoDecorrido{
+    #tempoDecorrido {
         margin: 0%;
         padding: 0%;
         border-radius: 4px 0px 0px 4px;
@@ -124,12 +123,15 @@
         align-items: center;
         text-align: center;
         border-radius: 3px;
+        z-index: 999999999999;
     }
     input {
         border-radius: 3px;
     }
     .fundo {
         position: fixed;
+        margin: 0%;
+        padding: 0%;
         top: 0;
         left: 0;
         background-color: rgba(17, 17, 17, 0.618);
@@ -139,6 +141,7 @@
         flex-direction: row;
         align-items: center;
         justify-content: center;
+        z-index: 89999999;
     }
     div {
         display: flex;

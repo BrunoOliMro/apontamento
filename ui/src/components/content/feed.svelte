@@ -22,9 +22,8 @@
     }
 
     const doPost = async () => {
-        //showConfirm = true;
+        showConfirm = true;
         const headers = new Headers();
-        console.log(feed);
         const res = await fetch(urlS, {
             method: "POST",
             body: JSON.stringify({
@@ -58,6 +57,10 @@
     }
     let resRefugo = callRefugo();
     let resultado = getOdfData();
+
+    function confirm() {
+        console.log("Ok");
+    }
 </script>
 
 {#await resultado}
@@ -136,127 +139,58 @@
                 <h3>Confirma?</h3>
             {/if} -->
 
-            <!-- {#await resRefugo}
-                <div>...</div>
+            {#await resRefugo}
+                <div></div>
             {:then item}
-                <div class="fundo">
-                    <div class="header">
-                        <p>MOTIVO DO REFUGO</p>
-                        <div class="c">
-                            <div class="dd">
-                                <div class="dd-p"><span>Opções</span></div>
-                                <input type="checkbox" />
-                                <div class="dd-c">
-                                    {#each dados as item}
-                                        <ul>
-                                            <li>
-                                                <span href="#">{item}</span>
-                                            </li>
-                                        </ul>
-                                    {/each}
-                                    <p>Confirmar</p>
-                                </div>
+                {#if showConfirm === true}
+                    <div class="fundo">
+                        <div class="header">
+                            <div class="closed">
+                                <h2>MOTIVO DO REFUGO</h2>
                             </div>
+                            <select name="id" id="id">
+                                {#each dados as item}
+                                    <option value="opt1">{item}</option>
+                                {/each}
+                            </select>
+                            <p>Supervisor</p>
+                            <input class="super" type="text">
+                            <p on:click={confirm}>Confirmar</p>
                         </div>
                     </div>
-                </div>
-            {/await} -->
+                {/if}
+            {/await}
         {/if}
     </main>
 {/await}
 
 <style>
-    /* .dd-p {
-        padding: 10px;
-        background: black;
-        position: relative;
-        -webkit-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.75);
-        -moz-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.75);
-        box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.75);
-        transition-duration: 0.2s;
-        -webkit-transition-duration: 0.2s;
+    .super{
+        height: 25px;
+        
     }
-    .dd input:after {
-        content: "";
-        width: 100%;
-        height: 2px;
-        position: absolute;
-        display: block;
-        background: #c63d0f;
-        bottom: 0;
-        left: 0;
-        transform: scaleX(0);
-        transform-origin: bottom left;
-        transition-duration: 0.2s;
-        -webkit-transform: scaleX(0);
-        -webkit-transform-origin: bottom left;
-        -webkit-transition-duration: 0.2s;
+    .fullForm {
+        margin: 0%;
+        padding: 0%;
     }
-    .dd input {
-        top: 0;
-        opacity: 0;
-        display: block;
-        padding: 0;
-        margin: 0;
-        border: 0;
-        position: absolute;
-        height: 100%;
-        width: 100%;
+    h2 {
+        width: 460px;
+        justify-content: center;
+        display: flex;
     }
-    .dd input:hover {
-        cursor: pointer;
+    .closed {
+        display: flex;
     }
-    /* .dd input:hover ~ .dd-p {
-        -webkit-box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.75);
-        -moz-box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.75);
-        box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.75);
-    } */
-    /* .dd input:checked:after {
-        transform: scaleX(1);
-        -webkit-transform: scaleX(1);
+    select {
+        width: 200px;
+        background-color: #252525;
+        border-radius: 5px;
+        color: #fff;
     }
-    .dd input:checked ~ .dd-c {
-        transform: scaleY(1);
-        -webkit-transform: scaleY(1);
-    }  */
-    /* .dd-p span {
-        color: #c63d0f;
-    } */
-    /* .dd-c {
-        display: block;
-        position: absolute;
-        background: black;
-        height: auto;
-        transform: scaleY(0);
-        transform-origin: top left;
-        transition-duration: 0.2s;
-        -webkit-transform: scaleY(0);
-        -webkit-transform-origin: top left;
-        -webkit-transition-duration: 0.2s;
+    option {
+        width: 35px;
+        background-color: #252525;
     }
-    .dd-c ul {
-        margin: 0;
-        padding: 0;
-        list-style-type: none;
-    }
-    .dd-c li {
-        margin-bottom: 5px;
-        word-break: keep-all;
-        white-space: nowrap;
-        display: block;
-        position: relative;
-    }
-
-
-    p {
-        display: block;
-        position: relative;
-        text-decoration: none;
-        padding: 5px;
-        background: white;
-        color: black;
-    } */
-
     a {
         position: relative;
         display: inline-block;
@@ -271,6 +205,7 @@
         letter-spacing: 4px;
         border-radius: 5px;
         background-color: black;
+        z-index: 1;
     }
     a:hover {
         background: black;
@@ -378,22 +313,24 @@
         width: 100%;
     }
     .header {
+        margin: 0%;
+        padding: 0%;
         color: white;
-        background-color: black;
-        width: 500px;
+        background-color: #252525;
+        width: 450px;
         height: 300px;
-        /* position: absolute;
-        top: 20%;
-        left: 40%; */
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         text-align: center;
         border-radius: 3px;
+        z-index: 9;
     }
 
     .fundo {
+        margin: 0%;
+        padding: 0%;
         position: fixed;
         top: 0;
         left: 0;
@@ -404,6 +341,7 @@
         flex-direction: row;
         align-items: center;
         justify-content: center;
+        z-index: 8;
     }
     #parcialDiv {
         display: none;

@@ -58,6 +58,10 @@
             showmodal = false;
         }
     }
+    function confirm(event) {
+        let j = event.target.value;
+        console.log(j);
+    }
 
     async function callMotivo() {
         const res = await fetch(apiMotivoParada);
@@ -71,6 +75,22 @@
     <ul class="nav2">
         <li>Parcial</li>
     </ul>
+    {#if showmodal === true}
+        <div class="fundo">
+            <div class="header">
+                <div class="closed">
+                    <h2>Motivo da Parada</h2>
+                    <p class="closebtn" on:click={closePop}>X</p>
+                </div>
+                <select name="id" id="id">
+                    {#each dados as item}
+                        <option value="opt1">{item}</option>
+                    {/each}
+                </select>
+                <p on:click={confirm}>Confirmar</p>
+            </div>
+        </div>
+    {/if}
     <div class="nav">
         <button
             on:click={getParcial}
@@ -106,175 +126,41 @@
         <a class="out" href="/#/desenho/"
             ><button type="button" class="sideButton">Desenho</button></a
         >
-        {#if showmodal === true}
-            <div class="fundo">
-                <div class="header">
-                    <h2>Motivo da Parada</h2>
-                    <div class="c">
-                        <div class="dd">
-                            <div class="dd-p"><span>Opções</span></div>
-                            <input type="checkbox" />
-                            <div class="dd-c">
-                                {#each dados as item}
-                                    <ul>
-                                        <li><p href="#">{item}</p></li>
-                                    </ul>
-                                {/each}
-                            </div>
-                        </div>
-                    </div>
-                    <p on:click={closePop}>Fechar</p>
-                </div>
-            </div>
-        {/if}
     </div>
 </main>
 
 <style>
-    .dd-p {
-        padding: 10px;
-        background: black;
-        position: relative;
-        -webkit-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.75);
-        -moz-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.75);
-        box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.75);
-        transition-duration: 0.2s;
-        -webkit-transition-duration: 0.2s;
+    .closebtn{
+        width: 25px;
+        border-radius: 5px;
     }
-    .dd input:after {
-        content: "";
-        width: 100%;
-        height: 2px;
-        position: absolute;
-        display: block;
-        background: #c63d0f;
-        bottom: 0;
-        left: 0;
-        transform: scaleX(0);
-        transform-origin: bottom left;
-        transition-duration: 0.2s;
-        -webkit-transform: scaleX(0);
-        -webkit-transform-origin: bottom left;
-        -webkit-transition-duration: 0.2s;
+    h2{
+        width: 460px;
+        justify-content: center;
+        display: flex;
     }
-    .dd input {
-        top: 0;
-        opacity: 0;
-        display: block;
-        padding: 0;
-        margin: 0;
-        border: 0;
-        position: absolute;
-        height: 100%;
-        width: 100%;
+    .closed{
+        display: flex;
     }
-    .dd input:hover {
-        cursor: pointer;
+    select {
+        width: 200px;
+        background-color: #252525;
+        border-radius: 5px;
+        color: #fff;
     }
-    /* .dd input:hover ~ .dd-p {
-        -webkit-box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.75);
-        -moz-box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.75);
-        box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.75);
-    } */
-    .dd input:checked:after {
-        transform: scaleX(1);
-        -webkit-transform: scaleX(1);
-    }
-    .dd input:checked ~ .dd-c {
-        transform: scaleY(1);
-        -webkit-transform: scaleY(1);
-    }
-    /* .dd-p span {
-        color: #c63d0f;
-    } */
-    .dd-c {
-        display: block;
-        position: absolute;
-        background: black;
-        height: auto;
-        transform: scaleY(0);
-        transform-origin: top left;
-        transition-duration: 0.2s;
-        -webkit-transform: scaleY(0);
-        -webkit-transform-origin: top left;
-        -webkit-transition-duration: 0.2s;
-    }
-    .dd-c ul {
-        margin: 0;
-        padding: 0;
-        list-style-type: none;
-    }
-    .dd-c li {
-        margin-bottom: 5px;
-        word-break: keep-all;
-        white-space: nowrap;
-        display: block;
-        position: relative;
+    option {
+        width: 35px;
+        background-color: #252525;
     }
     p {
-        display: block;
-        position: relative;
+        display: flex;
+        justify-content: center;
         text-decoration: none;
         padding: 5px;
-        background: black;
-        color: white;
-    }
-    /* p:before {
-        z-index: 0;
-        content: "";
-        position: absolute;
-        display: block;
-        height: 100%;
-        width: 100%;
-        -webkit-transition-duration: 0.2s;
-        transition-duration: 0.2s;
-        transform-origin: top left;
-        -webkit-transform-origin: top left;
-        background: black;
-        top: 0;
-        left: 0;
-        transform: scaleX(0);
-        -webkit-transform: scaleX(0);
-    } */
-    /* p, span {
-        display: block;
-        position: relative;
-        -webkit-transition-duration: 0.2s;
-        transition-duration: 0.2s;
-    } */
-    /* p:hover:before {
-        transform: scaleX(1);
-        -webkit-transform: scaleX(1);
-    } */
-    /* p, span:hover {
-        color: white;
-    } */
-
-    /* #li:focus ~ li {
-        background-color: red;
-        transition: 1s;
+        background: #252525;
+        color: #fff;
     }
 
-    #li:active ~ ul {
-        visibility: hidden;
-        opacity: 0;
-    }
-    #li {
-        display: none;
-    }
-    #li:not(:active) ~ ul {
-        opacity: 1;
-        transition: 0.3s ease-in-out;
-    } */
-
-    main {
-        display: flex;
-        margin: 0%;
-        padding: 0%;
-        justify-content: left;
-        text-align: left;
-        align-items: left;
-    }
     .fundo {
         position: fixed;
         top: 0;
@@ -286,21 +172,23 @@
         flex-direction: row;
         align-items: center;
         justify-content: center;
+        z-index: 999999999999999999999999999999;
     }
     .header {
+        margin: 0%;
+        padding: 0%;
         color: white;
-        background-color: black;
-        width: 500px;
-        height: 350px;
-        /* position: absolute;
-        top: 20%;
-        left: 40%; */
-        display: flex;
+        background-color: #252525;
+        top: 0;
+        left: 0;
+        width: 450px;
+        height: 250px;
+        display: block;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         text-align: center;
-        border-radius: 3px;
+        border-radius: 5px;
     }
     .out {
         text-decoration: none;
