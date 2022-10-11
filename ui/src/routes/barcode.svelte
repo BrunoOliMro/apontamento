@@ -106,6 +106,24 @@
       </div>
     {/if}
 
+    {#if barcodeMsg === "odflimitquantity"}
+      <div class="fundo">
+        <div class="invalidBarcode" id="s">
+          <h5>ODF JA APONTOU TODA QUANTIDADE</h5>
+          <p on:click={closePop}>Fechar</p>
+        </div>
+      </div>
+    {/if}
+
+    {#if barcodeMsg === "nolimitonlastodf"}
+      <div class="fundo">
+        <div class="invalidBarcode" id="s">
+          <h5>ODF PASSADA ESTA COM 0 APONTADA</h5>
+          <p on:click={closePop}>Fechar</p>
+        </div>
+      </div>
+    {/if}
+
     {#if barcodeMsg === "invalidBarcode"}
       <div class="fundo">
         <div class="invalidBarcode" id="s">

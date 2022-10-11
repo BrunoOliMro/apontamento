@@ -49,38 +49,36 @@ apiRouter.route("/apontamento")
     let objOdfSelecionada = queryGrupoOdf[indiceDoArrayDeOdfs];
     let objOdfSelecProximo = queryGrupoOdf[indiceDoArrayDeOdfs + 1];
     let objOdfSelecAnterior = queryGrupoOdf[indiceDoArrayDeOdfs - 1];
-    if (objOdfSelecProximo === dados.numOper) {
-        console.log(" a ultima: linha 60");
+    let qtdLib = 0;
+    let apontLib = '';
+    let qntdeJaApontada = 0;
+    if (indiceDoArrayDeOdfs === 0) {
+        qntdeJaApontada = objOdfSelecionada["QTDE_APONTADA"];
+        qtdLib = objOdfSelecionada["QTDE_ODF"];
+        apontLib = objOdfSelecionada["APONTAMENTO_LIBERADO"];
     }
-    if (indiceDoArrayDeOdfs <= 0 || indiceDoArrayDeOdfs === undefined) {
-        objOdfSelecAnterior = objOdfSelecionada;
+    if (indiceDoArrayDeOdfs > 0) {
+        qntdeJaApontada = objOdfSelecionada["QTDE_APONTADA"];
+        qtdLib = objOdfSelecAnterior["QTDE_APONTADA"];
+        apontLib = objOdfSelecionada["APONTAMENTO_LIBERADO"];
     }
-    if (indiceDoArrayDeOdfs >= 1) {
-        console.log("esse não é o primeiro");
-    }
-    if (objOdfSelecProximo > indiceDoArrayDeOdfs) {
-        objOdfSelecProximo = indiceDoArrayDeOdfs;
-        console.log("passou da ultima");
-    }
-    let QTDE_LIB_ANTERIOR = objOdfSelecAnterior.QTDE_APONTADA;
-    let apontaLib = objOdfSelecAnterior.APONTAMENTO_LIBERADO;
-    if (indiceDoArrayDeOdfs <= 0 && apontaLib === 'N') {
-        const updateNtoS = await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'
-            `.trim())
-            .then(result => result.recordset);
-        console.log(updateNtoS);
-    }
-    else if (indiceDoArrayDeOdfs >= 0 && apontaLib === 'N') {
+    if (indiceDoArrayDeOdfs > 0 && apontLib === "N") {
         return res.status(400).redirect("/#/codigobarras?error=anotherodfexpected");
     }
-    res.cookie("numeroOperacaoProximaOdf", objOdfSelecProximo.NUMERO_OPERACAO);
-    res.cookie("codMaqProxOdf", objOdfSelecProximo.CODIGO_MAQUINA);
-    res.cookie('QTDE_LIB_ANTERIOR', QTDE_LIB_ANTERIOR);
-    res.cookie("NUMERO_ODF", objOdfSelecionada.NUMERO_ODF);
-    res.cookie("CODIGO_PECA", objOdfSelecionada.CODIGO_PECA);
-    res.cookie("CODIGO_MAQUINA", objOdfSelecionada.CODIGO_MAQUINA);
-    res.cookie("NUMERO_OPERACAO", objOdfSelecionada.NUMERO_OPERACAO);
-    res.cookie("REVISAO", objOdfSelecionada.REVISAO);
+    if (qntdeJaApontada - qtdLib === 0) {
+        return res.status(400).redirect("/#/codigobarras?error=nolimitonlastodf");
+    }
+    if (!objOdfSelecAnterior) {
+        await connection.query(`
+            UPDATE 
+            PCP_PROGRAMACAO_PRODUCAO 
+            SET 
+            APONTAMENTO_LIBERADO = 'S' 
+            WHERE 1 = 1 
+            AND NUMERO_ODF = '${dados.numOdf}' 
+            AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' 
+            AND CODIGO_MAQUINA = '${dados.codMaq}'`);
+    }
     const processoTemP = await connection.query(`
         SELECT
         NUMPEC, 
@@ -93,9 +91,16 @@ apiRouter.route("/apontamento")
         OPERACAO
         WHERE 1 = 1 
         AND [CONDIC] = 'P'
-        AND [NUMPEC] = '${objOdfSelecionada.CODIGO_PECA}'
+        AND [NUMPEC] = '${objOdfSelecionada['CODIGO_PECA']}'
         `).then(result => result.recordset);
-    console.log('processoTemP: LINHA 104', processoTemP);
+    res.cookie("numeroOperacaoProximaOdf", objOdfSelecProximo["NUMERO_OPERACAO"]);
+    res.cookie("codMaqProxOdf", objOdfSelecProximo["CODIGO_MAQUINA"]);
+    res.cookie('qtdLib', qtdLib);
+    res.cookie("NUMERO_ODF", objOdfSelecionada["NUMERO_ODF"]);
+    res.cookie("CODIGO_PECA", objOdfSelecionada['CODIGO_PECA']);
+    res.cookie("CODIGO_MAQUINA", objOdfSelecionada['CODIGO_MAQUINA']);
+    res.cookie("NUMERO_OPERACAO", objOdfSelecionada['NUMERO_OPERACAO']);
+    res.cookie("REVISAO", objOdfSelecionada['REVISAO']);
     res.cookie("CONDIC", processoTemP);
     if (processoTemP.length > 0) {
         try {
@@ -179,8 +184,7 @@ apiRouter.route("/apontamento")
 });
 apiRouter.route("/apontamentoCracha")
     .post(async (req, res) => {
-    let finalTimer = 6000000;
-    let MATRIC = String(req.body["MATRIC"].trim());
+    let MATRIC = req.body["MATRIC"].trim();
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
         return input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
@@ -191,7 +195,7 @@ apiRouter.route("/apontamentoCracha")
     }
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
-        const resource = await connection.query(` 
+        const selecionarMatricula = await connection.query(` 
                 SELECT TOP 1
                 [MATRIC],
                 [FUNCIONARIO]
@@ -199,12 +203,12 @@ apiRouter.route("/apontamentoCracha")
                 WHERE 1 = 1
                 AND [MATRIC] = ${MATRIC}
                 `.trim()).then(result => result.recordset);
-        if (resource.length > 0) {
+        if (selecionarMatricula.length > 0) {
             let start = new Date();
             let mili = start.getMilliseconds() / 1000;
             res.cookie("starterBarcode", mili);
-            res.cookie("MATRIC", resource[0].MATRIC, { httpOnly: true, maxAge: finalTimer });
-            res.cookie("FUNCIONARIO", resource[0].FUNCIONARIO);
+            res.cookie("MATRIC", selecionarMatricula[0].MATRIC);
+            res.cookie("FUNCIONARIO", selecionarMatricula[0].FUNCIONARIO);
             res.status(200).redirect("/#/codigobarras?status=ok");
         }
         else {
@@ -257,7 +261,7 @@ apiRouter.route("/odf")
 apiRouter.route("/imagem")
     .get(async (req, res) => {
     const numpec = req.cookies["CODIGO_PECA"];
-    const revisao = String(req.cookies['REVISAO']);
+    const revisao = req.cookies['REVISAO'];
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let statusImg = "_status";
     try {
@@ -342,9 +346,12 @@ apiRouter.route("/HISTORICO")
 apiRouter.route("/ferramenta")
     .get(async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let CODIGO = String(req.cookies["CODIGO_PECA"]);
+    let codigoPeca = req.cookies["CODIGO_PECA"];
+    let numero_odf = req.cookies["NUMERO_ODF"];
+    let numeroOperacao = req.cookies["NUMERO_OPERACAO"];
+    let codigoMaq = req.cookies["CODIGO_MAQUINA"];
     let startProd = new Date();
-    let newStartProd = Number(startProd.getMilliseconds() / 1000);
+    let newStartProd = startProd.getMilliseconds() / 1000;
     res.cookie("startProd", newStartProd);
     let ferramenta = "_ferr";
     try {
@@ -355,7 +362,7 @@ apiRouter.route("/ferramenta")
                 FROM VIEW_APTO_FERRAMENTAL 
                 WHERE 1 = 1 
                     AND IMAGEM IS NOT NULL
-                    AND CODIGO = '${CODIGO}'
+                    AND CODIGO = '${codigoPeca}'
             `).then(res => res.recordset);
         let result = [];
         for await (let [i, record] of resource.entries()) {
@@ -363,6 +370,20 @@ apiRouter.route("/ferramenta")
             const path = await pictures_1.pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], ferramenta, String(i));
             result.push(path);
         }
+        if (resource.length <= 0) {
+            let end = new Date();
+            let newEnd = end.getMilliseconds() / 1000;
+            let start = req.cookies["starterBarcode"];
+            let final = newEnd - start;
+            const insertSql = await connection.query(`UPDATE HISAPONTA SET APT_TEMPO_OPERACAO = APT_TEMPO_OPERACAO + '${final}'  WHERE 1 = 1 AND ODF = '${numero_odf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}'`);
+            console.log("insertSql", insertSql);
+            const resss = await connection.query(`UPDATE HISAPONTA SET CODAPONTA = '1'  WHERE 1 = 1 AND ODF = '${numero_odf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}'`);
+            const resss2 = await connection.query(`UPDATE HISAPONTA SET CODAPONTA = '2'  WHERE 1 = 1 AND ODF = '${numero_odf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}'`);
+            console.log("resss linha 431", resss);
+            console.log("resss linha 432", resss2);
+        }
+        console.log("linha 418", resource);
+        console.log('linha 419', result);
         return res.status(200).json(result);
     }
     catch (error) {
@@ -378,7 +399,6 @@ apiRouter.route("/ferselecionadas")
     let numero_odf = req.cookies['NUMERO_ODF'];
     let numeroOperacao = req.cookies['numeroOperacao'];
     let codigoMaq = req.cookies['codigoMaq'];
-    let codAponta = 1;
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         let end = new Date();
@@ -387,9 +407,10 @@ apiRouter.route("/ferselecionadas")
         let final = newEnd - start;
         const insertSql = await connection.query(`UPDATE HISAPONTA SET APT_TEMPO_OPERACAO = APT_TEMPO_OPERACAO + '${final}'  WHERE 1 = 1 AND ODF = '${numero_odf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}'`);
         console.log("insertSqlTimer: linha 418", insertSql);
-        console.log("Insert: linha 419:", insertSql);
-        const resss = await connection.query(`UPDATE HISAPONTA SET CODAPONTA = '${codAponta}'  WHERE 1 = 1 AND ODF = '${numero_odf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}'`);
+        const resss = await connection.query(`UPDATE HISAPONTA SET CODAPONTA = '1'  WHERE 1 = 1 AND ODF = '${numero_odf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}'`);
+        const resss2 = await connection.query(`UPDATE HISAPONTA SET CODAPONTA = '2'  WHERE 1 = 1 AND ODF = '${numero_odf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}'`);
         console.log("resss: linha 422", resss);
+        console.log("resss: linha 422", resss2);
         return res.status(200).json();
     }
     catch (error) {
