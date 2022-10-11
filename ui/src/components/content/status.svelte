@@ -1,6 +1,7 @@
 <script>
     let tempoDecorrido = 0;
     let tempodePro = [];
+    let urlSS = `/api/v1/supervisor`;
     let urlString = `/api/v1/status`;
     let url = `/api/v1/imagem`;
     let tempoMax = null;
@@ -9,11 +10,11 @@
     let showRed = false;
     let showGreen = false;
     let showBlue = false;
+    let supervisor = "";
     async function getTempo() {
         const res = await fetch(urlString);
         tempodePro = await res.json();
         tempoMax = Number(tempodePro);
-        console.log(tempoMax);
     }
     async function getImagem() {
         const res = await fetch(url);
@@ -55,6 +56,17 @@
 
     let resultado = getTempo();
     let callImagem = getImagem();
+
+    const doPostSuper = async () => {
+        const headers = new Headers();
+        await fetch(urlSS, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                supervisor: supervisor,
+            }),
+        });
+    };
 </script>
 
 <div class="content">
@@ -64,7 +76,13 @@
                 <h3>Tempo Excedido</h3>
                 <form action="api/v1/apontar" method="POST" />
                 <p>Insira um supervisor para continuar</p>
-                <input type="text" />
+                <input
+                    bind:value={supervisor}
+                    name="supervisor"
+                    id="supervisor"
+                    type="text"
+                />
+                <p on:click={doPostSuper}>Confirma</p>
             </div>
         </div>
     {/if}

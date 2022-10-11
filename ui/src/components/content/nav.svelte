@@ -10,10 +10,12 @@
     import parcialDiv from "../content/feed.svelte";
 
     let apiMotivoParada = "api/v1/motivoParada";
+    let postParada = `/api/v1/postParada`
     let urlStop = `/api/v1/parada`;
     let urlPause = `/api/v1/pause`;
     let dadosOdf = [];
     let dados = [];
+    let value = "";
 
     const getMissingFeed = async () => {
         document.getElementById("faltante").style.display = "block";
@@ -58,17 +60,24 @@
             showmodal = false;
         }
     }
-    function confirm(event) {
-        let j = event.target.value;
-        console.log(j);
-    }
-
     async function callMotivo() {
         const res = await fetch(apiMotivoParada);
         dados = await res.json();
-        console.log(dados);
     }
     let resultCall = callMotivo();
+
+    const confirm = async () => {
+        //showConfirm = true;
+        console.log("feed linha 41", value);
+        const headers = new Headers();
+        await fetch(postParada, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                value: value,
+            }),
+        });
+    };
 </script>
 
 <main>
@@ -80,14 +89,16 @@
             <div class="header">
                 <div class="closed">
                     <h2>Motivo da Parada</h2>
-                    <p class="closebtn" on:click={closePop}>X</p>
+                    <button  class="closebtn" on:click={closePop}
+                        >X</button
+                    >
                 </div>
-                <select name="id" id="id">
+                <select bind:value={value} name="id" id="id">
                     {#each dados as item}
-                        <option value="opt1">{item}</option>
+                        <option >{item}</option>
                     {/each}
                 </select>
-                <p on:click={confirm}>Confirmar</p>
+                <p  on:click={confirm}>Confirmar</p>
             </div>
         </div>
     {/if}
@@ -130,16 +141,16 @@
 </main>
 
 <style>
-    .closebtn{
+    .closebtn {
         width: 25px;
         border-radius: 5px;
     }
-    h2{
+    h2 {
         width: 460px;
         justify-content: center;
         display: flex;
     }
-    .closed{
+    .closed {
         display: flex;
     }
     select {

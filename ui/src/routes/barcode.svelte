@@ -22,27 +22,27 @@
     badgeMsg = window.location.href.split("?")[1].split("=")[1];
   }
 
-  // function blockForbiddenChars(e) {
-  //   let value = e.target.value;
-  //   e.target.value = preSanitize(value);
-  // }
-  // function preSanitize(input) {
-  //   const allowedChars = /[A-Za-z0-9]/;
-  //   const sanitizedOutput = input
-  //     .split("")
-  //     .map((char) => (allowedChars.test(char) ? char : ""))
-  //     .join("");
-  //   return sanitizedOutput;
-  // }
+  function blockForbiddenChars(e) {
+    let value = e.target.value;
+    e.target.value = preSanitize(value);
+  }
+  function preSanitize(input) {
+    const allowedChars = /[A-Za-z0-9]/;
+    const sanitizedOutput = input
+      .split("")
+      .map((char) => (allowedChars.test(char) ? char : ""))
+      .join("");
+    return sanitizedOutput;
+  }
   const doPost = async () => {
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
     const res = await fetch(urlS, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         codigoBarras: !codigoBarras ? "" : codigoBarras,
       }),
-      headers,
     });
     if (barcodeMsg === "red") {
       window.location.href = "/#/ferramenta";
@@ -149,6 +149,7 @@
           <!-- on:input={setValues} -->
           <label class="input">
             <input
+            on:input={blockForbiddenChars}
               onkeyup="this.value = this.value.toUpperCase()"
               bind:value
               id="codigoBarras"
@@ -205,6 +206,7 @@
           </div>
           <h4>Insira a quantidade que deseja estornar</h4>
           <input
+          on:input={blockForbiddenChars}
             class="returnInput"
             onkeyup="this.value = this.value.toUpperCase()"
             bind:value

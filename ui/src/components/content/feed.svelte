@@ -1,5 +1,6 @@
 <script>
-    let feed;
+    import { onMount, validate_each_argument } from "svelte/internal";
+
     let badFeed;
     let missingFeed;
     let reworkFeed;
@@ -10,6 +11,9 @@
     let dadosOdf = [];
     let dados = [];
     let showConfirm = false;
+    let valorFeed = "";
+    let value = "";
+    let supervisor = "";
 
     let apontamentoMsg = "";
     if (window.location.href.includes("?")) {
@@ -20,18 +24,6 @@
         const res = await fetch(urlString);
         dadosOdf = await res.json();
     }
-
-    const doPost = async () => {
-        showConfirm = true;
-        const headers = new Headers();
-        const res = await fetch(urlS, {
-            method: "POST",
-            body: JSON.stringify({
-                feed: feed,
-            }),
-            headers,
-        });
-    };
 
     function blockForbiddenChars(e) {
         let value = e.target.value;
@@ -50,16 +42,40 @@
         return sanitizedOutput;
     }
 
-    async function callRefugo() {
+    onMount(async()=>{
         const res = await fetch(motivoUrl);
         dados = await res.json();
-        console.log(dados);
-    }
-    let resRefugo = callRefugo();
+    })
     let resultado = getOdfData();
 
-    function confirm() {
-        console.log("Ok");
+    const doPost = async () => {
+        const headers = new Headers();
+        const res = await fetch(urlS, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                valorFeed: valorFeed,
+                badFeed: badFeed,
+                missingFeed: missingFeed,
+                parcialFeed: parcialFeed,
+                reworkFeed: reworkFeed,
+                value: value,
+                supervisor: supervisor,
+            }),
+        });
+        if (res.ok) {
+            window.location.href = `/#/rip`;
+        }
+    };
+
+    //Verificar o que fazer para ativiar o post tmb
+    async function doSome() {
+        if (badFeed > 0) {
+            showConfirm = true;
+        } else if(badFeed < 0){
+            doPost()
+        }
+
     }
 </script>
 
@@ -79,15 +95,16 @@
                     <div class="write" id="feed">
                         <p>BOAS</p>
                         <input
-                            on:input={blockForbiddenChars}
                             class="input"
-                            id="feed"
-                            name="feed"
+                            id="valorFeed"
+                            bind:value={valorFeed}
+                            name="valorFeed"
                         />
                     </div>
                     <div class="write" id="ruins" name="ruins">
                         <p>RUINS</p>
                         <input
+                            bind:value={badFeed}
                             on:input={blockForbiddenChars}
                             class="input"
                             id="badFeed"
@@ -97,6 +114,7 @@
                     <div class="write" id="retrabalhar">
                         <p>RETRABALHAR</p>
                         <input
+                            bind:value={reworkFeed}
                             on:input={blockForbiddenChars}
                             class="input"
                             id="reworkFeed"
@@ -107,6 +125,7 @@
                     <div class="write" id="parcialDiv">
                         <p>PARCIAL</p>
                         <input
+                            bind:value={parcialFeed}
                             on:input={blockForbiddenChars}
                             class="input"
                             id="parcialfeed"
@@ -117,6 +136,7 @@
                     <div class="write" id="faltante">
                         <p>FALTANTE</p>
                         <input
+                            bind:value={missingFeed}
                             on:input={blockForbiddenChars}
                             class="input"
                             id="missingFeed"
@@ -126,7 +146,7 @@
                     </div>
                 </form>
 
-                <a id="apontar" on:click={doPost} type="submit">
+                <a id="apontar" on:click={doSome} type="submit">
                     <span />
                     <span />
                     <span />
@@ -139,35 +159,36 @@
                 <h3>Confirma?</h3>
             {/if} -->
 
-            {#await resRefugo}
-                <div></div>
-            {:then item}
-                {#if showConfirm === true}
-                    <div class="fundo">
-                        <div class="header">
-                            <div class="closed">
-                                <h2>MOTIVO DO REFUGO</h2>
-                            </div>
-                            <select name="id" id="id">
-                                {#each dados as item}
-                                    <option value="opt1">{item}</option>
-                                {/each}
-                            </select>
-                            <p>Supervisor</p>
-                            <input class="super" type="text">
-                            <p on:click={confirm}>Confirmar</p>
+            {#if showConfirm === true}
+                <div class="fundo">
+                    <div class="header">
+                        <div class="closed">
+                            <h2>MOTIVO DO REFUGO</h2>
                         </div>
+                        <select bind:value name="id" id="id">
+                            {#each dados as item}
+                                <option >{item}</option>
+                            {/each}
+                        </select>
+                        <p>Supervisor</p>
+                        <input
+                            bind:value={supervisor}
+                            class="supervisor"
+                            type="text"
+                            name="supervisor"
+                            id="supervisor"
+                        />
+                        <p on:click={doPost}>Confirmar</p>
                     </div>
-                {/if}
-            {/await}
+                </div>
+            {/if}
         {/if}
     </main>
 {/await}
 
 <style>
-    .super{
+    .supervisor {
         height: 25px;
-        
     }
     .fullForm {
         margin: 0%;

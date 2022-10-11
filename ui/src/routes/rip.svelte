@@ -36,15 +36,29 @@
         ripTable = await res.json();
     });
 
-    async function doPost() {
-        const res = await fetch(urlS, {
+    const doPost = async () => {
+        //showConfirm = true;
+        console.log("feed linha 41", value);
+        const headers = new Headers();
+        await fetch(urlS, {
             method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                idInput: idInput,
+                value: value,
             }),
         });
         showEnd = true;
-    }
+    };
+
+    // async function doPost() {
+    //     const res = await fetch(urlS, {
+    //         method: "POST",
+    //         body: JSON.stringify({
+    //             idInput: idInput,
+    //         }),
+    //     });
+    //     showEnd = true;
+    // }
 
     async function doReturn() {
         const res = await fetch(returnedValueApi, {
