@@ -52,12 +52,15 @@ apiRouter.route("/apontamento")
     let qtdLib = 0;
     let apontLib = '';
     let qntdeJaApontada = 0;
+    let qtdLibMax = 0;
     if (indiceDoArrayDeOdfs === 0) {
         qntdeJaApontada = objOdfSelecionada["QTDE_APONTADA"];
         qtdLib = objOdfSelecionada["QTDE_ODF"];
         apontLib = objOdfSelecionada["APONTAMENTO_LIBERADO"];
     }
+    console.log('objOdfSelecProximo linha 74 ', objOdfSelecProximo);
     if (indiceDoArrayDeOdfs > 0) {
+        objOdfSelecProximo = objOdfSelecionada;
         qntdeJaApontada = objOdfSelecionada["QTDE_APONTADA"];
         qtdLib = objOdfSelecAnterior["QTDE_APONTADA"];
         apontLib = objOdfSelecionada["APONTAMENTO_LIBERADO"];
@@ -65,9 +68,13 @@ apiRouter.route("/apontamento")
     if (indiceDoArrayDeOdfs > 0 && apontLib === "N") {
         return res.status(400).redirect("/#/codigobarras?error=anotherodfexpected");
     }
+    console.log("qtdLib: ", qtdLib);
+    console.log("qntdeJaApontada: ", qntdeJaApontada);
     if (qtdLib - qntdeJaApontada === 0) {
         return res.status(400).redirect("/#/codigobarras?error=nolimitonlastodf");
     }
+    qtdLibMax = qtdLib - qntdeJaApontada;
+    console.log("qtdLibMax: ", qtdLibMax);
     if (!objOdfSelecAnterior) {
         await connection.query(`
             UPDATE 
@@ -79,6 +86,7 @@ apiRouter.route("/apontamento")
             AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' 
             AND CODIGO_MAQUINA = '${dados.codMaq}'`);
     }
+    console.log("linha 114: ");
     const processoTemP = await connection.query(`
         SELECT
         NUMPEC, 
@@ -93,17 +101,21 @@ apiRouter.route("/apontamento")
         AND [CONDIC] = 'P'
         AND [NUMPEC] = '${objOdfSelecionada['CODIGO_PECA']}'
         `).then(result => result.recordset);
+    console.log("linha 132: ");
     if (processoTemP.length > 0) {
         res.cookie("CONDIC", processoTemP);
     }
+    console.log('objOdfSelecProximo linha 137 ', objOdfSelecProximo);
     res.cookie("numeroOperacaoProximaOdf", objOdfSelecProximo["NUMERO_OPERACAO"]);
     res.cookie("codMaqProxOdf", objOdfSelecProximo["CODIGO_MAQUINA"]);
-    res.cookie('qtdLib', qtdLib);
+    console.log('objOdfSelecProximo linha 140 ', objOdfSelecProximo);
+    res.cookie('qtdLibMax', qtdLibMax);
     res.cookie("NUMERO_ODF", objOdfSelecionada["NUMERO_ODF"]);
     res.cookie("CODIGO_PECA", objOdfSelecionada['CODIGO_PECA']);
     res.cookie("CODIGO_MAQUINA", objOdfSelecionada['CODIGO_MAQUINA']);
     res.cookie("NUMERO_OPERACAO", objOdfSelecionada['NUMERO_OPERACAO']);
     res.cookie("REVISAO", objOdfSelecionada['REVISAO']);
+    console.log("object2");
     if (processoTemP.length > 0) {
         try {
             const resource2 = await connection.query(`
@@ -198,13 +210,9 @@ apiRouter.route("/apontamentoCracha")
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const selecionarMatricula = await connection.query(` 
-                SELECT TOP 1
-                [MATRIC],
-                [FUNCIONARIO]
-                FROM FUNCIONARIOS
-                WHERE 1 = 1
-                AND [MATRIC] = ${MATRIC}
+            SELECT TOP 1 [MATRIC], [FUNCIONARIO] FROM FUNCIONARIOS WHERE 1 = 1 AND [MATRIC] = '${MATRIC}'
                 `.trim()).then(result => result.recordset);
+        console.log(selecionarMatricula);
         if (selecionarMatricula.length > 0) {
             let start = new Date();
             let mili = start.getMilliseconds() / 1000;
@@ -426,7 +434,7 @@ apiRouter.route("/ferselecionadas")
 apiRouter.route("/apontar")
     .post(async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let QTDE_APONTADA = req.body['valorFeed'];
+    let qtdBoas = req.body['valorFeed'];
     let supervisor = req.body['supervisor'];
     let motivorefugo = req.body['value'];
     let badFeed = req.body['badFeed'];
@@ -436,14 +444,14 @@ apiRouter.route("/apontar")
     let NUMERO_ODF = req.cookies["NUMERO_ODF"];
     let NUMERO_OPERACAO = req.cookies["NUMERO_OPERACAO"];
     let CODIGO_MAQUINA = req.cookies["CODIGO_MAQUINA"];
+    let qtdLibMax = req.cookies['qtdLibMax'];
     let proxCodOpercao = req.cookies['numeroOperacaoProximaOdf'];
     let proxCodMaqui = req.cookies['codMaqProxOdf'];
-    let qtdLib = req.cookies["qtdLib"];
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
         return input && input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
     }
-    QTDE_APONTADA = sanitize(req.body["valorFeed"]);
+    qtdBoas = sanitize(req.body["valorFeed"]);
     badFeed = sanitize(req.body["badFeed"]);
     missingFeed = sanitize(req.body["missingFeed"]);
     reworkFeed = sanitize(req.body["reworkFeed"]);
@@ -456,20 +464,32 @@ apiRouter.route("/apontar")
     let endProdTimer = new Date();
     let startProd = req.cookies["startProd"];
     let finalProdTimer = endProdTimer.getTime() - startProd / 1000;
+    let valorTotalApontado = parseInt(qtdBoas + badFeed + missingFeed + reworkFeed + parcialFeed);
+    if (valorTotalApontado > qtdLibMax) {
+        return res.status(400).json();
+    }
+    if (badFeed > 0) {
+        const resource = await connection.query(`
+            SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'
+            `).then(result => result.recordset);
+        console.log("resource", resource);
+        if (resource.length <= 0) {
+            return res.status(400).json();
+        }
+    }
     const insertSqlTimer = await connection.query(`UPDATE HISAPONTA SET APT_TEMPO_OPERACAO = '${finalProdTimer}' WHERE 1 = 1 AND ODF = '618976' AND CAST (LTRIM(NUMOPE) AS INT) = '00040'`);
-    if (QTDE_APONTADA < qtdLib) {
+    if (valorTotalApontado < qtdLibMax) {
         const updateProxOdfToS = await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${proxCodOpercao}' AND CODIGO_MAQUINA = '${proxCodMaqui}'`);
     }
-    if (QTDE_APONTADA >= qtdLib) {
+    if (valorTotalApontado >= qtdLibMax) {
         const updateProxOdfToS = await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'N' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
     }
     const resss = await connection.query(`UPDATE HISAPONTA SET CODAPONTA = '3' WHERE 1 = 1 AND ODF = '618976' AND CAST (LTRIM(NUMOPE) AS INT) = '00040'`);
-    const updateProxOdfToS = await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = '${QTDE_APONTADA}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
+    const updateProxOdfToS = await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
     if (NUMERO_OPERACAO === "00999") {
-        const updateProxOdfToS = await connection.query(`UPDATE CST_ALOCACAO SET QUANTIDADE = '${QTDE_APONTADA}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
+        const updateProxOdfToS = await connection.query(`UPDATE CST_ALOCACAO SET QUANTIDADE = '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
         console.log("tem q dar baixa no estoque");
     }
-    console.log("ok");
     return res.status(200).json();
 });
 apiRouter.route("/rip")
@@ -573,8 +593,8 @@ apiRouter.route("/returnedValue")
     let numero_odf = req.cookies["NUMERO_ODF"];
     let CODIGO_MAQUINA = req.cookies["CODIGO_MAQUINA"];
     let NUMERO_OPERACAO = req.cookies["NUMERO_OPERACAO"];
-    let superCracha = req.body["superCracha"];
-    console.log("debug: linha 672");
+    let supervisor = req.body['supervisor'];
+    console.log("debug: linha 756");
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
         return input && input
@@ -583,8 +603,15 @@ apiRouter.route("/returnedValue")
             .join("");
     }
     returnedvalue = sanitize(req.body["returnedvalue"]);
-    superCracha = sanitize(req.body["supervisor"]);
-    console.log("debug: linha 684");
+    supervisor = sanitize(req.body["supervisor"]);
+    console.log("debug: linha 768", supervisor);
+    console.log("debug: linha 769", returnedvalue);
+    const selectSuper = await connection.query(`
+        SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`).then(result => result.recordset);
+    console.log(selectSuper);
+    if (selectSuper.length <= 0) {
+        return res.status(400);
+    }
     try {
         const resource = await connection.query(`
             UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = '${returnedvalue}' WHERE 1 = 1 AND NUMERO_ODF = '${numero_odf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
@@ -601,19 +628,22 @@ apiRouter.route("/returnedValue")
 });
 apiRouter.route("/supervisor")
     .get(async (req, res) => {
-    let numeroOdf = req.cookies["NUMERO_ODF"];
-    let peca = req.cookies['CODIGO_PECA'];
     let supervisor = req.body['supervisor'];
     console.log("supervisor ", supervisor);
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const resource = await connection.query(`
-                    UPDATE HISAPONTA  SET CODAPONTA =  '5' WHERE 1 = 1 AND ODF = '${numeroOdf}' AND PECA= '${peca}'`);
+            SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`).then(result => result.recordset);
         console.log(resource);
-        res.status(200).json(resource);
+        if (resource.length <= 0) {
+            return res.status(400);
+        }
+        else {
+            return res.status(200).json(resource);
+        }
     }
     catch (error) {
-        console.log(error);
+        return res.status(400);
     }
     finally {
         await connection.close();

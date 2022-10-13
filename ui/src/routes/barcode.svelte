@@ -2,7 +2,7 @@
   import { bind } from "svelte/internal";
   import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
   import Title from "../components/title/title.svelte";
-  let value = "";
+  let value;
   let codigoBarras = "";
   let urlS = `/api/v1/apontamento`;
   let urlBagde = `/api/v1/apontamentoCracha`;
@@ -10,7 +10,8 @@
   let showmodal = false;
   let returnedValueApi = `/api/v1/returnedValue`;
   let returnValueStorage;
-  let superCracha;
+  let supervisor;
+  let quantity ;
 
   let barcodeMsg = "";
   if (window.location.href.includes("?")) {
@@ -78,9 +79,13 @@
       method: "POST",
       body: JSON.stringify({
         returnValueStorage: returnValueStorage,
-        superCracha: superCracha,
+        supervisor: supervisor,
+        quantity: quantity,
       }),
     });
+    if (res.ok) {
+      console.log("object");
+    }
   }
 </script>
 
@@ -149,7 +154,7 @@
           <!-- on:input={setValues} -->
           <label class="input">
             <input
-            on:input={blockForbiddenChars}
+              on:input={blockForbiddenChars}
               onkeyup="this.value = this.value.toUpperCase()"
               bind:value
               id="codigoBarras"
@@ -188,16 +193,16 @@
             <h4>Codigo do Supervisor</h4>
           </div>
           <input
+            bind:value={supervisor}
             class="returnInput"
             on:input={blockForbiddenChars}
             onkeyup="this.value = this.value.toUpperCase()"
-            bind:value
             type="text"
-            name="superCracha"
+            name="supervisor"
           />
           <h4>Qual irá retornar</h4>
           <div class="options">
-            <select name="id" id="id">
+            <select bind:value name="id" id="id">
               <option>BOAS</option>
               <option>RUINS</option>
               <option>PARCIAL</option>
@@ -206,10 +211,10 @@
           </div>
           <h4>Insira a quantidade que deseja estornar</h4>
           <input
-          on:input={blockForbiddenChars}
+            on:input={blockForbiddenChars}
             class="returnInput"
             onkeyup="this.value = this.value.toUpperCase()"
-            bind:value
+            bind:value={quantity}
             type="text"
             name="returnValueStorage"
           />

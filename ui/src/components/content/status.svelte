@@ -59,33 +59,31 @@
 
     const doPostSuper = async () => {
         const headers = new Headers();
-        await fetch(urlSS, {
+        const res = await fetch(urlSS, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 supervisor: supervisor,
             }),
         });
+        if(res.ok){
+            shwowSuper === false
+        }
     };
 </script>
 
 <div class="content">
-    {#if shwowSuper === true}
+    <!-- {#if shwowSuper === true}
         <div class="fundo">
             <div class="timeOver">
                 <h3>Tempo Excedido</h3>
                 <form action="api/v1/apontar" method="POST" />
                 <p>Insira um supervisor para continuar</p>
-                <input
-                    bind:value={supervisor}
-                    name="supervisor"
-                    id="supervisor"
-                    type="text"
-                />
+                <input  bind:value={supervisor} name="supervisor" id="supervisor" type="text" />
                 <p on:click={doPostSuper}>Confirma</p>
             </div>
         </div>
-    {/if}
+    {/if} -->
     {#await resultado}
         <div>...</div>
     {:then itens}

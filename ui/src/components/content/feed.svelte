@@ -1,6 +1,4 @@
 <script>
-    import { onMount, validate_each_argument } from "svelte/internal";
-
     let badFeed;
     let missingFeed;
     let reworkFeed;
@@ -11,9 +9,11 @@
     let dadosOdf = [];
     let dados = [];
     let showConfirm = false;
-    let valorFeed = "";
-    let value = "";
-    let supervisor = "";
+    let valorFeed;
+    let value;
+    let supervisor;
+    let qtdPossivelProducao;
+    let showError = false;
 
     let apontamentoMsg = "";
     if (window.location.href.includes("?")) {
@@ -23,6 +23,8 @@
     async function getOdfData() {
         const res = await fetch(urlString);
         dadosOdf = await res.json();
+        qtdPossivelProducao =
+            dadosOdf[0].QTDE_ODF[0] - dadosOdf[0].QTDE_APONTADA;
     }
 
     function blockForbiddenChars(e) {
@@ -42,11 +44,10 @@
         return sanitizedOutput;
     }
 
-    onMount(async()=>{
+    async function getRefugodata() {
         const res = await fetch(motivoUrl);
         dados = await res.json();
-    })
-    let resultado = getOdfData();
+    }
 
     const doPost = async () => {
         const headers = new Headers();
@@ -63,20 +64,30 @@
                 supervisor: supervisor,
             }),
         });
+        if (res.status === 400) {
+            showError = true;
+        }
         if (res.ok) {
             window.location.href = `/#/rip`;
         }
     };
 
-    //Verificar o que fazer para ativiar o post tmb
-    async function doSome() {
-        if (badFeed > 0) {
+    async function doCallPost() {
+        if (valorFeed >= 0 && badFeed === '0' || !badFeed) {
+            console.log("object linha 79");
+            doPost();
+        } else if (badFeed > 0) {
             showConfirm = true;
-        } else if(badFeed < 0){
-            doPost()
         }
-
     }
+
+    function close() {
+        showError = false;
+        showConfirm = false;
+    }
+
+    let resultRefugo = getRefugodata();
+    let resultado = getOdfData();
 </script>
 
 {#await resultado}
@@ -89,7 +100,7 @@
                     <div id="prod" class="write">
                         <p>PRODUZIR</p>
                         <div>
-                            {dadosOdf[0].QTDE_ODF[0]}
+                            {qtdPossivelProducao}
                         </div>
                     </div>
                     <div class="write" id="feed">
@@ -146,7 +157,7 @@
                     </div>
                 </form>
 
-                <a id="apontar" on:click={doSome} type="submit">
+                <a id="apontar" on:click={doCallPost} type="submit">
                     <span />
                     <span />
                     <span />
@@ -155,30 +166,42 @@
                 </a>
             </div>
 
-            <!-- {#if showConfirm === true}
-                <h3>Confirma?</h3>
-            {/if} -->
+            {#await resultRefugo}
+                <div>...</div>
+            {:then item}
+                {#if showConfirm === true}
+                    <div class="fundo">
+                        <div class="header">
+                            <div class="closed">
+                                <h2>MOTIVO DO REFUGO</h2>
+                            </div>
+                            <select bind:value name="id" id="id">
+                                {#each dados as item}
+                                    <option>{item}</option>
+                                {/each}
+                            </select>
+                            <p>Supervisor</p>
+                            <input
+                                bind:value={supervisor}
+                                class="supervisor"
+                                type="text"
+                                name="supervisor"
+                                id="supervisor"
+                            />
+                            <button on:click={doPost}>Confirmar</button>
+                            <button on:click={close}>Fechar</button>
+                        </div>
+                    </div>
+                {/if}
+            {/await}
 
-            {#if showConfirm === true}
+            {#if showError === true}
                 <div class="fundo">
                     <div class="header">
                         <div class="closed">
-                            <h2>MOTIVO DO REFUGO</h2>
+                            <h2>Valor Enviado maior que o possivel</h2>
                         </div>
-                        <select bind:value name="id" id="id">
-                            {#each dados as item}
-                                <option >{item}</option>
-                            {/each}
-                        </select>
-                        <p>Supervisor</p>
-                        <input
-                            bind:value={supervisor}
-                            class="supervisor"
-                            type="text"
-                            name="supervisor"
-                            id="supervisor"
-                        />
-                        <p on:click={doPost}>Confirmar</p>
+                        <button on:click={close}>fechar</button>
                     </div>
                 </div>
             {/if}
