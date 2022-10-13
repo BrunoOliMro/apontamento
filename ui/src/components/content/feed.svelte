@@ -11,6 +11,7 @@
     let showConfirm = false;
     let valorFeed;
     let value;
+    let values;
     let supervisor;
     let qtdPossivelProducao;
     let showError = false;
@@ -23,8 +24,14 @@
     async function getOdfData() {
         const res = await fetch(urlString);
         dadosOdf = await res.json();
+        console.log("dadosOdf: ", dadosOdf);
+        console.log("linha 27 :", dadosOdf[0].QTDE_ODF[0]);
+        console.log("linha 28: ", dadosOdf[0].QTDE_ODF[0]);
         qtdPossivelProducao =
             dadosOdf[0].QTDE_ODF[0] - dadosOdf[0].QTDE_APONTADA;
+        if (qtdPossivelProducao <= 0) {
+            qtdPossivelProducao = 0;
+        }
     }
 
     function blockForbiddenChars(e) {
@@ -73,7 +80,7 @@
     };
 
     async function doCallPost() {
-        if (valorFeed >= 0 && badFeed === '0' || !badFeed) {
+        if ((valorFeed >= 0 && badFeed === "0") || !badFeed) {
             console.log("object linha 79");
             doPost();
         } else if (badFeed > 0) {

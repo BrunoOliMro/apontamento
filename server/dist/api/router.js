@@ -53,14 +53,25 @@ apiRouter.route("/apontamento")
     let apontLib = '';
     let qntdeJaApontada = 0;
     let qtdLibMax = 0;
+    let codigoMaquinaProxOdf;
+    let codMaqProxOdf;
     if (indiceDoArrayDeOdfs === 0) {
+        codigoMaquinaProxOdf = objOdfSelecProximo["CODIGO_MAQUINA"];
+        codMaqProxOdf = objOdfSelecProximo["NUMERO_OPERACAO"];
         qntdeJaApontada = objOdfSelecionada["QTDE_APONTADA"];
         qtdLib = objOdfSelecionada["QTDE_ODF"];
         apontLib = objOdfSelecionada["APONTAMENTO_LIBERADO"];
     }
-    console.log('objOdfSelecProximo linha 74 ', objOdfSelecProximo);
-    if (indiceDoArrayDeOdfs > 0) {
-        objOdfSelecProximo = objOdfSelecionada;
+    if (indiceDoArrayDeOdfs === codigoOperArray.length - 1) {
+        codigoMaquinaProxOdf = objOdfSelecionada["CODIGO_MAQUINA"];
+        codMaqProxOdf = objOdfSelecionada["NUMERO_OPERACAO"];
+        qntdeJaApontada = objOdfSelecAnterior["QTDE_APONTADA"];
+        qtdLib = 2 * objOdfSelecAnterior["QTDE_APONTADA"];
+        apontLib = objOdfSelecionada["APONTAMENTO_LIBERADO"];
+    }
+    if (indiceDoArrayDeOdfs > 0 && indiceDoArrayDeOdfs < codigoOperArray.length - 1) {
+        codigoMaquinaProxOdf = objOdfSelecProximo["CODIGO_MAQUINA"];
+        codMaqProxOdf = objOdfSelecProximo["NUMERO_OPERACAO"];
         qntdeJaApontada = objOdfSelecionada["QTDE_APONTADA"];
         qtdLib = objOdfSelecAnterior["QTDE_APONTADA"];
         apontLib = objOdfSelecionada["APONTAMENTO_LIBERADO"];
@@ -68,13 +79,13 @@ apiRouter.route("/apontamento")
     if (indiceDoArrayDeOdfs > 0 && apontLib === "N") {
         return res.status(400).redirect("/#/codigobarras?error=anotherodfexpected");
     }
-    console.log("qtdLib: ", qtdLib);
-    console.log("qntdeJaApontada: ", qntdeJaApontada);
     if (qtdLib - qntdeJaApontada === 0) {
         return res.status(400).redirect("/#/codigobarras?error=nolimitonlastodf");
     }
+    console.log("qtdLib:", qtdLib);
+    console.log("qntdeJaApontada: ", qntdeJaApontada);
     qtdLibMax = qtdLib - qntdeJaApontada;
-    console.log("qtdLibMax: ", qtdLibMax);
+    console.log(qtdLibMax);
     if (!objOdfSelecAnterior) {
         await connection.query(`
             UPDATE 
@@ -86,7 +97,6 @@ apiRouter.route("/apontamento")
             AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' 
             AND CODIGO_MAQUINA = '${dados.codMaq}'`);
     }
-    console.log("linha 114: ");
     const processoTemP = await connection.query(`
         SELECT
         NUMPEC, 
@@ -101,21 +111,17 @@ apiRouter.route("/apontamento")
         AND [CONDIC] = 'P'
         AND [NUMPEC] = '${objOdfSelecionada['CODIGO_PECA']}'
         `).then(result => result.recordset);
-    console.log("linha 132: ");
     if (processoTemP.length > 0) {
         res.cookie("CONDIC", processoTemP);
     }
-    console.log('objOdfSelecProximo linha 137 ', objOdfSelecProximo);
-    res.cookie("numeroOperacaoProximaOdf", objOdfSelecProximo["NUMERO_OPERACAO"]);
-    res.cookie("codMaqProxOdf", objOdfSelecProximo["CODIGO_MAQUINA"]);
-    console.log('objOdfSelecProximo linha 140 ', objOdfSelecProximo);
     res.cookie('qtdLibMax', qtdLibMax);
+    res.cookie("MAQUINA_PROXIMA", codigoMaquinaProxOdf);
+    res.cookie("OPERACAO_PROXIMA", codMaqProxOdf);
     res.cookie("NUMERO_ODF", objOdfSelecionada["NUMERO_ODF"]);
     res.cookie("CODIGO_PECA", objOdfSelecionada['CODIGO_PECA']);
     res.cookie("CODIGO_MAQUINA", objOdfSelecionada['CODIGO_MAQUINA']);
     res.cookie("NUMERO_OPERACAO", objOdfSelecionada['NUMERO_OPERACAO']);
     res.cookie("REVISAO", objOdfSelecionada['REVISAO']);
-    console.log("object2");
     if (processoTemP.length > 0) {
         try {
             const resource2 = await connection.query(`
@@ -445,8 +451,8 @@ apiRouter.route("/apontar")
     let NUMERO_OPERACAO = req.cookies["NUMERO_OPERACAO"];
     let CODIGO_MAQUINA = req.cookies["CODIGO_MAQUINA"];
     let qtdLibMax = req.cookies['qtdLibMax'];
-    let proxCodOpercao = req.cookies['numeroOperacaoProximaOdf'];
-    let proxCodMaqui = req.cookies['codMaqProxOdf'];
+    let MAQUINA_PROXIMA = req.cookies['MAQUINA_PROXIMA'];
+    let OPERACAO_PROXIMA = req.cookies['OPERACAO_PROXIMA'];
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
         return input && input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
@@ -477,18 +483,24 @@ apiRouter.route("/apontar")
             return res.status(400).json();
         }
     }
-    const insertSqlTimer = await connection.query(`UPDATE HISAPONTA SET APT_TEMPO_OPERACAO = '${finalProdTimer}' WHERE 1 = 1 AND ODF = '618976' AND CAST (LTRIM(NUMOPE) AS INT) = '00040'`);
+    await connection.query(`UPDATE HISAPONTA SET APT_TEMPO_OPERACAO = '${finalProdTimer}' WHERE 1 = 1 AND ODF = '618976' AND CAST (LTRIM(NUMOPE) AS INT) = '00040'`);
     if (valorTotalApontado < qtdLibMax) {
-        const updateProxOdfToS = await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${proxCodOpercao}' AND CODIGO_MAQUINA = '${proxCodMaqui}'`);
+        await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
+    }
+    valorTotalApontado = Number(valorTotalApontado);
+    qtdLibMax = Number(qtdLibMax);
+    console.log(valorTotalApontado);
+    console.log(qtdLibMax);
+    if (valorTotalApontado <= qtdLibMax) {
+        await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${OPERACAO_PROXIMA}' AND CODIGO_MAQUINA = '${MAQUINA_PROXIMA}'`);
     }
     if (valorTotalApontado >= qtdLibMax) {
-        const updateProxOdfToS = await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'N' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
+        await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'N' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
     }
-    const resss = await connection.query(`UPDATE HISAPONTA SET CODAPONTA = '3' WHERE 1 = 1 AND ODF = '618976' AND CAST (LTRIM(NUMOPE) AS INT) = '00040'`);
-    const updateProxOdfToS = await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
-    if (NUMERO_OPERACAO === "00999") {
-        const updateProxOdfToS = await connection.query(`UPDATE CST_ALOCACAO SET QUANTIDADE = '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
-        console.log("tem q dar baixa no estoque");
+    await connection.query(`UPDATE HISAPONTA SET CODAPONTA = '3' WHERE 1 = 1 AND ODF = '618976' AND CAST (LTRIM(NUMOPE) AS INT) = '00040'`);
+    await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
+    NUMERO_OPERACAO = String(NUMERO_OPERACAO);
+    if (NUMERO_OPERACAO === "999") {
     }
     return res.status(200).json();
 });
@@ -589,12 +601,12 @@ apiRouter.route("/returnedValue")
     .post(async (req, res) => {
     console.log(req.body);
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let returnedvalue = req.body['returnedvalue'];
+    let quantity = req.body['quantity'];
+    let optionChoosed = req.body['quantity'];
     let numero_odf = req.cookies["NUMERO_ODF"];
     let CODIGO_MAQUINA = req.cookies["CODIGO_MAQUINA"];
     let NUMERO_OPERACAO = req.cookies["NUMERO_OPERACAO"];
     let supervisor = req.body['supervisor'];
-    console.log("debug: linha 756");
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
         return input && input
@@ -602,10 +614,8 @@ apiRouter.route("/returnedValue")
             .map((char) => (allowedChars.test(char) ? char : ""))
             .join("");
     }
-    returnedvalue = sanitize(req.body["returnedvalue"]);
+    quantity = sanitize(req.body["quantity"]);
     supervisor = sanitize(req.body["supervisor"]);
-    console.log("debug: linha 768", supervisor);
-    console.log("debug: linha 769", returnedvalue);
     const selectSuper = await connection.query(`
         SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`).then(result => result.recordset);
     console.log(selectSuper);
@@ -613,14 +623,13 @@ apiRouter.route("/returnedValue")
         return res.status(400);
     }
     try {
-        const resource = await connection.query(`
-            UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = '${returnedvalue}' WHERE 1 = 1 AND NUMERO_ODF = '${numero_odf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
-        console.log("resource: linha 738?", resource);
-        return res.status(200).redirect("/#/codigobarras");
+        await connection.query(`
+            UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = '${quantity}' WHERE 1 = 1 AND NUMERO_ODF = '${numero_odf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
+        return res.status(200).redirect("/#/codigobarras?status=returned");
     }
     catch (error) {
         console.log(error);
-        return res.status(200).redirect("/#/rip?error=riperror");
+        return res.status(200).redirect("/#/codigobarras?error=riperror");
     }
     finally {
         await connection.close();

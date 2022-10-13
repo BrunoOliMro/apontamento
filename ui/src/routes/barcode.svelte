@@ -8,10 +8,11 @@
   let urlBagde = `/api/v1/apontamentoCracha`;
   let cracha = "";
   let showmodal = false;
+  let showCorr = false;
   let returnedValueApi = `/api/v1/returnedValue`;
   let returnValueStorage;
   let supervisor;
-  let quantity ;
+  let quantity;
 
   let barcodeMsg = "";
   if (window.location.href.includes("?")) {
@@ -77,6 +78,7 @@
   async function doReturn() {
     const res = await fetch(returnedValueApi, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         returnValueStorage: returnValueStorage,
         supervisor: supervisor,
@@ -84,8 +86,14 @@
       }),
     });
     if (res.ok) {
-      console.log("object");
+      showmodal = false;
+      showCorr = true;
+      window.location.href = "/#/codigobarras";
     }
+  }
+
+  function closePopCor() {
+    showCorr = false;
   }
 </script>
 
@@ -101,6 +109,15 @@
         </div>
       {/if}
     </div>
+
+    {#if showCorr === true}
+      <div class="fundo">
+        <div class="invalidBarcode" id="s">
+          <h5>Estorno Feito</h5>
+          <p on:click={closePopCor}>Fechar</p>
+        </div>
+      </div>
+    {/if}
 
     {#if barcodeMsg === "anotherodfexpected"}
       <div class="fundo">
@@ -199,10 +216,11 @@
             onkeyup="this.value = this.value.toUpperCase()"
             type="text"
             name="supervisor"
+            id="supervisor"
           />
           <h4>Qual irá retornar</h4>
           <div class="options">
-            <select bind:value name="id" id="id">
+            <select bind:value={returnValueStorage} name="id" id="id">
               <option>BOAS</option>
               <option>RUINS</option>
               <option>PARCIAL</option>
