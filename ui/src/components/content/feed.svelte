@@ -25,8 +25,6 @@
         const res = await fetch(urlString);
         dadosOdf = await res.json();
         console.log("dadosOdf: ", dadosOdf);
-        console.log("linha 27 :", dadosOdf[0].QTDE_ODF[0]);
-        console.log("linha 28: ", dadosOdf[0].QTDE_ODF[0]);
         qtdPossivelProducao =
             dadosOdf[0].QTDE_ODF[0] - dadosOdf[0].QTDE_APONTADA;
         if (qtdPossivelProducao <= 0) {
@@ -81,7 +79,6 @@
 
     async function doCallPost() {
         if ((valorFeed >= 0 && badFeed === "0") || !badFeed) {
-            console.log("object linha 79");
             doPost();
         } else if (badFeed > 0) {
             showConfirm = true;

@@ -1,6 +1,5 @@
 <script>
   import { bind } from "svelte/internal";
-  import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
   import Title from "../components/title/title.svelte";
   let value;
   let codigoBarras = "";
@@ -13,6 +12,7 @@
   let returnValueStorage;
   let supervisor;
   let quantity;
+  let showApontInic = false
 
   let barcodeMsg = "";
   if (window.location.href.includes("?")) {
@@ -46,6 +46,9 @@
         codigoBarras: !codigoBarras ? "" : codigoBarras,
       }),
     });
+    if (barcodeMsg === "red") {
+      showApontInic = true
+    }
     if (barcodeMsg === "red") {
       window.location.href = "/#/ferramenta";
     }
@@ -228,6 +231,16 @@
             </select>
           </div>
           <h4>Insira a quantidade que deseja estornar</h4>
+          <input
+            on:input={blockForbiddenChars}
+            class="returnInput"
+            onkeyup="this.value = this.value.toUpperCase()"
+            bind:value={quantity}
+            type="text"
+            name="returnValueStorage"
+          />
+
+          <h4>Codigo de Barras da Odf</h4>
           <input
             on:input={blockForbiddenChars}
             class="returnInput"

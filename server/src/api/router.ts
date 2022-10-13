@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { number } from "joi";
 //import assert from "node:assert";
 import mssql from "mssql";
 import { sqlConfig } from "../global.config";
@@ -101,8 +102,6 @@ apiRouter.route("/apontamento")
         if (qtdLib - qntdeJaApontada === 0) {
             return res.status(400).redirect("/#/codigobarras?error=nolimitonlastodf")
         }
-        console.log("qtdLib:", qtdLib);
-        console.log("qntdeJaApontada: ", qntdeJaApontada);
         qtdLibMax = qtdLib - qntdeJaApontada
         console.log(qtdLibMax);
         // Caso seja a primeira Odf, objOdfSelecAnterior vai vir como undefined
@@ -284,9 +283,9 @@ apiRouter.route("/apontamentoCracha")
 
 apiRouter.route("/odf")
     .get(async (req, res) => {
-        let NUMERO_ODF: String = String(req.cookies["NUMERO_ODF"])
-        let CODIGO_MAQUINA: String = String(req.cookies["CODIGO_MAQUINA"])
-        let NUMERO_OPERACAO: String = String(req.cookies["NUMERO_OPERACAO"])
+        let NUMERO_ODF: string = String(req.cookies["NUMERO_ODF"])
+        let CODIGO_MAQUINA: string = String(req.cookies["CODIGO_MAQUINA"])
+        let NUMERO_OPERACAO: string = String(req.cookies["NUMERO_OPERACAO"])
         const connection = await mssql.connect(sqlConfig);
         try {
             const resource = await connection.query(`
@@ -489,20 +488,20 @@ apiRouter.route("/ferselecionadas")
 apiRouter.route("/apontar")
     .post(async (req, res) => {
         const connection = await mssql.connect(sqlConfig);
-        let qtdBoas = req.body['valorFeed']
-        let supervisor = req.body['supervisor']
+        let qtdBoas = req.body['valorFeed'] || 0;
+        let supervisor = req.body['supervisor'] || 0
         let motivorefugo = req.body['value']
-        let badFeed = req.body['badFeed']
-        let missingFeed = req.body['missingFeed']
-        let reworkFeed = req.body['reworkFeed']
-        let parcialFeed = req.body['parcialFeed']
-        //var codigoFilho = req.cookies['codigoFilho']
-        //var reservedItens: string = req.cookies['reservedItens']
+        let badFeed = req.body['badFeed'] || 0
+        let missingFeed = req.body['missingFeed'] || 0
+        let reworkFeed = req.body['reworkFeed'] || 0
+        let parcialFeed = req.body['parcialFeed'] || 0
+        var codigoFilho = req.cookies['codigoFilho']
+        var reservedItens: string = req.cookies['reservedItens']
         let NUMERO_ODF = req.cookies["NUMERO_ODF"]
         let NUMERO_OPERACAO = req.cookies["NUMERO_OPERACAO"]
         let CODIGO_MAQUINA = req.cookies["CODIGO_MAQUINA"]
         let qtdLibMax = req.cookies['qtdLibMax']
-        //let condic = req.cookies['CONDIC']
+        let condic = req.cookies['CONDIC']
         let MAQUINA_PROXIMA = req.cookies['MAQUINA_PROXIMA']
         let OPERACAO_PROXIMA = req.cookies['OPERACAO_PROXIMA']
 
@@ -512,11 +511,11 @@ apiRouter.route("/apontar")
             return input && input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
         }
 
-        qtdBoas = sanitize(req.body["valorFeed"])
-        badFeed = sanitize(req.body["badFeed"])
-        missingFeed = sanitize(req.body["missingFeed"])
-        reworkFeed = sanitize(req.body["reworkFeed"])
-        parcialFeed = sanitize(req.body["parcialFeed"])
+        qtdBoas = sanitize(req.body["valorFeed"]) || 0;
+        badFeed = sanitize(req.body["badFeed"]) || 0;
+        missingFeed = sanitize(req.body["missingFeed"]) || 0;
+        reworkFeed = sanitize(req.body["reworkFeed"]) || 0;
+        parcialFeed = sanitize(req.body["parcialFeed"]) || 0;
         supervisor = sanitize(req.body["supervisor"])
         motivorefugo = sanitize(req.body["value"])
 
@@ -530,7 +529,7 @@ apiRouter.route("/apontar")
         let startProd = req.cookies["startProd"]
         let finalProdTimer = endProdTimer.getTime() - startProd / 1000
 
-        let valorTotalApontado = parseInt(qtdBoas + badFeed + missingFeed + reworkFeed + parcialFeed)
+        let valorTotalApontado: number = parseInt(Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed) + Number(parcialFeed))
 
         //Verifica se a quantidade apontada mão é maior que a quantidade maxima liberada
         if (valorTotalApontado > qtdLibMax) {
@@ -547,89 +546,105 @@ apiRouter.route("/apontar")
                 return res.status(400).json()
             }
         }
-
-        //Insere no banco o tempo levada de produção, inserindo em HISAPONTA, coluna APT_TEMPO
-        await connection.query(`UPDATE HISAPONTA SET APT_TEMPO_OPERACAO = '${finalProdTimer}' WHERE 1 = 1 AND ODF = '618976' AND CAST (LTRIM(NUMOPE) AS INT) = '00040'`)
-
-        //Verifica caso a quantidade seja menor que o valor(assim a produção foi menor que o desejado), e deixa um "S" em apontamento liberado para um possivel apontamento futuro
-        if (valorTotalApontado < qtdLibMax) {
-            await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
-            //console.log('updateProxOdfToS ', updateProxOdfToS);
-        }
-
-        //Verifica o valor e sendo acima de 0 ele libera um "S" no proximo processo
         valorTotalApontado = Number(valorTotalApontado)
         qtdLibMax = Number(qtdLibMax)
         console.log(valorTotalApontado);
-        console.log(qtdLibMax);
-        if (valorTotalApontado <= qtdLibMax) {
-            await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${OPERACAO_PROXIMA}' AND CODIGO_MAQUINA = '${MAQUINA_PROXIMA}'`)
+        try {
+            //Insere no banco o tempo levada de produção, inserindo em HISAPONTA, coluna APT_TEMPO
+            await connection.query(`UPDATE HISAPONTA SET APT_TEMPO_OPERACAO = '${finalProdTimer}' WHERE 1 = 1 AND ODF = '618976' AND CAST (LTRIM(NUMOPE) AS INT) = '00040'`)
+            //Verifica caso a quantidade seja menor que o valor(assim a produção foi menor que o desejado), e deixa um "S" em apontamento liberado para um possivel apontamento futuro
+            if (valorTotalApontado < qtdLibMax) {
+                await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
+            }
+            //Verifica o valor e sendo acima de 0 ele libera um "S" no proximo processo
+            if (valorTotalApontado <= qtdLibMax) {
+                await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${OPERACAO_PROXIMA}' AND CODIGO_MAQUINA = '${MAQUINA_PROXIMA}'`)
+            }
+            //Verifica caso a quantidade apontada pelo usuario seja maior ou igual ao numero que poderia ser lançado, assim lanca um "N" em apontamento para bloquear um proximo apontamento
+            if (valorTotalApontado >= qtdLibMax) {
+                await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'N' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
+            }
+            //Insere a quantidade total
+            if (valorTotalApontado > 0) {
+                await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
+            }
+            //Insere em cada coluna os dados caso haja
+            if (qtdBoas.length > 0) {
+                await connection.query(`UPDATE HISAPONTA SET PC_BOAS = PC_BOAS + '${qtdBoas}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
+            }
+            if (badFeed.length > 0) {
+                await connection.query(`UPDATE HISAPONTA SET PC_REFUGA = PC_REFUGA + '${badFeed}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
+                await connection.query(`UPDATE HISAPONTA SET MOTIVO_REFUGO = '${motivorefugo}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
+            }
+            if (missingFeed.length > 0) {
+                await connection.query(`UPDATE HISAPONTA SET CST_PC_FALTANTE = CST_PC_FALTANTE + '${missingFeed}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
+            }
+            if (reworkFeed.length > 0) {
+                await connection.query(`UPDATE HISAPONTA SET CST_QTD_RETRABALHADA = CST_QTD_RETRABALHADA + '${reworkFeed}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
+            }
+
+            //Insere na HISAPONTA o CODAPONTA de final de produção
+            await connection.query(`UPDATE HISAPONTA SET CODAPONTA = '3' WHERE 1 = 1 AND ODF = '618976' AND CAST (LTRIM(NUMOPE) AS INT) = '00040'`)
+
+            //Seta quantidade apontada da odf para o quanto o usuario diz ser
+            //await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
+
+            NUMERO_OPERACAO = String(NUMERO_OPERACAO)
+            //Caso a operação seja 999 fara baixa no estoque
+            if (NUMERO_OPERACAO === "999") {
+                // const updateProxOdfToS = await connection.query(`UPDATE CST_ALOCACAO SET QUANTIDADE = '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
+            }
+
+            //Caso haja "P" faz update na quantidade de peças dos filhos
+            if (condic.length > 0) {
+                console.log("ok")
+            } else {
+                try {
+                    // Loop para atualizar os dados no DB
+                    const updateQtyQuery = [];
+                    const updateQtyRes = [];
+
+                    for (const [i, qtdItem] of reservedItens.entries()) {
+                        updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
+                    }
+                    const updateQty = await connection.query(updateQtyQuery.join("\n"));
+                    console.log("updateQty: linha 510", updateQty)
+
+                    for (const [i, qtdItem] of reservedItens.entries()) {
+                        updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
+                    }
+                    const updateRes = await connection.query(updateQtyRes.join("\n"));
+                    console.log("updateRes: linha 517", updateRes)
+
+                    return res.status(200).redirect(`/#/rip`)
+                } catch (err) {
+                    console.log("Erro:135", err)
+                    return res.status(400).redirect("/#/codigobarras/apontamento")
+                }
+            }
+            return res.status(200).json()
+            // try {
+
+            //     // if (CST_PC_FALTANTE > 0 || CST_QTD_RETRABALHADA > 0) {
+            //     const insertSqlRework = await connection.query('INSERT INTO HISAPONTA(CST_PC_FALTANTE, CST_QTD_RETRABALHADA) VALUES (' + CST_PC_FALTANTE + ',' + CST_QTD_RETRABALHADA + ')')
+            //     console.log(insertSqlRework)
+            //     // } else {0
+
+            //     const insertSql = await connection.query('INSERT INTO PCP_PROGRAMACAO_PRODUCAO(NUMERO_ODF,NUMERO_OPERACAO,CODIGO_MAQUINA,EMPRESA_RECNO, QTDE_APONTADA, QTD_REFUGO) VALUES (' + NUMERO_ODF + ',' + NUMERO_OPERACAO + ',' + CODIGO_MAQUINA + ',' + EMPRESA_RECNO + ',' + QTDE_APONTADA + ',' + QTD_REFUGO + ')')
+            //     console.log(insertSql)
+            //     // }
+
+            //     const insertSqlTimer = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + finalProdTimer + ')')
+            //     console.log(insertSqlTimer)
+            //     res.status(200).redirect(`/#/rip`)
+            // } catch (error) {
+            //     res.redirect(`/#/codigobarras/apontamento?erro=apontamentoInvalido`)
+            // } 
+        } catch {
+            return res.status(400).json()
+        } finally {
+            await connection.close()
         }
-
-        //Verifica caso a quantidade apontada pelo usuario seja maior ou igual ao numero que poderia ser lançado, assim lanca um "N" em apontamento para bloquear um proximo apontamento
-        if (valorTotalApontado >= qtdLibMax) {
-            await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'N' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
-        }
-
-        //Insere na HISAPONTA o CODAPONTA de final de produção
-        await connection.query(`UPDATE HISAPONTA SET CODAPONTA = '3' WHERE 1 = 1 AND ODF = '618976' AND CAST (LTRIM(NUMOPE) AS INT) = '00040'`)
-
-        //Seta quantidade apontada da odf para o quanto o usuario diz ser
-        await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
-
-        NUMERO_OPERACAO = String(NUMERO_OPERACAO)
-        //Caso a operação seja 999 fara baixa no estoque
-        if (NUMERO_OPERACAO === "999") {
-            // const updateProxOdfToS = await connection.query(`UPDATE CST_ALOCACAO SET QUANTIDADE = '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
-        }
-
-        //Caso haja "P" faz update na quantidade de peças dos filhos
-        // if (condic.length > 0) {
-        //     console.log("ok")
-        // } else {
-        //     try {
-        //         // Loop para atualizar os dados no DB
-        //         const updateQtyQuery = [];
-        //         const updateQtyRes = [];
-
-        //         for (const [i, qtdItem] of reservedItens.entries()) {
-        //             updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
-        //         }
-        //         const updateQty = await connection.query(updateQtyQuery.join("\n"));
-        //         console.log("updateQty: linha 510", updateQty)
-
-        //         for (const [i, qtdItem] of reservedItens.entries()) {
-        //             updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
-        //         }
-        //         const updateRes = await connection.query(updateQtyRes.join("\n"));
-        //         console.log("updateRes: linha 517", updateRes)
-
-        //         return res.status(200).redirect(`/#/rip`)
-        //     } catch (err) {
-        //         console.log("Erro:135", err)
-        //         return res.status(400).redirect("/#/codigobarras/apontamento")
-        //     }
-        // }
-        return res.status(200).json()
-        // try {
-
-        //     // if (CST_PC_FALTANTE > 0 || CST_QTD_RETRABALHADA > 0) {
-        //     const insertSqlRework = await connection.query('INSERT INTO HISAPONTA(CST_PC_FALTANTE, CST_QTD_RETRABALHADA) VALUES (' + CST_PC_FALTANTE + ',' + CST_QTD_RETRABALHADA + ')')
-        //     console.log(insertSqlRework)
-        //     // } else {0
-
-        //     const insertSql = await connection.query('INSERT INTO PCP_PROGRAMACAO_PRODUCAO(NUMERO_ODF,NUMERO_OPERACAO,CODIGO_MAQUINA,EMPRESA_RECNO, QTDE_APONTADA, QTD_REFUGO) VALUES (' + NUMERO_ODF + ',' + NUMERO_OPERACAO + ',' + CODIGO_MAQUINA + ',' + EMPRESA_RECNO + ',' + QTDE_APONTADA + ',' + QTD_REFUGO + ')')
-        //     console.log(insertSql)
-        //     // }
-
-        //     const insertSqlTimer = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + finalProdTimer + ')')
-        //     console.log(insertSqlTimer)
-        //     res.status(200).redirect(`/#/rip`)
-        // } catch (error) {
-        //     res.redirect(`/#/codigobarras/apontamento?erro=apontamentoInvalido`)
-        // } finally {
-        //     await connection.close()
-        // }
     }
     )
 
@@ -751,12 +766,31 @@ apiRouter.route("/returnedValue")
         let NUMERO_OPERACAO: string = req.cookies["NUMERO_OPERACAO"]
         let supervisor = req.body['supervisor']
 
-        function sanitize(input?: string) {
+        req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
+        let barcode = req.body["codigoBarras"]
+
+        //Sanitização
+        function sanitize(input: string) {
             const allowedChars = /[A-Za-z0-9]/;
-            return input && input
-                .split("")
-                .map((char) => (allowedChars.test(char) ? char : ""))
-                .join("");
+            return input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
+        }
+
+        //Verifica se o codigo de barras veio vazio
+        if (barcode == '') {
+            res.status(400).redirect("/#/codigobarras?error=invalidBarcode")
+        }
+
+        //Divide o Codigo de barras em 3 partes para a verificação na proxima etapa
+        const dados = {
+            numOdf: Number(barcode.slice(10)),
+            numOper: String(barcode.slice(0, 5)),
+            codMaq: String(barcode.slice(5, 10)),
+        }
+        //Reatribuiu o codigo caso o cado de barras seja maior
+        if (barcode.length > 17) {
+            dados.numOdf = barcode.slice(11)
+            dados.numOper = barcode.slice(0, 5)
+            dados.codMaq = barcode.slice(5, 11)
         }
 
         quantity = sanitize(req.body["quantity"])

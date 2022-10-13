@@ -82,8 +82,6 @@ apiRouter.route("/apontamento")
     if (qtdLib - qntdeJaApontada === 0) {
         return res.status(400).redirect("/#/codigobarras?error=nolimitonlastodf");
     }
-    console.log("qtdLib:", qtdLib);
-    console.log("qntdeJaApontada: ", qntdeJaApontada);
     qtdLibMax = qtdLib - qntdeJaApontada;
     console.log(qtdLibMax);
     if (!objOdfSelecAnterior) {
@@ -440,28 +438,31 @@ apiRouter.route("/ferselecionadas")
 apiRouter.route("/apontar")
     .post(async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let qtdBoas = req.body['valorFeed'];
-    let supervisor = req.body['supervisor'];
+    let qtdBoas = req.body['valorFeed'] || 0;
+    let supervisor = req.body['supervisor'] || 0;
     let motivorefugo = req.body['value'];
-    let badFeed = req.body['badFeed'];
-    let missingFeed = req.body['missingFeed'];
-    let reworkFeed = req.body['reworkFeed'];
-    let parcialFeed = req.body['parcialFeed'];
+    let badFeed = req.body['badFeed'] || 0;
+    let missingFeed = req.body['missingFeed'] || 0;
+    let reworkFeed = req.body['reworkFeed'] || 0;
+    let parcialFeed = req.body['parcialFeed'] || 0;
+    var codigoFilho = req.cookies['codigoFilho'];
+    var reservedItens = req.cookies['reservedItens'];
     let NUMERO_ODF = req.cookies["NUMERO_ODF"];
     let NUMERO_OPERACAO = req.cookies["NUMERO_OPERACAO"];
     let CODIGO_MAQUINA = req.cookies["CODIGO_MAQUINA"];
     let qtdLibMax = req.cookies['qtdLibMax'];
+    let condic = req.cookies['CONDIC'];
     let MAQUINA_PROXIMA = req.cookies['MAQUINA_PROXIMA'];
     let OPERACAO_PROXIMA = req.cookies['OPERACAO_PROXIMA'];
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
         return input && input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
     }
-    qtdBoas = sanitize(req.body["valorFeed"]);
-    badFeed = sanitize(req.body["badFeed"]);
-    missingFeed = sanitize(req.body["missingFeed"]);
-    reworkFeed = sanitize(req.body["reworkFeed"]);
-    parcialFeed = sanitize(req.body["parcialFeed"]);
+    qtdBoas = sanitize(req.body["valorFeed"]) || 0;
+    badFeed = sanitize(req.body["badFeed"]) || 0;
+    missingFeed = sanitize(req.body["missingFeed"]) || 0;
+    reworkFeed = sanitize(req.body["reworkFeed"]) || 0;
+    parcialFeed = sanitize(req.body["parcialFeed"]) || 0;
     supervisor = sanitize(req.body["supervisor"]);
     motivorefugo = sanitize(req.body["value"]);
     let startRip = new Date();
@@ -470,7 +471,7 @@ apiRouter.route("/apontar")
     let endProdTimer = new Date();
     let startProd = req.cookies["startProd"];
     let finalProdTimer = endProdTimer.getTime() - startProd / 1000;
-    let valorTotalApontado = parseInt(qtdBoas + badFeed + missingFeed + reworkFeed + parcialFeed);
+    let valorTotalApontado = parseInt(Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed) + Number(parcialFeed));
     if (valorTotalApontado > qtdLibMax) {
         return res.status(400).json();
     }
@@ -483,26 +484,72 @@ apiRouter.route("/apontar")
             return res.status(400).json();
         }
     }
-    await connection.query(`UPDATE HISAPONTA SET APT_TEMPO_OPERACAO = '${finalProdTimer}' WHERE 1 = 1 AND ODF = '618976' AND CAST (LTRIM(NUMOPE) AS INT) = '00040'`);
-    if (valorTotalApontado < qtdLibMax) {
-        await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
-    }
     valorTotalApontado = Number(valorTotalApontado);
     qtdLibMax = Number(qtdLibMax);
     console.log(valorTotalApontado);
-    console.log(qtdLibMax);
-    if (valorTotalApontado <= qtdLibMax) {
-        await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${OPERACAO_PROXIMA}' AND CODIGO_MAQUINA = '${MAQUINA_PROXIMA}'`);
+    try {
+        await connection.query(`UPDATE HISAPONTA SET APT_TEMPO_OPERACAO = '${finalProdTimer}' WHERE 1 = 1 AND ODF = '618976' AND CAST (LTRIM(NUMOPE) AS INT) = '00040'`);
+        if (valorTotalApontado < qtdLibMax) {
+            await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
+        }
+        if (valorTotalApontado <= qtdLibMax) {
+            await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${OPERACAO_PROXIMA}' AND CODIGO_MAQUINA = '${MAQUINA_PROXIMA}'`);
+        }
+        if (valorTotalApontado >= qtdLibMax) {
+            await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'N' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
+        }
+        if (valorTotalApontado > 0) {
+            await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
+        }
+        if (qtdBoas.length > 0) {
+            await connection.query(`UPDATE HISAPONTA SET PC_BOAS = PC_BOAS + '${qtdBoas}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
+        }
+        if (badFeed.length > 0) {
+            await connection.query(`UPDATE HISAPONTA SET PC_REFUGA = PC_REFUGA + '${badFeed}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
+            await connection.query(`UPDATE HISAPONTA SET MOTIVO_REFUGO = '${motivorefugo}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
+        }
+        if (missingFeed.length > 0) {
+            await connection.query(`UPDATE HISAPONTA SET CST_PC_FALTANTE = CST_PC_FALTANTE + '${missingFeed}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
+        }
+        if (reworkFeed.length > 0) {
+            await connection.query(`UPDATE HISAPONTA SET CST_QTD_RETRABALHADA = CST_QTD_RETRABALHADA + '${reworkFeed}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
+        }
+        await connection.query(`UPDATE HISAPONTA SET CODAPONTA = '3' WHERE 1 = 1 AND ODF = '618976' AND CAST (LTRIM(NUMOPE) AS INT) = '00040'`);
+        NUMERO_OPERACAO = String(NUMERO_OPERACAO);
+        if (NUMERO_OPERACAO === "999") {
+        }
+        if (condic.length > 0) {
+            console.log("ok");
+        }
+        else {
+            try {
+                const updateQtyQuery = [];
+                const updateQtyRes = [];
+                for (const [i, qtdItem] of reservedItens.entries()) {
+                    updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
+                }
+                const updateQty = await connection.query(updateQtyQuery.join("\n"));
+                console.log("updateQty: linha 510", updateQty);
+                for (const [i, qtdItem] of reservedItens.entries()) {
+                    updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
+                }
+                const updateRes = await connection.query(updateQtyRes.join("\n"));
+                console.log("updateRes: linha 517", updateRes);
+                return res.status(200).redirect(`/#/rip`);
+            }
+            catch (err) {
+                console.log("Erro:135", err);
+                return res.status(400).redirect("/#/codigobarras/apontamento");
+            }
+        }
+        return res.status(200).json();
     }
-    if (valorTotalApontado >= qtdLibMax) {
-        await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'N' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
+    catch {
+        return res.status(400).json();
     }
-    await connection.query(`UPDATE HISAPONTA SET CODAPONTA = '3' WHERE 1 = 1 AND ODF = '618976' AND CAST (LTRIM(NUMOPE) AS INT) = '00040'`);
-    await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
-    NUMERO_OPERACAO = String(NUMERO_OPERACAO);
-    if (NUMERO_OPERACAO === "999") {
+    finally {
+        await connection.close();
     }
-    return res.status(200).json();
 });
 apiRouter.route("/rip")
     .get(async (req, res) => {
@@ -607,12 +654,24 @@ apiRouter.route("/returnedValue")
     let CODIGO_MAQUINA = req.cookies["CODIGO_MAQUINA"];
     let NUMERO_OPERACAO = req.cookies["NUMERO_OPERACAO"];
     let supervisor = req.body['supervisor'];
+    req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
+    let barcode = req.body["codigoBarras"];
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
-        return input && input
-            .split("")
-            .map((char) => (allowedChars.test(char) ? char : ""))
-            .join("");
+        return input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
+    }
+    if (barcode == '') {
+        res.status(400).redirect("/#/codigobarras?error=invalidBarcode");
+    }
+    const dados = {
+        numOdf: Number(barcode.slice(10)),
+        numOper: String(barcode.slice(0, 5)),
+        codMaq: String(barcode.slice(5, 10)),
+    };
+    if (barcode.length > 17) {
+        dados.numOdf = barcode.slice(11);
+        dados.numOper = barcode.slice(0, 5);
+        dados.codMaq = barcode.slice(5, 11);
     }
     quantity = sanitize(req.body["quantity"]);
     supervisor = sanitize(req.body["supervisor"]);
