@@ -48,6 +48,7 @@ apiRouter.route("/apontamento")
         ORDER BY NUMERO_OPERACAO ASC
                         `.trim()
         ).then(result => result.recordset)
+
         if (queryGrupoOdf.length <= 0) {
             return res.status(400).redirect("/#/codigobarras")
         }
@@ -102,7 +103,6 @@ apiRouter.route("/apontamento")
             return res.status(400).redirect("/#/codigobarras?error=nolimitonlastodf")
         }
         qtdLibMax = qtdLib - qntdeJaApontada
-        console.log(qtdLibMax);
         // Caso seja a primeira Odf, objOdfSelecAnterior vai vir como undefined
         if (!objOdfSelecAnterior) {
             await connection.query(`
@@ -115,26 +115,6 @@ apiRouter.route("/apontamento")
             AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' 
             AND CODIGO_MAQUINA = '${dados.codMaq}'`)
         }
-
-        //Select para identificar se há o "P"
-        const processoTemP = await connection.query(`
-        SELECT
-        NUMPEC, 
-        NUMOPE, 
-        NUMSEQ, 
-        MAQUIN, 
-        NUMITE, 
-        CONDIC
-        FROM
-        OPERACAO
-        WHERE 1 = 1 
-        AND [CONDIC] = 'P'
-        AND [NUMPEC] = '${objOdfSelecionada['CODIGO_PECA']}'
-        `).then(result => result.recordset)
-
-        if (processoTemP.length > 0) {
-            res.cookie("CONDIC", processoTemP)
-        }
         res.cookie('qtdLibMax', qtdLibMax)
         res.cookie("MAQUINA_PROXIMA", codigoMaquinaProxOdf)
         res.cookie("OPERACAO_PROXIMA", codMaqProxOdf)
@@ -143,13 +123,13 @@ apiRouter.route("/apontamento")
         res.cookie("CODIGO_MAQUINA", objOdfSelecionada['CODIGO_MAQUINA'])
         res.cookie("NUMERO_OPERACAO", objOdfSelecionada['NUMERO_OPERACAO'])
         res.cookie("REVISAO", objOdfSelecionada['REVISAO'])
-        if (processoTemP.length > 0) {
-            try {
-                //Seleciona as peças filhas, a quantidade para execução e o estoque dos itens
-                const resource2 = await connection.query(`
+        try {
+            //Seleciona as peças filhas, a quantidade para execução e o estoque dos itens
+            const resource2 = await connection.query(`
                         SELECT DISTINCT                 
                            OP.NUMITE,                 
-                           CAST(OP.EXECUT AS INT) AS EXECUT,       
+                           CAST(OP.EXECUT AS INT) AS EXECUT,
+                           CONDIC,       
                            CAST(E.SALDOREAL AS INT) AS SALDOREAL,                 
                            CAST(((E.SALDOREAL - ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO AND CA.ODF = PCP.NUMERO_ODF),0)) / ISNULL(OP.EXECUT,0)) AS INT) AS QTD_LIBERADA_PRODUZIR,
                            ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO),0) as saldo_alocado
@@ -163,9 +143,11 @@ apiRouter.route("/apontamento")
                            AND OP.CONDIC ='P'                 
                            AND PCP.NUMERO_ODF = '${dados.numOdf}'    
                         `.trim()
-                ).then(result => result.recordset)
-                console.log("resource2:78", resource2)
-
+            ).then(result => result.recordset)
+            if (resource2.length > 0) {
+                res.cookie("CONDIC", resource2[0].CONDIC)
+                let codigoNumite = resource2.map(e => e.NUMITE)
+                res.cookie("NUMITE", codigoNumite)
                 /**
                  * Calcula quantas peças pai podem ser produzidas com o estoque atual de componentes
                  */
@@ -186,10 +168,8 @@ apiRouter.route("/apontamento")
                 //Map na quantidade de itens para execução e map do estoque
                 const execut = resource2.map(item => item.EXECUT);
                 const saldoReal = resource2.map(item => item.SALDOREAL);
-                console.log("execut:99", execut, "saldoReal:99", saldoReal)
 
                 let qtdTotal = calMaxQuant(execut, saldoReal);
-                console.log("qtdTotal", qtdTotal)
 
                 //Retorna um array com a quantidade de itens total da execução
                 const reservedItens = execut.map((quantItens) => {
@@ -206,36 +186,26 @@ apiRouter.route("/apontamento")
                     return resultadoFinalProducao
                 }
                 res.cookie("resultadoFinalProducao", resultadoFinalProducao)
-                try {
-                    // Loop para atualizar os dados no DB
-                    const updateQtyQuery = [];
-                    const updateQtyRes = [];
+                // Loop para atualizar os dados no DB
+                const updateQtyQuery = [];
+                const updateQtyRes = [];
 
-                    for (const [i, qtdItem] of reservedItens.entries()) {
-                        updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
-                    }
-                    const updateQty = await connection.query(updateQtyQuery.join("\n"));
-
-
-                    for (const [i, qtdItem] of reservedItens.entries()) {
-                        updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
-                    }
-                    const updateRes = await connection.query(updateQtyRes.join("\n"));
-
-                    console.log("updateQty: linha 122", updateQty)
-                    console.log("updateRes: linha 123", updateRes);
-                    return res.status(200).redirect("/#/codigobarras?red=red")
-                } catch (err) {
-                    console.log("Erro:135", err)
-                    return res.status(400).redirect("/#/codigobarras?error=invalidBarcode")
+                for (const [i, qtdItem] of reservedItens.entries()) {
+                    updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
                 }
-            } catch (error) {
-                console.log("erro linha 138", error)
-                return res.status(400).redirect("/#/codigobarras?error=invalidBarcode")
-            } finally {
-                await connection.close()
+                await connection.query(updateQtyQuery.join("\n"));
+
+
+                for (const [i, qtdItem] of reservedItens.entries()) {
+                    updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
+                }
+                await connection.query(updateQtyRes.join("\n"));
+                return res.status(400).redirect("/#/ferramenta?status=pdoesntexists")
             }
-        } else {
+        } catch (error) {
+            return res.status(400).redirect("/#/codigobarras")
+        } finally {
+            await connection.close()
             return res.status(400).redirect("/#/ferramenta?status=pdoesntexists")
         }
     })
@@ -289,6 +259,9 @@ apiRouter.route("/odf")
         try {
             const resource = await connection.query(`
                 SELECT TOP 1
+                [NUMERO_ODF],
+                [NUMERO_OPERACAO],
+                [CODIGO_MAQUINA],
                 [CODIGO_CLIENTE],
                 [QTDE_ODF],
                 [CODIGO_PECA],
@@ -307,6 +280,7 @@ apiRouter.route("/odf")
                 AND [NUMERO_OPERACAO] = ${NUMERO_OPERACAO}
                 ORDER BY NUMERO_OPERACAO ASC`.trim()).then(result => result.recordset);
             res.cookie("qtdProduzir", resource[0].QTDE_ODF)
+            //console.log('resource: LINHA 303  ', resource);
             res.json(resource);
         } catch (error) {
             console.log(error);
@@ -412,12 +386,8 @@ apiRouter.route("/ferramenta")
         let funcionario: string = req.cookies['FUNCIONARIO']
         let revisao = req.cookies['REVISAO']
         let qtdLibMax = req.cookies['qtdLibMax']
-
-        //Inicia a produção
-        let startProd = new Date();
-        let newStartProd: number = startProd.getMilliseconds() / 1000
-        res.cookie("startProd", newStartProd)
         let ferramenta = "_ferr"
+        let start = req.cookies["starterBarcode"]
         try {
             const resource = await connection.query(`
                 SELECT
@@ -440,32 +410,7 @@ apiRouter.route("/ferramenta")
             INSERT INTO 
             HISAPONTA
             (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-            VALUES(GETDATE(),'${funcionario}','${numero_odf}','${codigoPeca}','${revisao}',${numeroOperacao},${numeroOperacao}, 'D','${codigoMaq}','${qtdLibMax}','0','0','${funcionario}','0','1', '1', 'Setup Ini.','${newStartProd}','${newStartProd}', '1', '0','0')`)
-                .then(result => result.recordset)
-
-            if (resource.length <= 0) {
-                //Encerra o primeiro tempo de setup
-                let end = new Date();
-                let newEnd = end.getMilliseconds() / 1000;
-                let start = req.cookies["starterBarcode"]
-                let final: number = newEnd - start
-
-                //INSERE EM CODAPONTA 2
-                await connection.query(`
-            INSERT INTO 
-            HISAPONTA
-            (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-            VALUES(GETDATE(),'${funcionario}','${numero_odf}','${codigoPeca}','${revisao}',${numeroOperacao},${numeroOperacao}, 'D','${codigoMaq}','${qtdLibMax}','0','0','${funcionario}','0','2', '2', 'Setup Fin.','${newStartProd}','${newStartProd}', '1', '0','0')`)
-                    .then(result => result.recordset)
-            } else {
-                //INSERE EM CODAPONTA 2
-                await connection.query(`
-            INSERT INTO 
-            HISAPONTA
-            (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-            VALUES(GETDATE(),'${funcionario}','${numero_odf}','${codigoPeca}','${revisao}',${numeroOperacao},${numeroOperacao}, 'D','${codigoMaq}','${qtdLibMax}','0','0','${funcionario}','0','2', '2', 'Setup Fin.','${newStartProd}','${newStartProd}', '1', '0','0')`)
-                    .then(result => result.recordset)
-            }
+            VALUES(GETDATE(),'${funcionario}','${numero_odf}','${codigoPeca}','${revisao}',${numeroOperacao},${numeroOperacao}, 'D','${codigoMaq}','${qtdLibMax}','0','0','${funcionario}','0','1', '1', 'Setup Ini.','${start}','${start}', '1', '0','0')`)
             return res.status(200).json(result);
         } catch (error) {
             console.log(error)
@@ -485,19 +430,31 @@ apiRouter.route("/ferselecionadas")
         let funcionario: string = String(req.cookies['FUNCIONARIO'])
         let revisao = req.cookies['REVISAO']
         let qtdLibMax = req.cookies['qtdLibMax']
+
+        //Encerra o primeiro tempo de setup
+        let end = new Date();
+        let newEnd = end.getMilliseconds() / 1000;
+        let start = req.cookies["starterBarcode"]
+        let final: number = newEnd - start
+
+        //Inicia a produção
+        let startProd = new Date();
+        let newStartProd: number = startProd.getMilliseconds() / 1000
+        res.cookie("startProd", newStartProd)
         try {
-            //Encerra o primeiro tempo de setup e insera CODAPONTA 1 E 2 caso haja ferramenta
-            let end = new Date();
-            let newEnd = end.getMilliseconds() / 1000;
-            let start = req.cookies["starterBarcode"] / 1000
-            let final: number = Number(newEnd) - Number(start)
+            //INSERE EM CODAPONTA 2
+            await connection.query(`
+            INSERT INTO 
+            HISAPONTA
+            (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
+            VALUES(GETDATE(),'${funcionario}','${numero_odf}','${codigoPeca}','${revisao}',${numeroOperacao},${numeroOperacao}, 'D','${codigoMaq}','${qtdLibMax}','0','0','${funcionario}','0','2', '2', 'Setup Fin.','${final}','${final}', '1', '0','0')`)
 
             //INSERE EM CODAPONTA 3
             await connection.query(`
             INSERT INTO 
             HISAPONTA
             (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-            VALUES(GETDATE(),'${funcionario}','${numero_odf}','${codigoPeca}','${revisao}',${numeroOperacao},${numeroOperacao}, 'D','${codigoMaq}','${qtdLibMax}','0','0','${funcionario}','0','3', '3', 'Ini Prod.','${final}','${final}', '1', '0','0')`)
+            VALUES(GETDATE(),'${funcionario}','${numero_odf}','${codigoPeca}','${revisao}',${numeroOperacao},${numeroOperacao}, 'D','${codigoMaq}','${qtdLibMax}','0','0','${funcionario}','0','3', '3', 'Ini Prod.','${newStartProd}','${newStartProd}', '1', '0','0')`)
                 .then(result => result.recordset)
             return res.status(200).json()
         } catch (error) {
@@ -514,13 +471,13 @@ apiRouter.route("/apontar")
         const connection = await mssql.connect(sqlConfig);
         let qtdBoas = req.body['valorFeed'] || 0;
         let supervisor = req.body['supervisor'] || 0
-        let motivorefugo = req.body['value']
+        let motivorefugo = req.body['value'] || null
         let badFeed = req.body['badFeed'] || 0
         let missingFeed = req.body['missingFeed'] || 0
         let reworkFeed = req.body['reworkFeed'] || 0
         let parcialFeed = req.body['parcialFeed'] || 0
         var codigoFilho = req.cookies['codigoFilho']
-        var reservedItens: string = req.cookies['reservedItens']
+        var reservedItens: number[] = req.cookies['reservedItens']
         let NUMERO_ODF = req.cookies["NUMERO_ODF"]
         let NUMERO_OPERACAO = req.cookies["NUMERO_OPERACAO"]
         let codigoPeca = req.cookies['CODIGO_PECA']
@@ -544,7 +501,7 @@ apiRouter.route("/apontar")
         reworkFeed = sanitize(req.body["reworkFeed"]) || 0;
         parcialFeed = sanitize(req.body["parcialFeed"]) || 0;
         supervisor = sanitize(req.body["supervisor"])
-        motivorefugo = sanitize(req.body["value"])
+        motivorefugo = sanitize(req.body["value"]) || null
 
         //Inicia tempo de Rip
         let startRip = new Date();
@@ -557,6 +514,10 @@ apiRouter.route("/apontar")
         let finalProdTimer = endProdTimer.getTime() - startProd / 1000;
 
         let valorTotalApontado: number = parseInt(Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed) + Number(parcialFeed))
+
+        if (motivorefugo === undefined) {
+            motivorefugo = null
+        }
 
         //Verifica se a quantidade apontada mão é maior que a quantidade maxima liberada
         if (valorTotalApontado > qtdLibMax) {
@@ -573,7 +534,6 @@ apiRouter.route("/apontar")
                 return res.status(400).json()
             }
         }
-
         valorTotalApontado = Number(valorTotalApontado)
         qtdLibMax = Number(qtdLibMax)
         try {
@@ -593,16 +553,11 @@ apiRouter.route("/apontar")
 
             //Seta quantidade apontada da odf para o quanto o usuario diz ser(PCP_PROGRAMACAO_PRODUCAO)
             await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
-    
+
             // Insere o CODAPONTA 4, O tempo de produção e as quantidades boas, ruins, retrabalhadas e faltantes(HISAPONTA) 
             await connection.query(`
-            INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-            VALUES(GETDATE(), '${funcionario}' , '${NUMERO_ODF}' , '${codigoPeca}' , '${revisao}' , ${NUMERO_OPERACAO} ,${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '4' , '4', 'Fin Prod.' , '${finalProdTimer}' , '${finalProdTimer}' , '1', '0','0')`)
-                .then(result => result.recordset)
-
-            if (badFeed.length > 0) {
-                await connection.query(`UPDATE HISAPONTA SET MOTIVO_REFUGO = 'MOTIVOS' WHERE 1 = 1 AND ODF = '1444591' AND CAST (LTRIM(PECA) AS INT) = '15990007' AND ITEM = 'QUA002'  AND USUARIO = 'CESAR'`)
-            }
+            INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, MOTIVO_REFUGO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
+            VALUES(GETDATE(), '${funcionario}' , '${NUMERO_ODF}' , '${codigoPeca}' , '${revisao}' , ${NUMERO_OPERACAO} ,${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '4' , '4', 'Fin Prod.' , '${finalProdTimer}' , '${finalProdTimer}' , '1', UPPER('${motivorefugo}') ,'0','0')`)
 
             //Caso a operação seja 999 fara baixa no estoque
             NUMERO_OPERACAO = String(NUMERO_OPERACAO)
@@ -610,51 +565,33 @@ apiRouter.route("/apontar")
                 // const updateProxOdfToS = await connection.query(`UPDATE CST_ALOCACAO SET QUANTIDADE = '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
             }
 
+            if (condic === undefined || condic === null) {
+                condic = 0;
+                codigoFilho = 0;
+            }
+
             //Caso haja "P" faz update na quantidade de peças dos filhos
-            // if (condic.length > 0) {
-            //     console.log("ok")
-            // } else {
-            //     try {
-            //         // Loop para atualizar os dados no DB
-            //         const updateQtyQuery = [];
-            //         const updateQtyRes = [];
+            if (condic === 'P') {
+                try {
+                    // Loop para atualizar os dados no DB
+                    const updateQtyQuery = [];
+                    //const updateQtyRes = [];
+                    for (const [i, qtdItem] of reservedItens.entries()) {
+                        updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
+                    }
+                    const res = await connection.query(updateQtyQuery.join("\n"))
+                    console.log('res:  ', res);
 
-            //         for (const [i, qtdItem] of reservedItens.entries()) {
-            //             updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
-            //         }
-            //         const updateQty = await connection.query(updateQtyQuery.join("\n"));
-            //         console.log("updateQty: linha 510", updateQty)
-
-            //         for (const [i, qtdItem] of reservedItens.entries()) {
-            //             updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
-            //         }
-            //         const updateRes = await connection.query(updateQtyRes.join("\n"));
-            //         console.log("updateRes: linha 517", updateRes)
-
-            //         return res.status(200).redirect(`/#/rip`)
-            //     } catch (err) {
-            //         console.log("Erro:135", err)
-            //         return res.status(400).redirect("/#/codigobarras/apontamento")
-            //     }
-            // }
+                    // for (const [i, qtdItem] of reservedItens.entries()) {
+                    //     updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
+                    // }
+                    // const resultQuery = await connection.query(updateQtyRes.join("\n")).then(result => result.recordset);
+                    // console.log('resultQuery: ', resultQuery);
+                } catch (err) {
+                    return res.status(400).redirect("/#/codigobarras/apontamento")
+                }
+            }
             return res.status(200).json()
-            // try {
-
-            //     // if (CST_PC_FALTANTE > 0 || CST_QTD_RETRABALHADA > 0) {
-            //     const insertSqlRework = await connection.query('INSERT INTO HISAPONTA(CST_PC_FALTANTE, CST_QTD_RETRABALHADA) VALUES (' + CST_PC_FALTANTE + ',' + CST_QTD_RETRABALHADA + ')')
-            //     console.log(insertSqlRework)
-            //     // } else {0
-
-            //     const insertSql = await connection.query('INSERT INTO PCP_PROGRAMACAO_PRODUCAO(NUMERO_ODF,NUMERO_OPERACAO,CODIGO_MAQUINA,EMPRESA_RECNO, QTDE_APONTADA, QTD_REFUGO) VALUES (' + NUMERO_ODF + ',' + NUMERO_OPERACAO + ',' + CODIGO_MAQUINA + ',' + EMPRESA_RECNO + ',' + QTDE_APONTADA + ',' + QTD_REFUGO + ')')
-            //     console.log(insertSql)
-            //     // }
-
-            //     const insertSqlTimer = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + finalProdTimer + ')')
-            //     console.log(insertSqlTimer)
-            //     res.status(200).redirect(`/#/rip`)
-            // } catch (error) {
-            //     res.redirect(`/#/codigobarras/apontamento?erro=apontamentoInvalido`)
-            // } 
         } catch {
             return res.status(400).json()
         } finally {
@@ -666,12 +603,12 @@ apiRouter.route("/apontar")
 apiRouter.route("/rip")
     .get(async (req, res) => {
         const connection = await mssql.connect(sqlConfig);
-        let numpec: string = req.cookies["CODIGO_PECA"]
-        let revisao: string = req.cookies['REVISAO']
+        let numpec: string = String(req.cookies["CODIGO_PECA"])
+        let revisao: string = String(req.cookies['REVISAO'])
 
         //Inicia tempo de Rip
         let startRip = new Date();
-        let ripMiliseg: number = startRip.getMilliseconds() / 1000;
+        let ripMiliseg: number = Number(startRip.getMilliseconds() / 1000);
         res.cookie("startRip", ripMiliseg)
         try {
             const resource = await connection.query(`
@@ -713,7 +650,11 @@ apiRouter.route("/lancamentoRip")
         let NUMERO_ODF = req.cookies['NUMERO_ODF']
         let NUMERO_OPERACAO = req.cookies['NUMERO_OPERACAO']
         let CODIGO_MAQUINA = req.cookies['CODIGO_MAQUINA']
+        let codigoPeca = req.cookies['CODIGO_PECA']
         let SETUP = req.body.SETUP.trim()
+        let funcionario = req.cookies['FUNCIONARIO']
+        let revisao = req.cookies['REVISAO']
+        let qtdLibMax = req.cookies['qtdLibMax']
         let M2 = req.body["M2"].trim()
         let M3 = req.body["M3"].trim()
         let M4 = req.body["M4"].trim()
@@ -738,25 +679,21 @@ apiRouter.route("/lancamentoRip")
 
         //Encerra o processo todo
         let end = new Date();
-        let newNemEnd: number = end.getMilliseconds() / 1000;
-        let start = req.cookies["starterBarcode"]
-        let final: number = newNemEnd - start
-        const insertSqlTimerq = await connection.query(`UPDATE HISAPONTA SET APT_TEMPO_OPERACAO = APT_TEMPO_OPERACAO + '${final}'  WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND NUMOPE = '${NUMERO_OPERACAO}' AND ITEM = '${CODIGO_MAQUINA}'`)
-        console.log("insertSqlTimer: linha 551", insertSqlTimerq);
+        let newNemEnd: number = Number(end.getMilliseconds() / 1000);
+        let start: number = req.cookies["starterBarcode"]
+        let final: number = Number(newNemEnd - start)
 
         // Encerra ao final da Rip
         let endProdRip = new Date();
-        let newendProdRip: number = endProdRip.getMilliseconds() / 1000;
-        let startRip = req.cookies["startRip"]
-        let finalProdRip: number = newendProdRip - startRip
-        const insertSqlTimer = await connection.query(`UPDATE HISAPONTA SET APT_TEMPO_OPERACAO = APT_TEMPO_OPERACAO + '${finalProdRip}'  WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND NUMOPE = '${NUMERO_OPERACAO}' AND ITEM = '${CODIGO_MAQUINA}'`)
-        console.log("insertSqlTimer: linha 551", insertSqlTimer);
+        let newendProdRip: number = Number(endProdRip.getMilliseconds() / 1000);
+        let startRip: number = req.cookies["startRip"]
+        let finalProdRip: number = Number(newendProdRip - startRip)
 
+        //Insere O CODAPONTA 6 e Tempo da rip
+        await connection.query(`
+            INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
+            VALUES(GETDATE(), '${funcionario}' , '${NUMERO_ODF}' , '${codigoPeca}' , '${revisao}' , ${NUMERO_OPERACAO} ,${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '6' , '6', 'Fin Prod.' , '${final}' , '${final}' , '1' ,'0','0')`)
 
-        //Insere O CODAPONTA 6
-        const resource = await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-        VALUES(GETDATE(),'CESAR','1444591','15990007','1','80','80', 'D','QUA002','1','0','0','CESAR','0','6', '6', 'Final Prod.','0.566','0.655', '1', '0','0')`).then(result => result.recordset)
-        console.log("resource", resource);
         try {
             const resource = await connection.query('INSERT INTO CST_RIP_ODF_PRODUCAO(SETUP, M2,M3,M4,M5,M6) VALUES ('
                 + SETUP + ','
@@ -779,15 +716,14 @@ apiRouter.route("/returnedValue")
     .post(async (req, res) => {
         console.log(req.body)
         const connection = await mssql.connect(sqlConfig);
-        let quantity = req.body['quantity']
-        let optionChoosed = req.body['quantity']
-        let numero_odf: string = req.cookies["NUMERO_ODF"]
-        let CODIGO_MAQUINA: string = req.cookies["CODIGO_MAQUINA"]
-        let NUMERO_OPERACAO: string = req.cookies["NUMERO_OPERACAO"]
+        let choosenOption = req.body['quantity']
         let supervisor = req.body['supervisor']
+        console.log("choosenOption:  ", choosenOption);
+        console.log("supervisor:  ", supervisor);
 
         req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
         let barcode = req.body["codigoBarras"]
+        console.log("object");
 
         //Sanitização
         function sanitize(input: string) {
@@ -799,6 +735,7 @@ apiRouter.route("/returnedValue")
         if (barcode == '') {
             res.status(400).redirect("/#/codigobarras?error=invalidBarcode")
         }
+
 
         //Divide o Codigo de barras em 3 partes para a verificação na proxima etapa
         const dados = {
@@ -813,67 +750,81 @@ apiRouter.route("/returnedValue")
             dados.codMaq = barcode.slice(5, 11)
         }
 
-        quantity = sanitize(req.body["quantity"])
+        choosenOption = sanitize(req.body["quantity"])
         supervisor = sanitize(req.body["supervisor"])
+        let funcionario = req.cookies
 
-
-        const selectSuper = await connection.query(`
-        SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`).then(result => result.recordset);
-        console.log(selectSuper)
-        if (selectSuper.length <= 0) {
-            return res.status(400)
-        }
-
-        try {
-            await connection.query(`
-            UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = '${quantity}' WHERE 1 = 1 AND NUMERO_ODF = '${numero_odf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
-            return res.status(200).redirect("/#/codigobarras?status=returned")
-        } catch (error) {
-            console.log(error)
-            return res.status(200).redirect("/#/codigobarras?error=riperror")
-        } finally {
-            await connection.close()
-        }
-    })
-
-apiRouter.route("/supervisor")
-    .get(async (req, res) => {
-        let supervisor = req.body['supervisor']
-        console.log("supervisor ", supervisor);
-        const connection = await mssql.connect(sqlConfig);
-        try {
-            const resource = await connection.query(`
-            SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`).then(result => result.recordset);
-            console.log(resource)
-            if (resource.length <= 0) {
-                return res.status(400)
+        const res1 = await connection.query(`
+        SELECT TOP 1
+                [NUMERO_ODF],
+                [NUMERO_OPERACAO],
+                [CODIGO_MAQUINA],
+                [CODIGO_CLIENTE],
+                [QTDE_ODF],
+                [CODIGO_PECA],
+                [DT_INICIO_OP],
+                [DT_FIM_OP],
+                [QTDE_ODF],
+                [QTDE_APONTADA],
+                [DT_ENTREGA_ODF],
+                [QTD_REFUGO],
+                [HORA_INICIO],
+                [HORA_FIM],
+                [REVISAO]
+                FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO
+                WHERE 1 = 1
+                AND [NUMERO_ODF] = ${dados.numOdf}
+                AND [CODIGO_MAQUINA] = '${dados.codMaq}'
+                AND [NUMERO_OPERACAO] = ${dados.numOper}
+                ORDER BY NUMERO_OPERACAO ASC`.trim()).then(result => result.recordset);
+        if (res1.length > 0) {
+            let codigoPeca = res1[0].CODIGO_PECA
+            let revisao = res1[0].REVISAO
+            let qtdLibMax = res1[0].QTDE_ODF
+            let faltante = '0'
+            let retrabalhada = '0'
+            const selectSuper = await connection.query(`
+                    SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`).then(result => result.recordset);
+            if (selectSuper.length > 0) {
+                try {
+                    await connection.query(`
+                                INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
+                                VALUES(GETDATE(), '${funcionario}' , '${dados.numOdf}' , '${codigoPeca}' , '${revisao}' , ${dados.numOper} ,${dados.numOper}, 'D', '${dados.codMaq}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '7' , '7', 'Valor Est.' , '1' ,'${faltante}','${retrabalhada}')`)
+                    return res.status(200).redirect("/#/codigobarras?status=returnedsucess")
+                } catch (error) {
+                    console.log(error)
+                    return res.status(400).redirect("/#/codigobarras?error=returnederror")
+                } finally {
+                    await connection.close()
+                }
             } else {
-                return res.status(200).json(resource)
+                return res.status(400).redirect("/#/codigobarras?error=returnederror")
             }
-        } catch (error) {
-            return res.status(400)
-        } finally {
-            await connection.close()
+        } else {
+            return res.status(400).redirect("/#/codigobarras?error=returnederror")
         }
     })
 
-apiRouter.route("/parada")
-    .get(async (req, res) => {
-        let numeroOdf: string = req.cookies["NUMERO_ODF"]
-        let peca: string = req.cookies['CODIGO_PECA']
-        const connection = await mssql.connect(sqlConfig);
-        try {
-            //Insere O CODAPONTA 5
-            const resource = await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-                VALUES(GETDATE(),'CESAR','1444591','15990007','1','80','80', 'D','QUA002','1','0','0','CESAR','0','5', '5', 'Parada.','0.566','0.655', '1', '0','0')`).then(result => result.recordset)
-            console.log("resource", resource);
-            res.status(200).json(resource)
-        } catch (error) {
-            console.log(error)
-        } finally {
-            await connection.close()
-        }
-    })
+// apiRouter.route("/supervisor")
+//     .get(async (req, res) => {
+//         let supervisor = req.body['supervisor']
+//         console.log("supervisor ", supervisor);
+//         const connection = await mssql.connect(sqlConfig);
+//         try {
+//             const resource = await connection.query(`
+//             SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`).then(result => result.recordset);
+//             console.log(resource)
+//             if (resource.length <= 0) {
+//                 return res.status(400)
+//             } else {
+//                 return res.status(200).json(resource)
+//             }
+//         } catch (error) {
+//             return res.status(400)
+//         } finally {
+//             await connection.close()
+//         }
+//     })
 
 apiRouter.route("/motivoParada")
     .get(async (_req, res) => {
@@ -891,19 +842,32 @@ apiRouter.route("/motivoParada")
         }
     })
 
-
 apiRouter.route("/postParada")
-    .get(async (_req, res) => {
+    .post(async (req, res) => {
         const connection = await mssql.connect(sqlConfig);
+        let numeroOdf: string = req.cookies["NUMERO_ODF"]
+        let funcionario = req.cookies['FUNCIONARIO']
+        let codigoPeca = req.cookies['CODIGO_PECA']
+        let revisao = req.cookies['REVISAO']
+        let numeroOperacao = req.cookies['NUMERO_OPERACAO']
+        let codigoMaq = req.cookies['CODIGO_MAQUINA']
+        let qtdLibMax = req.cookies['qtdLibMax']
+
+        //Encerra o processo todo
+        let end = new Date();
+        let newNemEnd: number = end.getMilliseconds() / 1000;
+        let start = req.cookies["starterBarcode"]
+        let final: number = newNemEnd - start
         try {
-            const resource = await connection.query(`
-                SELECT CODIGO,DESCRICAO FROM APT_PARADA (NOLOCK) ORDER BY DESCRICAO ASC`).then(record => record.recordset);
-            let resoc = resource.map(e => e.DESCRICAO)
-            res.status(200).json(resoc)
+            //Insere O CODAPONTA 5
+            await connection.query(`
+                INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
+                VALUES(GETDATE(), '${funcionario}' , '${numeroOdf}' , '${codigoPeca}' , '${revisao}' , ${numeroOperacao} ,${numeroOperacao}, 'D', '${codigoMaq}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '5' , '5', 'Parada.' , '${final}' , '${final}' , '1' ,'0','0')`)
+            return res.status(200).json()
         } catch (error) {
             console.log(error)
+            return res.status(400).json()
         } finally {
-
             await connection.close()
         }
     })
@@ -919,22 +883,6 @@ apiRouter.route("/motivorefugo")
         } catch (error) {
             return console.log(error)
         } finally {
-            await connection.close()
-        }
-    })
-
-apiRouter.route("/postmotivorefugo")
-    .get(async (_req, res) => {
-        const connection = await mssql.connect(sqlConfig);
-        try {
-            const resource = await connection.query(`
-                SELECT CODIGO,DESCRICAO FROM APT_PARADA (NOLOCK) ORDER BY DESCRICAO ASC`).then(record => record.recordset);
-            let resoc = resource.map(e => e.DESCRICAO)
-            res.status(200).json(resoc)
-        } catch (error) {
-            console.log(error)
-        } finally {
-
             await connection.close()
         }
     })

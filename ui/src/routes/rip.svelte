@@ -94,7 +94,6 @@
 
 <main>
     <div class="bread">
-        <Breadcrumb />
     </div>
     <div class="divBtn">
         <button on:click={createCol} class="sideButton" type="submit"

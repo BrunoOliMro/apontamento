@@ -11,6 +11,9 @@
     let showGreen = false;
     let showBlue = false;
     let supervisor = "";
+    let resultado = getTempo();
+    let callImagem = getImagem();
+
     async function getTempo() {
         const res = await fetch(urlString);
         tempodePro = await res.json();
@@ -53,10 +56,6 @@
             }
         }
     }, 1000);
-
-    let resultado = getTempo();
-    let callImagem = getImagem();
-
     const doPostSuper = async () => {
         const headers = new Headers();
         const res = await fetch(urlSS, {

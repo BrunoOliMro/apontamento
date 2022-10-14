@@ -2,7 +2,6 @@
     let badFeed;
     let missingFeed;
     let reworkFeed;
-    let parcialFeed;
     let urlS = `/api/v1/apontar`;
     let urlString = `/api/v1/odf`;
     let motivoUrl = `/api/v1/motivorefugo`;
@@ -11,10 +10,12 @@
     let showConfirm = false;
     let valorFeed;
     let value;
-    let values;
     let supervisor;
     let qtdPossivelProducao;
     let showError = false;
+    let resultRefugo = getRefugodata();
+    let resultado = getOdfData();
+    let showParcialSuper = false;
 
     let apontamentoMsg = "";
     if (window.location.href.includes("?")) {
@@ -63,7 +64,6 @@
                 valorFeed: valorFeed,
                 badFeed: badFeed,
                 missingFeed: missingFeed,
-                parcialFeed: parcialFeed,
                 reworkFeed: reworkFeed,
                 value: value,
                 supervisor: supervisor,
@@ -78,6 +78,9 @@
     };
 
     async function doCallPost() {
+        if (valorFeed < qtdPossivelProducao) {
+            showParcialSuper;
+        }
         if ((valorFeed >= 0 && badFeed === "0") || !badFeed) {
             doPost();
         } else if (badFeed > 0) {
@@ -88,10 +91,8 @@
     function close() {
         showError = false;
         showConfirm = false;
+        showParcialSuper = false;
     }
-
-    let resultRefugo = getRefugodata();
-    let resultado = getOdfData();
 </script>
 
 {#await resultado}
@@ -135,17 +136,6 @@
                             id="reworkFeed"
                             type="text"
                             name="reworkFeed"
-                        />
-                    </div>
-                    <div class="write" id="parcialDiv">
-                        <p>PARCIAL</p>
-                        <input
-                            bind:value={parcialFeed}
-                            on:input={blockForbiddenChars}
-                            class="input"
-                            id="parcialfeed"
-                            type="text"
-                            name="parcial"
                         />
                     </div>
                     <div class="write" id="faltante">
@@ -198,6 +188,31 @@
                     </div>
                 {/if}
             {/await}
+
+            {#if showParcialSuper === true}
+                <div class="fundo">
+                    <div class="header">
+                        <div class="closed">
+                            <h2>Envio Parcial</h2>
+                        </div>
+                        <select bind:value name="id" id="id">
+                            {#each dados as item}
+                                <option>{item}</option>
+                            {/each}
+                        </select>
+                        <p>Supervisor</p>
+                        <input
+                            bind:value={supervisor}
+                            class="supervisor"
+                            type="text"
+                            name="supervisor"
+                            id="supervisor"
+                        />
+                        <button on:click={doPost}>Confirmar</button>
+                        <button on:click={close}>Fechar</button>
+                    </div>
+                </div>
+            {/if}
 
             {#if showError === true}
                 <div class="fundo">

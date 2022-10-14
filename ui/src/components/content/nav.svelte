@@ -6,16 +6,17 @@
     import ruins from "../content/feed.svelte";
     import retrabalhar from "../content/feed.svelte";
     import faltante from "../content/feed.svelte";
-    import parcialFeed from "../content/feed.svelte";
-    import parcialDiv from "../content/feed.svelte";
 
     let apiMotivoParada = "api/v1/motivoParada";
-    let postParada = `/api/v1/postParada`
+    let postParada = `/api/v1/postParada`;
     let urlStop = `/api/v1/parada`;
     let urlPause = `/api/v1/pause`;
     let dadosOdf = [];
     let dados = [];
     let value = "";
+    let showmodal = false;
+    let resultCall = callMotivo();
+    let showMaqPar = false;
 
     const getMissingFeed = async () => {
         document.getElementById("faltante").style.display = "block";
@@ -23,7 +24,6 @@
         document.getElementById("retrabalhar").style.display = "none";
         document.getElementById("ruins").style.display = "none";
         document.getElementById("badFeed").style.display = "none";
-        document.getElementById("parcialDiv").style.display = "none";
     };
 
     const getReworkFeed = async () => {
@@ -32,7 +32,6 @@
         document.getElementById("reworkFeed").style.display = "block";
         document.getElementById("ruins").style.display = "none";
         document.getElementById("badFeed").style.display = "none";
-        document.getElementById("parcialDiv").style.display = "none";
     };
 
     const getParcial = async () => {
@@ -40,11 +39,7 @@
         document.getElementById("retrabalhar").style.display = "none";
         document.getElementById("ruins").style.display = "none";
         document.getElementById("badFeed").style.display = "none";
-        document.getElementById("parcialDiv").style.display = "block";
-        document.getElementById("parcialfeed").style.display = "block";
     };
-
-    let showmodal = false;
     function parada() {
         if (showmodal === false) {
             showmodal = true;
@@ -53,7 +48,14 @@
         }
     }
 
+    function closeConfirm() {
+        showMaqPar = false;
+        showmodal = false;
+        window.location.href = `/#/codigobarras`;
+    }
+
     function closePop() {
+        showMaqPar = false;
         if (showmodal === false) {
             showmodal = true;
         } else {
@@ -64,19 +66,21 @@
         const res = await fetch(apiMotivoParada);
         dados = await res.json();
     }
-    let resultCall = callMotivo();
 
     const confirm = async () => {
         //showConfirm = true;
         console.log("feed linha 41", value);
         const headers = new Headers();
-        await fetch(postParada, {
+        const res = await fetch(postParada, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 value: value,
             }),
         });
+        if (res.ok) {
+            showMaqPar = true;
+        }
     };
 </script>
 
@@ -84,33 +88,40 @@
     <ul class="nav2">
         <li>Parcial</li>
     </ul>
-    {#if showmodal === true}
+
+    {#await resultCall}
+        <div>...</div>
+    {:then item}
+        {#if showmodal === true}
+            <div class="fundo">
+                <div class="header">
+                    <div class="closed">
+                        <h2>Motivo da Parada</h2>
+                        <button class="closebtn" on:click={closePop}>X</button>
+                    </div>
+                    <select bind:value name="id" id="id">
+                        {#each dados as item}
+                            <option>{item}</option>
+                        {/each}
+                    </select>
+                    <p on:click={confirm}>Confirmar</p>
+                </div>
+            </div>
+        {/if}
+    {/await}
+
+    {#if showMaqPar === true}
         <div class="fundo">
             <div class="header">
                 <div class="closed">
-                    <h2>Motivo da Parada</h2>
-                    <button  class="closebtn" on:click={closePop}
-                        >X</button
-                    >
+                    <h2>Maquina Parada</h2>
+                    <button class="closebtn" on:click={closeConfirm}>X</button>
+                    <p on:click={closeConfirm}>Confirma</p>
                 </div>
-                <select bind:value={value} name="id" id="id">
-                    {#each dados as item}
-                        <option >{item}</option>
-                    {/each}
-                </select>
-                <p  on:click={confirm}>Confirmar</p>
             </div>
         </div>
     {/if}
     <div class="nav">
-        <button
-            on:click={getParcial}
-            type="button"
-            class="sideButton"
-            id="parcial"
-            name="parcial"
-            >Parcial
-        </button>
         <button
             on:click={getMissingFeed}
             type="button"

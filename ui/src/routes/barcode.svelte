@@ -46,9 +46,10 @@
         codigoBarras: !codigoBarras ? "" : codigoBarras,
       }),
     });
-    if (barcodeMsg === "red") {
-      showApontInic = true
-    }
+    // if (barcodeMsg === "red") {
+    //   showApontInic = true
+    // }
+    console.log('barcodeMsg:   ',barcodeMsg);
     if (barcodeMsg === "red") {
       window.location.href = "/#/ferramenta";
     }
