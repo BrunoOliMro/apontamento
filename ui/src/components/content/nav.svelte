@@ -67,7 +67,6 @@
     }
 
     const confirm = async () => {
-        console.log("feed linha 41", value);
         const headers = new Headers();
         const res = await fetch(postParada, {
             method: "POST",

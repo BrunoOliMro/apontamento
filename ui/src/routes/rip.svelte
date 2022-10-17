@@ -37,8 +37,6 @@
     });
 
     const doPost = async () => {
-        //showConfirm = true;
-        console.log("feed linha 55", value);
         const headers = new Headers();
         await fetch(urlS, {
             method: "POST",

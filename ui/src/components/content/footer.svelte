@@ -3,15 +3,31 @@
   let urlString = `/api/v1/odf`;
   let horaInicio = "";
   let horaFinal = "";
-  let data = null
+
+  let dataInicio = "";
+  let anoInicio = "";
+  let meioInicio = "";
+
+  let dataFim = "";
+  let meioFim = "";
+  let anoFim = "";
+
   async function getOdfData() {
     const res = await fetch(urlString);
     dadosOdf = await res.json();
-    data = dadosOdf
-    horaInicio = data[0].HORA_INICIO.slice(11, 19);
-    horaFinal = data[0].HORA_FIM.slice(11, 19);
+
+    dataInicio = dadosOdf.objOdfSelecionada.DT_INICIO_OP.slice(6, 8)
+    meioInicio = dadosOdf.objOdfSelecionada.DT_INICIO_OP.slice(4, 6)
+    anoInicio = dadosOdf.objOdfSelecionada.DT_INICIO_OP.slice(0, 4)
+    horaInicio = dadosOdf.objOdfSelecionada.HORA_INICIO.slice(11, 19)
+
+
+    dataFim = dadosOdf.objOdfSelecionada.DT_FIM_OP.slice(6, 8)
+    meioFim = dadosOdf.objOdfSelecionada.DT_FIM_OP.slice(4, 6)
+    anoFim = dadosOdf.objOdfSelecionada.DT_FIM_OP.slice(0, 4)
+    horaFinal = dadosOdf.objOdfSelecionada.HORA_FIM.slice(11, 19);
   }
-  
+
   let resultado = getOdfData();
 </script>
 
@@ -21,18 +37,12 @@
   <main class="main">
     <div class="div1">
       <div class="title">INICIO</div>
-      {dadosOdf[0].DT_INICIO_OP.slice(6, 8)} /
-      {dadosOdf[0].DT_INICIO_OP.slice(4, 6)} /
-      {dadosOdf[0].DT_INICIO_OP.slice(0, 4)}
-      - {(horaInicio = horaInicio === null ? "S/I" : horaInicio)}
+      {dataInicio} / {meioInicio} / {anoInicio} - {(horaInicio = horaInicio === null ? "S/I" : horaInicio)}
     </div>
 
     <div class="div2">
       <div class="title">FINAL</div>
-      {dadosOdf[0].DT_FIM_OP.slice(6, 8)} /
-      {dadosOdf[0].DT_FIM_OP.slice(4, 6)} /
-      {dadosOdf[0].DT_FIM_OP.slice(0, 4)} -
-      {(horaFinal = horaFinal === null ? "S/I" : horaFinal)}
+      {dataFim} / {meioFim} /  {anoFim} - {(horaFinal = horaFinal === null ? "S/I" : horaFinal)}
     </div>
   </main>
 {/await}

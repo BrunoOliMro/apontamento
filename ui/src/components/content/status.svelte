@@ -18,7 +18,6 @@
         const res = await fetch(urlString);
         tempodePro = await res.json();
         tempoMax = Number(tempodePro);
-        tempoMax = 0;
     }
     async function getImagem() {
         const res = await fetch(url);

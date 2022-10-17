@@ -29,9 +29,7 @@
     async function getOdfData() {
         const res = await fetch(urlString);
         dadosOdf = await res.json();
-        console.log("dadosOdf: ", dadosOdf);
-        qtdPossivelProducao =
-            dadosOdf[0].QTDE_ODF[0] - dadosOdf[0].QTDE_APONTADA;
+        qtdPossivelProducao = dadosOdf.valorMaxdeProducao
         if (qtdPossivelProducao <= 0) {
             qtdPossivelProducao = 0;
         }
@@ -100,19 +98,33 @@
         if (badFeed > 0 && Number(valorFeed) === 0) {
             showConfirm = true;
         }
-        if ( (Number(valorFeed) < qtdPossivelProducao &&  Number(valorFeed) > 0) && badFeed === 0  ) {
+        if (
+            Number(valorFeed) < qtdPossivelProducao &&
+            Number(valorFeed) > 0 &&
+            badFeed === 0
+        ) {
             showParcialSuper = true;
         }
 
-        if ( (Number(valorFeed) < qtdPossivelProducao && Number(valorFeed) > 0) && badFeed > 0 ) {
+        if (
+            Number(valorFeed) < qtdPossivelProducao &&
+            Number(valorFeed) > 0 &&
+            badFeed > 0
+        ) {
             showConfirm = true;
         }
 
-        if (Number(valorFeed) === qtdPossivelProducao ||  Number(valorFeed) + badFeed === qtdPossivelProducao  ) {
+        if (
+            Number(valorFeed) === qtdPossivelProducao ||
+            Number(valorFeed) + badFeed === qtdPossivelProducao
+        ) {
             doPost();
         }
 
-        if ((Number(valorFeed) === 0 && badFeed === 0) || Number(valorFeed) + badFeed === 0) {
+        if (
+            (Number(valorFeed) === 0 && badFeed === 0) ||
+            Number(valorFeed) + badFeed === 0
+        ) {
             showRoundedApont = true;
         }
         console.log(typeof valorFeed);

@@ -1,13 +1,7 @@
 <script>
     // @ts-nocheck
-
-    const dataFromBarcode = localStorage.getItem("barcodeData");
-    let NUMERO_ODF = Number(dataFromBarcode.slice(10));
-    let NUMERO_OPERACAO = Number(dataFromBarcode.slice(0, 5));
-    let CODIGO_MAQUINA = String(dataFromBarcode.slice(5, 10));
     let urlString = `/api/v1/odf`;
     let dadosOdf = [];
-
     let employeName = document.cookie
         .split(";")
         .map((cookie) => cookie.split("="))
@@ -22,6 +16,7 @@
     async function getOdfData() {
         const res = await fetch(urlString);
         dadosOdf = await res.json();
+        console.log('dados: linha 19 COD: ',dadosOdf);
     }
     let resultado = getOdfData();
 </script>
@@ -33,20 +28,21 @@
         <div class="areaCodigos">
             <p class="odf">ODF:</p>
             <p class="bold">
-                {NUMERO_ODF === null || !NUMERO_ODF ? "S/I" : NUMERO_ODF}
+                {dadosOdf.objOdfSelecionada.NUMERO_ODF === null || !dadosOdf.objOdfSelecionada.NUMERO_ODF
+                    ? "S/I"
+                    : dadosOdf.objOdfSelecionada.NUMERO_ODF}
             </p>
             <p class="odf">Cód. Interno:</p>
             <p class="bold">
-                {dadosOdf[0].CODIGO_PECA === null || !dadosOdf[0].CODIGO_PECA
+                {dadosOdf.objOdfSelecionada.CODIGO_PECA === null || !dadosOdf.objOdfSelecionada.CODIGO_PECA
                     ? "S/I"
-                    : dadosOdf[0].CODIGO_PECA}
+                    : dadosOdf.objOdfSelecionada.CODIGO_PECA}
             </p>
             <p class="odf">Cód. do Cliente:</p>
             <p class="bold">
-                {dadosOdf[0].CODIGO_CLIENTE === null ||
-                !dadosOdf[0].CODIGO_CLIENTE
+                {dadosOdf.objOdfSelecionada.CODIGO_CLIENTE === null || !dadosOdf.objOdfSelecionada.CODIGO_CLIENTE
                     ? "S/I"
-                    : dadosOdf[0].CODIGO_CLIENTE}
+                    : dadosOdf.objOdfSelecionada.CODIGO_CLIENTE}
             </p>
             <p class="odf">Operador:</p>
             <p class="bold">
@@ -56,15 +52,15 @@
             </p>
             <p class="odf">OP:</p>
             <p class="bold">
-                {NUMERO_OPERACAO === null || !NUMERO_OPERACAO
+                {dadosOdf.objOdfSelecionada.NUMERO_OPERACAO === null || !dadosOdf.objOdfSelecionada.NUMERO_OPERACAO
                     ? "S/I"
-                    : NUMERO_OPERACAO} -
-                {CODIGO_MAQUINA === null || !CODIGO_MAQUINA
+                    : dadosOdf.objOdfSelecionada.NUMERO_OPERACAO} -
+                {dadosOdf.objOdfSelecionada.CODIGO_MAQUINA === null || !dadosOdf.objOdfSelecionada.CODIGO_MAQUINA
                     ? "S/I"
-                    : CODIGO_MAQUINA} -
-                {dadosOdf[0].QTDE_ODF[0] === null || !dadosOdf[0].QTDE_ODF[0]
+                    : dadosOdf.objOdfSelecionada.CODIGO_MAQUINA} -
+                {dadosOdf.objOdfSelecionada.QTDE_ODF === null || !dadosOdf.objOdfSelecionada.QTDE_ODF
                     ? "S/I"
-                    : dadosOdf[0].QTDE_ODF[0]}
+                    : dadosOdf.objOdfSelecionada.QTDE_ODF}
             </p>
         </div>
     </main>

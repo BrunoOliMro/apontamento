@@ -90,7 +90,6 @@
   function closePop() {
     document.getElementById("s").style.display = "none";
     window.location.href = "/#/codigobarras";
-    location.reload();
   }
   function returnValue() {
     if (showmodal === false) {
