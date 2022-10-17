@@ -267,7 +267,6 @@ apiRouter.route("/status")
     let maquina = req.cookies['CODIGO_MAQUINA'];
     let tempoAgora = new Date();
     let newEnd = tempoAgora.getMilliseconds() / 1000;
-    console.log(newEnd);
     try {
         const resource = await connection.query(`
             SELECT TOP 1 EXECUT FROM OPERACAO WHERE NUMPEC = '${numpec}' AND MAQUIN = '${maquina}' ORDER BY REVISAO DESC
@@ -277,12 +276,11 @@ apiRouter.route("/status")
         let tempoTotalExecução = resultadoEmSegundos * qtdProd;
         let tempoFinal = newEnd - tempoInicio;
         let tempoTotal = tempoTotalExecução - tempoFinal;
-        console.log(tempoTotal);
-        res.json(tempoTotal);
+        return res.json(tempoTotal);
     }
     catch (error) {
         console.log(error);
-        res.status(500).json({ error: true, message: "Erro no servidor." });
+        return res.status(500).json({ error: true, message: "Erro no servidor." });
     }
     finally {
         await connection.close();
@@ -578,7 +576,7 @@ apiRouter.route("/returnedValue")
     console.log("supervisor:  ", supervisor);
     req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
     let barcode = req.body["codigoBarras"];
-    console.log("object");
+    console.log("barcode: ", barcode);
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
         return input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
@@ -598,7 +596,7 @@ apiRouter.route("/returnedValue")
     }
     choosenOption = sanitize(req.body["quantity"]);
     supervisor = sanitize(req.body["supervisor"]);
-    let funcionario = req.cookies;
+    let funcionario = req.cookies['FUNCIONARIO'];
     const res1 = await connection.query(`
         SELECT TOP 1
                 [NUMERO_ODF],
@@ -633,8 +631,9 @@ apiRouter.route("/returnedValue")
         if (selectSuper.length > 0) {
             try {
                 await connection.query(`
-                                INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-                                VALUES(GETDATE(), '${funcionario}' , '${dados.numOdf}' , '${codigoPeca}' , '${revisao}' , ${dados.numOper} ,${dados.numOper}, 'D', '${dados.codMaq}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '7' , '7', 'Valor Est.' , '1' ,'${faltante}','${retrabalhada}')`);
+                    INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
+VALUES(GETDATE(),'CESAR','1444591','15990007','1','80','80', 'D','QUA002','1','0','0','CESAR','0','7', '7', 'Valor Estorn.','0.566','0.655', '1', '0','0')
+                    `);
                 return res.status(200).redirect("/#/codigobarras?status=returnedsucess");
             }
             catch (error) {

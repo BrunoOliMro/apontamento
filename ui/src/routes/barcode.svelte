@@ -38,11 +38,11 @@
       body: JSON.stringify({
         supervisor: !supervisor ? "" : supervisor,
       }),
-    }).then(res => res.json());
-    if(res.success === 'maquina'){
-      superParada = ''
+    }).then((res) => res.json());
+    if (res.success === "maquina") {
+      superParada = "";
       window.location.href = "/#/codigobarras";
-      location.reload()
+      location.reload();
     }
   };
 
@@ -106,6 +106,7 @@
         returnValueStorage: returnValueStorage,
         supervisor: supervisor,
         quantity: quantity,
+        codigoBarras: !codigoBarras ? "" : codigoBarras,
       }),
     });
     if (res.ok) {
@@ -117,6 +118,7 @@
 
   function closePopCor() {
     showCorr = false;
+    location.reload()
   }
 </script>
 
@@ -282,9 +284,10 @@
             on:input={blockForbiddenChars}
             class="returnInput"
             onkeyup="this.value = this.value.toUpperCase()"
-            bind:value={quantity}
+            bind:value={codigoBarras}
+            id="codigoBarras"
+            name="codigoBarras"
             type="text"
-            name="returnValueStorage"
           />
 
           <div>

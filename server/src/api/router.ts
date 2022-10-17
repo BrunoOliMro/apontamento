@@ -81,7 +81,7 @@ apiRouter.route("/apontamento")
             codigoMaquinaProxOdf = objOdfSelecionada["CODIGO_MAQUINA"]
             codMaqProxOdf = objOdfSelecionada["NUMERO_OPERACAO"]
             qntdeJaApontada = objOdfSelecionada["QTDE_APONTADA"]
-            qtdLib =  objOdfSelecAnterior["QTDE_APONTADA"]
+            qtdLib = objOdfSelecAnterior["QTDE_APONTADA"]
             apontLib = objOdfSelecionada["APONTAMENTO_LIBERADO"]
         }
 
@@ -95,8 +95,8 @@ apiRouter.route("/apontamento")
         }
 
 
-        console.log('qtdLib linha 98: ',qtdLib);
-        console.log('qntdeJaApontada linha 99: ',qntdeJaApontada);
+        console.log('qtdLib linha 98: ', qtdLib);
+        console.log('qntdeJaApontada linha 99: ', qntdeJaApontada);
         //Se a odf não for a primeira e a quantidade liberada for 0 não é a odf da vez a ser enviada
         if (indiceDoArrayDeOdfs > 0 && apontLib === "N") {
             return res.status(400).redirect("/#/codigobarras?error=anotherodfexpected")
@@ -160,7 +160,7 @@ apiRouter.route("/apontamento")
                            AND PCP.NUMERO_ODF = '${dados.numOdf}'    
                         `.trim()
             ).then(result => result.recordset)
-            console.log('resource2: ',resource2);
+            console.log('resource2: ', resource2);
             // if (resource2.length > 0) {
             //     res.cookie("CONDIC", resource2[0].CONDIC)
             //     let codigoNumite = resource2.map(e => e.NUMITE)
@@ -346,7 +346,7 @@ apiRouter.route("/imagem")
                 const path = await pictures.getPicturePath(rec["NUMPEC"], rec["IMAGEM"], statusImg, String(i));
                 imgResult.push(path);
             }
-            console.log('imgResult: ',imgResult);
+            console.log('imgResult: ', imgResult);
             return res.json(imgResult)
         } catch (error) {
             console.log(error)
@@ -364,24 +364,35 @@ apiRouter.route("/status")
         let maquina = req.cookies['CODIGO_MAQUINA']
         let tempoAgora = new Date();
         let newEnd = tempoAgora.getMilliseconds() / 1000;
-        console.log(newEnd);
+
         try {
             const resource = await connection.query(`
             SELECT TOP 1 EXECUT FROM OPERACAO WHERE NUMPEC = '${numpec}' AND MAQUIN = '${maquina}' ORDER BY REVISAO DESC
             `).then(record => record.recordset)
             //res.cookie("Tempo Execucao", resource[0].EXECUT) 
             let qtdProd = req.cookies["qtdProduzir"][0]
+            
+
+
             //valor em segundos
             let resultadoEmSegundos: number = resource[0].EXECUT * 1000
+
+
             //valor vezes a quantidade de peças
             let tempoTotalExecução: number = resultadoEmSegundos * qtdProd
+
+
             let tempoFinal = newEnd - tempoInicio
+
+
+
+
+
             let tempoTotal: number = tempoTotalExecução - tempoFinal
-            console.log(tempoTotal);
-            res.json(tempoTotal)
+            return res.json(tempoTotal)
         } catch (error) {
             console.log(error)
-            res.status(500).json({ error: true, message: "Erro no servidor." });
+            return res.status(500).json({ error: true, message: "Erro no servidor." });
         } finally {
             await connection.close()
         }
@@ -759,7 +770,7 @@ apiRouter.route("/returnedValue")
 
         req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
         let barcode = req.body["codigoBarras"]
-        console.log("object");
+        console.log("barcode: ", barcode);
 
         //Sanitização
         function sanitize(input: string) {
@@ -788,8 +799,7 @@ apiRouter.route("/returnedValue")
 
         choosenOption = sanitize(req.body["quantity"])
         supervisor = sanitize(req.body["supervisor"])
-        let funcionario = req.cookies
-
+        let funcionario = req.cookies['FUNCIONARIO']
         const res1 = await connection.query(`
         SELECT TOP 1
                 [NUMERO_ODF],
@@ -824,8 +834,9 @@ apiRouter.route("/returnedValue")
             if (selectSuper.length > 0) {
                 try {
                     await connection.query(`
-                                INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-                                VALUES(GETDATE(), '${funcionario}' , '${dados.numOdf}' , '${codigoPeca}' , '${revisao}' , ${dados.numOper} ,${dados.numOper}, 'D', '${dados.codMaq}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '7' , '7', 'Valor Est.' , '1' ,'${faltante}','${retrabalhada}')`)
+                    INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
+VALUES(GETDATE(),'CESAR','1444591','15990007','1','80','80', 'D','QUA002','1','0','0','CESAR','0','7', '7', 'Valor Estorn.','0.566','0.655', '1', '0','0')
+                    `
                     return res.status(200).redirect("/#/codigobarras?status=returnedsucess")
                 } catch (error) {
                     console.log(error)
