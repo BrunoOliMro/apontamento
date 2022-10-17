@@ -5,6 +5,7 @@
   let codigoBarras = "";
   let urlS = `/api/v1/apontamento`;
   let urlBagde = `/api/v1/apontamentoCracha`;
+  let supervisorApi = "api/v1/supervisorParada";
   let cracha = "";
   let showmodal = false;
   let showCorr = false;
@@ -12,7 +13,7 @@
   let returnValueStorage;
   let supervisor;
   let quantity;
-  let showApontInic = false
+  let superParada = "";
 
   let barcodeMsg = "";
   if (window.location.href.includes("?")) {
@@ -23,6 +24,27 @@
   if (window.location.href.includes("?")) {
     badgeMsg = window.location.href.split("?")[1].split("=")[1];
   }
+
+  if (window.location.href.includes("?")) {
+    superParada = window.location.href.split("?")[1].split("=")[1];
+  }
+
+  const doPostSuper = async () => {
+    const headers = new Headers();
+    headers.append("Content-Type", "application/json");
+    const res = await fetch(supervisorApi, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        supervisor: !supervisor ? "" : supervisor,
+      }),
+    }).then(res => res.json());
+    if(res.success === 'maquina'){
+      superParada = ''
+      window.location.href = "/#/codigobarras";
+      location.reload()
+    }
+  };
 
   function blockForbiddenChars(e) {
     let value = e.target.value;
@@ -36,6 +58,7 @@
       .join("");
     return sanitizedOutput;
   }
+
   const doPost = async () => {
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
@@ -46,11 +69,8 @@
         codigoBarras: !codigoBarras ? "" : codigoBarras,
       }),
     });
-    // if (barcodeMsg === "red") {
-    //   showApontInic = true
-    // }
-    console.log('barcodeMsg:   ',barcodeMsg);
     if (barcodeMsg === "red") {
+      barcodeMsg = "";
       window.location.href = "/#/ferramenta";
     }
   };
@@ -113,6 +133,23 @@
         </div>
       {/if}
     </div>
+
+    {#if superParada === "paradademaquina"}
+      <div class="fundo">
+        <div class="invalidBarcode" id="s">
+          <h5>Maquina Parada selecione um supervisor</h5>
+          <input
+            id="supervisor"
+            name="supervisor"
+            type="text"
+            on:input={blockForbiddenChars}
+            onkeyup="this.value = this.value.toUpperCase()"
+            bind:value={supervisor}
+          />
+          <p on:click={doPostSuper}>Confirmar</p>
+        </div>
+      </div>
+    {/if}
 
     {#if showCorr === true}
       <div class="fundo">

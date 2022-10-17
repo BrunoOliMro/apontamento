@@ -16,6 +16,10 @@
     let resultRefugo = getRefugodata();
     let resultado = getOdfData();
     let showParcialSuper = false;
+    let showParcialAndRef = false;
+    let showSuperNotFound = false;
+    let showErrorMessage = false;
+    let showRoundedApont = false;
 
     let apontamentoMsg = "";
     if (window.location.href.includes("?")) {
@@ -68,24 +72,50 @@
                 value: value,
                 supervisor: supervisor,
             }),
-        });
-        if (res.status === 400) {
-            showError = true;
+        }).then((res) => res.json());
+        if (res.message === "supervisor não encontrado") {
+            showSuperNotFound = true;
         }
-        if (res.ok) {
+        if (res.message === "erro ao enviar o apontamento") {
+            showErrorMessage = true;
+        }
+        if (res.message === "valores apontados com sucesso") {
             window.location.href = `/#/rip`;
+        }
+        if (res.message === "valor apontado maior que a quantidade liberada") {
+            showError = true;
         }
     };
 
     async function doCallPost() {
-        if (valorFeed < qtdPossivelProducao) {
-            showParcialSuper;
+        Number(badFeed);
+        Number(valorFeed);
+        Number(qtdPossivelProducao);
+        if (!badFeed) {
+            badFeed = 0;
         }
-        if ((valorFeed >= 0 && badFeed === "0") || !badFeed) {
-            doPost();
-        } else if (badFeed > 0) {
+        if (!valorFeed) {
+            valorFeed = 0;
+        }
+        if (badFeed > 0 && Number(valorFeed) === 0) {
             showConfirm = true;
         }
+        if ( (Number(valorFeed) < qtdPossivelProducao &&  Number(valorFeed) > 0) && badFeed === 0  ) {
+            showParcialSuper = true;
+        }
+
+        if ( (Number(valorFeed) < qtdPossivelProducao && Number(valorFeed) > 0) && badFeed > 0 ) {
+            showConfirm = true;
+        }
+
+        if (Number(valorFeed) === qtdPossivelProducao ||  Number(valorFeed) + badFeed === qtdPossivelProducao  ) {
+            doPost();
+        }
+
+        if ((Number(valorFeed) === 0 && badFeed === 0) || Number(valorFeed) + badFeed === 0) {
+            showRoundedApont = true;
+        }
+        console.log(typeof valorFeed);
     }
 
     function close() {
@@ -193,13 +223,49 @@
                 <div class="fundo">
                     <div class="header">
                         <div class="closed">
+                            <h2>
+                                Para lançar Parcial um supervisor deve ser
+                                avisado
+                            </h2>
+                        </div>
+                        <p>Supervisor</p>
+                        <input
+                            bind:value={supervisor}
+                            class="supervisor"
+                            type="text"
+                            name="supervisor"
+                            id="supervisor"
+                        />
+                        <button on:click={doPost}>Confirmar</button>
+                    </div>
+                </div>
+            {/if}
+
+            {#if showParcialAndRef === true}
+                <div class="fundo">
+                    <div class="header">
+                        <div class="closed">
+                            <h2>Este lançamento é uma Parcial e há Refugo</h2>
+                        </div>
+                        <p>Supervisor</p>
+                        <input
+                            bind:value={supervisor}
+                            class="supervisor"
+                            type="text"
+                            name="supervisor"
+                            id="supervisor"
+                        />
+                        <button on:click={doPost}>Confirmar</button>
+                    </div>
+                </div>
+            {/if}
+
+            {#if showParcialSuper === true}
+                <div class="fundo">
+                    <div class="header">
+                        <div class="closed">
                             <h2>Envio Parcial</h2>
                         </div>
-                        <select bind:value name="id" id="id">
-                            {#each dados as item}
-                                <option>{item}</option>
-                            {/each}
-                        </select>
                         <p>Supervisor</p>
                         <input
                             bind:value={supervisor}
@@ -219,6 +285,39 @@
                     <div class="header">
                         <div class="closed">
                             <h2>Valor Enviado maior que o possivel</h2>
+                        </div>
+                        <button on:click={close}>fechar</button>
+                    </div>
+                </div>
+            {/if}
+
+            {#if showErrorMessage === true}
+                <div class="fundo">
+                    <div class="header">
+                        <div class="closed">
+                            <h2>Erro ao enviar apontamento</h2>
+                        </div>
+                        <button on:click={close}>fechar</button>
+                    </div>
+                </div>
+            {/if}
+
+            {#if showRoundedApont === true}
+                <div class="fundo">
+                    <div class="header">
+                        <div class="closed">
+                            <h2>Apontamento Zerado</h2>
+                        </div>
+                        <button on:click={close}>fechar</button>
+                    </div>
+                </div>
+            {/if}
+
+            {#if showSuperNotFound === true}
+                <div class="fundo">
+                    <div class="header">
+                        <div class="closed">
+                            <h2>Supervisor não encontrado</h2>
                         </div>
                         <button on:click={close}>fechar</button>
                     </div>

@@ -1,7 +1,7 @@
 <script>
     let tempoDecorrido = 0;
     let tempodePro = [];
-    let urlSS = `/api/v1/supervisor`;
+    let supervisorApi = "api/v1/supervisor";
     let urlString = `/api/v1/status`;
     let url = `/api/v1/imagem`;
     let tempoMax = null;
@@ -18,12 +18,14 @@
         const res = await fetch(urlString);
         tempodePro = await res.json();
         tempoMax = Number(tempodePro);
+        tempoMax = 0;
     }
     async function getImagem() {
         const res = await fetch(url);
         imagem = await res.json();
     }
-    setInterval(() => {
+
+    let tempoDaBarra = setInterval(() => {
         if (tempoMax <= 0) {
             shwowSuper = true;
             showRed = true;
@@ -56,33 +58,40 @@
             }
         }
     }, 1000);
+
     const doPostSuper = async () => {
         const headers = new Headers();
-        const res = await fetch(urlSS, {
+        const res = await fetch(supervisorApi, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 supervisor: supervisor,
             }),
         });
-        if(res.ok){
-            shwowSuper === false
+        if (res.ok) {
+            shwowSuper = false;
+            clearInterval(tempoDaBarra);
         }
     };
 </script>
 
 <div class="content">
-    <!-- {#if shwowSuper === true}
+    {#if shwowSuper === true}
         <div class="fundo">
             <div class="timeOver">
                 <h3>Tempo Excedido</h3>
                 <form action="api/v1/apontar" method="POST" />
                 <p>Insira um supervisor para continuar</p>
-                <input  bind:value={supervisor} name="supervisor" id="supervisor" type="text" />
+                <input
+                    bind:value={supervisor}
+                    name="supervisor"
+                    id="supervisor"
+                    type="text"
+                />
                 <p on:click={doPostSuper}>Confirma</p>
             </div>
         </div>
-    {/if} -->
+    {/if}
     {#await resultado}
         <div>...</div>
     {:then itens}

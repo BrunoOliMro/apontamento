@@ -6,7 +6,6 @@
     import ruins from "../content/feed.svelte";
     import retrabalhar from "../content/feed.svelte";
     import faltante from "../content/feed.svelte";
-
     let apiMotivoParada = "api/v1/motivoParada";
     let postParada = `/api/v1/postParada`;
     let urlStop = `/api/v1/parada`;
@@ -68,7 +67,6 @@
     }
 
     const confirm = async () => {
-        //showConfirm = true;
         console.log("feed linha 41", value);
         const headers = new Headers();
         const res = await fetch(postParada, {

@@ -102,6 +102,14 @@ apiRouter.route("/apontamento")
     res.cookie("CODIGO_MAQUINA", objOdfSelecionada['CODIGO_MAQUINA']);
     res.cookie("NUMERO_OPERACAO", objOdfSelecionada['NUMERO_OPERACAO']);
     res.cookie("REVISAO", objOdfSelecionada['REVISAO']);
+    const k = await connection.query(`
+        SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CAST (LTRIM(PECA) AS INT) = '${objOdfSelecionada['CODIGO_PECA']}' AND ITEM = '${objOdfSelecionada['CODIGO_MAQUINA']}'  ORDER BY DATAHORA DESC`.trim()).then(result => result.recordset);
+    console.log('k linha 130', k);
+    if (k.length === 0) {
+    }
+    if (k[0].CODAPONTA === 5) {
+        return res.status(400).redirect("/#/codigobarras?error=paradademaquina");
+    }
     try {
         const resource2 = await connection.query(`
                         SELECT DISTINCT                 
@@ -335,15 +343,19 @@ apiRouter.route("/HISTORICO")
 apiRouter.route("/ferramenta")
     .get(async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let codigoPeca = req.cookies["CODIGO_PECA"];
-    let numero_odf = req.cookies["NUMERO_ODF"];
-    let numeroOperacao = req.cookies["NUMERO_OPERACAO"];
-    let codigoMaq = req.cookies["CODIGO_MAQUINA"];
-    let funcionario = req.cookies['FUNCIONARIO'];
-    let revisao = req.cookies['REVISAO'];
-    let qtdLibMax = req.cookies['qtdLibMax'];
-    let ferramenta = "_ferr";
-    let start = req.cookies["starterBarcode"];
+    let codigoPeca = String(req.cookies["CODIGO_PECA"]);
+    let numero_odf = String(req.cookies["NUMERO_ODF"]);
+    let numeroOperacao = String(req.cookies["NUMERO_OPERACAO"]);
+    let codigoMaq = String(req.cookies["CODIGO_MAQUINA"]);
+    let funcionario = String(req.cookies['FUNCIONARIO']);
+    let revisao = Number(req.cookies['REVISAO']);
+    let qtdLibMax = Number(req.cookies['qtdLibMax']);
+    let ferramenta = String("_ferr");
+    let start = Number(req.cookies["starterBarcode"]);
+    if (!revisao) {
+        revisao = 0;
+    }
+    console.log('start: linha 391 ', revisao);
     try {
         const resource = await connection.query(`
                 SELECT
@@ -435,7 +447,7 @@ apiRouter.route("/apontar")
     let MAQUINA_PROXIMA = req.cookies['MAQUINA_PROXIMA'];
     let OPERACAO_PROXIMA = req.cookies['OPERACAO_PROXIMA'];
     let funcionario = req.cookies['FUNCIONARIO'];
-    let revisao = req.cookies['REVISAO'];
+    let revisao = Number(req.cookies['REVISAO']) || 0;
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
         return input && input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
@@ -457,16 +469,17 @@ apiRouter.route("/apontar")
     if (motivorefugo === undefined) {
         motivorefugo = null;
     }
+    console.log('valorTotalApontado;  ', valorTotalApontado);
+    console.log('qtdLibMax;  ', qtdLibMax);
     if (valorTotalApontado > qtdLibMax) {
-        return res.status(400).json();
+        return res.json({ message: 'valor apontado maior que a quantidade liberada' });
     }
     if (badFeed > 0) {
         const resource = await connection.query(`
             SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'
             `).then(result => result.recordset);
-        console.log("resource", resource);
         if (resource.length <= 0) {
-            return res.status(400).json();
+            return res.json({ message: 'supervisor não encontrado' });
         }
     }
     valorTotalApontado = Number(valorTotalApontado);
@@ -485,30 +498,10 @@ apiRouter.route("/apontar")
         await connection.query(`
             INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, MOTIVO_REFUGO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
             VALUES(GETDATE(), '${funcionario}' , '${NUMERO_ODF}' , '${codigoPeca}' , '${revisao}' , ${NUMERO_OPERACAO} ,${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '4' , '4', 'Fin Prod.' , '${finalProdTimer}' , '${finalProdTimer}' , '1', UPPER('${motivorefugo}') ,'0','0')`);
-        NUMERO_OPERACAO = String(NUMERO_OPERACAO);
-        if (NUMERO_OPERACAO === "999") {
-        }
-        if (condic === undefined || condic === null) {
-            condic = 0;
-            codigoFilho = 0;
-        }
-        if (condic === 'P') {
-            try {
-                const updateQtyQuery = [];
-                for (const [i, qtdItem] of reservedItens.entries()) {
-                    updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
-                }
-                const res = await connection.query(updateQtyQuery.join("\n"));
-                console.log('res:  ', res);
-            }
-            catch (err) {
-                return res.status(400).redirect("/#/codigobarras/apontamento");
-            }
-        }
-        return res.status(200).json();
+        return res.json({ message: 'valores apontados com sucesso' });
     }
     catch {
-        return res.status(400).json();
+        return res.json({ message: 'erro ao enviar o apontamento' });
     }
     finally {
         await connection.close();
@@ -695,6 +688,58 @@ apiRouter.route("/returnedValue")
         return res.status(400).redirect("/#/codigobarras?error=returnederror");
     }
 });
+apiRouter.route("/supervisor")
+    .post(async (req, res) => {
+    let supervisor = String(req.body['supervisor']);
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    try {
+        const resource = await connection.query(`
+            SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`).then(result => result.recordset);
+        if (resource.length > 0) {
+            return res.status(200).json();
+        }
+        else {
+            return res.status(400).json();
+        }
+    }
+    catch (error) {
+        return res.status(400);
+    }
+    finally {
+        await connection.close();
+    }
+});
+apiRouter.route("/supervisorParada")
+    .post(async (req, res) => {
+    let supervisor = String(req.body['supervisor']);
+    let numeroOdf = String(req.cookies['NUMERO_ODF']);
+    let NUMERO_OPERACAO = String(req.cookies['NUMERO_OPERACAO']);
+    let CODIGO_MAQUINA = String(req.cookies['CODIGO_MAQUINA']);
+    let qtdLibMax = String(req.cookies['qtdLibMax']);
+    let funcionario = String(req.cookies['FUNCIONARIO']);
+    let revisao = Number(req.cookies['REVISAO']) || 0;
+    let codigoPeca = String(req.cookies['CODIGO_PECA']);
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    try {
+        const resource = await connection.query(`
+            SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`).then(result => result.recordset);
+        if (resource.length > 0) {
+            await connection.query(`
+                INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
+                VALUES(GETDATE(), '${funcionario}' , '${numeroOdf}' , '${codigoPeca}' , '${revisao}' , ${NUMERO_OPERACAO} ,${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '3' , '3', 'Fin Prod.' , '0' , '0' , '1' ,'0','0')`);
+            return res.status(200).json({ success: 'maquina' });
+        }
+        else {
+            return res.status(400).json();
+        }
+    }
+    catch (error) {
+        return res.status(400);
+    }
+    finally {
+        await connection.close();
+    }
+});
 apiRouter.route("/motivoParada")
     .get(async (_req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
@@ -714,10 +759,10 @@ apiRouter.route("/motivoParada")
 apiRouter.route("/postParada")
     .post(async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let numeroOdf = req.cookies["NUMERO_ODF"];
-    let funcionario = req.cookies['FUNCIONARIO'];
+    let numeroOdf = String(req.cookies["NUMERO_ODF"]);
+    let funcionario = String(req.cookies['FUNCIONARIO']);
     let codigoPeca = req.cookies['CODIGO_PECA'];
-    let revisao = req.cookies['REVISAO'];
+    let revisao = Number(req.cookies['REVISAO']) || 0;
     let numeroOperacao = req.cookies['NUMERO_OPERACAO'];
     let codigoMaq = req.cookies['CODIGO_MAQUINA'];
     let qtdLibMax = req.cookies['qtdLibMax'];
@@ -758,9 +803,12 @@ apiRouter.route("/motivorefugo")
 apiRouter.route("/desenho")
     .get(async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    const revisao = String(req.cookies['REVISAO']);
+    const revisao = Number(req.cookies['REVISAO']) || 0;
     const numpec = String(req.cookies["CODIGO_PECA"]);
     let desenho = "_desenho";
+    if (revisao === 0) {
+        console.log("object");
+    }
     try {
         const resource = await connection.query(`
             SELECT
