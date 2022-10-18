@@ -8,7 +8,6 @@
   async function getHISTORICO() {
     const res = await fetch(urlString);
     HISTORICO = await res.json();
-    console.log('HISTORICO: ', HISTORICO);
   }
   let resultado = getHISTORICO();
 </script>

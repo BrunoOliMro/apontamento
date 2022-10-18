@@ -19,7 +19,6 @@
   async function getfetchItem() {
     const res = await fetch(urlString);
     fetchItem = await res.json();
-    console.log('fetchItem:  ',fetchItem);
     if (fetchItem == "/images/sem_imagem.gif") {
       window.location.href = "/#/codigobarras/apontamento";
     }

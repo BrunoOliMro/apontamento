@@ -1,36 +1,43 @@
 <script>
+    // @ts-nocheck
     export let dados;
     export let indice;
     export let extraColumns;
-    let idInput = "M" + indice;
-    let value = "";
+    export let value = "";
+    export let setup = {}
+    let id = "";
+    // function checkColor(i) {
+    //     let userInput = ""; 
+    //     //     // @ts-ignore
+    //     //     let userInput = document.getElementById(i).value;
 
-    function checkColor(i) {
-        let userInput = "";
-        //     // @ts-ignore
-        //     let userInput = document.getElementById(i).value;
+    //     //     console.log("user: linha 111", userInput);
+    //     //     //let userInputI = document.querySelectorAll("[name*=M]");
+    //     let lie = dados.LIE;
+    //     let lsd = dados.LSE;
 
-        //     console.log("user: linha 111", userInput);
-        //     //let userInputI = document.querySelectorAll("[name*=M]");
-        let lie = dados.LIE;
-        let lsd = dados.LSE;
+    //     //     userInput = blockForbiddenChars();
+    //     //     console.log("userInput: linha 17", userInput);
 
-        //     userInput = blockForbiddenChars();
-        //     console.log("userInput: linha 17", userInput);
+    //     if (userInput < lie && userInput.length !== 0) {
+    //         document.getElementById(i).style.borderColor = "red";
+    //     } else if (userInput > lsd && userInput.length !== 0) {
+    //         document.getElementById(i).style.borderColor = "red";
+    //     } else if (
+    //         userInput >= lie &&
+    //         userInput <= lsd &&
+    //         userInput.length !== 0
+    //     ) {
+    //         document.getElementById(i).style.borderColor = "green";
+    //     } else if (userInput.length === 0) {
+    //         document.getElementById(i).style.borderColor = "black";
+    //     }
+    // }
 
-        if (userInput < lie && userInput.length !== 0) {
-            document.getElementById(i).style.borderColor = "red";
-        } else if (userInput > lsd && userInput.length !== 0) {
-            document.getElementById(i).style.borderColor = "red";
-        } else if (
-            userInput >= lie &&
-            userInput <= lsd &&
-            userInput.length !== 0
-        ) {
-            document.getElementById(i).style.borderColor = "green";
-        } else if (userInput.length === 0) {
-            document.getElementById(i).style.borderColor = "black";
-        }
+    function target(event) {
+        id = event.target.id;
+        value = event.target.value;
+        setup[id] = value;
     }
 
     // function blockForbiddenChars(event) {
@@ -57,65 +64,60 @@
     <td>{dados.LIE === null ? "S/I" : dados.LIE}</td>
     <td>{dados.LSE === null ? "S/I" : dados.LSE}</td>
     <td>{dados.INSTRUMENTO === null ? "S/I" : dados.INSTRUMENTO}</td>
+    <!-- onkeyup="this.value = this.value.toUpperCase()" -->
+    <!-- on:input={checkColor("SETUP-" + indice)} -->
     <td
         ><input
-            on:input={checkColor("SETUP-" + indice)}
-            onkeyup="this.value = this.value.toUpperCase()"
+            on:input={target}
             id={"SETUP-" + indice}
-            bind:value={value}
-            name={idInput}
+            name={"SETUP-" + indice}
             type="text"
         /></td
     >
     <td
         ><input
+            on:input={target}
             onkeyup="this.value = this.value.toUpperCase()"
-            on:input={checkColor("M2-" + indice)}
             id={"M2-" + indice}
-            bind:value={value}
-            name="M{indice}"
+            name={"M2-" + indice}
             type="text "
         /></td
     >
     <td
         ><input
             onkeyup="this.value = this.value.toUpperCase()"
-            on:input={checkColor("M3-" + indice)}
+            on:input={target}
             id={"M3-" + indice}
-            bind:value={value}
-            name="M{indice}"
+            name={"M3-" + indice}
             type="text"
         /></td
     >
     <td
         ><input
             onkeyup="this.value = this.value.toUpperCase()"
-            on:input={checkColor("M4-" + indice)}
+            on:input={target}
             id={"M4-" + indice}
-            bind:value={value}
-            name="M{indice}"
+            name={"M4-" + indice}
             type="text"
         /></td
     >
     <td
         ><input
             onkeyup="this.value = this.value.toUpperCase()"
-            on:input={checkColor("M5-" + indice)}
+            on:input={target}
             id={"M5-" + indice}
-            bind:value={value}
-            name="M{indice}"
+            name={"M5-" + indice}
             type="text"
         /></td
     >
 
-    {#each extraColumns as columnNumber, i}
+    {#each extraColumns as columnNumber}
         <td>
             <input
                 onkeyup="this.value = this.value.toUpperCase()"
-                on:input={checkColor("M-" + indice + columnNumber + i)}
-                id={"M-" + indice + columnNumber + i}
-                bind:value={value}
-                name="M-{indice}"
+                on:input={target}
+                id={"M" + columnNumber + "-" + indice}
+                name={"M" + columnNumber + "-" + indice}
                 type="text"
             />
         </td>

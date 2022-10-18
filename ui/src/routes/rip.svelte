@@ -1,51 +1,34 @@
 <script>
-    import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
-    import { onMount } from "svelte";
     import TableRipRow from "../components/Tables/TableRipRow.svelte";
-    import id from "../components/Tables/TableRipRow.svelte";
-    import indice from "../components/Tables/TableRipRow.svelte";
     let seq = "Seq";
     let extraColumns = [];
     let urlS = `/api/v1/lancamentoRip`;
     let urlString = `/api/v1/rip`;
-    let returnedValueApi = `/api/v1/returnedValue`;
-    let returnValueStorage;
-    let superCracha;
     let Subtitle = "RIP - RELATÓRIO DE INSPEÇÃO DE PROCESSOS";
-    let idInput;
-    let value = "";
     let showEnd = false;
-
-    let SETUP = "";
-    let M2 = "";
-    let M3 = "";
-    let M4 = "";
-    let M5 = "";
-    let M6 = "";
-    let M7 = "";
-    let M8 = "";
-    let M9 = "";
-    let M10 = "";
-    let M11 = "";
-    let M12 = "";
-    let M13 = "";
     let ripTable = [];
+    let setup = {};
+    callRip();
 
-    onMount(async () => {
+    async function callRip() {
         const res = await fetch(urlString);
         ripTable = await res.json();
-    });
+    }
 
     const doPost = async () => {
+        console.log();
         const headers = new Headers();
-        await fetch(urlS, {
+        const res = await fetch(urlS, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                value: value,
+                setup: setup,
             }),
-        });
-        showEnd = true;
+        }).then((res) => res.json());
+        if (res.message === "rip enviada, odf finalizada") {
+            showEnd = true;
+            window.location.href = "/#/codigobarras";
+        }
     };
 
     // async function doPost() {
@@ -58,41 +41,33 @@
     //     showEnd = true;
     // }
 
-    async function doReturn() {
-        const res = await fetch(returnedValueApi, {
-            method: "POST",
-            body: JSON.stringify({
-                returnValueStorage: returnValueStorage,
-                superCracha: superCracha,
-            }),
-        });
-    }
+    // async function doReturn() {
+    //     const res = await fetch(returnedValueApi, {
+    //         method: "POST",
+    //         body: JSON.stringify({
+    //             returnValueStorage: returnValueStorage,
+    //             superCracha: superCracha,
+    //         }),
+    //     });
+    // }
     function createCol() {
         if (extraColumns.length < 7) {
             extraColumns = [...extraColumns, extraColumns.length + 6];
         }
     }
 
-    let showmodal = false;
-    function returnValue() {
-        if (showmodal === false) {
-            showmodal = true;
-        } else {
-            showmodal = false;
-        }
-    }
-    function closePop() {
-        if (showmodal === false) {
-            showmodal = true;
-        } else {
-            showmodal = false;
-        }
-    }
+    // let showmodal = false;
+    // function closePop() {
+    //     if (showmodal === false) {
+    //         showmodal = true;
+    //     } else {
+    //         showmodal = false;
+    //     }
+    // }
 </script>
 
 <main>
-    <div class="bread">
-    </div>
+    <div class="bread" />
     <div class="divBtn">
         <button on:click={createCol} class="sideButton" type="submit"
             >Adicionar coluna</button
@@ -128,6 +103,7 @@
                     <tbody id="corpoTabela">
                         {#each ripTable as row, i}
                             <TableRipRow
+                                bind:setup
                                 dados={row}
                                 indice={i + 1}
                                 {extraColumns}

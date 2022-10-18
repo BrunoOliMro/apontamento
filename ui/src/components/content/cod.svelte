@@ -16,7 +16,6 @@
     async function getOdfData() {
         const res = await fetch(urlString);
         dadosOdf = await res.json();
-        console.log('dados: linha 19 COD: ',dadosOdf);
     }
     let resultado = getOdfData();
 </script>

@@ -74,8 +74,8 @@
             body: JSON.stringify({
                 value: value,
             }),
-        });
-        if (res.ok) {
+        }).then((res) => res.json());
+        if (res.message === 'maquina parada com sucesso') {
             showMaqPar = true;
         }
     };
