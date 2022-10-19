@@ -589,14 +589,25 @@ apiRouter.route("/lancamentoRip")
     let qtdLibMax = req.cookies['qtdLibMax'];
     let setup = req.body['setup'];
     const updateQtyQuery = [];
-    console.log("object");
-    for (const itens of Object.entries(setup)) {
-        updateQtyQuery.push(`
-            INSERT INTO CST_RIP_ODF_PRODUCAO (ODF, ITEM, REVISAO, NUMCAR, ESPECIFICACAO, LIE, LSE, SETUP, M2, M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13, INSTRUMENTO, OPE_MAQUIN, OPERACAO) 
-            VALUES('0','1', '0' , '0', '0','0', '0' , '${itens}', '0','0', '0' , '0', '0','0', '0' , '0', '0','0', '0' , '0', '0','0', '0' )`);
+    if (Object.keys(setup).length <= 0) {
+        return res.json({ message: "rip vazia" });
     }
+    const resultSplitLines = Object.keys(setup).reduce((acc, interator) => {
+        const [col, lin] = interator.split("-");
+        const value = setup[interator];
+        if (acc[lin] === undefined)
+            acc[lin] = {};
+        acc[lin][col] = Number(value);
+        return acc;
+    }, {});
+    Object.entries(resultSplitLines).forEach(([row, cols], i) => {
+        updateQtyQuery.push(`
+            INSERT INTO 
+            CST_RIP_ODF_PRODUCAO 
+            (ODF, ITEM, REVISAO, NUMCAR, ESPECIFICACAO, LIE, LSE, SETUP, M2, M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13, INSTRUMENTO, OPE_MAQUIN, OPERACAO) 
+            VALUES('${NUMERO_ODF}','1', '${revisao}' , '0', '0','0', '0',${resultSplitLines[row].SETUP ? `'${resultSplitLines[row].SETUP}'` : null},${resultSplitLines[row].M2 ? `'${resultSplitLines[row].M2}'` : null},${resultSplitLines[row].M3 ? `'${resultSplitLines[row].M3}'` : null},${resultSplitLines[row].M4 ? `'${resultSplitLines[row].M4}'` : null},${resultSplitLines[row].M5 ? `'${resultSplitLines[row].M5}'` : null},${resultSplitLines[row].M6 ? `'${resultSplitLines[row].M6}'` : null},${resultSplitLines[row].M7 ? `'${resultSplitLines[row].M7}'` : null},${resultSplitLines[row].M8 ? `'${resultSplitLines[row].M8}'` : null},${resultSplitLines[row].M9 ? `'${resultSplitLines[row].M9}'` : null},${resultSplitLines[row].M10 ? `'${resultSplitLines[row].M10}'` : null},${resultSplitLines[row].M11 ? `'${resultSplitLines[row].M11}'` : null},${resultSplitLines[row].M12 ? `'${resultSplitLines[row].M12}'` : null},${resultSplitLines[row].M13 ? `'${resultSplitLines[row].M13}'` : null},'0','${CODIGO_MAQUINA}','${NUMERO_OPERACAO}')`);
+    });
     await connection.query(updateQtyQuery.join("\n"));
-    console.log("ok");
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
         return input && input
@@ -604,29 +615,23 @@ apiRouter.route("/lancamentoRip")
             .map((char) => (allowedChars.test(char) ? char : ""))
             .join("");
     }
-    setup = sanitize(setup);
     let end = new Date().getTime();
     let start = req.cookies["starterBarcode"];
     let tempoDecorrido = Number(new Date(start).getTime());
     let final = Number(end - tempoDecorrido);
-    console.log('final ', final);
     let endProdRip = new Date().getDate();
     let startRip = req.cookies["startRip"];
     let tempoDecorridoRip = Number(new Date(startRip).getDate());
     let finalProdRip = Number(tempoDecorridoRip - endProdRip);
-    console.log('finalProdRip ', finalProdRip);
     await connection.query(`
-            INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-                VALUES(GETDATE(), '${funcionario}' , '${NUMERO_ODF}' , '${codigoPeca}' , '${revisao}' , ${NUMERO_OPERACAO} ,${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '6' , '6', 'Fin Prod.' , '${final}' , '${final}' , '1' ,'0','0')`);
-    await connection.query(`
-            INSERT INTO CST_RIP_ODF_PRODUCAO (ODF, ITEM, REVISAO, NUMCAR, ESPECIFICACAO, LIE, LSE, SETUP, M2, M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13, INSTRUMENTO, OPE_MAQUIN, OPERACAO) 
-            VALUES('0','1', '0' , '0', '0','0', '0' , '0', '0','0', '0' , '0', '0','0', '0' , '0', '0','0', '0' , '0', '0','0', '0' )`);
+            INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
+        VALUES(GETDATE(), '${funcionario}', '${NUMERO_ODF}', '${codigoPeca}', '${revisao}', ${NUMERO_OPERACAO}, ${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}', '${qtdLibMax}', '0', '0', '${funcionario}', '0', '6', '6', 'Fin Prod.', '${finalProdRip}', '${finalProdRip}', '1', '0', '0')`);
     try {
-        console.log("ok feito linha 751");
-        res.json({ message: "rip enviada, odf finalizada" });
+        return res.json({ message: "rip enviada, odf finalizada" });
     }
     catch (error) {
         console.log(error);
+        return res.json({ message: "ocorreu um erro ao enviar os dados da rip" });
     }
     finally {
         await connection.close();

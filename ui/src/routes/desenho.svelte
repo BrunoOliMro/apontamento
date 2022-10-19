@@ -1,7 +1,7 @@
 <script>
     import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
     export let Subtitle = "DESENHO";
-    let zoomNumber = 100;
+    let zoomNumber = 400;
     let rotation = 0;
     let imagemBack = [];
     let urlString = `/api/v1/desenho?`;
@@ -30,11 +30,19 @@
     }
 
     function zoomIn() {
-        zoomNumber += 10
+        var img = document.getElementById("img");
+        var width = img.clientWidth;
+        img.style.width = width + zoomNumber + "px";
+        console.log(img);
+        console.log(width);
     }
 
     function zoomOut() {
-        zoomNumber -= 10
+        var img = document.getElementById("img");
+        var width = img.clientWidth;
+        img.style.width = width - zoomNumber + "px";
+        console.log(img);
+        console.log(width);
     }
     function print() {
         window.print();
@@ -68,20 +76,19 @@
         {#await resultado}
             <div>AGUARDE...</div>
         {:then item}
-        <div class="frame">
-            {#each imagemBack as column}
-                {#if imagemBack.length > 0}
-                    <img
-                        media="print"
-                        id="img"
-                        class="img"
-                        src={column}
-                        alt=""
-                        style="zoom:{zoomNumber}%"
-                    />
+            <div class="frame">
+                {#each imagemBack as column}
+                    {#if imagemBack.length > 0}
+                        <img
+                            media="print"
+                            id="img"
+                            class="img"
+                            src={column}
+                            alt=""
+                        />
                     {/if}
-                    {/each}
-                </div>
+                {/each}
+            </div>
         {/await}
     </div>
 
@@ -91,7 +98,7 @@
 </main>
 
 <style>
-    .frame{
+    .frame {
         display: flex;
         flex-direction: column;
         justify-content: center;

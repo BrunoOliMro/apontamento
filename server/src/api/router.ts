@@ -1,6 +1,6 @@
 import { Router } from "express";
 //import assert from "node:assert";
-import mssql, { Numeric } from "mssql";
+import mssql from "mssql";
 import { sqlConfig } from "../global.config";
 import { pictures } from "./pictures";
 
@@ -695,60 +695,30 @@ apiRouter.route("/lancamentoRip")
         let funcionario = req.cookies['FUNCIONARIO']
         let revisao = req.cookies['REVISAO']
         let qtdLibMax = req.cookies['qtdLibMax']
-        let setup = req.body['setup']
-        const updateQtyQuery = [];
+        let setup: string = req.body['setup']
+        const updateQtyQuery: string[] = [];
 
-        console.log("object");
-        for (const itens of Object.entries(setup)) {
-            updateQtyQuery.push(`
-            INSERT INTO CST_RIP_ODF_PRODUCAO (ODF, ITEM, REVISAO, NUMCAR, ESPECIFICACAO, LIE, LSE, SETUP, M2, M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13, INSTRUMENTO, OPE_MAQUIN, OPERACAO) 
-            VALUES('0','1', '0' , '0', '0','0', '0' , '${itens}', '0','0', '0' , '0', '0','0', '0' , '0', '0','0', '0' , '0', '0','0', '0' )`);
-            
+        if (Object.keys(setup).length <= 0) {
+            return res.json({ message: "rip vazia" })
         }
+
+        const resultSplitLines: { [k: string]: any; } = Object.keys(setup).reduce((acc: any, interator: any) => {
+            const [col, lin] = interator.split("-")
+            const value = setup[interator];
+            if (acc[lin] === undefined) acc[lin] = {}
+            acc[lin][col] = Number(value)
+            return acc
+        }, <{ [k: string]: any; }>{})
+
+
+        Object.entries(resultSplitLines).forEach(([row, cols], i) => {
+            updateQtyQuery.push(`
+            INSERT INTO 
+            CST_RIP_ODF_PRODUCAO 
+            (ODF, ITEM, REVISAO, NUMCAR, ESPECIFICACAO, LIE, LSE, SETUP, M2, M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13, INSTRUMENTO, OPE_MAQUIN, OPERACAO) 
+            VALUES('${NUMERO_ODF}','1', '${revisao}' , '0', '0','0', '0',${resultSplitLines[row].SETUP ? `'${resultSplitLines[row].SETUP}'` : null},${resultSplitLines[row].M2 ? `'${resultSplitLines[row].M2}'` : null},${resultSplitLines[row].M3 ? `'${resultSplitLines[row].M3}'` : null},${resultSplitLines[row].M4 ? `'${resultSplitLines[row].M4}'` : null},${resultSplitLines[row].M5 ? `'${resultSplitLines[row].M5}'` : null},${resultSplitLines[row].M6 ? `'${resultSplitLines[row].M6}'` : null},${resultSplitLines[row].M7 ? `'${resultSplitLines[row].M7}'` : null},${resultSplitLines[row].M8 ? `'${resultSplitLines[row].M8}'` : null},${resultSplitLines[row].M9 ? `'${resultSplitLines[row].M9}'` : null},${resultSplitLines[row].M10 ? `'${resultSplitLines[row].M10}'` : null},${resultSplitLines[row].M11 ? `'${resultSplitLines[row].M11}'` : null},${resultSplitLines[row].M12 ? `'${resultSplitLines[row].M12}'` : null},${resultSplitLines[row].M13 ? `'${resultSplitLines[row].M13}'` : null},'0','${CODIGO_MAQUINA}','${NUMERO_OPERACAO}')`)})
         await connection.query(updateQtyQuery.join("\n"))
 
-
-        // //const updateQtyRes = [];
-        // for (const [i, qtdItem] of setup.entries()) {
-        //     updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
-        // }
-        // console.log('res:  ', res);
-
-        //let m1 = setup.map((e: string) => e)
-        //let m1: string = String(setup.SETUP-1)
-
-        // let y = setup.map((e: string) => e)
-
-        // let m1 = Object.keys(setup)
-        // let valoresObj = Object.values(setup)
-        // console.log('valoresObj:linha 706 ',valoresObj);
-
-        // let indiceDoObject = Object.entries(setup)
-        // console.log('indiceDoObject:linha 706 ',indiceDoObject);
-
-        // let x = m1.map( e => e)
-        // console.log('x: linha 701', x);
-
-
-        // let j = y.map( e => e)
-        // console.log('x: linha 715', j);
-
-
-        //let SETUP = req.body.SETUP.trim()
-        // let M2 = req.body["M2"].trim()
-        // let M3 = req.body["M3"].trim()
-        // let M4 = req.body["M4"].trim()
-        // let M5 = req.body["M5"].trim()
-        // let M6 = req.body["M6"].trim()
-        // let M7 = req.body["M7"].trim()
-        // let M8 = req.body["M8"].trim()
-        // let M9 = req.body["M9"].trim()
-        // let M10 = req.body["M10"].trim()
-        // let M11 = req.body["M11"].trim()
-        // let M12 = req.body["M12"].trim()
-        // let M13 = req.body["M13"].trim()
-
-        console.log("ok");
         function sanitize(input?: string) {
             const allowedChars = /[A-Za-z0-9]/;
             return input && input
@@ -756,43 +726,42 @@ apiRouter.route("/lancamentoRip")
                 .map((char) => (allowedChars.test(char) ? char : ""))
                 .join("");
         }
-        setup = sanitize(setup)
+        //setup = sanitize(setup)
 
         //Encerra o processo todo
         let end = new Date().getTime();
         let start: number = req.cookies["starterBarcode"]
         let tempoDecorrido = Number(new Date(start).getTime())
         let final: number = Number(end - tempoDecorrido)
-        console.log('final ', final);
+        //console.log('final ', final);
 
         // Encerra ao final da Rip
         let endProdRip = new Date().getDate();
         let startRip: number = req.cookies["startRip"]
         let tempoDecorridoRip = Number(new Date(startRip).getDate())
         let finalProdRip: number = Number(tempoDecorridoRip - endProdRip)
-        console.log('finalProdRip ', finalProdRip);
+        //console.log('finalProdRip ', finalProdRip);
+
 
         //Insere O CODAPONTA 6 e Tempo da rip
         await connection.query(`
-            INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-                VALUES(GETDATE(), '${funcionario}' , '${NUMERO_ODF}' , '${codigoPeca}' , '${revisao}' , ${NUMERO_OPERACAO} ,${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '6' , '6', 'Fin Prod.' , '${final}' , '${final}' , '1' ,'0','0')`)
+            INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
+        VALUES(GETDATE(), '${funcionario}', '${NUMERO_ODF}', '${codigoPeca}', '${revisao}', ${NUMERO_OPERACAO}, ${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}', '${qtdLibMax}', '0', '0', '${funcionario}', '0', '6', '6', 'Fin Prod.', '${finalProdRip}', '${finalProdRip}', '1', '0', '0')`)
 
-        //Looping todos os itens do front para dar insert no banco
-        // console.log(setup.length);
-        // for (const element of setup) {
-        //     console.log(element);
-        // }
+        //Atualiza o tempo total que a operação levou
+        // await connection.query(`
+        //         UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = '${final}' WHERE 1 = 1 AND NUMERO_ODF = '1444592' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '999' AND CODIGO_MAQUINA = 'EX002`)
 
         //Insere os dados no banco
-        await connection.query(`
-            INSERT INTO CST_RIP_ODF_PRODUCAO (ODF, ITEM, REVISAO, NUMCAR, ESPECIFICACAO, LIE, LSE, SETUP, M2, M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13, INSTRUMENTO, OPE_MAQUIN, OPERACAO) 
-            VALUES('0','1', '0' , '0', '0','0', '0' , '0', '0','0', '0' , '0', '0','0', '0' , '0', '0','0', '0' , '0', '0','0', '0' )`)
+        // await connection.query(`
+        //     INSERT INTO CST_RIP_ODF_PRODUCAO (ODF, ITEM, REVISAO, NUMCAR, ESPECIFICACAO, LIE, LSE, SETUP, M2, M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13, INSTRUMENTO, OPE_MAQUIN, OPERACAO) 
+        //     VALUES('0','1', '0' , '0', '0','0', '0' , '0', '0','0', '0' , '0', '0','0', '0' , '0', '0','0', '0' , '0', '0','0', '0' )`)
 
         try {
-            console.log("ok feito linha 751");
-            res.json({ message: "rip enviada, odf finalizada" })
+            return res.json({ message: "rip enviada, odf finalizada" })
         } catch (error) {
             console.log(error)
+            return res.json({ message: "ocorreu um erro ao enviar os dados da rip" })
         } finally {
             await connection.close()
         }

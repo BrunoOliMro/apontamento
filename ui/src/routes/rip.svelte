@@ -8,6 +8,7 @@
     let showEnd = false;
     let ripTable = [];
     let setup = {};
+    let showErrorEmpty = false;
     callRip();
 
     async function callRip() {
@@ -25,6 +26,9 @@
                 setup: setup,
             }),
         }).then((res) => res.json());
+        if (res.message === "rip vazia") {
+            showErrorEmpty = true;
+        }
         if (res.message === "rip enviada, odf finalizada") {
             showEnd = true;
             window.location.href = "/#/codigobarras";
@@ -52,7 +56,7 @@
     // }
     function createCol() {
         if (extraColumns.length < 7) {
-            extraColumns = [...extraColumns, extraColumns.length + 6];
+            extraColumns = [...extraColumns, extraColumns.length + 7];
         }
     }
 
@@ -118,6 +122,9 @@
     {/if}
     {#if showEnd === true}
         <h3>ODF FINALIZADA</h3>
+    {/if}
+    {#if showErrorEmpty === true}
+        <h3>rip vazia, envio invalido</h3>
     {/if}
 </main>
 
