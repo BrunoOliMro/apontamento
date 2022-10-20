@@ -459,6 +459,7 @@ apiRouter.route("/apontar")
     let OPERACAO_PROXIMA = req.cookies['OPERACAO_PROXIMA'];
     let funcionario = req.cookies['FUNCIONARIO'];
     let revisao = Number(req.cookies['REVISAO']) || 0;
+    const updateQtyQuery = [];
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
         return input && input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
@@ -493,6 +494,39 @@ apiRouter.route("/apontar")
     }
     valorTotalApontado = Number(valorTotalApontado);
     qtdLibMax = Number(qtdLibMax);
+    if (condic === undefined || condic === null) {
+        condic = 0;
+        codigoFilho = 0;
+    }
+    if (condic === 'P') {
+        try {
+            for (const [i, qtdItem] of reservedItens.entries()) {
+                updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
+            }
+            await connection.query(updateQtyQuery.join("\n"));
+        }
+        catch (err) {
+            return res.json({ message: 'erro ao efetivar estoque das peças filhas ' });
+        }
+    }
+    const hisReal = await connection.query(`SELECT TOP 1 SALDO FROM  HISREAL WHERE 1 = 1`).then(record => record.recordset);
+    try {
+        await connection.query(`
+            SELECT E.CODIGO,CAST('${NUMERO_ODF}' + '/' + 'DATA HORA' AS VARCHAR(200)),
+            '${qtdBoas}',
+            MAX(VALPAGO),
+            'E', ('${hisReal[0].SALDO}' + '${qtdBoas}'),
+            GETDATE(),0,'${funcionario}','${NUMERO_ODF}',0,1,1,MAX(CUSTO_MEDIO),MAX(CUSTO_TOTAL),
+            MAX(CUSTO_UNITARIO),MAX(CATEGORIA),MAX(E.DESCRI),1,MAX(E.UNIDADE),'S','N','APONTAMENTO',
+            'VERSAO DO APONTAMENTO','ENDERECO DO WMS','HOSTNAME DA MAQUINA QUE ESTA APONTANDO','IP DA MAQUINA QUE ESTA APONTANDO' 
+            FROM ESTOQUE E(NOLOCK)
+            WHERE 1 = 1 
+            AND E.CODIGO ='${codigoPeca}' GROUP BY E.CODIGO;`);
+    }
+    catch (error) {
+        console.log(error);
+        return res.json({ message: 'erro ao enviar o apontamento' });
+    }
     try {
         if (valorTotalApontado < qtdLibMax) {
             await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
@@ -508,25 +542,13 @@ apiRouter.route("/apontar")
             INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, MOTIVO_REFUGO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
             VALUES(GETDATE(), '${funcionario}' , '${NUMERO_ODF}' , '${codigoPeca}' , '${revisao}' , ${NUMERO_OPERACAO} ,${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '4' , '4', 'Fin Prod.' , '${finalProdTimer}' , '${finalProdTimer}' , '1', UPPER('${motivorefugo}') ,'0','0')`);
         if (NUMERO_OPERACAO === "00999") {
-            console.log("Linha 603: 999");
-            const updateProxOdfToS = await connection.query(`UPDATE ESTOQUE SET SALDOREAL = '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
-            console.log('updateProxOdfToS: ', updateProxOdfToS);
-        }
-        if (condic === undefined || condic === null) {
-            condic = 0;
-            codigoFilho = 0;
-        }
-        if (condic === 'P') {
             try {
-                const updateQtyQuery = [];
-                for (const [i, qtdItem] of reservedItens.entries()) {
-                    updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
-                }
-                const res = await connection.query(updateQtyQuery.join("\n"));
-                console.log('res:  ', res);
+                const updateProxOdfToS = await connection.query(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 =1 AND CODIGO = '${codigoPeca}'`);
+                console.log('updateProxOdfToS: ', updateProxOdfToS);
             }
-            catch (err) {
-                return res.json({ message: 'erro ao enviar o apontamento' });
+            catch (error) {
+                console.log(error);
+                return res.json({ message: 'erro ao inserir estoque' });
             }
         }
         return res.json({ message: 'valores apontados com sucesso' });
@@ -567,6 +589,12 @@ apiRouter.route("/rip")
             AND NUMCAR < '2999'
             ORDER BY NUMPEC ASC
                 `.trim()).then(result => result.recordset);
+        res.cookie('numCar', resource.map(e => e.NUMCAR));
+        res.cookie('descricao', resource.map(e => e.DESCRICAO));
+        res.cookie('especif', resource.map(e => e.ESPECIF));
+        res.cookie('instrumento', resource.map(e => e.INSTRUMENTO));
+        res.cookie('lie', resource.map(e => e.LIE));
+        res.cookie('lse', resource.map(e => e.LSE));
         return res.json(resource);
     }
     catch (error) {
@@ -589,31 +617,21 @@ apiRouter.route("/lancamentoRip")
     let qtdLibMax = req.cookies['qtdLibMax'];
     let setup = req.body['setup'];
     const updateQtyQuery = [];
-    if (Object.keys(setup).length <= 0) {
-        return res.json({ message: "rip vazia" });
-    }
-    const resultSplitLines = Object.keys(setup).reduce((acc, interator) => {
-        const [col, lin] = interator.split("-");
-        const value = setup[interator];
-        if (acc[lin] === undefined)
-            acc[lin] = {};
-        acc[lin][col] = Number(value);
-        return acc;
-    }, {});
-    Object.entries(resultSplitLines).forEach(([row, cols], i) => {
-        updateQtyQuery.push(`
-            INSERT INTO 
-            CST_RIP_ODF_PRODUCAO 
-            (ODF, ITEM, REVISAO, NUMCAR, ESPECIFICACAO, LIE, LSE, SETUP, M2, M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13, INSTRUMENTO, OPE_MAQUIN, OPERACAO) 
-            VALUES('${NUMERO_ODF}','1', '${revisao}' , '0', '0','0', '0',${resultSplitLines[row].SETUP ? `'${resultSplitLines[row].SETUP}'` : null},${resultSplitLines[row].M2 ? `'${resultSplitLines[row].M2}'` : null},${resultSplitLines[row].M3 ? `'${resultSplitLines[row].M3}'` : null},${resultSplitLines[row].M4 ? `'${resultSplitLines[row].M4}'` : null},${resultSplitLines[row].M5 ? `'${resultSplitLines[row].M5}'` : null},${resultSplitLines[row].M6 ? `'${resultSplitLines[row].M6}'` : null},${resultSplitLines[row].M7 ? `'${resultSplitLines[row].M7}'` : null},${resultSplitLines[row].M8 ? `'${resultSplitLines[row].M8}'` : null},${resultSplitLines[row].M9 ? `'${resultSplitLines[row].M9}'` : null},${resultSplitLines[row].M10 ? `'${resultSplitLines[row].M10}'` : null},${resultSplitLines[row].M11 ? `'${resultSplitLines[row].M11}'` : null},${resultSplitLines[row].M12 ? `'${resultSplitLines[row].M12}'` : null},${resultSplitLines[row].M13 ? `'${resultSplitLines[row].M13}'` : null},'0','${CODIGO_MAQUINA}','${NUMERO_OPERACAO}')`);
-    });
-    await connection.query(updateQtyQuery.join("\n"));
+    let especif = req.cookies['especif'];
+    let numCar = req.cookies['numCar'];
+    let lie = req.cookies['lie'];
+    let lse = req.cookies['lse'];
+    let instrumento = req.cookies['instrumento'];
+    console.log('numCar: ', numCar);
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
         return input && input
             .split("")
             .map((char) => (allowedChars.test(char) ? char : ""))
             .join("");
+    }
+    if (Object.keys(setup).length <= 0) {
+        return res.json({ message: "rip vazia" });
     }
     let end = new Date().getTime();
     let start = req.cookies["starterBarcode"];
@@ -626,6 +644,31 @@ apiRouter.route("/lancamentoRip")
     await connection.query(`
             INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
         VALUES(GETDATE(), '${funcionario}', '${NUMERO_ODF}', '${codigoPeca}', '${revisao}', ${NUMERO_OPERACAO}, ${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}', '${qtdLibMax}', '0', '0', '${funcionario}', '0', '6', '6', 'Fin Prod.', '${finalProdRip}', '${finalProdRip}', '1', '0', '0')`);
+    try {
+        await connection.query(`
+                    UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
+    }
+    catch (error) {
+        console.log(error);
+        return res.json({ message: 'ocorreu um erro ao enviar os dados da rip' });
+    }
+    const resultSplitLines = Object.keys(setup).reduce((acc, interator) => {
+        const [col, lin] = interator.split("-");
+        const value = setup[interator];
+        if (acc[lin] === undefined)
+            acc[lin] = {};
+        acc[lin][col] = Number(value);
+        return acc;
+    }, {});
+    Object.entries(resultSplitLines).forEach(([row, cols], i) => {
+        console.log("linha 759");
+        updateQtyQuery.push(`
+            INSERT INTO 
+            CST_RIP_ODF_PRODUCAO 
+            (ODF, ITEM, REVISAO, NUMCAR, ESPECIFICACAO, LIE, LSE, SETUP, M2, M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13, INSTRUMENTO, OPE_MAQUIN, OPERACAO) 
+            VALUES('${NUMERO_ODF}','1', '${revisao}' , '${numCar}', '${especif}','${lie}', '${lse}',${resultSplitLines[row].SETUP ? `'${resultSplitLines[row].SETUP}'` : null},${resultSplitLines[row].M2 ? `'${resultSplitLines[row].M2}'` : null},${resultSplitLines[row].M3 ? `'${resultSplitLines[row].M3}'` : null},${resultSplitLines[row].M4 ? `'${resultSplitLines[row].M4}'` : null},${resultSplitLines[row].M5 ? `'${resultSplitLines[row].M5}'` : null},${resultSplitLines[row].M6 ? `'${resultSplitLines[row].M6}'` : null},${resultSplitLines[row].M7 ? `'${resultSplitLines[row].M7}'` : null},${resultSplitLines[row].M8 ? `'${resultSplitLines[row].M8}'` : null},${resultSplitLines[row].M9 ? `'${resultSplitLines[row].M9}'` : null},${resultSplitLines[row].M10 ? `'${resultSplitLines[row].M10}'` : null},${resultSplitLines[row].M11 ? `'${resultSplitLines[row].M11}'` : null},${resultSplitLines[row].M12 ? `'${resultSplitLines[row].M12}'` : null},${resultSplitLines[row].M13 ? `'${resultSplitLines[row].M13}'` : null},'${instrumento}','${CODIGO_MAQUINA}','${NUMERO_OPERACAO}')`);
+    });
+    await connection.query(updateQtyQuery.join("\n"));
     try {
         return res.json({ message: "rip enviada, odf finalizada" });
     }
@@ -726,15 +769,16 @@ apiRouter.route("/returnedValue")
 apiRouter.route("/supervisor")
     .post(async (req, res) => {
     let supervisor = String(req.body['supervisor']);
+    console.log("object");
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const resource = await connection.query(`
             SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`).then(result => result.recordset);
         if (resource.length > 0) {
-            return res.status(200).json();
+            return res.status(200).json({ message: 'supervisor encontrado' });
         }
         else {
-            return res.status(400).json();
+            return res.status(400).json({ message: 'supervisor não encontrado' });
         }
     }
     catch (error) {

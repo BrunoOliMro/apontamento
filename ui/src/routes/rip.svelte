@@ -9,6 +9,10 @@
     let ripTable = [];
     let setup = {};
     let showErrorEmpty = false;
+    let showSuper = false;
+    let supervisor = "";
+    let supervisorApi = `/api/v1/supervisor`;
+    let showError = false;
     callRip();
 
     async function callRip() {
@@ -16,8 +20,39 @@
         ripTable = await res.json();
     }
 
+    const doPostSuper = async () => {
+        const headers = new Headers();
+        headers.append("Content-Type", "application/json");
+        const res = await fetch(supervisorApi, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                supervisor: !supervisor ? "" : supervisor,
+            }),
+        }).then((res) => res.json());
+        if (res.message === "supervisor encontrado") {
+            showSuper = false;
+            doPost();
+            window.location.href = "/#/codigobarras";
+            location.reload();
+        } else if (res.message === "supervisor não encontrado") {
+            showError = true;
+        }
+    };
+
+    const check = (event) => {
+        // if ((event.target.style.borderColor = "red")) {
+        //     showSuper = true;
+        // } 
+        
+        if (setup.length === undefined) {
+            showErrorEmpty = true;
+        } else {
+            doPost();
+        }
+    };
+
     const doPost = async () => {
-        console.log();
         const headers = new Headers();
         const res = await fetch(urlS, {
             method: "POST",
@@ -35,25 +70,6 @@
         }
     };
 
-    // async function doPost() {
-    //     const res = await fetch(urlS, {
-    //         method: "POST",
-    //         body: JSON.stringify({
-    //             idInput: idInput,
-    //         }),
-    //     });
-    //     showEnd = true;
-    // }
-
-    // async function doReturn() {
-    //     const res = await fetch(returnedValueApi, {
-    //         method: "POST",
-    //         body: JSON.stringify({
-    //             returnValueStorage: returnValueStorage,
-    //             superCracha: superCracha,
-    //         }),
-    //     });
-    // }
     function createCol() {
         if (extraColumns.length < 7) {
             extraColumns = [...extraColumns, extraColumns.length + 7];
@@ -76,7 +92,7 @@
         <button on:click={createCol} class="sideButton" type="submit"
             >Adicionar coluna</button
         >
-        <button on:click={doPost} class="sideButton" type="submit"
+        <button on:click={check} class="sideButton" type="submit"
             >Enviar dados</button
         >
     </div>
@@ -123,8 +139,22 @@
     {#if showEnd === true}
         <h3>ODF FINALIZADA</h3>
     {/if}
+    {#if showSuper === true}
+        <h3>Supervisor</h3>
+        <input
+            bind:value={supervisor}
+            onkeyup="this.value = this.value.toUpperCase()"
+            type="text"
+            name="supervisor"
+            id="supervisor"
+        />
+        <button on:click={doPostSuper}>Confirma</button>
+    {/if}
     {#if showErrorEmpty === true}
         <h3>rip vazia, envio invalido</h3>
+    {/if}
+    {#if showError === true}
+        <h3>Algo deu errado</h3>
     {/if}
 </main>
 

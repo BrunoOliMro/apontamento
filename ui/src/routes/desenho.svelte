@@ -33,16 +33,12 @@
         var img = document.getElementById("img");
         var width = img.clientWidth;
         img.style.width = width + zoomNumber + "px";
-        console.log(img);
-        console.log(width);
     }
 
     function zoomOut() {
         var img = document.getElementById("img");
         var width = img.clientWidth;
         img.style.width = width - zoomNumber + "px";
-        console.log(img);
-        console.log(width);
     }
     function print() {
         window.print();

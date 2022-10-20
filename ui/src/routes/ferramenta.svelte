@@ -1,6 +1,4 @@
 <script>
-  import { each, onMount } from "svelte/internal";
-  import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
   let urlString = `/api/v1/ferramenta`;
   let fetchItem = [];
   let resultado = getfetchItem();
