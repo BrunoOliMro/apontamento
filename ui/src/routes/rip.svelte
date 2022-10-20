@@ -1,4 +1,5 @@
 <script>
+    // @ts-nocheck
     import TableRipRow from "../components/Tables/TableRipRow.svelte";
     let seq = "Seq";
     let extraColumns = [];
@@ -13,6 +14,7 @@
     let supervisor = "";
     let supervisorApi = `/api/v1/supervisor`;
     let showError = false;
+    let showSetup = false;
     callRip();
 
     async function callRip() {
@@ -40,18 +42,6 @@
         }
     };
 
-    const check = (event) => {
-        // if ((event.target.style.borderColor = "red")) {
-        //     showSuper = true;
-        // } 
-        
-        if (setup.length === undefined) {
-            showErrorEmpty = true;
-        } else {
-            doPost();
-        }
-    };
-
     const doPost = async () => {
         const headers = new Headers();
         const res = await fetch(urlS, {
@@ -69,21 +59,40 @@
             window.location.href = "/#/codigobarras";
         }
     };
-
     function createCol() {
-        if (extraColumns.length < 7) {
-            extraColumns = [...extraColumns, extraColumns.length + 7];
+        //console.log("ripTable=row.values:66", ripTable);
+        // let x = ripTable.map((acc) => {
+        //     let bool = acc.values.setup === "";
+        //     if (bool === true) {
+        //         showSetup = true;
+        //     }
+        //     return bool;
+        // });
+
+        let y = ripTable.reduce((acc, int) => {
+            console.log('acc linha 73' ,acc);
+            console.log('acc linha 74' ,int.values.setup);
+            if (int.values.setup === "") {
+                return acc;
+            }
+            return acc;
+        }, false);
+
+        if (y === false) {
+            if (extraColumns.length < 13) {
+                extraColumns = [...extraColumns, extraColumns.length + 2];
+            }
+        } else {
+            showSetup = true;
         }
     }
+    const check = () => {
+        doPost();
+    };
 
-    // let showmodal = false;
-    // function closePop() {
-    //     if (showmodal === false) {
-    //         showmodal = true;
-    //     } else {
-    //         showmodal = false;
-    //     }
-    // }
+    function close() {
+        showSetup = false;
+    }
 </script>
 
 <main>
@@ -111,10 +120,10 @@
                             <th scope="col">LSE</th>
                             <th scope="col">Instrumento</th>
                             <th scope="col">SETUP</th>
-                            <th scope="col">M 2</th>
+                            <!-- <th scope="col">M 2</th>
                             <th scope="col">M 3</th>
                             <th scope="col">M 4</th>
-                            <th scope="col">M 5</th>
+                            <th scope="col">M 5</th> -->
                             {#each extraColumns as columnNumber}
                                 <th scope="col">M {columnNumber}</th>
                             {/each}
@@ -124,6 +133,7 @@
                         {#each ripTable as row, i}
                             <TableRipRow
                                 bind:setup
+                                bind:values={row.values}
                                 dados={row}
                                 indice={i + 1}
                                 {extraColumns}
@@ -155,6 +165,11 @@
     {/if}
     {#if showError === true}
         <h3>Algo deu errado</h3>
+    {/if}
+
+    {#if showSetup === true}
+        <h3>Preencha a coluna Setup antes</h3>
+        <button on:click={close}>Confirma</button>
     {/if}
 </main>
 

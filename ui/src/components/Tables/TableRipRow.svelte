@@ -3,7 +3,22 @@
     export let dados;
     export let indice;
     export let extraColumns;
-    export let value = "";
+    export let value;
+    export let values = {
+        setup: "",
+        M2: "",
+        M3: "",
+        M4: "",
+        M5: "",
+        M6: "",
+        M7: "",
+        M8: "",
+        M9: "",
+        M10: "",
+        M11: "",
+        M12: "",
+        M13: "",
+    };
     export let setup = {};
     let id = "";
 
@@ -11,7 +26,6 @@
         let userInputValue = event.target.value;
         let lie = dados.LIE;
         let lsd = dados.LSE;
-       // console.log('event: ', event.target.style);
 
         if (userInputValue < lie && userInputValue.length !== 0) {
             event.target.style.borderColor = "red";
@@ -26,21 +40,16 @@
         } else if (userInputValue.length === 0) {
             event.target.style.borderColor = "black";
         }
-
-        if (lie === null) {
-            event.target.style.borderColor = "green";
-            //event.target.setAttribute("disabled", "disabled");
-        }
     }
 
     function target(event) {
         id = event.target.id;
-        value = event.target.value;
-        setup[id] = value;
+        values = event.target.value;
+        setup[id] = values;
     }
 
     function blockForbiddenChars(event) {
-        //event.target.value = preSanitize(event.target.value);
+        event.target.value = preSanitize(event.target.value);
     }
 
     function preSanitize(input) {
@@ -63,24 +72,24 @@
     <td>{dados.INSTRUMENTO === null ? "S/I" : dados.INSTRUMENTO}</td>
     <td
         ><input
-            on:input={checkColor}
-            onkeyup="this.value = this.value.toUpperCase()"
             on:input={target}
+            on:input={checkColor}
+            on:input={blockForbiddenChars}
+            bind:value
+            onkeyup="this.value = this.value.toUpperCase()"
             id={"SETUP-" + indice}
             name={"SETUP-" + indice}
             type="text"
         /></td
     >
-    <td
-        ><input
+    <!-- <td> <input
             on:input={checkColor}
             on:input={target}
             onkeyup="this.value = this.value.toUpperCase()"
             id={"M2-" + indice}
             name={"M2-" + indice}
             type="text "
-        /></td
-    >
+        /></td>
     <td
         ><input
             on:input={checkColor}
@@ -109,8 +118,7 @@
             id={"M5-" + indice}
             name={"M5-" + indice}
             type="text"
-        /></td
-    >
+        /></td> -->
 
     {#each extraColumns as columnNumber}
         <td>
@@ -118,6 +126,7 @@
                 on:input={checkColor}
                 onkeyup="this.value = this.value.toUpperCase()"
                 on:input={target}
+                bind:value
                 id={"M" + columnNumber + "-" + indice}
                 name={"M" + columnNumber + "-" + indice}
                 type="text"
