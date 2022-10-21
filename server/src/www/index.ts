@@ -3,7 +3,7 @@
 import app from "../app";
 import http from "node:http";
 
-const PORT = normalizePort(process.env["PORT"] || "3000");
+const PORT = normalizePort( "3000");
 
 app.set("port", PORT);
 
@@ -13,8 +13,8 @@ server.on("error", onErrorHandler);
 server.on("listening", onListeningHandler);
 
 process.on("exit", () => server.close());
-process.on("uncaughtException", () => server.close());
-process.on("unhandledRejection", () => server.close());
+// process.on("uncaughtException", () => server.close());
+// process.on("unhandledRejection", () => server.close());
 process.on("SIGTERM", () => server.close());
 
 server.listen(PORT);

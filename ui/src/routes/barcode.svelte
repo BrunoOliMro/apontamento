@@ -1,4 +1,6 @@
 <script>
+  // @ts-nocheck
+
   import { bind } from "svelte/internal";
   import Title from "../components/title/title.svelte";
   let value;
@@ -68,20 +70,27 @@
       body: JSON.stringify({
         codigoBarras: !codigoBarras ? "" : codigoBarras,
       }),
-    });
+    })
+    // .then( res => res.json());
+    // console.log('linha 740 ',res);
+    // if(res.message === 'okkk'){
+    //   window.location.href = "/#/codigobarras";
+    // }
+    console.log('barcodeMsg: ',barcodeMsg);
     if (barcodeMsg === "red") {
       barcodeMsg = "";
       window.location.href = "/#/ferramenta";
+      location.reload();
     }
   };
 
   const checkBagde = async () => {
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
-    const res = await fetch(urlBagde, {
+    await fetch(urlBagde, {
       method: "POST",
       body: JSON.stringify({
-        cracha: !cracha ? "" : cracha,
+        cracha,
       }),
       headers,
     });
@@ -90,6 +99,7 @@
   function closePop() {
     document.getElementById("s").style.display = "none";
     window.location.href = "/#/codigobarras";
+    location.reload();
   }
   function returnValue() {
     if (showmodal === false) {
@@ -106,19 +116,20 @@
         returnValueStorage: returnValueStorage,
         supervisor: supervisor,
         quantity: quantity,
-        codigoBarras: !codigoBarras ? "" : codigoBarras,
+        codigoBarras: codigoBarras,
       }),
-    });
-    if (res.ok) {
+    }).then((res) => res.json());
+    if ((res.message = "estorno feito")) {
       showmodal = false;
       showCorr = true;
       window.location.href = "/#/codigobarras";
+      location.reload();
     }
   }
 
   function closePopCor() {
     showCorr = false;
-    location.reload()
+    location.reload();
   }
 </script>
 
@@ -198,6 +209,7 @@
     {/if}
 
     {#if badgeMsg === "invalidBadge"}
+      <!-- {#if showInvalidBagde === true} -->
       <div class="fundo">
         <div class="invalidBadge" id="s">
           <h5>Crachá Invalido</h5>

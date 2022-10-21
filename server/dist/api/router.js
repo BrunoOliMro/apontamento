@@ -17,7 +17,7 @@ apiRouter.route("/apontamento")
         return input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
     }
     if (barcode == '') {
-        res.status(400).redirect("/#/codigobarras?error=invalidBarcode");
+        return res.status(400).redirect("/#/codigobarras?error=invalidBarcode");
     }
     const dados = {
         numOdf: Number(barcode.slice(10)),
@@ -29,26 +29,20 @@ apiRouter.route("/apontamento")
         dados.numOper = barcode.slice(0, 5);
         dados.codMaq = barcode.slice(5, 11);
     }
-    console.log(dados.numOdf);
-    console.log(dados.numOper);
-    console.log(dados.codMaq);
+    console.log('linha 38 ', dados.numOdf);
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     const queryGrupoOdf = await connection.query(`
-        SELECT 
-        * 
-        FROM
-        VW_APP_APTO_PROGRAMACAO_PRODUCAO
-        WHERE 1 = 1 
-        AND [NUMERO_ODF] = ${dados.numOdf}
-        AND [CODIGO_PECA] IS NOT NULL
-        ORDER BY NUMERO_OPERACAO ASC
-                        `.trim()).then(result => result.recordset);
+        SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND NUMERO_ODF = '1444592' ORDER BY NUMERO_OPERACAO ASC
+        `.trim()).then(result => result.recordset);
     if (queryGrupoOdf.length <= 0) {
-        return res.status(400).redirect("/#/codigobarras");
+        return res.json({ message: "okkk" });
     }
     let codigoOperArray = queryGrupoOdf.map(e => e.NUMERO_OPERACAO);
     let arrayAfterMap = codigoOperArray.map(e => "00" + e).toString().replaceAll(' ', "0").split(",");
     let indiceDoArrayDeOdfs = arrayAfterMap.findIndex((e) => e === dados.numOper);
+    if (indiceDoArrayDeOdfs < 0) {
+        indiceDoArrayDeOdfs = 0;
+    }
     let objOdfSelecionada = queryGrupoOdf[indiceDoArrayDeOdfs];
     let objOdfSelecProximo = queryGrupoOdf[indiceDoArrayDeOdfs + 1];
     let objOdfSelecAnterior = queryGrupoOdf[indiceDoArrayDeOdfs - 1];
@@ -80,13 +74,11 @@ apiRouter.route("/apontamento")
         apontLib = objOdfSelecionada["APONTAMENTO_LIBERADO"];
     }
     if (qtdLib - qntdeJaApontada === 0) {
-        return res.status(400).redirect("/#/codigobarras?error=nolimitonlastodf");
     }
     qtdLibMax = qtdLib - qntdeJaApontada;
     if (qtdLibMax <= 0 && apontLib === "N") {
-        return res.status(400).redirect("/#/codigobarras?error=anotherodfexpected");
     }
-    if (!objOdfSelecAnterior) {
+    if (objOdfSelecAnterior === undefined) {
         await connection.query(`
             UPDATE 
             PCP_PROGRAMACAO_PRODUCAO 
@@ -97,22 +89,22 @@ apiRouter.route("/apontamento")
             AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' 
             AND CODIGO_MAQUINA = '${dados.codMaq}'`);
     }
+    if (objOdfSelecAnterior === undefined) {
+        objOdfSelecAnterior = 0;
+    }
+    console.log("linha 119", objOdfSelecAnterior);
     let numeroOper = '00' + objOdfSelecionada.NUMERO_OPERACAO.replaceAll(" ", '0');
     if (objOdfSelecionada['CODIGO_MAQUINA'] === 'RET001') {
         objOdfSelecionada['CODIGO_MAQUINA'] = 'RET01';
     }
-    res.cookie('qtdLibMax', qtdLibMax);
-    res.cookie("MAQUINA_PROXIMA", codigoMaquinaProxOdf);
-    res.cookie("OPERACAO_PROXIMA", codMaqProxOdf);
-    res.cookie("NUMERO_ODF", objOdfSelecionada["NUMERO_ODF"]);
-    res.cookie("CODIGO_PECA", objOdfSelecionada['CODIGO_PECA']);
-    res.cookie("CODIGO_MAQUINA", objOdfSelecionada['CODIGO_MAQUINA']);
-    res.cookie("NUMERO_OPERACAO", numeroOper);
-    res.cookie("REVISAO", objOdfSelecionada['REVISAO']);
+    console.log('LINHA 136', objOdfSelecionada.CODIGO_PECA);
+    console.log('LINHA 136', dados.numOdf);
+    console.log('LINHA 136', objOdfSelecionada.CODIGO_MAQUINA);
+    console.log("linha 135");
     const codApont = await connection.query(`
         SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND PECA = '${objOdfSelecionada.CODIGO_PECA}' AND ITEM = '${objOdfSelecionada.CODIGO_MAQUINA}'  ORDER BY DATAHORA DESC`.trim()).then(result => result.recordset);
-    if (codApont.length <= 0) {
-        codApont[0].CODAPONTA = '0';
+    if (codApont.length < 0) {
+        codApont[0].CODAPONTA = "0";
     }
     if (codApont[0].CODAPONTA === 5) {
         return res.status(400).redirect("/#/codigobarras?error=paradademaquina");
@@ -136,7 +128,6 @@ apiRouter.route("/apontamento")
                            AND OP.CONDIC ='P'                 
                            AND PCP.NUMERO_ODF = '${dados.numOdf}'    
                         `.trim()).then(result => result.recordset);
-        console.log('resource2: ', resource2);
         if (resource2.length > 0) {
             res.cookie("CONDIC", resource2[0].CONDIC);
             let codigoNumite = resource2.map(e => e.NUMITE);
@@ -179,25 +170,31 @@ apiRouter.route("/apontamento")
             await connection.query(updateQtyRes.join("\n"));
             return res.status(400).redirect("/#/ferramenta?status=pdoesntexists");
         }
+        if (resource2.length <= 0) {
+            return res.redirect('/#/codigobarras?status=red');
+        }
     }
     catch (error) {
-        return res.redirect("/#/codigobarras");
+        console.log('linha 236: ', error);
+        return res.json({ message: "CATCH ERRO NO TRY" });
     }
     finally {
         await connection.close();
-        return res.redirect("/#/ferramenta");
     }
 });
 apiRouter.route("/apontamentoCracha")
     .post(async (req, res) => {
-    let MATRIC = req.body["MATRIC"].trim();
+    let MATRIC = req.body["MATRIC"];
+    if (MATRIC === undefined || MATRIC === null) {
+        MATRIC = '0';
+    }
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
         return input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
     }
     MATRIC = sanitize(MATRIC);
     if (MATRIC == '') {
-        res.status(400).redirect("/#/codigobarras?error=invalidBadge");
+        return res.redirect("/#/codigobarras?error=invalidBadge");
     }
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
@@ -209,14 +206,15 @@ apiRouter.route("/apontamentoCracha")
             res.cookie("starterBarcode", start);
             res.cookie("MATRIC", selecionarMatricula[0].MATRIC);
             res.cookie("FUNCIONARIO", selecionarMatricula[0].FUNCIONARIO);
-            res.status(200).redirect("/#/codigobarras?status=ok");
+            return res.redirect("/#/codigobarras?status=ok");
         }
-        else {
-            res.status(404).redirect("/#/codigobarras?error=invalidBadge");
+        if (selecionarMatricula.length <= 0) {
+            return res.redirect("/#/codigobarras?error=invalidBadge");
         }
     }
     catch (error) {
-        res.status(404).redirect("/#/codigobarras?error=invalidBadge");
+        console.log(error);
+        return res.redirect("/#/codigobarras?error=invalidBadge");
     }
     finally {
         await connection.close();
@@ -509,6 +507,61 @@ apiRouter.route("/apontar")
             return res.json({ message: 'erro ao efetivar estoque das peças filhas ' });
         }
     }
+    console.log('codigo Maq', CODIGO_MAQUINA);
+    console.log('codigo Ope', NUMERO_OPERACAO);
+    if (CODIGO_MAQUINA !== "EX002") {
+        console.log("linha 648/");
+        if (CODIGO_MAQUINA === 'ENG01') {
+            console.log('não vai executar aqui linha 651');
+            const s = await connection.query(`
+                    SELECT EE.CODIGO AS COD_PRODUTO,NULL AS COD_PRODUTO_EST, CE.CODIGO,CE.ENDERECO, ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE FROM CST_CAD_ENDERECOS CE(NOLOCK)
+                    LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO)
+                    WHERE ISNULL(EE.QUANTIDADE,0) > 0 AND CE.ENDERECO LIKE '5%' AND UPPER(EE.CODIGO) = UPPER('00240174-1') ORDER BY CE.ENDERECO ASC`).then(result => result.recordset);
+            if (s.length > 0) {
+                return res.json(s);
+            }
+            if (s.length <= 0) {
+                console.log('não vai executar aqui linha 661');
+                const e = await connection.query(`
+                            SELECT EE.CODIGO AS COD_PRODUTO,NULL AS COD_PRODUTO_EST, CE.CODIGO,CE.ENDERECO, ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE FROM CST_CAD_ENDERECOS CE(NOLOCK)
+                            LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO)
+                            WHERE ISNULL(EE.QUANTIDADE,0) > 0 AND CE.ENDERECO LIKE '5%' AND UPPER(EE.CODIGO) = UPPER('00240174-1') ORDER BY CE.ENDERECO ASC`).then(result => result.recordset);
+                return res.json(e);
+            }
+        }
+        if (CODIGO_MAQUINA === 'EX002') {
+            console.log('vai executar aqui linha 670');
+            const q = await connection.query(`
+                    SELECT EE.CODIGO AS COD_PRODUTO,NULL AS COD_PRODUTO_EST, CE.CODIGO,CE.ENDERECO, ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE FROM CST_CAD_ENDERECOS CE(NOLOCK)
+                    LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO)
+                    WHERE ISNULL(EE.QUANTIDADE,0) > 0 AND CE.ENDERECO LIKE '7%' AND UPPER(EE.CODIGO) = UPPER('00240174') ORDER BY CE.ENDERECO ASC`).then(result => result.recordset);
+            if (q.length > 0) {
+                return res.json(q);
+            }
+            if (q.length <= 0) {
+                console.log('vai executar aqui linha 680');
+                const l = await connection.query(`
+                    SELECT EE.CODIGO AS COD_PRODUTO,NULL AS COD_PRODUTO_EST, CE.CODIGO,CE.ENDERECO, ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE FROM CST_CAD_ENDERECOS CE(NOLOCK)
+                    LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO)
+                    WHERE ISNULL(EE.QUANTIDADE,0) <= 0 AND CE.ENDERECO LIKE '7%' ORDER BY CE.ENDERECO ASC`).then(result => result.recordset);
+                return res.json(l);
+            }
+        }
+        try {
+            if (CODIGO_MAQUINA === 'EX002') {
+                const updateProxOdfToS = await connection.query(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 =1 AND CODIGO = '${codigoPeca}'`);
+                console.log('updateProxOdfToS: ', updateProxOdfToS);
+            }
+            else {
+                const updateProxOdfToS = await connection.query(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 =1 AND CODIGO = '${codigoPeca}'`);
+                console.log('updateProxOdfToS: linha 655 ', updateProxOdfToS);
+            }
+        }
+        catch (error) {
+            console.log(error);
+            return res.json({ message: 'erro ao inserir estoque' });
+        }
+    }
     const hisReal = await connection.query(`SELECT TOP 1 SALDO FROM  HISREAL WHERE 1 = 1`).then(record => record.recordset);
     try {
         await connection.query(`
@@ -518,7 +571,7 @@ apiRouter.route("/apontar")
             'E', ('${hisReal[0].SALDO}' + '${qtdBoas}'),
             GETDATE(),0,'${funcionario}','${NUMERO_ODF}',0,1,1,MAX(CUSTO_MEDIO),MAX(CUSTO_TOTAL),
             MAX(CUSTO_UNITARIO),MAX(CATEGORIA),MAX(E.DESCRI),1,MAX(E.UNIDADE),'S','N','APONTAMENTO',
-            'VERSAO DO APONTAMENTO','ENDERECO DO WMS','HOSTNAME DA MAQUINA QUE ESTA APONTANDO','IP DA MAQUINA QUE ESTA APONTANDO' 
+            'VERSAO DO APONTAMENTO','47091','7C1501-04','${CODIGO_MAQUINA}' 
             FROM ESTOQUE E(NOLOCK)
             WHERE 1 = 1 
             AND E.CODIGO ='${codigoPeca}' GROUP BY E.CODIGO;`);
@@ -541,16 +594,6 @@ apiRouter.route("/apontar")
         await connection.query(`
             INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, MOTIVO_REFUGO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
             VALUES(GETDATE(), '${funcionario}' , '${NUMERO_ODF}' , '${codigoPeca}' , '${revisao}' , ${NUMERO_OPERACAO} ,${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '4' , '4', 'Fin Prod.' , '${finalProdTimer}' , '${finalProdTimer}' , '1', UPPER('${motivorefugo}') ,'0','0')`);
-        if (NUMERO_OPERACAO === "00999") {
-            try {
-                const updateProxOdfToS = await connection.query(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 =1 AND CODIGO = '${codigoPeca}'`);
-                console.log('updateProxOdfToS: ', updateProxOdfToS);
-            }
-            catch (error) {
-                console.log(error);
-                return res.json({ message: 'erro ao inserir estoque' });
-            }
-        }
         return res.json({ message: 'valores apontados com sucesso' });
     }
     catch {
@@ -565,6 +608,7 @@ apiRouter.route("/rip")
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let numpec = String(req.cookies["CODIGO_PECA"]);
     let revisao = String(req.cookies['REVISAO']);
+    let codMaq = String(req.cookies['CODIGO_MAQUINA']);
     try {
         const resource = await connection.query(`
             SELECT  DISTINCT
@@ -589,13 +633,20 @@ apiRouter.route("/rip")
             AND NUMCAR < '2999'
             ORDER BY NUMPEC ASC
                 `.trim()).then(result => result.recordset);
-        res.cookie('numCar', resource.map(e => e.NUMCAR));
-        res.cookie('descricao', resource.map(e => e.DESCRICAO));
-        res.cookie('especif', resource.map(e => e.ESPECIF));
-        res.cookie('instrumento', resource.map(e => e.INSTRUMENTO));
-        res.cookie('lie', resource.map(e => e.LIE));
-        res.cookie('lse', resource.map(e => e.LSE));
-        return res.json(resource);
+        let arrayNumope = resource.map((e) => {
+            if (e.CST_NUMOPE === codMaq) {
+                return e;
+            }
+        });
+        let numopeFilter = arrayNumope.filter(e => e);
+        res.cookie('cstNumope', numopeFilter.map(e => e.CST_NUMOPE));
+        res.cookie('numCar', numopeFilter.map(e => e.NUMCAR));
+        res.cookie('descricao', numopeFilter.map(e => e.DESCRICAO));
+        res.cookie('especif', numopeFilter.map(e => e.ESPECIF));
+        res.cookie('instrumento', numopeFilter.map(e => e.INSTRUMENTO));
+        res.cookie('lie', numopeFilter.map(e => e.LIE));
+        res.cookie('lse', numopeFilter.map(e => e.LSE));
+        return res.json(numopeFilter);
     }
     catch (error) {
         console.log(error);
@@ -623,13 +674,6 @@ apiRouter.route("/lancamentoRip")
     let lse = req.cookies['lse'];
     let instrumento = req.cookies['instrumento'];
     let descricao = req.cookies['descricao'];
-    function sanitize(input) {
-        const allowedChars = /[A-Za-z0-9]/;
-        return input && input
-            .split("")
-            .map((char) => (allowedChars.test(char) ? char : ""))
-            .join("");
-    }
     if (Object.keys(setup).length <= 0) {
         return res.json({ message: "rip vazia" });
     }
@@ -660,7 +704,7 @@ apiRouter.route("/lancamentoRip")
         acc[lin][col] = Number(value);
         return acc;
     }, {});
-    Object.entries(resultSplitLines).forEach(([row, cols], i) => {
+    Object.entries(resultSplitLines).forEach(([row], i) => {
         if (lie[i] === null) {
             lie[i] = 0;
         }
@@ -753,17 +797,14 @@ apiRouter.route("/returnedValue")
                     INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
                     VALUES(GETDATE(),'CESAR','1444591','15990007','1','80','80', 'D','QUA002','1','0','0','CESAR','0','7', '7', 'Valor Estorn.','0.566','0.655', '1', '0','0')
                     `);
-                return res.status(200).redirect("/#/codigobarras?status=returnedsucess");
+                return res.status(200).json({ message: 'estorno feito' });
             }
             catch (error) {
                 console.log(error);
-                return res.status(400).redirect("/#/codigobarras?error=returnederror");
             }
             finally {
                 await connection.close();
             }
-        }
-        else {
             return res.status(400).redirect("/#/codigobarras?error=returnederror");
         }
     }

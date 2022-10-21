@@ -3,8 +3,8 @@
     export let dados;
     export let indice;
     export let extraColumns;
-    export let value;
-    export let values = {
+    export let values;
+    export let valuesObj = {
         setup: "",
         M2: "",
         M3: "",
@@ -26,6 +26,7 @@
         let userInputValue = event.target.value;
         let lie = dados.LIE;
         let lsd = dados.LSE;
+
 
         if (userInputValue < lie && userInputValue.length !== 0) {
             event.target.style.borderColor = "red";
@@ -75,7 +76,7 @@
             on:input={target}
             on:input={checkColor}
             on:input={blockForbiddenChars}
-            bind:value
+            bind:value={valuesObj["setup"]}
             onkeyup="this.value = this.value.toUpperCase()"
             id={"SETUP-" + indice}
             name={"SETUP-" + indice}
@@ -126,7 +127,8 @@
                 on:input={checkColor}
                 onkeyup="this.value = this.value.toUpperCase()"
                 on:input={target}
-                bind:value
+                on:input={blockForbiddenChars}
+                bind:value={valuesObj["M" + columnNumber]}
                 id={"M" + columnNumber + "-" + indice}
                 name={"M" + columnNumber + "-" + indice}
                 type="text"

@@ -16,10 +16,23 @@
     let showError = false;
     let showSetup = false;
     callRip();
+    let lie;
+    let lsd;
 
     async function callRip() {
         const res = await fetch(urlString);
         ripTable = await res.json();
+        console.log("ripTable: ", ripTable);
+
+        lie = ripTable.map((e) => e.LIE);
+        lsd = ripTable.map((e) => e.LSE);
+
+        console.log("lie: ", lie);
+        console.log("lsd", lsd);
+        if (ripTable.length <= 0) {
+            window.location.href = "/#/codigobarras";
+            location.reload();
+        }
     }
 
     const doPostSuper = async () => {
@@ -60,25 +73,17 @@
         }
     };
     function createCol() {
-        //console.log("ripTable=row.values:66", ripTable);
-        // let x = ripTable.map((acc) => {
-        //     let bool = acc.values.setup === "";
-        //     if (bool === true) {
-        //         showSetup = true;
-        //     }
-        //     return bool;
-        // });
+        // Retorna um array de booleans
+        let arrayToAddCol = ripTable.map((acc) => {
+            let bool = acc.values.setup === "";
+            return bool;
+        });
+        console.log("arrayToAddCol: ", arrayToAddCol);
+        //filtra o array e encontra os campos com true, ou seja os campos vazios
+        let filterAddCol = arrayToAddCol.filter((e) => e === true);
 
-        let y = ripTable.reduce((acc, int) => {
-            console.log('acc linha 73' ,acc);
-            console.log('acc linha 74' ,int.values.setup);
-            if (int.values.setup === "") {
-                return acc;
-            }
-            return acc;
-        }, false);
-
-        if (y === false) {
+        //Caso o array de campos vazios retorne vazio, adiciona mais uma coluna
+        if (filterAddCol.length <= 0) {
             if (extraColumns.length < 13) {
                 extraColumns = [...extraColumns, extraColumns.length + 2];
             }
@@ -87,7 +92,25 @@
         }
     }
     const check = () => {
-        doPost();
+        let valueFromUser = Number(Object.values(setup));
+        console.log(valueFromUser);
+        if (
+            valueFromUser >= lie[0] &&
+            valueFromUser <= lsd[0] &&
+            valueFromUser !== 0
+        ) {
+            doPost();
+        }
+
+        if (valueFromUser < lie[0] && valueFromUser !== 0) {
+            showSuper = true;
+        }
+
+        if (valueFromUser > lsd[0] && valueFromUser !== 0) {
+            showSuper = true;
+        } else if (valueFromUser === 0) {
+            showErrorEmpty = true;
+        }
     };
 
     function close() {
@@ -168,7 +191,7 @@
     {/if}
 
     {#if showSetup === true}
-        <h3>Preencha a coluna Setup antes</h3>
+        <h3>Preencha as coluna antes</h3>
         <button on:click={close}>Confirma</button>
     {/if}
 </main>

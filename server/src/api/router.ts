@@ -19,7 +19,7 @@ apiRouter.route("/apontamento")
 
         //Verifica se o codigo de barras veio vazio
         if (barcode == '') {
-            res.status(400).redirect("/#/codigobarras?error=invalidBarcode")
+            return res.status(400).redirect("/#/codigobarras?error=invalidBarcode")
         }
 
         //Divide o Codigo de barras em 3 partes para a verificação na proxima etapa
@@ -35,34 +35,30 @@ apiRouter.route("/apontamento")
             dados.codMaq = barcode.slice(5, 11)
         }
 
-        console.log(dados.numOdf)
-        console.log(dados.numOper)
-        console.log(dados.codMaq)
+        console.log('linha 38 ', dados.numOdf)
+        // console.log(dados.numOper)
+        // console.log(dados.codMaq)
 
         //Seleciona todos os itens da Odf
         const connection = await mssql.connect(sqlConfig);
         const queryGrupoOdf = await connection.query(`
-        SELECT 
-        * 
-        FROM
-        VW_APP_APTO_PROGRAMACAO_PRODUCAO
-        WHERE 1 = 1 
-        AND [NUMERO_ODF] = ${dados.numOdf}
-        AND [CODIGO_PECA] IS NOT NULL
-        ORDER BY NUMERO_OPERACAO ASC
-                        `.trim()
+        SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND NUMERO_ODF = '1444592' ORDER BY NUMERO_OPERACAO ASC
+        `.trim()
         ).then(result => result.recordset)
 
         if (queryGrupoOdf.length <= 0) {
-            return res.status(400).redirect("/#/codigobarras")
+            return res.json({ message: "okkk" })
         }
 
         //Map pelo numero da operação e diz o indice de uma odf antes e uma depois
         let codigoOperArray = queryGrupoOdf.map(e => e.NUMERO_OPERACAO)
         let arrayAfterMap = codigoOperArray.map(e => "00" + e).toString().replaceAll(' ', "0").split(",")
         let indiceDoArrayDeOdfs: number = arrayAfterMap.findIndex((e: string) => e === dados.numOper)
+
+        if (indiceDoArrayDeOdfs < 0) {
+            indiceDoArrayDeOdfs = 0
+        }
         let objOdfSelecionada = queryGrupoOdf[indiceDoArrayDeOdfs]
-        //console.log('objOdfSelecionada: ',objOdfSelecionada);
         let objOdfSelecProximo = queryGrupoOdf[indiceDoArrayDeOdfs + 1]
         let objOdfSelecAnterior = queryGrupoOdf[indiceDoArrayDeOdfs - 1]
         let qtdLib: number = 0
@@ -100,16 +96,16 @@ apiRouter.route("/apontamento")
         }
 
         if (qtdLib - qntdeJaApontada === 0) {
-            return res.status(400).redirect("/#/codigobarras?error=nolimitonlastodf")
+            //return res.status(400).redirect("/#/codigobarras?error=nolimitonlastodf")
         }
         qtdLibMax = qtdLib - qntdeJaApontada
 
         if (qtdLibMax <= 0 && apontLib === "N") {
-            return res.status(400).redirect("/#/codigobarras?error=anotherodfexpected")
+            //return res.status(400).redirect("/#/codigobarras?error=anotherodfexpected")
         }
 
         // Caso seja a primeira Odf, objOdfSelecAnterior vai vir como undefined
-        if (!objOdfSelecAnterior) {
+        if (objOdfSelecAnterior === undefined) {
             await connection.query(`
             UPDATE 
             PCP_PROGRAMACAO_PRODUCAO 
@@ -121,6 +117,11 @@ apiRouter.route("/apontamento")
             AND CODIGO_MAQUINA = '${dados.codMaq}'`)
         }
 
+        if (objOdfSelecAnterior === undefined) {
+            objOdfSelecAnterior = 0
+        }
+        console.log("linha 119", objOdfSelecAnterior);
+
         let numeroOper = '00' + objOdfSelecionada.NUMERO_OPERACAO.replaceAll(" ", '0')
 
         if (objOdfSelecionada['CODIGO_MAQUINA'] === 'RET001') {
@@ -128,27 +129,29 @@ apiRouter.route("/apontamento")
         }
 
         //console.log('codigoMaq:',codigoMaq);
-        res.cookie('qtdLibMax', qtdLibMax)
-        res.cookie("MAQUINA_PROXIMA", codigoMaquinaProxOdf)
-        res.cookie("OPERACAO_PROXIMA", codMaqProxOdf)
-        res.cookie("NUMERO_ODF", objOdfSelecionada["NUMERO_ODF"])
-        res.cookie("CODIGO_PECA", objOdfSelecionada['CODIGO_PECA'])
-        res.cookie("CODIGO_MAQUINA", objOdfSelecionada['CODIGO_MAQUINA'])
-        res.cookie("NUMERO_OPERACAO", numeroOper)
-        res.cookie("REVISAO", objOdfSelecionada['REVISAO'])
-
+        // res.cookie('qtdLibMax', qtdLibMax)
+        // res.cookie("MAQUINA_PROXIMA", codigoMaquinaProxOdf)
+        // res.cookie("OPERACAO_PROXIMA", codMaqProxOdf)
+        // res.cookie("NUMERO_ODF", objOdfSelecionada["NUMERO_ODF"])
+        // res.cookie("CODIGO_PECA", objOdfSelecionada['CODIGO_PECA'])
+        // res.cookie("CODIGO_MAQUINA", objOdfSelecionada['CODIGO_MAQUINA'])
+        // res.cookie("NUMERO_OPERACAO", numeroOper)
+        // res.cookie("REVISAO", objOdfSelecionada['REVISAO'])
+        console.log('LINHA 136', objOdfSelecionada.CODIGO_PECA);
+        console.log('LINHA 136', dados.numOdf)
+        console.log('LINHA 136', objOdfSelecionada.CODIGO_MAQUINA);
+        console.log("linha 135");
         const codApont = await connection.query(`
         SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND PECA = '${objOdfSelecionada.CODIGO_PECA}' AND ITEM = '${objOdfSelecionada.CODIGO_MAQUINA}'  ORDER BY DATAHORA DESC`.trim()
         ).then(result => result.recordset)
 
-        if (codApont.length <= 0) {
-            codApont[0].CODAPONTA = '0'
+        if (codApont.length < 0) {
+            codApont[0].CODAPONTA = "0"
         }
 
         if (codApont[0].CODAPONTA === 5) {
             return res.status(400).redirect("/#/codigobarras?error=paradademaquina")
         }
-
         try {
             //Seleciona as peças filhas, a quantidade para execução e o estoque dos itens
             const resource2 = await connection.query(`
@@ -170,7 +173,6 @@ apiRouter.route("/apontamento")
                            AND PCP.NUMERO_ODF = '${dados.numOdf}'    
                         `.trim()
             ).then(result => result.recordset)
-            console.log('resource2: ', resource2);
             if (resource2.length > 0) {
                 res.cookie("CONDIC", resource2[0].CONDIC)
                 let codigoNumite = resource2.map(e => e.NUMITE)
@@ -229,18 +231,25 @@ apiRouter.route("/apontamento")
                 await connection.query(updateQtyRes.join("\n"));
                 return res.status(400).redirect("/#/ferramenta?status=pdoesntexists")
             }
+
+            if (resource2.length <= 0) {
+                return res.redirect('/#/codigobarras?status=red')
+            }
         } catch (error) {
-            return res.redirect("/#/codigobarras")
+            console.log('linha 236: ', error);
+            return res.json({ message: "CATCH ERRO NO TRY" })
         } finally {
             await connection.close()
-            return res.redirect("/#/ferramenta")
         }
     })
 
 apiRouter.route("/apontamentoCracha")
     .post(async (req, res) => {
-        let MATRIC: string = req.body["MATRIC"].trim()
+        let MATRIC: string = req.body["MATRIC"]
 
+        if (MATRIC === undefined || MATRIC === null) {
+            MATRIC = '0'
+        }
         //Sanitizar codigo
         function sanitize(input: String) {
             const allowedChars = /[A-Za-z0-9]/;
@@ -250,7 +259,7 @@ apiRouter.route("/apontamentoCracha")
         MATRIC = sanitize(MATRIC)
 
         if (MATRIC == '') {
-            res.status(400).redirect("/#/codigobarras?error=invalidBadge")
+            return res.redirect("/#/codigobarras?error=invalidBadge")
         }
 
         const connection = await mssql.connect(sqlConfig);
@@ -264,12 +273,14 @@ apiRouter.route("/apontamentoCracha")
                 res.cookie("starterBarcode", start)
                 res.cookie("MATRIC", selecionarMatricula[0].MATRIC)
                 res.cookie("FUNCIONARIO", selecionarMatricula[0].FUNCIONARIO)
-                res.status(200).redirect("/#/codigobarras?status=ok")
-            } else {
-                res.status(404).redirect("/#/codigobarras?error=invalidBadge")
+                return res.redirect("/#/codigobarras?status=ok")
+            }
+            if (selecionarMatricula.length <= 0) {
+                return res.redirect("/#/codigobarras?error=invalidBadge")
             }
         } catch (error) {
-            res.status(404).redirect("/#/codigobarras?error=invalidBadge")
+            console.log(error)
+            return res.redirect("/#/codigobarras?error=invalidBadge")
         } finally {
             await connection.close()
         }
@@ -322,7 +333,6 @@ apiRouter.route("/odf")
                 objOdfSelecionada,
                 valorMaxdeProducao,
             }
-
             res.json(obj);
         } catch (error) {
             console.log(error);
@@ -599,6 +609,67 @@ apiRouter.route("/apontar")
                 return res.json({ message: 'erro ao efetivar estoque das peças filhas ' })
             }
         }
+        console.log('codigo Maq', CODIGO_MAQUINA);
+        console.log('codigo Ope', NUMERO_OPERACAO);
+        //Caso a operação seja 999 fará baixa no estoque
+        if (CODIGO_MAQUINA !== "EX002") {
+            console.log("linha 648/");
+            //Caso seja diferente de "EX"
+            if (CODIGO_MAQUINA === 'ENG01') {
+                console.log('não vai executar aqui linha 651');
+                const s = await connection.query(`
+                    SELECT EE.CODIGO AS COD_PRODUTO,NULL AS COD_PRODUTO_EST, CE.CODIGO,CE.ENDERECO, ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE FROM CST_CAD_ENDERECOS CE(NOLOCK)
+                    LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO)
+                    WHERE ISNULL(EE.QUANTIDADE,0) > 0 AND CE.ENDERECO LIKE '5%' AND UPPER(EE.CODIGO) = UPPER('00240174-1') ORDER BY CE.ENDERECO ASC`).then(result => result.recordset)
+                if (s.length > 0) {
+                    return res.json(s)
+                }
+
+                if (s.length <= 0) {
+                    console.log('não vai executar aqui linha 661');
+                    const e = await connection.query(`
+                            SELECT EE.CODIGO AS COD_PRODUTO,NULL AS COD_PRODUTO_EST, CE.CODIGO,CE.ENDERECO, ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE FROM CST_CAD_ENDERECOS CE(NOLOCK)
+                            LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO)
+                            WHERE ISNULL(EE.QUANTIDADE,0) > 0 AND CE.ENDERECO LIKE '5%' AND UPPER(EE.CODIGO) = UPPER('00240174-1') ORDER BY CE.ENDERECO ASC`).then(result => result.recordset)
+                    return res.json(e)
+                }
+            }
+
+            //Caso seja igual de "EX"
+            if (CODIGO_MAQUINA === 'EX002') {
+                console.log('vai executar aqui linha 670');
+                const q = await connection.query(`
+                    SELECT EE.CODIGO AS COD_PRODUTO,NULL AS COD_PRODUTO_EST, CE.CODIGO,CE.ENDERECO, ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE FROM CST_CAD_ENDERECOS CE(NOLOCK)
+                    LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO)
+                    WHERE ISNULL(EE.QUANTIDADE,0) > 0 AND CE.ENDERECO LIKE '7%' AND UPPER(EE.CODIGO) = UPPER('00240174') ORDER BY CE.ENDERECO ASC`).then(result => result.recordset)
+                if (q.length > 0) {
+                    return res.json(q)
+                }
+
+                if (q.length <= 0) {
+                    console.log('vai executar aqui linha 680');
+                    const l = await connection.query(`
+                    SELECT EE.CODIGO AS COD_PRODUTO,NULL AS COD_PRODUTO_EST, CE.CODIGO,CE.ENDERECO, ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE FROM CST_CAD_ENDERECOS CE(NOLOCK)
+                    LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO)
+                    WHERE ISNULL(EE.QUANTIDADE,0) <= 0 AND CE.ENDERECO LIKE '7%' ORDER BY CE.ENDERECO ASC`).then(result => result.recordset)
+                    return res.json(l)
+                }
+            }
+
+            try {
+                if (CODIGO_MAQUINA === 'EX002') {
+                    const updateProxOdfToS = await connection.query(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 =1 AND CODIGO = '${codigoPeca}'`)
+                    console.log('updateProxOdfToS: ', updateProxOdfToS);
+                } else {
+                    const updateProxOdfToS = await connection.query(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 =1 AND CODIGO = '${codigoPeca}'`)
+                    console.log('updateProxOdfToS: linha 655 ', updateProxOdfToS);
+                }
+            } catch (error) {
+                console.log(error);
+                return res.json({ message: 'erro ao inserir estoque' })
+            }
+        }
+
         const hisReal = await connection.query(`SELECT TOP 1 SALDO FROM  HISREAL WHERE 1 = 1`).then(record => record.recordset)
         try {
             await connection.query(`
@@ -608,7 +679,7 @@ apiRouter.route("/apontar")
             'E', ('${hisReal[0].SALDO}' + '${qtdBoas}'),
             GETDATE(),0,'${funcionario}','${NUMERO_ODF}',0,1,1,MAX(CUSTO_MEDIO),MAX(CUSTO_TOTAL),
             MAX(CUSTO_UNITARIO),MAX(CATEGORIA),MAX(E.DESCRI),1,MAX(E.UNIDADE),'S','N','APONTAMENTO',
-            'VERSAO DO APONTAMENTO','ENDERECO DO WMS','HOSTNAME DA MAQUINA QUE ESTA APONTANDO','IP DA MAQUINA QUE ESTA APONTANDO' 
+            'VERSAO DO APONTAMENTO','47091','7C1501-04','${CODIGO_MAQUINA}' 
             FROM ESTOQUE E(NOLOCK)
             WHERE 1 = 1 
             AND E.CODIGO ='${codigoPeca}' GROUP BY E.CODIGO;`)
@@ -640,16 +711,6 @@ apiRouter.route("/apontar")
             INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, MOTIVO_REFUGO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
             VALUES(GETDATE(), '${funcionario}' , '${NUMERO_ODF}' , '${codigoPeca}' , '${revisao}' , ${NUMERO_OPERACAO} ,${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '4' , '4', 'Fin Prod.' , '${finalProdTimer}' , '${finalProdTimer}' , '1', UPPER('${motivorefugo}') ,'0','0')`)
 
-            //Caso a operação seja 999 fara baixa no estoque
-            if (NUMERO_OPERACAO === "00999") {
-                try {
-                    const updateProxOdfToS = await connection.query(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 =1 AND CODIGO = '${codigoPeca}'`)
-                    console.log('updateProxOdfToS: ', updateProxOdfToS);
-                } catch (error) {
-                    console.log(error);
-                    return res.json({ message: 'erro ao inserir estoque' })
-                }
-            }
             return res.json({ message: 'valores apontados com sucesso' })
         } catch {
             return res.json({ message: 'erro ao enviar o apontamento' })
@@ -664,6 +725,7 @@ apiRouter.route("/rip")
         const connection = await mssql.connect(sqlConfig);
         let numpec: string = String(req.cookies["CODIGO_PECA"])
         let revisao: string = String(req.cookies['REVISAO'])
+        let codMaq: string = String(req.cookies['CODIGO_MAQUINA'])
         try {
             const resource = await connection.query(`
             SELECT  DISTINCT
@@ -689,13 +751,22 @@ apiRouter.route("/rip")
             ORDER BY NUMPEC ASC
                 `.trim()
             ).then(result => result.recordset)
-            res.cookie('numCar', resource.map(e => e.NUMCAR))
-            res.cookie('descricao', resource.map(e => e.DESCRICAO))
-            res.cookie('especif', resource.map(e => e.ESPECIF))
-            res.cookie('instrumento', resource.map(e => e.INSTRUMENTO))
-            res.cookie('lie', resource.map(e => e.LIE))
-            res.cookie('lse', resource.map(e => e.LSE))
-            return res.json(resource)
+
+            let arrayNumope = resource.map((e) => {
+                if (e.CST_NUMOPE === codMaq) {
+                    return e
+                }
+            })
+
+            let numopeFilter = arrayNumope.filter(e => e)
+            res.cookie('cstNumope', numopeFilter.map(e => e.CST_NUMOPE))
+            res.cookie('numCar', numopeFilter.map(e => e.NUMCAR))
+            res.cookie('descricao', numopeFilter.map(e => e.DESCRICAO))
+            res.cookie('especif', numopeFilter.map(e => e.ESPECIF))
+            res.cookie('instrumento', numopeFilter.map(e => e.INSTRUMENTO))
+            res.cookie('lie', numopeFilter.map(e => e.LIE))
+            res.cookie('lse', numopeFilter.map(e => e.LSE))
+            return res.json(numopeFilter)
         } catch (error) {
             console.log(error)
             return res.status(400).redirect("/#/codigobarras/apontamento?error=ripnotFound")
@@ -723,13 +794,13 @@ apiRouter.route("/lancamentoRip")
         let instrumento = req.cookies['instrumento']
         let descricao = req.cookies['descricao']
 
-        function sanitize(input?: string) {
-            const allowedChars = /[A-Za-z0-9]/;
-            return input && input
-                .split("")
-                .map((char) => (allowedChars.test(char) ? char : ""))
-                .join("");
-        }
+        // function sanitize(input?: string) {
+        //     const allowedChars = /[A-Za-z0-9]/;
+        //     return input && input
+        //         .split("")
+        //         .map((char) => (allowedChars.test(char) ? char : ""))
+        //         .join("");
+        // }
         //setup = sanitize(setup)
 
         //Insere os dados no banco
@@ -750,7 +821,6 @@ apiRouter.route("/lancamentoRip")
         let tempoDecorridoRip = Number(new Date(startRip).getDate())
         let finalProdRip: number = Number(tempoDecorridoRip - endProdRip)
         //console.log('finalProdRip ', finalProdRip);
-
 
         //Insere O CODAPONTA 6 e Tempo da rip
         await connection.query(`
@@ -774,12 +844,12 @@ apiRouter.route("/lancamentoRip")
             return acc
         }, <{ [k: string]: any; }>{})
 
-        Object.entries(resultSplitLines).forEach(([row, cols], i) => {
-            if(lie[i] === null){
+        Object.entries(resultSplitLines).forEach(([row], i) => {
+            if (lie[i] === null) {
                 lie[i] = 0
             }
 
-            if(lse[i] === null){
+            if (lse[i] === null) {
                 lse[i] = 0
             }
 
@@ -878,14 +948,12 @@ apiRouter.route("/returnedValue")
                     INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
                     VALUES(GETDATE(),'CESAR','1444591','15990007','1','80','80', 'D','QUA002','1','0','0','CESAR','0','7', '7', 'Valor Estorn.','0.566','0.655', '1', '0','0')
                     `)
-                    return res.status(200).redirect("/#/codigobarras?status=returnedsucess")
+                    return res.status(200).json({ message: 'estorno feito' })
                 } catch (error) {
                     console.log(error)
-                    return res.status(400).redirect("/#/codigobarras?error=returnederror")
                 } finally {
                     await connection.close()
                 }
-            } else {
                 return res.status(400).redirect("/#/codigobarras?error=returnederror")
             }
         } else {
