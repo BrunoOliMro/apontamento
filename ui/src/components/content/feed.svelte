@@ -13,13 +13,30 @@
     let supervisor;
     let qtdPossivelProducao;
     let showError = false;
-    let resultRefugo = getRefugodata();
+    let resultRefugo;
     let resultado = getOdfData();
     let showParcialSuper = false;
     let showParcialAndRef = false;
     let showSuperNotFound = false;
     let showErrorMessage = false;
     let showRoundedApont = false;
+    let storage = localStorage;
+
+    storage.setItem("motivorefugo", motivoUrl);
+
+    console.log("storage linha 29", storage.key);
+
+    if (storage.length <= 0) {
+        async function getRefugodata() {
+            const res = await fetch(motivoUrl);
+            dados = await res.json();
+            console.log("linha 60 feed", dados);
+        }
+        resultRefugo = getRefugodata();
+    }
+    if (storage.length > 0) {
+        console.log("ja tem coisa na storage");
+    }
 
     let apontamentoMsg = "";
     if (window.location.href.includes("?")) {
@@ -50,11 +67,6 @@
             .map((char) => (allowedChars.test(char) ? char : ""))
             .join("");
         return sanitizedOutput;
-    }
-
-    async function getRefugodata() {
-        const res = await fetch(motivoUrl);
-        dados = await res.json();
     }
 
     const doPost = async () => {

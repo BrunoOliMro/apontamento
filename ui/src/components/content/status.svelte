@@ -18,11 +18,16 @@
         const res = await fetch(urlString);
         tempodePro = await res.json();
         tempoMax = Number(tempodePro);
+        if (tempoMax === NaN || tempoMax === undefined || tempoMax === null) {
+            tempoMax = 0;
+        }
+        console.log("linha 24: ", tempoMax);
     }
     async function getImagem() {
         const res = await fetch(url);
         imagem = await res.json();
     }
+    console.log("call", callImagem);
 
     let tempoDaBarra = setInterval(() => {
         if (tempoMax <= 0) {
@@ -115,7 +120,9 @@
                 id="tempoDecorrido"
             />
         {/if}
-        <img class="img" src={String(imagem)} alt="" />
+        {#if callImagem}
+            <img class="img" src={String(imagem)} alt="" />
+        {/if}
     {/await}
 </div>
 

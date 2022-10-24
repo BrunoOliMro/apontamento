@@ -35,7 +35,7 @@ apiRouter.route("/apontamento")
             dados.codMaq = barcode.slice(5, 11)
         }
 
-        console.log('linha 38 ', dados.numOdf)
+        //console.log('linha 38 ', dados.numOdf)
         // console.log(dados.numOper)
         // console.log(dados.codMaq)
 
@@ -49,6 +49,8 @@ apiRouter.route("/apontamento")
         if (queryGrupoOdf.length <= 0) {
             return res.json({ message: "okkk" })
         }
+
+
 
         //Map pelo numero da operação e diz o indice de uma odf antes e uma depois
         let codigoOperArray = queryGrupoOdf.map(e => e.NUMERO_OPERACAO)
@@ -95,15 +97,17 @@ apiRouter.route("/apontamento")
             apontLib = objOdfSelecionada["APONTAMENTO_LIBERADO"]
         }
 
+        console.log('linha 108 ', dados.numOdf)
+        console.log("linha 101", qtdLib);
+        console.log("linha 102", qntdeJaApontada);
         if (qtdLib - qntdeJaApontada === 0) {
-            //return res.status(400).redirect("/#/codigobarras?error=nolimitonlastodf")
+            return res.status(400).json({ message: "nolimitonlastodf" })
         }
         qtdLibMax = qtdLib - qntdeJaApontada
 
         if (qtdLibMax <= 0 && apontLib === "N") {
-            //return res.status(400).redirect("/#/codigobarras?error=anotherodfexpected")
+            return res.status(400).redirect("/#/codigobarras?error=anotherodfexpected")
         }
-
         // Caso seja a primeira Odf, objOdfSelecAnterior vai vir como undefined
         if (objOdfSelecAnterior === undefined) {
             await connection.query(`
@@ -120,7 +124,8 @@ apiRouter.route("/apontamento")
         if (objOdfSelecAnterior === undefined) {
             objOdfSelecAnterior = 0
         }
-        console.log("linha 119", objOdfSelecAnterior);
+
+        //console.log("linha 119", objOdfSelecAnterior);
 
         let numeroOper = '00' + objOdfSelecionada.NUMERO_OPERACAO.replaceAll(" ", '0')
 
@@ -129,18 +134,18 @@ apiRouter.route("/apontamento")
         }
 
         //console.log('codigoMaq:',codigoMaq);
-        // res.cookie('qtdLibMax', qtdLibMax)
-        // res.cookie("MAQUINA_PROXIMA", codigoMaquinaProxOdf)
-        // res.cookie("OPERACAO_PROXIMA", codMaqProxOdf)
-        // res.cookie("NUMERO_ODF", objOdfSelecionada["NUMERO_ODF"])
-        // res.cookie("CODIGO_PECA", objOdfSelecionada['CODIGO_PECA'])
-        // res.cookie("CODIGO_MAQUINA", objOdfSelecionada['CODIGO_MAQUINA'])
-        // res.cookie("NUMERO_OPERACAO", numeroOper)
-        // res.cookie("REVISAO", objOdfSelecionada['REVISAO'])
-        console.log('LINHA 136', objOdfSelecionada.CODIGO_PECA);
-        console.log('LINHA 136', dados.numOdf)
-        console.log('LINHA 136', objOdfSelecionada.CODIGO_MAQUINA);
-        console.log("linha 135");
+        res.cookie('qtdLibMax', qtdLibMax)
+        res.cookie("MAQUINA_PROXIMA", codigoMaquinaProxOdf)
+        res.cookie("OPERACAO_PROXIMA", codMaqProxOdf)
+        res.cookie("NUMERO_ODF", objOdfSelecionada["NUMERO_ODF"])
+        res.cookie("CODIGO_PECA", objOdfSelecionada['CODIGO_PECA'])
+        res.cookie("CODIGO_MAQUINA", objOdfSelecionada['CODIGO_MAQUINA'])
+        res.cookie("NUMERO_OPERACAO", numeroOper)
+        res.cookie("REVISAO", objOdfSelecionada['REVISAO'])
+        // console.log('LINHA 136', objOdfSelecionada.CODIGO_PECA);
+        // console.log('LINHA 136', dados.numOdf)
+        // console.log('LINHA 136', objOdfSelecionada.CODIGO_MAQUINA);
+        // console.log("linha 135");
         const codApont = await connection.query(`
         SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND PECA = '${objOdfSelecionada.CODIGO_PECA}' AND ITEM = '${objOdfSelecionada.CODIGO_MAQUINA}'  ORDER BY DATAHORA DESC`.trim()
         ).then(result => result.recordset)
@@ -148,10 +153,13 @@ apiRouter.route("/apontamento")
         if (codApont.length < 0) {
             codApont[0].CODAPONTA = "0"
         }
+        console.log("linha 156");
 
         if (codApont[0].CODAPONTA === 5) {
-            return res.status(400).redirect("/#/codigobarras?error=paradademaquina")
+            return res.status(400).json({ message: "paradademaquina" })
         }
+
+        console.log("linha 161");
         try {
             //Seleciona as peças filhas, a quantidade para execução e o estoque dos itens
             const resource2 = await connection.query(`
@@ -229,11 +237,11 @@ apiRouter.route("/apontamento")
                     updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
                 }
                 await connection.query(updateQtyRes.join("\n"));
-                return res.status(400).redirect("/#/ferramenta?status=pdoesntexists")
+                return res.status(200).redirect("/#/ferramenta?status=pdoesntexists")
             }
 
             if (resource2.length <= 0) {
-                return res.redirect('/#/codigobarras?status=red')
+                return res.status(200).json({ message: 'feito' })
             }
         } catch (error) {
             console.log('linha 236: ', error);
@@ -306,7 +314,7 @@ apiRouter.route("/odf")
             let codigoOperArray = resource.map(e => e.NUMERO_OPERACAO)
             let arrayAfterMap = codigoOperArray.map(e => "00" + e).toString().replaceAll(' ', "0").split(",")
             let indiceDoArrayDeOdfs: number = arrayAfterMap.findIndex((e: string) => e === numOpeNew)
-            let objOdfSelecionada = resource[indiceDoArrayDeOdfs]
+            let odfSelecionada = resource[indiceDoArrayDeOdfs]
             let qtdeApontadaArray = resource.map(e => e.QTDE_APONTADA)
             let qtdOdfArray = resource.map(e => e.QTDE_ODF)
             let valorQtdOdf;
@@ -317,7 +325,7 @@ apiRouter.route("/odf")
             if (indiceDoArrayDeOdfs - 1 <= 0) {
                 valorQtdOdf = qtdOdfArray[indiceDoArrayDeOdfs - 1] || qtdOdfArray[indiceDoArrayDeOdfs]
                 valorQtdeApontAnterior = qtdeApontadaArray[indiceDoArrayDeOdfs - 1] || qtdeApontadaArray[indiceDoArrayDeOdfs]
-                valorMaxdeProducao = valorQtdOdf - valorQtdeApontAnterior;
+                valorMaxdeProducao = valorQtdOdf - valorQtdeApontAnterior || 0;
             }
 
             //Para os demais do array
@@ -325,17 +333,25 @@ apiRouter.route("/odf")
                 qtdeApontadaArray = resource.map(e => e.QTDE_APONTADA)
                 let x = qtdeApontadaArray[indiceDoArrayDeOdfs - 1]
                 valorQtdeApontAnterior = qtdeApontadaArray[indiceDoArrayDeOdfs]
-                valorMaxdeProducao = x - valorQtdeApontAnterior
+                valorMaxdeProducao = x - valorQtdeApontAnterior || 0
             }
 
             //Obj que retorna ao front
             const obj = {
-                objOdfSelecionada,
+                odfSelecionada,
                 valorMaxdeProducao,
             }
-            res.json(obj);
+
+            if (obj.odfSelecionada === undefined || obj.odfSelecionada === null) {
+                return res.status(400).json({ message: 'erro ao pegar o tempo' });
+            } else {
+                console.log("linha 336 /odf/ ", obj);
+                return res.status(200).json(obj);
+            }
+
         } catch (error) {
             console.log(error);
+            return res.status(400).json({ message: "erro ao pegar o tempo" });
         } finally {
             await connection.close()
         }
@@ -345,8 +361,8 @@ apiRouter.route("/imagem")
     .get(async (req, res) => {
         const numpec: string = req.cookies["CODIGO_PECA"]
         const revisao: string = req.cookies['REVISAO']
-        const connection = await mssql.connect(sqlConfig);
         let statusImg = "_status"
+        const connection = await mssql.connect(sqlConfig);
         try {
             const resource = await connection.query(`
             SELECT TOP 1
@@ -357,14 +373,20 @@ apiRouter.route("/imagem")
             AND NUMPEC = '${numpec}'
             AND REVISAO = '${revisao}'
             AND IMAGEM IS NOT NULL
-            `).then(res => res.recordset);
+            `).then(record => record.recordset);
             let imgResult = [];
             for await (let [i, record] of resource.entries()) {
                 const rec = await record;
                 const path = await pictures.getPicturePath(rec["NUMPEC"], rec["IMAGEM"], statusImg, String(i));
                 imgResult.push(path);
             }
-            return res.json(imgResult)
+            if (imgResult.length <= 0) {
+                return res.status(400).json({ message: 'Erro no servidor' })
+            } else {
+                console.log('linha 378 ok');
+                return res.status(200).json(imgResult)
+            }
+
         } catch (error) {
             console.log(error)
             return res.status(500).json({ error: true, message: "Erro no servidor." });
@@ -375,13 +397,13 @@ apiRouter.route("/imagem")
 
 apiRouter.route("/status")
     .get(async (req, res) => {
-        const connection = await mssql.connect(sqlConfig);
         let numpec = req.cookies['CODIGO_PECA']
         let maquina = req.cookies['CODIGO_MAQUINA']
         let tempoAgora = new Date().getTime()
         let startTime = req.cookies['starterBarcode']
         let startTimeNow: number = Number(new Date(startTime).getTime());
         let tempoDecorrido: number = Number(tempoAgora - startTimeNow);
+        const connection = await mssql.connect(sqlConfig);
         try {
             const resource = await connection.query(`
             SELECT 
@@ -403,7 +425,8 @@ apiRouter.route("/status")
             if (tempoRestante <= 0) {
                 tempoRestante = 0
             }
-            return res.json(tempoRestante)
+            console.log('linha 407: /status/ : ', tempoRestante);
+            return res.status(200).json(tempoRestante)
         } catch (error) {
             console.log(error)
             return res.status(500).json({ error: true, message: "Erro no servidor." });
@@ -964,7 +987,6 @@ apiRouter.route("/returnedValue")
 apiRouter.route("/supervisor")
     .post(async (req, res) => {
         let supervisor: string = String(req.body['supervisor'])
-        console.log("object");
         const connection = await mssql.connect(sqlConfig);
         try {
             const resource = await connection.query(`
@@ -1062,10 +1084,10 @@ apiRouter.route("/motivorefugo")
             const resource = await connection.query(`
             SELECT R_E_C_N_O_, DESCRICAO FROM CST_MOTIVO_REFUGO (NOLOCK) ORDER BY DESCRICAO ASC`).then(record => record.recordset);
             let resoc = resource.map(e => e.DESCRICAO)
-            console.log("linha 959");
             return res.status(200).json(resoc)
         } catch (error) {
-            return console.log(error)
+            console.log(error)
+            return res.status(400).json({ message: 'erro em motivos de refugo' })
         } finally {
             await connection.close()
         }

@@ -1,9 +1,9 @@
 <script>
   // @ts-nocheck
-
   import { bind } from "svelte/internal";
   import Title from "../components/title/title.svelte";
   let value;
+  let codigoBarrasReturn = "";
   let codigoBarras = "";
   let urlS = `/api/v1/apontamento`;
   let urlBagde = `/api/v1/apontamentoCracha`;
@@ -15,7 +15,8 @@
   let returnValueStorage;
   let supervisor;
   let quantity;
-  let superParada = "";
+  let superParada = false;
+  let showError = false;
 
   let barcodeMsg = "";
   if (window.location.href.includes("?")) {
@@ -27,9 +28,9 @@
     badgeMsg = window.location.href.split("?")[1].split("=")[1];
   }
 
-  if (window.location.href.includes("?")) {
-    superParada = window.location.href.split("?")[1].split("=")[1];
-  }
+  // if (window.location.href.includes("?")) {
+  //   superParada = window.location.href.split("?")[1].split("=")[1];
+  // }
 
   const doPostSuper = async () => {
     const headers = new Headers();
@@ -66,21 +67,20 @@
     headers.append("Content-Type", "application/json");
     const res = await fetch(urlS, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: headers,
       body: JSON.stringify({
         codigoBarras: !codigoBarras ? "" : codigoBarras,
       }),
-    })
-    // .then( res => res.json());
-    // console.log('linha 740 ',res);
-    // if(res.message === 'okkk'){
-    //   window.location.href = "/#/codigobarras";
-    // }
-    console.log('barcodeMsg: ',barcodeMsg);
-    if (barcodeMsg === "red") {
-      barcodeMsg = "";
+    }).then((res) => res.json());
+    if (res.message === "nolimitonlastodf") {
+      showError = true;
+    }
+    if (res.message === "paradademaquina") {
+      superParada = true;
+    }
+    if (res.message === "feito") {
       window.location.href = "/#/ferramenta";
-      location.reload();
+      //location.reload();
     }
   };
 
@@ -116,7 +116,7 @@
         returnValueStorage: returnValueStorage,
         supervisor: supervisor,
         quantity: quantity,
-        codigoBarras: codigoBarras,
+        codigoBarrasReturn: !codigoBarrasReturn ? "" : codigoBarrasReturn,
       }),
     }).then((res) => res.json());
     if ((res.message = "estorno feito")) {
@@ -146,7 +146,7 @@
       {/if}
     </div>
 
-    {#if superParada === "paradademaquina"}
+    {#if superParada === true}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>Maquina Parada selecione um supervisor</h5>
@@ -190,7 +190,7 @@
       </div>
     {/if}
 
-    {#if barcodeMsg === "nolimitonlastodf"}
+    {#if showError === true}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>ODF PASSADA ESTA COM 0 APONTADA</h5>
@@ -219,7 +219,11 @@
     {/if}
 
     {#if barcodeMsg === "ok" || barcodeMsg === "invalidBarcode"}
-      <form action="/api/v1/apontamento" method="POST" on:submit={doPost}>
+      <form
+        action="/api/v1/apontamento"
+        method="POST"
+        on:submit|preventDefault={doPost}
+      >
         <div class="form">
           <div class="bar" id="title">Código de barras</div>
           <!-- on:input={setValues} -->
@@ -227,7 +231,7 @@
             <input
               on:input={blockForbiddenChars}
               onkeyup="this.value = this.value.toUpperCase()"
-              bind:value
+              bind:value={codigoBarras}
               id="codigoBarras"
               name="codigoBarras"
               type="text"
@@ -296,7 +300,7 @@
             on:input={blockForbiddenChars}
             class="returnInput"
             onkeyup="this.value = this.value.toUpperCase()"
-            bind:value={codigoBarras}
+            bind:value={codigoBarrasReturn}
             id="codigoBarras"
             name="codigoBarras"
             type="text"

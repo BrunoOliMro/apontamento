@@ -16,16 +16,16 @@
     const res = await fetch(urlString);
     dadosOdf = await res.json();
 
-    dataInicio = dadosOdf.objOdfSelecionada.DT_INICIO_OP.slice(6, 8)
-    meioInicio = dadosOdf.objOdfSelecionada.DT_INICIO_OP.slice(4, 6)
-    anoInicio = dadosOdf.objOdfSelecionada.DT_INICIO_OP.slice(0, 4)
-    horaInicio = dadosOdf.objOdfSelecionada.HORA_INICIO.slice(11, 19)
+    dataInicio = dadosOdf.odfSelecionada.DT_INICIO_OP.slice(6, 8)
+    meioInicio = dadosOdf.odfSelecionada.DT_INICIO_OP.slice(4, 6)
+    anoInicio = dadosOdf.odfSelecionada.DT_INICIO_OP.slice(0, 4)
+    horaInicio = dadosOdf.odfSelecionada.HORA_INICIO.slice(11, 19)
 
 
-    dataFim = dadosOdf.objOdfSelecionada.DT_FIM_OP.slice(6, 8)
-    meioFim = dadosOdf.objOdfSelecionada.DT_FIM_OP.slice(4, 6)
-    anoFim = dadosOdf.objOdfSelecionada.DT_FIM_OP.slice(0, 4)
-    horaFinal = dadosOdf.objOdfSelecionada.HORA_FIM.slice(11, 19);
+    dataFim = dadosOdf.odfSelecionada.DT_FIM_OP.slice(6, 8)
+    meioFim = dadosOdf.odfSelecionada.DT_FIM_OP.slice(4, 6)
+    anoFim = dadosOdf.odfSelecionada.DT_FIM_OP.slice(0, 4)
+    horaFinal = dadosOdf.odfSelecionada.HORA_FIM.slice(11, 19);
   }
 
   let resultado = getOdfData();
