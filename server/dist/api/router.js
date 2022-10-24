@@ -31,7 +31,7 @@ apiRouter.route("/apontamento")
     }
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     const queryGrupoOdf = await connection.query(`
-        SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND NUMERO_ODF = '1444592' ORDER BY NUMERO_OPERACAO ASC
+        SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' ORDER BY NUMERO_OPERACAO ASC
         `.trim()).then(result => result.recordset);
     if (queryGrupoOdf.length <= 0) {
         return res.json({ message: "okkk" });
@@ -72,9 +72,6 @@ apiRouter.route("/apontamento")
         qtdLib = objOdfSelecAnterior["QTDE_APONTADA"];
         apontLib = objOdfSelecionada["APONTAMENTO_LIBERADO"];
     }
-    console.log('linha 108 ', dados.numOdf);
-    console.log("linha 101", qtdLib);
-    console.log("linha 102", qntdeJaApontada);
     if (qtdLib - qntdeJaApontada === 0) {
         return res.status(400).json({ message: "nolimitonlastodf" });
     }
@@ -113,11 +110,9 @@ apiRouter.route("/apontamento")
     if (codApont.length < 0) {
         codApont[0].CODAPONTA = "0";
     }
-    console.log("linha 156");
     if (codApont[0].CODAPONTA === 5) {
         return res.status(400).json({ message: "paradademaquina" });
     }
-    console.log("linha 161");
     try {
         const resource2 = await connection.query(`
                         SELECT DISTINCT                 
@@ -217,7 +212,7 @@ apiRouter.route("/apontamentoCracha")
             res.cookie("FUNCIONARIO", selecionarMatricula[0].FUNCIONARIO);
             return res.redirect("/#/codigobarras?status=ok");
         }
-        if (selecionarMatricula.length <= 0) {
+        if (!selecionarMatricula) {
             return res.redirect("/#/codigobarras?error=invalidBadge");
         }
     }
@@ -226,7 +221,6 @@ apiRouter.route("/apontamentoCracha")
         return res.redirect("/#/codigobarras?error=invalidBadge");
     }
     finally {
-        await connection.close();
     }
 });
 apiRouter.route("/odf")
@@ -244,7 +238,7 @@ apiRouter.route("/odf")
             WHERE 1 = 1 
             AND [NUMERO_ODF] = ${numeroOdf}
             AND [CODIGO_PECA] IS NOT NULL
-            ORDER BY NUMERO_OPERACAO ASC`.trim()).then(result => result.recordset);
+            ORDER BY NUMERO_OPERACAO ASC`.trim()).then(record => record.recordset);
         res.cookie("qtdProduzir", resource[0].QTDE_ODF);
         let codigoOperArray = resource.map(e => e.NUMERO_OPERACAO);
         let arrayAfterMap = codigoOperArray.map(e => "00" + e).toString().replaceAll(' ', "0").split(",");
@@ -271,19 +265,17 @@ apiRouter.route("/odf")
             valorMaxdeProducao,
         };
         if (obj.odfSelecionada === undefined || obj.odfSelecionada === null) {
-            return res.status(400).json({ message: 'erro ao pegar o tempo' });
+            return res.json({ message: 'erro ao pegar o tempo' });
         }
         else {
-            console.log("linha 336 /odf/ ", obj);
             return res.status(200).json(obj);
         }
     }
     catch (error) {
         console.log(error);
-        return res.status(400).json({ message: "erro ao pegar o tempo" });
+        return res.json({ message: "erro ao pegar o tempo" });
     }
     finally {
-        await connection.close();
     }
 });
 apiRouter.route("/imagem")
@@ -309,8 +301,9 @@ apiRouter.route("/imagem")
             const path = await pictures_1.pictures.getPicturePath(rec["NUMPEC"], rec["IMAGEM"], statusImg, String(i));
             imgResult.push(path);
         }
-        if (imgResult.length <= 0) {
-            return res.status(400).json({ message: 'Erro no servidor' });
+        console.log("img", imgResult);
+        if (!imgResult) {
+            return res.json({ message: 'Erro no servidor' });
         }
         else {
             console.log('linha 378 ok');
@@ -319,10 +312,9 @@ apiRouter.route("/imagem")
     }
     catch (error) {
         console.log(error);
-        return res.status(500).json({ error: true, message: "Erro no servidor." });
+        return res.json({ error: true, message: "Erro no servidor." });
     }
     finally {
-        await connection.close();
     }
 });
 apiRouter.route("/status")
@@ -352,15 +344,19 @@ apiRouter.route("/status")
         if (tempoRestante <= 0) {
             tempoRestante = 0;
         }
-        console.log('linha 407: /status/ : ', tempoRestante);
-        return res.status(200).json(tempoRestante);
+        if (tempoRestante <= 0) {
+            return res.json({ message: 'erro no tempo' });
+        }
+        else {
+            console.log('linha 407: /status/ : ', tempoRestante);
+            return res.status(200).json(tempoRestante);
+        }
     }
     catch (error) {
         console.log(error);
-        return res.status(500).json({ error: true, message: "Erro no servidor." });
+        return res.json({ error: true, message: "Erro no servidor." });
     }
     finally {
-        await connection.close();
     }
 });
 apiRouter.route("/HISTORICO")
@@ -376,14 +372,18 @@ apiRouter.route("/HISTORICO")
             AND ODF = '${NUMERO_ODF}'
             ORDER BY OP ASC
             `.trim()).then(result => result.recordset);
-        return res.json(resource);
+        if (resource.length <= 0) {
+            return res.json({ error: true, message: "Erro no servidor." });
+        }
+        else {
+            return res.json(resource);
+        }
     }
     catch (error) {
         console.log(error);
         return res.status(500).json({ error: true, message: "Erro no servidor." });
     }
     finally {
-        await connection.close();
     }
 });
 apiRouter.route("/ferramenta")
@@ -415,21 +415,25 @@ apiRouter.route("/ferramenta")
             const path = await pictures_1.pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], ferramenta, String(i));
             result.push(path);
         }
-        await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-            VALUES(GETDATE(),'${funcionario}','${numero_odf}','${codigoPeca}','${revisao}','${numeroOperacao}','${numeroOperacao}', 'D','${codigoMaq}','${qtdLibMax}','0','0','${funcionario}','0','1', '1', 'Setup Ini.','${startTime}','${startTime}', '1', '0','0')`).then(result => result.recordset);
-        return res.status(200).json(result);
+        const query = await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
+            VALUES (GETDATE(), '${funcionario}', '${numero_odf}', '${codigoPeca}', '${revisao}', '${numeroOperacao}', '${numeroOperacao}', 'D', '${codigoMaq}', ${qtdLibMax}, '0', '0', '${funcionario}', '0', '1', '1', 'Ini Set.', ${startTime}, ${startTime}, '1', '0', '0' )`).then(record => record.recordsets);
+        console.log("query linha 515: ", query);
+        if (query === undefined) {
+            return res.json({ message: "Erro nas ferramentas." });
+        }
+        else {
+            return res.status(200).json(result);
+        }
     }
     catch (error) {
         console.log(error);
         return res.status(500).json({ error: true, message: "Erro no servidor." });
     }
     finally {
-        await connection.close();
     }
 });
 apiRouter.route("/ferselecionadas")
     .get(async (req, res) => {
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let numero_odf = String(req.cookies['NUMERO_ODF']);
     let numeroOperacao = String(req.cookies['NUMERO_OPERACAO']);
     let codigoMaq = String(req.cookies['CODIGO_MAQUINA']);
@@ -443,19 +447,26 @@ apiRouter.route("/ferselecionadas")
     let tempoDecorrido = Number(end - startTime);
     let startProd = new Date().getTime();
     res.cookie("startProd", startProd);
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
-        await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-            VALUES(GETDATE(),'${funcionario}','${numero_odf}','${codigoPeca}','${revisao}','${numeroOperacao}','${numeroOperacao}', 'D','${codigoMaq}','${qtdLibMax}','0','0','${funcionario}','0','2', '2', 'Setup Fin.','${tempoDecorrido}','${tempoDecorrido}', '1', '0','0')`).then(result => result.recordset);
-        await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-            VALUES(GETDATE(),'${funcionario}','${numero_odf}','${codigoPeca}','${revisao}','${numeroOperacao}','${numeroOperacao}', 'D','${codigoMaq}','${qtdLibMax}','0','0','${funcionario}','0','3', '3', 'Ini Prod.','${startProd}','${startProd}', '1', '0','0')`).then(result => result.recordset);
-        return res.status(200).json();
+        const query = await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
+            VALUES (GETDATE(), '${funcionario}', '${numero_odf}', '${codigoPeca}', '${revisao}', '${numeroOperacao}', '${numeroOperacao}', 'D', '${codigoMaq}', ${qtdLibMax}, '0', '0', '${funcionario}', '0', '2', '2', 'Fin Set.', ${tempoDecorrido}, ${tempoDecorrido}, '1', '0', '0' )`).then(record => record.rowsAffected);
+        console.log("query linha 572 : ", query);
+        const InsertCodTwo = await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
+            VALUES (GETDATE(), '${funcionario}', '${numero_odf}', '${codigoPeca}', '${revisao}', '${numeroOperacao}', '${numeroOperacao}', 'D', '${codigoMaq}', ${qtdLibMax}, '0', '0', '${funcionario}', '0', '3', '3', 'Ini Prod.', ${tempoDecorrido}, ${tempoDecorrido}, '1', '0', '0' )`).then(record => record.rowsAffected);
+        console.log("InsertCodTwo linha 577 : ", InsertCodTwo);
+        if (!query) {
+            return res.json({ message: "erro em ferselecionadas" });
+        }
+        else {
+            return res.status(200).json({ message: 'ferramentas selecionadas com successo' });
+        }
     }
     catch (error) {
         console.log(error);
-        return res.status(400).redirect("/#/ferramenta");
+        return res.redirect("/#/ferramenta");
     }
     finally {
-        await connection.close();
     }
 });
 apiRouter.route("/apontar")
@@ -470,10 +481,11 @@ apiRouter.route("/apontar")
     let parcialFeed = req.body['parcialFeed'] || 0;
     var codigoFilho = req.cookies['codigoFilho'];
     var reservedItens = req.cookies['reservedItens'];
-    let NUMERO_ODF = req.cookies["NUMERO_ODF"];
+    let NUMERO_ODF = Number(req.cookies["NUMERO_ODF"]);
     let NUMERO_OPERACAO = req.cookies["NUMERO_OPERACAO"];
     let codigoPeca = req.cookies['CODIGO_PECA'];
-    let CODIGO_MAQUINA = req.cookies["CODIGO_MAQUINA"];
+    let CODIGO_MAQUINA = String(req.cookies["CODIGO_MAQUINA"]);
+    console.log("codigo: ", CODIGO_MAQUINA);
     let qtdLibMax = req.cookies['qtdLibMax'];
     let condic = req.cookies['CONDIC'];
     let MAQUINA_PROXIMA = req.cookies['MAQUINA_PROXIMA'];
@@ -493,7 +505,6 @@ apiRouter.route("/apontar")
     supervisor = sanitize(req.body["supervisor"]);
     motivorefugo = sanitize(req.body["value"]) || null;
     let startRip = new Date();
-    console.log('startRip: ', startRip);
     res.cookie("startRip", startRip);
     let endProdTimer = new Date();
     let startProd = req.cookies["startProd"] / 1000;
@@ -530,9 +541,12 @@ apiRouter.route("/apontar")
             return res.json({ message: 'erro ao efetivar estoque das peças filhas ' });
         }
     }
-    console.log('codigo Maq', CODIGO_MAQUINA);
     console.log('codigo Ope', NUMERO_OPERACAO);
-    if (CODIGO_MAQUINA !== "EX002") {
+    if (CODIGO_MAQUINA === 'RET01') {
+        CODIGO_MAQUINA = 'RET001';
+    }
+    console.log('codigo Maq', CODIGO_MAQUINA);
+    if (CODIGO_MAQUINA === "EX002") {
         console.log("linha 648/");
         if (CODIGO_MAQUINA === 'ENG01') {
             console.log('não vai executar aqui linha 651');
@@ -554,24 +568,10 @@ apiRouter.route("/apontar")
         }
         if (CODIGO_MAQUINA === 'EX002') {
             console.log('vai executar aqui linha 670');
-            const q = await connection.query(`
-                    SELECT EE.CODIGO AS COD_PRODUTO,NULL AS COD_PRODUTO_EST, CE.CODIGO,CE.ENDERECO, ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE FROM CST_CAD_ENDERECOS CE(NOLOCK)
-                    LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO)
-                    WHERE ISNULL(EE.QUANTIDADE,0) > 0 AND CE.ENDERECO LIKE '7%' AND UPPER(EE.CODIGO) = UPPER('00240174') ORDER BY CE.ENDERECO ASC`).then(result => result.recordset);
-            if (q.length > 0) {
-                return res.json(q);
-            }
-            if (q.length <= 0) {
-                console.log('vai executar aqui linha 680');
-                const l = await connection.query(`
-                    SELECT EE.CODIGO AS COD_PRODUTO,NULL AS COD_PRODUTO_EST, CE.CODIGO,CE.ENDERECO, ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE FROM CST_CAD_ENDERECOS CE(NOLOCK)
-                    LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO)
-                    WHERE ISNULL(EE.QUANTIDADE,0) <= 0 AND CE.ENDERECO LIKE '7%' ORDER BY CE.ENDERECO ASC`).then(result => result.recordset);
-                return res.json(l);
-            }
         }
         try {
             if (CODIGO_MAQUINA === 'EX002') {
+                console.log("baixa no estoque");
                 const updateProxOdfToS = await connection.query(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 =1 AND CODIGO = '${codigoPeca}'`);
                 console.log('updateProxOdfToS: ', updateProxOdfToS);
             }
@@ -614,16 +614,17 @@ apiRouter.route("/apontar")
             await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'N' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
         }
         await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
-        await connection.query(`
-            INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, MOTIVO_REFUGO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-            VALUES(GETDATE(), '${funcionario}' , '${NUMERO_ODF}' , '${codigoPeca}' , '${revisao}' , ${NUMERO_OPERACAO} ,${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '4' , '4', 'Fin Prod.' , '${finalProdTimer}' , '${finalProdTimer}' , '1', UPPER('${motivorefugo}') ,'0','0')`);
+        console.log("ivghbwr", NUMERO_ODF);
+        console.log('numer', CODIGO_MAQUINA);
+        await connection.query(` INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, MOTIVO_REFUGO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
+            VALUES(GETDATE(),'${funcionario}',${NUMERO_ODF},'${codigoPeca}','${revisao}','${NUMERO_OPERACAO}','${NUMERO_OPERACAO}', 'D','QUA002','1',${qtdBoas},${badFeed},'${funcionario}','0','4', '4', 'Fin Prod.',${finalProdTimer},${finalProdTimer}, '1',  UPPER('${motivorefugo}') , ${missingFeed},${reworkFeed})`);
         return res.json({ message: 'valores apontados com sucesso' });
     }
-    catch {
+    catch (error) {
+        console.log(error);
         return res.json({ message: 'erro ao enviar o apontamento' });
     }
     finally {
-        await connection.close();
     }
 });
 apiRouter.route("/rip")
@@ -676,7 +677,6 @@ apiRouter.route("/rip")
         return res.status(400).redirect("/#/codigobarras/apontamento?error=ripnotFound");
     }
     finally {
-        await connection.close();
     }
 });
 apiRouter.route("/lancamentoRip")
@@ -749,7 +749,6 @@ apiRouter.route("/lancamentoRip")
         return res.json({ message: "ocorreu um erro ao enviar os dados da rip" });
     }
     finally {
-        await connection.close();
     }
 });
 apiRouter.route("/returnedValue")
@@ -758,18 +757,39 @@ apiRouter.route("/returnedValue")
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let choosenOption = req.body['quantity'];
     let supervisor = req.body['supervisor'];
-    console.log("choosenOption:  ", choosenOption);
-    console.log("supervisor:  ", supervisor);
-    req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
-    let barcode = req.body["codigoBarras"];
-    console.log("barcode: ", barcode);
+    let someC = req.body['returnValueStorage'];
+    let boas;
+    let ruins;
+    req.body["codigoBarrasReturn"] = sanitize(req.body["codigoBarrasReturn"]);
+    let barcode = req.body["codigoBarrasReturn"];
     function sanitize(input) {
         const allowedChars = /[A-Za-z0-9]/;
-        return input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
+        return input && input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
+    }
+    barcode = sanitize(barcode);
+    if (barcode === undefined) {
+        return res.redirect("/#/codigobarras?error=invalidBarcode");
     }
     if (barcode == '') {
-        res.status(400).redirect("/#/codigobarras?error=invalidBarcode");
+        return res.redirect("/#/codigobarras?error=invalidBarcode");
     }
+    if (supervisor === '') {
+        return res.json({ message: "supervisor esta vazio" });
+    }
+    if (someC === 'BOAS') {
+        boas = choosenOption;
+    }
+    if (someC === 'RUINS') {
+        ruins = choosenOption;
+    }
+    if (boas === undefined) {
+        boas = 0;
+    }
+    if (ruins === undefined) {
+        ruins = 0;
+    }
+    console.log('boas ', boas);
+    console.log('ruins ', ruins);
     const dados = {
         numOdf: Number(barcode.slice(10)),
         numOper: String(barcode.slice(0, 5)),
@@ -782,7 +802,7 @@ apiRouter.route("/returnedValue")
     }
     choosenOption = sanitize(req.body["quantity"]);
     supervisor = sanitize(req.body["supervisor"]);
-    let funcionario = req.cookies['FUNCIONARIO'];
+    let funcionario = String(req.cookies['FUNCIONARIO']);
     const res1 = await connection.query(`
         SELECT TOP 1
                 [NUMERO_ODF],
@@ -807,20 +827,29 @@ apiRouter.route("/returnedValue")
                 AND [NUMERO_OPERACAO] = ${dados.numOper}
                 ORDER BY NUMERO_OPERACAO ASC`.trim()).then(result => result.recordset);
     if (res1.length > 0) {
-        let codigoPeca = res1[0].CODIGO_PECA;
-        let revisao = res1[0].REVISAO;
-        let qtdLibMax = res1[0].QTDE_ODF;
-        let faltante = '0';
-        let retrabalhada = '0';
+        let codigoPeca = String(res1[0].CODIGO_PECA);
+        let revisao = Number(res1[0].REVISAO);
+        let qtdLibMax = String(res1[0].QTDE_ODF[0]);
+        let faltante = Number(0);
+        let retrabalhada = Number(0);
         const selectSuper = await connection.query(`
-                    SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`).then(result => result.recordset);
+            SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`).then(result => result.recordset);
         if (selectSuper.length > 0) {
             try {
-                await connection.query(`
-                    INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-                    VALUES(GETDATE(),'CESAR','1444591','15990007','1','80','80', 'D','QUA002','1','0','0','CESAR','0','7', '7', 'Valor Estorn.','0.566','0.655', '1', '0','0')
-                    `);
-                return res.status(200).json({ message: 'estorno feito' });
+                const w = await connection.query(`
+                    INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA) 
+                    VALUES (GETDATE(), '${funcionario}', '${dados.numOdf}', '${codigoPeca}', ${revisao}, ${dados.numOper}, ${dados.numOper}, 'D', '${dados.codMaq}', ${qtdLibMax} , '0', '0', '${funcionario}', '0', '7', '7', 'Valor Estorn.', '0', '0', '1', ${faltante},${retrabalhada})`)
+                    .then(record => record.recordset);
+                const s = await connection.query(`
+                    UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA - '${boas}', QTD_REFUGO = QTD_REFUGO - ${ruins} WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'`)
+                    .then(record => record.recordset);
+                console.log("linha 1024");
+                if (!w) {
+                    return res.json({ message: 'erro ao fazer estorno feito' });
+                }
+                else {
+                    return res.status(200).json({ message: 'estorno feito' });
+                }
             }
             catch (error) {
                 console.log(error);
@@ -839,6 +868,9 @@ apiRouter.route("/supervisor")
     .post(async (req, res) => {
     let supervisor = String(req.body['supervisor']);
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    if (supervisor === '' || supervisor === undefined || supervisor === null) {
+        return res.json({ message: 'supervisor não encontrado' });
+    }
     try {
         const resource = await connection.query(`
             SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`).then(result => result.recordset);
@@ -846,14 +878,13 @@ apiRouter.route("/supervisor")
             return res.status(200).json({ message: 'supervisor encontrado' });
         }
         else {
-            return res.status(400).json({ message: 'supervisor não encontrado' });
+            return res.json({ message: 'supervisor não encontrado' });
         }
     }
     catch (error) {
-        return res.status(400);
+        return res.json({ message: 'supervisor não encontrado' });
     }
     finally {
-        await connection.close();
     }
 });
 apiRouter.route("/supervisorParada")
@@ -877,14 +908,13 @@ apiRouter.route("/supervisorParada")
             return res.status(200).json({ success: 'maquina' });
         }
         else {
-            return res.status(400).json();
+            return res.status(400).json({ message: "erro na parada de maquina" });
         }
     }
     catch (error) {
-        return res.status(400);
+        return res.status(400).json({ message: "erro na parada de maquina" });
     }
     finally {
-        await connection.close();
     }
 });
 apiRouter.route("/motivoParada")
@@ -894,13 +924,17 @@ apiRouter.route("/motivoParada")
         const resource = await connection.query(`
                 SELECT CODIGO,DESCRICAO FROM APT_PARADA (NOLOCK) ORDER BY DESCRICAO ASC`).then(record => record.recordset);
         let resoc = resource.map(e => e.DESCRICAO);
-        return res.status(200).json(resoc);
+        if (!resource) {
+            return res.json({ message: 'erro motivos de parada de maquina' });
+        }
+        else {
+            return res.status(200).json(resoc);
+        }
     }
     catch (error) {
-        return res.status(500).json();
+        return res.json({ message: 'erro motivos de parada de maquina' });
     }
     finally {
-        await connection.close();
     }
 });
 apiRouter.route("/postParada")
@@ -918,17 +952,21 @@ apiRouter.route("/postParada")
     let newStart = Number(new Date(start).getTime());
     let final = end - newStart;
     try {
-        await connection.query(`
+        const resour = await connection.query(`
                 INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-                VALUES(GETDATE(), '${funcionario}' , '${numeroOdf}' , '${codigoPeca}' , '${revisao}' , ${numeroOperacao} ,${numeroOperacao}, 'D', '${codigoMaq}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '5' , '5', 'Parada.' , '${final}' , '${final}' , '1' ,'0','0')`);
-        return res.status(200).json({ message: 'maquina parada com sucesso' });
+                VALUES(GETDATE(), '${funcionario}' , '${numeroOdf}' , '${codigoPeca}' , '${revisao}' , ${numeroOperacao} ,${numeroOperacao}, 'D', '${codigoMaq}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '5' , '5', 'Parada.' , '${final}' , '${final}' , '1' ,'0','0')`).then(record => record.recordset);
+        if (resour.length <= 0) {
+            return res.status(400).json({ message: 'erro ao parar a maquina' });
+        }
+        else {
+            return res.status(200).json({ message: 'maquina parada com sucesso' });
+        }
     }
     catch (error) {
         console.log(error);
         return res.status(400).json({ message: "ocorre um erro ao tentar parar a maquina" });
     }
     finally {
-        await connection.close();
     }
 });
 apiRouter.route("/motivorefugo")
@@ -938,14 +976,18 @@ apiRouter.route("/motivorefugo")
         const resource = await connection.query(`
             SELECT R_E_C_N_O_, DESCRICAO FROM CST_MOTIVO_REFUGO (NOLOCK) ORDER BY DESCRICAO ASC`).then(record => record.recordset);
         let resoc = resource.map(e => e.DESCRICAO);
-        return res.status(200).json(resoc);
+        if (resource.length > 0) {
+            return res.status(200).json(resoc);
+        }
+        else {
+            return res.status(400).json({ message: 'erro em motivos do refugo' });
+        }
     }
     catch (error) {
         console.log(error);
         return res.status(400).json({ message: 'erro em motivos de refugo' });
     }
     finally {
-        await connection.close();
     }
 });
 apiRouter.route("/desenho")
@@ -982,7 +1024,6 @@ apiRouter.route("/desenho")
         return res.status(500).json({ error: true, message: "Erro no servidor." });
     }
     finally {
-        await connection.close();
     }
 });
 exports.default = apiRouter;

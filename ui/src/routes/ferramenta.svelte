@@ -8,11 +8,18 @@
   let arrayComp = [];
   let toolMsg = "";
 
+  if (window.location.href.includes("?")) {
+    toolMsg = window.location.href.split("?")[1].split("=")[1];
+  }
+
   async function ferSelected() {
-        const res = await fetch(urlFer);
-        fer = await res.json();
-        console.log(fer);
-      }
+    const res = await fetch(urlFer);
+    fer = await res.json();
+    if (fer.message === "ferramentas selecionadas com successo") {
+      window.location.href = "/#/codigobarras/apontamento";
+      location.reload();
+    }
+  }
 
   async function getfetchItem() {
     const res = await fetch(urlString);
@@ -20,14 +27,10 @@
     if (fetchItem == "/images/sem_imagem.gif") {
       window.location.href = "/#/codigobarras/apontamento";
     }
-    if(fetchItem.length === 0){
-    ferSelected()
-    window.location.href = "/#/codigobarras/apontamento";
-  }
-  }
-
-  if (window.location.href.includes("?")) {
-    toolMsg = window.location.href.split("?")[1].split("=")[1];
+    if (fetchItem.length === 0) {
+      ferSelected();
+      window.location.href = "/#/codigobarras/apontamento";
+    }
   }
 
   function checkIfclicked(column, imgId) {
@@ -38,8 +41,7 @@
       document.getElementById(imgId).style.transition = "1px";
     }
     if (fetchItem.length === arrayComp.length) {
-      ferSelected()
-      window.location.href = "/#/codigobarras/apontamento";
+      ferSelected();
     }
   }
 </script>

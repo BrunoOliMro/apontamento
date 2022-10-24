@@ -17,17 +17,28 @@
     async function getTempo() {
         const res = await fetch(urlString);
         tempodePro = await res.json();
-        tempoMax = Number(tempodePro);
-        if (tempoMax === NaN || tempoMax === undefined || tempoMax === null) {
+
+        if(tempodePro === 'erro no tempo'){
+            tempoMax = 0
+        }
+
+        if (tempoMax === null) {
             tempoMax = 0;
         }
-        console.log("linha 24: ", tempoMax);
+
+        localStorage.setItem('tempoMax', tempoMax)
+        if(localStorage.tempoMax === '0'){
+            tempoMax === 0;
+        }
     }
+
     async function getImagem() {
         const res = await fetch(url);
         imagem = await res.json();
+        if(imagem.length <= 0){
+            console.log("imagem não chegou");
+        }
     }
-    console.log("call", callImagem);
 
     let tempoDaBarra = setInterval(() => {
         if (tempoMax <= 0) {

@@ -20,23 +20,19 @@
     let showSuperNotFound = false;
     let showErrorMessage = false;
     let showRoundedApont = false;
-    let storage = localStorage;
+    resultRefugo = getRefugodata();
 
-    storage.setItem("motivorefugo", motivoUrl);
-
-    console.log("storage linha 29", storage.key);
-
-    if (storage.length <= 0) {
-        async function getRefugodata() {
-            const res = await fetch(motivoUrl);
-            dados = await res.json();
-            console.log("linha 60 feed", dados);
+    async function getRefugodata() {
+        const res = await fetch(motivoUrl);
+        dados = await res.json();
+        localStorage.setItem("dados", dados)
+        //console.log('linha 29: ', localStorage.dados);
+        if(localStorage.dados === '' || localStorage.dados === undefined || localStorage.dados === null){
+            console.log("linha 31 vazio");
         }
-        resultRefugo = getRefugodata();
     }
-    if (storage.length > 0) {
-        console.log("ja tem coisa na storage");
-    }
+
+    // if(localStorage)
 
     let apontamentoMsg = "";
     if (window.location.href.includes("?")) {
