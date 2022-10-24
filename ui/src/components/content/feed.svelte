@@ -521,9 +521,9 @@
         justify-content: center;
         z-index: 8;
     }
-    #parcialDiv {
+    /* #parcialDiv {
         display: none;
-    }
+    } */
     main {
         justify-content: center;
         display: flex;

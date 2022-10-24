@@ -16,8 +16,8 @@
     async function getOdfData() {
         const res = await fetch(urlString);
         dadosOdf = await res.json();
-        if(dadosOdf === null || dadosOdf === undefined){
-            dadosOdf = 0
+        if (dadosOdf === null || dadosOdf === undefined) {
+            dadosOdf = 0;
         }
     }
     let resultado = getOdfData();
@@ -30,19 +30,22 @@
         <div class="areaCodigos">
             <p class="odf">ODF:</p>
             <p class="bold">
-                {dadosOdf.odfSelecionada.NUMERO_ODF === null || !dadosOdf.odfSelecionada.NUMERO_ODF
+                {dadosOdf.odfSelecionada.NUMERO_ODF === null ||
+                !dadosOdf.odfSelecionada.NUMERO_ODF
                     ? "S/I"
                     : dadosOdf.odfSelecionada.NUMERO_ODF}
             </p>
             <p class="odf">Cód. Interno:</p>
             <p class="bold">
-                {dadosOdf.odfSelecionada.CODIGO_PECA === null || !dadosOdf.odfSelecionada.CODIGO_PECA
+                {dadosOdf.odfSelecionada.CODIGO_PECA === null ||
+                !dadosOdf.odfSelecionada.CODIGO_PECA
                     ? "S/I"
                     : dadosOdf.odfSelecionada.CODIGO_PECA}
             </p>
             <p class="odf">Cód. do Cliente:</p>
             <p class="bold">
-                {dadosOdf.odfSelecionada.CODIGO_CLIENTE === null || !dadosOdf.odfSelecionada.CODIGO_CLIENTE
+                {dadosOdf.odfSelecionada.CODIGO_CLIENTE === null ||
+                !dadosOdf.odfSelecionada.CODIGO_CLIENTE
                     ? "S/I"
                     : dadosOdf.odfSelecionada.CODIGO_CLIENTE}
             </p>
@@ -54,13 +57,16 @@
             </p>
             <p class="odf">OP:</p>
             <p class="bold">
-                {dadosOdf.odfSelecionada.NUMERO_OPERACAO === null || !dadosOdf.odfSelecionada.NUMERO_OPERACAO
+                {dadosOdf.odfSelecionada.NUMERO_OPERACAO === null ||
+                !dadosOdf.odfSelecionada.NUMERO_OPERACAO
                     ? "S/I"
                     : dadosOdf.odfSelecionada.NUMERO_OPERACAO} -
-                {dadosOdf.odfSelecionada.CODIGO_MAQUINA === null || !dadosOdf.odfSelecionada.CODIGO_MAQUINA
+                {dadosOdf.odfSelecionada.CODIGO_MAQUINA === null ||
+                !dadosOdf.odfSelecionada.CODIGO_MAQUINA
                     ? "S/I"
                     : dadosOdf.odfSelecionada.CODIGO_MAQUINA} -
-                {dadosOdf.odfSelecionada.QTDE_ODF === null || !dadosOdf.odfSelecionada.QTDE_ODF
+                {dadosOdf.odfSelecionada.QTDE_ODF === null ||
+                !dadosOdf.odfSelecionada.QTDE_ODF
                     ? "S/I"
                     : dadosOdf.odfSelecionada.QTDE_ODF}
             </p>

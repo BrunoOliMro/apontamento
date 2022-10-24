@@ -1,4 +1,6 @@
 <script>
+// @ts-nocheck
+
   let urlString = `/api/v1/ferramenta`;
   let fetchItem = [];
   let resultado = getfetchItem();
@@ -169,9 +171,9 @@
       margin: 1%;
       border-radius: 5px;
     }
-    .subtitle {
+    /* .subtitle {
       font-size: 20px;
-    }
+    } */
   }
 
   @media screen and (min-width: 1600px) {
@@ -179,8 +181,8 @@
       margin: 1%;
       border-radius: 5px;
     }
-    .subtitle {
+    /* .subtitle {
       font-size: 20px;
-    }
+    } */
   }
 </style>
