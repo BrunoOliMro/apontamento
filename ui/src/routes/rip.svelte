@@ -1,4 +1,6 @@
 <script>
+    import { claim_html_tag } from "svelte/internal";
+
     // @ts-nocheck
     import TableRipRow from "../components/Tables/TableRipRow.svelte";
     let seq = "Seq";
@@ -22,13 +24,13 @@
     async function callRip() {
         const res = await fetch(urlString);
         ripTable = await res.json();
-        console.log("ripTable: ", ripTable);
+        //console.log("ripTable: ", ripTable);
 
-        lie = ripTable.map((e) => e.LIE);
-        lsd = ripTable.map((e) => e.LSE);
+        lie = ripTable.map((acc) => acc.LIE);
+        lsd = ripTable.map((acc) => acc.LSE);
 
-        console.log("lie: ", lie);
-        console.log("lsd", lsd);
+        // console.log("lie: ", lie);
+        // console.log("lsd", lsd);
         if (ripTable.length <= 0) {
             window.location.href = "/#/codigobarras";
             location.reload();
@@ -73,17 +75,42 @@
         }
     };
     function createCol() {
-        // Retorna um array de booleans
-        let arrayToAddCol = ripTable.map((acc) => {
-            let bool = acc.values.setup === "";
-            return bool;
+        let arrayToAddCol = ripTable.reduce((acc, int) => {
+            //console.log("acc", acc.values);
+            //console.log('int', int.values);
+            if (acc.values === undefined) {
+                return false;
+            } else if (acc.values >= 0 && int.values >= 0) {
+                return true;
+            }
         });
-        console.log("arrayToAddCol: ", arrayToAddCol);
-        //filtra o array e encontra os campos com true, ou seja os campos vazios
-        let filterAddCol = arrayToAddCol.filter((e) => e === true);
+
+        // const resultSplitLines: { [k: string]: any } = Object.keys(
+        //     setup
+        // ).reduce((acc: any, interator: any) => {
+        //     const [col, lin] = interator.split("-");
+        //     const value = setup[interator];
+        //     if (acc[lin] === undefined) acc[lin] = {};
+        //     acc[lin][col] = Number(value);
+        //     return acc;
+        // }, <{ [k: string]: any }>{});
+
+        //console.log("arrayToAddCol linha 90: ", arrayToAddCol);
+
+        // console.log("arrayToAddCol: ", arrayToAddCol);
+        // //filtra o array e encontra os campos com true, ou seja os campos vazios
+        // let filterAddCol = arrayToAddCol.filter((acc, i) => {
+        //     console.log("acc linha 96", acc);
+        //     if (acc[i] === undefined) {
+        //         console.log("wrububvreurvr");
+        //         return true;
+        //     }
+        //     //acc === true
+        // });
+        // console.log("filterAdd,", filterAddCol);
 
         //Caso o array de campos vazios retorne vazio, adiciona mais uma coluna
-        if (filterAddCol.length <= 0) {
+        if (arrayToAddCol === true) {
             if (extraColumns.length < 13) {
                 extraColumns = [...extraColumns, extraColumns.length + 2];
             }
@@ -92,25 +119,90 @@
         }
     }
     const check = () => {
-        let valueFromUser = Number(Object.values(setup));
-        console.log(valueFromUser);
-        if (
-            valueFromUser >= lie[0] &&
-            valueFromUser <= lsd[0] &&
-            valueFromUser !== 0
-        ) {
-            doPost();
-        }
+        //let valueFromUser = Object.values(setup).map((acc) => acc);
 
-        if (valueFromUser < lie[0] && valueFromUser !== 0) {
-            showSuper = true;
-        }
+        //console.log("linha 112", valueFromUser);
+        // var itensComparison = valueFromUser.map((acc, i) => {
+        //     //acc - lie[i] - lsd[i]
+        //     return [acc, lie[i], lsd[i]];
+        // });
 
-        if (valueFromUser > lsd[0] && valueFromUser !== 0) {
-            showSuper = true;
-        } else if (valueFromUser === 0) {
-            showErrorEmpty = true;
-        }
+        //valueFromUser = setup.values
+
+        // let x  = Object.values(setup).reduce((acc, int)=>{
+        //     const [col, lin] = int.split("-");
+        //     const value = setup[int];
+        //     if (acc[lin] === undefined) acc[lin] = {}
+        //     acc[lin][col] = Number(value);
+        // }, {})
+        // console.log("linha 134",  x);
+
+        //console.log("linha 143 ", Object.keys(setup));
+        console.log("linha 144", setup);
+
+        // @ts-ignore
+        let x = Object.values(setup).reduce((acc, int) => {
+            return Number(acc) + Number(int);
+        }, 0);
+
+        console.log(x);
+
+        let y = Object.keys(setup).reduce((acc, int) => {
+            return [acc, int];
+        }, []);
+
+        console.log(y);
+
+        // @ts-ignore
+        let z = Object.keys(setup).reduce(
+            (acc, int) => {
+                const [lin, col] = int.split("-");
+                if (acc[lin] === undefined) acc[lin] = {};
+                console.log("linha 160", setup.key);
+                return [acc, int];
+            },
+            {
+                name: "",
+                value: "",
+            }
+        );
+
+        console.log(z);
+        // @ts-ignore
+        // const valueFromUser = Object.keys(setup).reduce((acc, interator) => {
+        //     const [col, lin] = interator.split("-");
+        //     if (acc[lin] === undefined) acc[lin] = {};
+        //     acc[lin][col] = setup[interator];
+        // }, {});
+
+        // console.log("linha 150", valueFromUser);
+
+        //console.log("linha 141", x);
+
+        // const resultSplitLines: { [k: string]: any } = Object.keys(
+        //     setup
+        // ).reduce((acc: any, interator: any) => {
+        //     const [col, lin] = interator.split("-");
+        //     const value = setup[interator];
+        //     if (acc[lin] === undefined) acc[lin] = {};
+        //     acc[lin][col] = Number(value);
+        //     return acc;
+        // }, <{ [k: string]: any }>{});
+
+        //console.log("linha 107", itensComparison);
+
+        // if (valueFromUser >= lie[0] && valueFromUser <= lsd[0]) {
+        //     doPost();
+        // }
+        // if (valueFromUser < lie[0]) {
+        //     showSuper = true;
+        // }
+
+        // if (valueFromUser > lsd[0]) {
+        //     showSuper = true;
+        // } else if (valueFromUser.length === 0) {
+        //     showErrorEmpty = true;
+        // }
     };
 
     function close() {
@@ -251,7 +343,7 @@
         width: 300px;
         border-radius: 3px;
     }
-    .returnValue {
+    /* .returnValue {
         justify-content: center;
         align-items: center;
         text-align: center;
@@ -261,7 +353,7 @@
         position: absolute;
         color: white;
         background-color: black;
-    }
+    } */
     .divBtn {
         display: flex;
         margin: 1%;

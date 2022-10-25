@@ -91,9 +91,10 @@ const pointerPost = async (req, res) => {
     }
     let numeroOper = '00' + objOdfSelecionada.NUMERO_OPERACAO.replaceAll(" ", '0');
     if (objOdfSelecionada['CODIGO_MAQUINA'] === 'RET001') {
-        objOdfSelecionada['CODIGO_MAQUINA'] = 'RET01';
+        objOdfSelecionada['CODIGO_MAQUINA'] = 'RET001';
     }
     console.log("linha 122 /pointer / : ", objOdfSelecionada['CODIGO_MAQUINA']);
+    console.log('codigoMaq linha 124:', dados.codMaq);
     res.cookie('qtdLibMax', qtdLibMax);
     res.cookie("MAQUINA_PROXIMA", codigoMaquinaProxOdf);
     res.cookie("OPERACAO_PROXIMA", codMaqProxOdf);

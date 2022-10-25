@@ -11,7 +11,7 @@ const sanitize_1 = require("../utils/sanitize");
 const tools = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let codigoPeca = String((0, sanitize_1.sanitize)(req.cookies["CODIGO_PECA"])) || null;
-    let numero_odf = String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"])) || null;
+    let numero_odf = Number((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"])) || 0;
     let numeroOperacao = String((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"])) || null;
     let codigoMaq = String((0, sanitize_1.sanitize)(req.cookies["CODIGO_MAQUINA"])) || null;
     let funcionario = String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])) || null;
@@ -20,7 +20,9 @@ const tools = async (req, res) => {
     let start = Number((0, sanitize_1.sanitize)(req.cookies["starterBarcode"])) || 0;
     let qtdLibMax = Number((0, sanitize_1.sanitize)(req.cookies['qtdLibMax'])) || 0;
     let startTime = Number(new Date(start).getTime()) || 0;
+    let state = 0;
     try {
+        state = 0;
         const resource = await connection.query(`
             SELECT
                 [CODIGO],
@@ -36,22 +38,26 @@ const tools = async (req, res) => {
             const path = await pictures_1.pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], ferramenta, String(i));
             result.push(path);
         }
-        const query = await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
-        VALUES (GETDATE(), '${funcionario}', '${numero_odf}', '${codigoPeca}', '${revisao}', '${numeroOperacao}', '${numeroOperacao}', 'D', '${codigoMaq}', ${qtdLibMax}, '0', '0', '${funcionario}', '0', '1', '1', 'Ini Set.', ${startTime}, ${startTime}, '1', '0', '0' )`).then(record => record.recordsets);
-        console.log("query linha 515: ", query);
-        if (query === undefined) {
-            return res.json({ message: "Erro nas ferramentas." });
+        console.log('res: linha 37 ', resource);
+        state = 1;
+        try {
+            await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
+            VALUES (GETDATE(), '${funcionario}', ${numero_odf}, '${codigoPeca}', '${revisao}', '${numeroOperacao}', '${numeroOperacao}', 'D', '${codigoMaq}', ${qtdLibMax}, 0, 0, '${funcionario}', '0', '1', '1', 'Ini Set.', ${startTime}, ${startTime}, '1', 0, 0 )`).then(record => record.recordsets);
         }
-        else {
-            return res.status(200).json(result);
+        catch (error) {
+            console.log(error);
         }
+        state = 2;
+        return res.status(200).json(result);
     }
     catch (error) {
-        console.log(error);
+        state = 0;
+        console.log('linha 57 /tools /', error);
         return res.status(500).json({ error: true, message: "Erro no servidor." });
     }
     finally {
     }
+    res;
 };
 exports.tools = tools;
 const selectedTools = async (req, res) => {
@@ -62,6 +68,7 @@ const selectedTools = async (req, res) => {
     const funcionario = String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])) || null;
     const revisao = Number((0, sanitize_1.sanitize)(req.cookies['REVISAO'])) || 0;
     const qtdLibMax = Number((0, sanitize_1.sanitize)(req.cookies['qtdLibMax'])) || 0;
+    let state = 0;
     const end = Number(new Date().getTime()) || 0;
     const start = Number(req.cookies['starterBarcode']) || 0;
     const startTime = Number(new Date(start).getTime()) || 0;
@@ -70,14 +77,17 @@ const selectedTools = async (req, res) => {
     res.cookie("startProd", startProd);
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
+        state = 1;
         await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
-        VALUES (GETDATE(), '${funcionario}', '${numero_odf}', '${codigoPeca}', '${revisao}', '${numeroOperacao}', '${numeroOperacao}', 'D', '${codigoMaq}', ${qtdLibMax}, '0', '0', '${funcionario}', '0', '2', '2', 'Fin Set.', ${tempoDecorrido}, ${tempoDecorrido}, '1', '0', '0' )`).then(record => record.recordset);
+        VALUES (GETDATE(), '${funcionario}', ${numero_odf}, '${codigoPeca}', '${revisao}', '${numeroOperacao}', '${numeroOperacao}', 'D', '${codigoMaq}', ${qtdLibMax}, '0', '0', '${funcionario}', '0', '2', '2', 'Fin Set.', ${tempoDecorrido}, ${tempoDecorrido}, '1', '0', '0' )`).then(record => record.recordset);
         await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
-        VALUES (GETDATE(), '${funcionario}', '${numero_odf}', '${codigoPeca}', '${revisao}', '${numeroOperacao}', '${numeroOperacao}', 'D', '${codigoMaq}', ${qtdLibMax}, '0', '0', '${funcionario}', '0', '3', '3', 'Ini Prod.', ${tempoDecorrido}, ${tempoDecorrido}, '1', '0', '0' )`).then(record => record.recordset);
+        VALUES (GETDATE(), '${funcionario}', ${numero_odf}, '${codigoPeca}', '${revisao}', '${numeroOperacao}', '${numeroOperacao}', 'D', '${codigoMaq}', ${qtdLibMax}, '0', '0', '${funcionario}', '0', '3', '3', 'Ini Prod.', ${tempoDecorrido}, ${tempoDecorrido}, '1', '0', '0' )`).then(record => record.recordset);
+        state = 2;
         return res.status(200).json({ message: 'ferramentas selecionadas com successo' });
     }
     catch (error) {
-        console.log(error);
+        state = 1;
+        console.log('linha 104: ', error);
         return res.redirect("/#/ferramenta");
     }
     finally {

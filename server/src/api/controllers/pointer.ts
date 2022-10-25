@@ -40,17 +40,17 @@ export const pointerPost: RequestHandler = async (req, res) => {
     let codigoOperArray = queryGrupoOdf.map(e => e.NUMERO_OPERACAO)
     let arrayAfterMap = codigoOperArray.map(e => "00" + e).toString().replaceAll(' ', "0").split(",")
     let indiceDoArrayDeOdfs: number = arrayAfterMap.findIndex((e: string) => e === dados.numOper)
-    
+
     //Caso indice do array seja o primeiro
     if (indiceDoArrayDeOdfs < 0) {
         indiceDoArrayDeOdfs = 0
-    
+
     }
     let objOdfSelecionada = queryGrupoOdf[indiceDoArrayDeOdfs]
     let objOdfSelecProximo = queryGrupoOdf[indiceDoArrayDeOdfs + 1]
     let objOdfSelecAnterior = queryGrupoOdf[indiceDoArrayDeOdfs - 1]
     //console.log("linha 57 /pointer/", objOdfSelecAnterior);
-    if(objOdfSelecAnterior === undefined){
+    if (objOdfSelecAnterior === undefined) {
         console.log("objOdfSelecAnterior linha 54 /pointer/ ", objOdfSelecAnterior);
     }
 
@@ -116,12 +116,12 @@ export const pointerPost: RequestHandler = async (req, res) => {
     let numeroOper = '00' + objOdfSelecionada.NUMERO_OPERACAO.replaceAll(" ", '0')
 
     if (objOdfSelecionada['CODIGO_MAQUINA'] === 'RET001') {
-        objOdfSelecionada['CODIGO_MAQUINA'] = 'RET01'
+        objOdfSelecionada['CODIGO_MAQUINA'] = 'RET001'
     }
 
-    console.log("linha 122 /pointer / : ", objOdfSelecionada['CODIGO_MAQUINA'] );
+    console.log("linha 122 /pointer / : ", objOdfSelecionada['CODIGO_MAQUINA']);
 
-    //console.log('codigoMaq:',codigoMaq);
+    console.log('codigoMaq linha 124:', dados.codMaq);
     res.cookie('qtdLibMax', qtdLibMax)
     res.cookie("MAQUINA_PROXIMA", codigoMaquinaProxOdf)
     res.cookie("OPERACAO_PROXIMA", codMaqProxOdf)
@@ -231,6 +231,6 @@ export const pointerPost: RequestHandler = async (req, res) => {
         console.log('linha 236: ', error);
         return res.json({ message: "CATCH ERRO NO TRY" })
     } finally {
-       // await connection.close()
+        // await connection.close()
     }
 }
