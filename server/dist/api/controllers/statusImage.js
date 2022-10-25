@@ -5,12 +5,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.statusImage = void 0;
 const mssql_1 = __importDefault(require("mssql"));
+const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const global_config_1 = require("../../global.config");
 const pictures_1 = require("../pictures");
 const statusImage = async (req, res) => {
-    const numpec = req.cookies["CODIGO_PECA"];
-    const revisao = req.cookies['REVISAO'];
-    let statusImg = "_status";
+    const numpec = String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"])) || null;
+    const revisao = String((0, sanitize_html_1.default)(req.cookies['REVISAO'])) || null;
+    const statusImg = String("_status");
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const resource = await connection.query(`
@@ -29,7 +30,6 @@ const statusImage = async (req, res) => {
             const path = await pictures_1.pictures.getPicturePath(rec["NUMPEC"], rec["IMAGEM"], statusImg, String(i));
             imgResult.push(path);
         }
-        console.log("img", imgResult);
         if (!imgResult) {
             return res.json({ message: 'Erro no servidor' });
         }

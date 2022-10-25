@@ -14,7 +14,6 @@ const odfData_1 = require("./controllers/odfData");
 const returnedValue_1 = require("./controllers/returnedValue");
 const rip_1 = require("./controllers/rip");
 const ripPost_1 = require("./controllers/ripPost");
-const selectedTools_1 = require("./controllers/selectedTools");
 const status_1 = require("./controllers/status");
 const statusImage_1 = require("./controllers/statusImage");
 const stopMotives_1 = require("./controllers/stopMotives");
@@ -39,7 +38,7 @@ apiRouter.route("/HISTORICO")
 apiRouter.route("/ferramenta")
     .get(tools_1.tools);
 apiRouter.route("/ferselecionadas")
-    .get(selectedTools_1.selectedTools);
+    .get(tools_1.selectedTools);
 apiRouter.route("/apontar")
     .post(point_1.point);
 apiRouter.route("/lancamentoRip")

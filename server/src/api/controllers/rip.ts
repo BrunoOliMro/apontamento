@@ -1,12 +1,13 @@
 import { RequestHandler } from "express";
 import mssql from "mssql";
+import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";
 
 export const rip: RequestHandler = async (req, res) => {
     const connection = await mssql.connect(sqlConfig);
-    let numpec: string = String(req.cookies["CODIGO_PECA"])
-    let revisao: string = String(req.cookies['REVISAO'])
-    let codMaq: string = String(req.cookies['CODIGO_MAQUINA'])
+    let numpec = String(sanitize(req.cookies["CODIGO_PECA"])) || null
+    let revisao = String(sanitize(req.cookies['REVISAO'])) || null
+    let codMaq = String(sanitize(req.cookies['CODIGO_MAQUINA'])) || null
     try {
         const resource = await connection.query(`
         SELECT  DISTINCT
@@ -33,24 +34,24 @@ export const rip: RequestHandler = async (req, res) => {
             `.trim()
         ).then(result => result.recordset)
 
-        let arrayNumope = resource.map((e) => {
-            if (e.CST_NUMOPE === codMaq) {
-                return e
+        let arrayNumope = resource.map((acc) => {
+            if (acc.CST_NUMOPE === codMaq) {
+                return acc
             }
         })
 
-        let numopeFilter = arrayNumope.filter(e => e)
-        res.cookie('cstNumope', numopeFilter.map(e => e.CST_NUMOPE))
-        res.cookie('numCar', numopeFilter.map(e => e.NUMCAR))
-        res.cookie('descricao', numopeFilter.map(e => e.DESCRICAO))
-        res.cookie('especif', numopeFilter.map(e => e.ESPECIF))
-        res.cookie('instrumento', numopeFilter.map(e => e.INSTRUMENTO))
-        res.cookie('lie', numopeFilter.map(e => e.LIE))
-        res.cookie('lse', numopeFilter.map(e => e.LSE))
+        let numopeFilter = arrayNumope.filter(acc => acc)
+        res.cookie('cstNumope', numopeFilter.map(acc => acc.CST_NUMOPE))
+        res.cookie('numCar', numopeFilter.map(acc => acc.NUMCAR))
+        res.cookie('descricao', numopeFilter.map(acc => acc.DESCRICAO))
+        res.cookie('especif', numopeFilter.map(acc => acc.ESPECIF))
+        res.cookie('instrumento', numopeFilter.map(acc => acc.INSTRUMENTO))
+        res.cookie('lie', numopeFilter.map(acc => acc.LIE))
+        res.cookie('lse', numopeFilter.map(acc => acc.LSE))
         return res.json(numopeFilter)
     } catch (error) {
         console.log(error)
-        return res.status(400).redirect("/#/codigobarras/apontamento?error=ripnotFound")
+        return res.redirect("/#/codigobarras/apontamento?error=ripnotFound")
     } finally {
         //await connection.close()
     }

@@ -5,11 +5,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.odfData = void 0;
 const mssql_1 = __importDefault(require("mssql"));
+const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const global_config_1 = require("../../global.config");
 const odfData = async (req, res) => {
-    let numeroOdf = String(req.cookies["NUMERO_ODF"]);
-    let numOper = String(req.cookies["NUMERO_OPERACAO"]);
-    let numOpeNew = numOper.toString().replaceAll(' ', "0");
+    let numeroOdf = String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"])) || null;
+    let numOper = String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"])) || null;
+    let numOpeNew = String(numOper.toString().replaceAll(' ', "0")) || null;
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const resource = await connection.query(`

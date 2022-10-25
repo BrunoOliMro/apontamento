@@ -6,18 +6,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.pointerPost = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
+const sanitize_1 = require("../utils/sanitize");
 const pointerPost = async (req, res) => {
-    req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
-    let barcode = req.body["codigoBarras"];
-    function sanitize(input) {
-        const allowedChars = /[A-Za-z0-9]/;
-        return input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
-    }
-    if (barcode == '') {
-        return res.status(400).redirect("/#/codigobarras?error=invalidBarcode");
+    let barcode = String((0, sanitize_1.sanitize)(req.body["codigoBarras"])) || null;
+    if (barcode === '' || barcode === undefined || barcode === null) {
+        return res.redirect("/#/codigobarras?error=invalidBarcode");
     }
     const dados = {
-        numOdf: Number(barcode.slice(10)),
+        numOdf: String(barcode.slice(10)),
         numOper: String(barcode.slice(0, 5)),
         codMaq: String(barcode.slice(5, 10)),
     };
@@ -29,9 +25,9 @@ const pointerPost = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     const queryGrupoOdf = await connection.query(`
     SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' ORDER BY NUMERO_OPERACAO ASC
-    `.trim()).then(result => result.recordset);
+    `).then(result => result.recordset);
     if (queryGrupoOdf.length <= 0) {
-        return res.json({ message: "okkk" });
+        return res.json({ message: "odf não encontrada" });
     }
     let codigoOperArray = queryGrupoOdf.map(e => e.NUMERO_OPERACAO);
     let arrayAfterMap = codigoOperArray.map(e => "00" + e).toString().replaceAll(' ', "0").split(",");
@@ -42,6 +38,9 @@ const pointerPost = async (req, res) => {
     let objOdfSelecionada = queryGrupoOdf[indiceDoArrayDeOdfs];
     let objOdfSelecProximo = queryGrupoOdf[indiceDoArrayDeOdfs + 1];
     let objOdfSelecAnterior = queryGrupoOdf[indiceDoArrayDeOdfs - 1];
+    if (objOdfSelecAnterior === undefined) {
+        console.log("objOdfSelecAnterior linha 54 /pointer/ ", objOdfSelecAnterior);
+    }
     let qtdLib = 0;
     let apontLib = '';
     let qntdeJaApontada = 0;
@@ -94,6 +93,7 @@ const pointerPost = async (req, res) => {
     if (objOdfSelecionada['CODIGO_MAQUINA'] === 'RET001') {
         objOdfSelecionada['CODIGO_MAQUINA'] = 'RET01';
     }
+    console.log("linha 122 /pointer / : ", objOdfSelecionada['CODIGO_MAQUINA']);
     res.cookie('qtdLibMax', qtdLibMax);
     res.cookie("MAQUINA_PROXIMA", codigoMaquinaProxOdf);
     res.cookie("OPERACAO_PROXIMA", codMaqProxOdf);
@@ -180,7 +180,6 @@ const pointerPost = async (req, res) => {
         return res.json({ message: "CATCH ERRO NO TRY" });
     }
     finally {
-        await connection.close();
     }
 };
 exports.pointerPost = pointerPost;

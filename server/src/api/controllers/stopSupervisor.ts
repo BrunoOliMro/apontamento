@@ -1,17 +1,19 @@
 import { RequestHandler } from "express";
 import mssql from "mssql";
+import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";
 
 export const stopSupervisor:RequestHandler = async (req, res) => {
-    let supervisor: string = String(req.body['supervisor'])
-    let numeroOdf: string = String(req.cookies['NUMERO_ODF'])
-    let NUMERO_OPERACAO: string = String(req.cookies['NUMERO_OPERACAO'])
-    let CODIGO_MAQUINA: string = String(req.cookies['CODIGO_MAQUINA'])
-    let qtdLibMax: string = String(req.cookies['qtdLibMax'])
-    let funcionario: string = String(req.cookies['FUNCIONARIO'])
-    let revisao: number = Number(req.cookies['REVISAO']) || 0
-    let codigoPeca: string = String(req.cookies['CODIGO_PECA'])
+    let supervisor = String(sanitize(req.body['supervisor'].trim)) || null
+    let numeroOdf = String(sanitize(req.cookies['NUMERO_ODF'].trim))|| null
+    let NUMERO_OPERACAO = String(sanitize(req.cookies['NUMERO_OPERACAO'].trim))|| null
+    let CODIGO_MAQUINA = String(sanitize(req.cookies['CODIGO_MAQUINA'].trim))|| null
+    let qtdLibMax = String(sanitize(req.cookies['qtdLibMax'].trim))|| null
+    let funcionario = String(sanitize(req.cookies['FUNCIONARIO'].trim))|| null
+    let revisao = Number(sanitize(req.cookies['REVISAO'].trim)) || 0
+    let codigoPeca = String(sanitize(req.cookies['CODIGO_PECA'].trim))|| null
     const connection = await mssql.connect(sqlConfig);
+
     try {
         const resource = await connection.query(`
         SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`).then(result => result.recordset);

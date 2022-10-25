@@ -6,9 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.historic = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
+const sanitize_1 = require("../utils/sanitize");
 const historic = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let NUMERO_ODF = req.cookies["NUMERO_ODF"];
+    let NUMERO_ODF = Number((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]));
     try {
         const resource = await connection.query(`
         SELECT

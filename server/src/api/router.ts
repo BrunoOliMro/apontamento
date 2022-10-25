@@ -10,19 +10,18 @@ import { odfData } from "./controllers/odfData";
 import { returnedValue } from "./controllers/returnedValue";
 import { rip } from "./controllers/rip";
 import { ripPost } from "./controllers/ripPost";
-import { selectedTools } from "./controllers/selectedTools";
 import { status } from "./controllers/status";
 import { statusImage } from "./controllers/statusImage";
 import { stopMotives } from "./controllers/stopMotives";
 import { stopPost } from "./controllers/stopPost";
 import { stopSupervisor } from "./controllers/stopSupervisor";
-import { tools } from "./controllers/tools";
+import { selectedTools, tools } from "./controllers/tools";
 import { point } from "./controllers/point";
 import { pointBagde } from "./controllers/pointBagde";
-//import { pictures } from "./pictures";
 
-const apiRouter = Router();
 // /api/v1/
+const apiRouter = Router();
+
 apiRouter.route("/apontamento")
     .post(pointerPost)
 
@@ -564,7 +563,7 @@ apiRouter.route("/ferramenta")
 
 apiRouter.route("/ferselecionadas")
     .get(selectedTools)
-    //     async (req, res) => {
+    //     async (req,  res) => {
     //     let numero_odf: string = String(req.cookies['NUMERO_ODF'])
     //     let numeroOperacao: string = String(req.cookies['NUMERO_OPERACAO'])
     //     let codigoMaq: string = String(req.cookies['CODIGO_MAQUINA'])

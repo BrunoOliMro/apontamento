@@ -5,12 +5,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.rip = void 0;
 const mssql_1 = __importDefault(require("mssql"));
+const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const global_config_1 = require("../../global.config");
 const rip = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let numpec = String(req.cookies["CODIGO_PECA"]);
-    let revisao = String(req.cookies['REVISAO']);
-    let codMaq = String(req.cookies['CODIGO_MAQUINA']);
+    let numpec = String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"])) || null;
+    let revisao = String((0, sanitize_html_1.default)(req.cookies['REVISAO'])) || null;
+    let codMaq = String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA'])) || null;
     try {
         const resource = await connection.query(`
         SELECT  DISTINCT
@@ -35,24 +36,24 @@ const rip = async (req, res) => {
         AND NUMCAR < '2999'
         ORDER BY NUMPEC ASC
             `.trim()).then(result => result.recordset);
-        let arrayNumope = resource.map((e) => {
-            if (e.CST_NUMOPE === codMaq) {
-                return e;
+        let arrayNumope = resource.map((acc) => {
+            if (acc.CST_NUMOPE === codMaq) {
+                return acc;
             }
         });
-        let numopeFilter = arrayNumope.filter(e => e);
-        res.cookie('cstNumope', numopeFilter.map(e => e.CST_NUMOPE));
-        res.cookie('numCar', numopeFilter.map(e => e.NUMCAR));
-        res.cookie('descricao', numopeFilter.map(e => e.DESCRICAO));
-        res.cookie('especif', numopeFilter.map(e => e.ESPECIF));
-        res.cookie('instrumento', numopeFilter.map(e => e.INSTRUMENTO));
-        res.cookie('lie', numopeFilter.map(e => e.LIE));
-        res.cookie('lse', numopeFilter.map(e => e.LSE));
+        let numopeFilter = arrayNumope.filter(acc => acc);
+        res.cookie('cstNumope', numopeFilter.map(acc => acc.CST_NUMOPE));
+        res.cookie('numCar', numopeFilter.map(acc => acc.NUMCAR));
+        res.cookie('descricao', numopeFilter.map(acc => acc.DESCRICAO));
+        res.cookie('especif', numopeFilter.map(acc => acc.ESPECIF));
+        res.cookie('instrumento', numopeFilter.map(acc => acc.INSTRUMENTO));
+        res.cookie('lie', numopeFilter.map(acc => acc.LIE));
+        res.cookie('lse', numopeFilter.map(acc => acc.LSE));
         return res.json(numopeFilter);
     }
     catch (error) {
         console.log(error);
-        return res.status(400).redirect("/#/codigobarras/apontamento?error=ripnotFound");
+        return res.redirect("/#/codigobarras/apontamento?error=ripnotFound");
     }
     finally {
     }

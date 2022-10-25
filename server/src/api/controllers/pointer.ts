@@ -1,61 +1,59 @@
-import { RequestHandler } from "express";
+import type { RequestHandler } from "express";
 import mssql from "mssql";
 import { sqlConfig } from "../../global.config";
+import { sanitize } from "../utils/sanitize";
 
 export const pointerPost: RequestHandler = async (req, res) => {
-    req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
-    let barcode = req.body["codigoBarras"]
-
-    //Sanitização
-    function sanitize(input: string) {
-        const allowedChars = /[A-Za-z0-9]/;
-        return input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
-    }
+    let barcode = String(sanitize(req.body["codigoBarras"])) || null;
 
     //Verifica se o codigo de barras veio vazio
-    if (barcode == '') {
-        return res.status(400).redirect("/#/codigobarras?error=invalidBarcode")
+    if (barcode === '' || barcode === undefined || barcode === null) {
+        return res.redirect("/#/codigobarras?error=invalidBarcode")
     }
 
+    //console.log("barcode: ", barcode);
     //Divide o Codigo de barras em 3 partes para a verificação na proxima etapa
     const dados = {
-        numOdf: Number(barcode.slice(10)),
-        numOper: String(barcode.slice(0, 5)),
-        codMaq: String(barcode.slice(5, 10)),
+        numOdf: String(barcode!.slice(10)),
+        numOper: String(barcode!.slice(0, 5)),
+        codMaq: String(barcode!.slice(5, 10)),
     }
     //Reatribuiu o codigo caso o cado de barras seja maior
-    if (barcode.length > 17) {
-        dados.numOdf = barcode.slice(11)
-        dados.numOper = barcode.slice(0, 5)
-        dados.codMaq = barcode.slice(5, 11)
+    if (barcode!.length > 17) {
+        dados.numOdf = barcode!.slice(11)
+        dados.numOper = barcode!.slice(0, 5)
+        dados.codMaq = barcode!.slice(5, 11)
     }
-
-    //console.log('linha 38 ', dados.numOdf)
-    // console.log(dados.numOper)
-    // console.log(dados.codMaq)
 
     //Seleciona todos os itens da Odf
     const connection = await mssql.connect(sqlConfig);
     const queryGrupoOdf = await connection.query(`
     SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' ORDER BY NUMERO_OPERACAO ASC
-    `.trim()
-    ).then(result => result.recordset)
+    `).then(result => result.recordset)
 
+    //Caso não encontre o numero da odf
     if (queryGrupoOdf.length <= 0) {
-        return res.json({ message: "okkk" })
+        return res.json({ message: "odf não encontrada" })
     }
 
     //Map pelo numero da operação e diz o indice de uma odf antes e uma depois
     let codigoOperArray = queryGrupoOdf.map(e => e.NUMERO_OPERACAO)
     let arrayAfterMap = codigoOperArray.map(e => "00" + e).toString().replaceAll(' ', "0").split(",")
     let indiceDoArrayDeOdfs: number = arrayAfterMap.findIndex((e: string) => e === dados.numOper)
-
+    
+    //Caso indice do array seja o primeiro
     if (indiceDoArrayDeOdfs < 0) {
         indiceDoArrayDeOdfs = 0
+    
     }
     let objOdfSelecionada = queryGrupoOdf[indiceDoArrayDeOdfs]
     let objOdfSelecProximo = queryGrupoOdf[indiceDoArrayDeOdfs + 1]
     let objOdfSelecAnterior = queryGrupoOdf[indiceDoArrayDeOdfs - 1]
+    //console.log("linha 57 /pointer/", objOdfSelecAnterior);
+    if(objOdfSelecAnterior === undefined){
+        console.log("objOdfSelecAnterior linha 54 /pointer/ ", objOdfSelecAnterior);
+    }
+
     let qtdLib: number = 0
     let apontLib: string = ''
     let qntdeJaApontada: number = 0
@@ -90,9 +88,6 @@ export const pointerPost: RequestHandler = async (req, res) => {
         apontLib = objOdfSelecionada["APONTAMENTO_LIBERADO"]
     }
 
-    // console.log('linha 108 ', dados.numOdf)
-    // console.log("linha 101", qtdLib);
-    // console.log("linha 102", qntdeJaApontada);
     if (qtdLib - qntdeJaApontada === 0) {
         return res.status(400).json({ message: "nolimitonlastodf" })
     }
@@ -118,13 +113,13 @@ export const pointerPost: RequestHandler = async (req, res) => {
         objOdfSelecAnterior = 0
     }
 
-    //console.log("linha 119", objOdfSelecAnterior);
-
     let numeroOper = '00' + objOdfSelecionada.NUMERO_OPERACAO.replaceAll(" ", '0')
 
     if (objOdfSelecionada['CODIGO_MAQUINA'] === 'RET001') {
         objOdfSelecionada['CODIGO_MAQUINA'] = 'RET01'
     }
+
+    console.log("linha 122 /pointer / : ", objOdfSelecionada['CODIGO_MAQUINA'] );
 
     //console.log('codigoMaq:',codigoMaq);
     res.cookie('qtdLibMax', qtdLibMax)
@@ -135,10 +130,7 @@ export const pointerPost: RequestHandler = async (req, res) => {
     res.cookie("CODIGO_MAQUINA", objOdfSelecionada['CODIGO_MAQUINA'])
     res.cookie("NUMERO_OPERACAO", numeroOper)
     res.cookie("REVISAO", objOdfSelecionada['REVISAO'])
-    // console.log('LINHA 136', objOdfSelecionada.CODIGO_PECA);
-    // console.log('LINHA 136', dados.numOdf)
-    // console.log('LINHA 136', objOdfSelecionada.CODIGO_MAQUINA);
-    // console.log("linha 135");
+
     const codApont = await connection.query(`
     SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND PECA = '${objOdfSelecionada.CODIGO_PECA}' AND ITEM = '${objOdfSelecionada.CODIGO_MAQUINA}'  ORDER BY DATAHORA DESC`.trim()
     ).then(result => result.recordset)
@@ -146,13 +138,11 @@ export const pointerPost: RequestHandler = async (req, res) => {
     if (codApont.length < 0) {
         codApont[0].CODAPONTA = "0"
     }
-    // console.log("linha 156");
 
     if (codApont[0].CODAPONTA === 5) {
         return res.status(400).json({ message: "paradademaquina" })
     }
 
-    // console.log("linha 161");
     try {
         //Seleciona as peças filhas, a quantidade para execução e o estoque dos itens
         const resource2 = await connection.query(`
@@ -174,6 +164,7 @@ export const pointerPost: RequestHandler = async (req, res) => {
                        AND PCP.NUMERO_ODF = '${dados.numOdf}'    
                     `.trim()
         ).then(result => result.recordset)
+        //console.log("RESOURCE: ", resource2);
         if (resource2.length > 0) {
             res.cookie("CONDIC", resource2[0].CONDIC)
             let codigoNumite = resource2.map(e => e.NUMITE)
@@ -240,6 +231,6 @@ export const pointerPost: RequestHandler = async (req, res) => {
         console.log('linha 236: ', error);
         return res.json({ message: "CATCH ERRO NO TRY" })
     } finally {
-        await connection.close()
+       // await connection.close()
     }
 }

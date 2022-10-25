@@ -72,6 +72,9 @@
         codigoBarras: !codigoBarras ? "" : codigoBarras,
       }),
     }).then((res) => res.json());
+    if(res.message === 'odf não encontrada'){
+      showError = true
+    }
     if (res.message === "nolimitonlastodf") {
       showError = true;
     }
@@ -193,7 +196,7 @@
     {#if showError === true}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
-          <h5>ODF PASSADA ESTA COM 0 APONTADA</h5>
+          <h5>Erro na ODF</h5>
           <p on:click={closePop}>Fechar</p>
         </div>
       </div>

@@ -1,10 +1,11 @@
 import { RequestHandler } from "express";
 import mssql from "mssql";
 import { sqlConfig } from "../../global.config";
+import { sanitize } from "../utils/sanitize";
 
 export const historic: RequestHandler = async (req, res) => {
     const connection = await mssql.connect(sqlConfig);
-    let NUMERO_ODF: String = req.cookies["NUMERO_ODF"]
+    let NUMERO_ODF = Number(sanitize(req.cookies["NUMERO_ODF"]))
     try {
         const resource = await connection.query(`
         SELECT

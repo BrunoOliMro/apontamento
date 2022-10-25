@@ -1,15 +1,16 @@
 import { RequestHandler } from "express";
 import mssql from "mssql";
+import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";
 import { pictures } from "../pictures";
 
 export const draw: RequestHandler = async (req, res) => {
     const connection = await mssql.connect(sqlConfig);
-    const revisao: number = Number(req.cookies['REVISAO']) || 0
-    const numpec: string = String(req.cookies["CODIGO_PECA"])
-    let desenho = "_desenho"
+    const revisao = Number(sanitize(req.cookies['REVISAO'])) || 0
+    const numpec = String(sanitize(req.cookies["CODIGO_PECA"])) || null
+    let desenho = String("_desenho")
     if (revisao === 0) {
-        console.log("object");
+        console.log("linha 13 / draw/ ");
     }
     try {
         const resource = await connection.query(`

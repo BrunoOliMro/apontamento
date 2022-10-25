@@ -6,26 +6,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.pointBagde = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
+const sanitize_1 = require("../utils/sanitize");
 const pointBagde = async (req, res) => {
-    let MATRIC = req.body["MATRIC"];
-    if (MATRIC === undefined || MATRIC === null) {
-        MATRIC = '0';
-    }
-    function sanitize(input) {
-        const allowedChars = /[A-Za-z0-9]/;
-        return input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
-    }
-    MATRIC = sanitize(MATRIC);
-    if (MATRIC == '') {
+    let matricula = String((0, sanitize_1.sanitize)(req.body["MATRIC"])) || null;
+    let start = new Date() || 0;
+    if (matricula === null) {
         return res.redirect("/#/codigobarras?error=invalidBadge");
     }
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const selecionarMatricula = await connection.query(` 
-        SELECT TOP 1 [MATRIC], [FUNCIONARIO] FROM FUNCIONARIOS WHERE 1 = 1 AND [MATRIC] = '${MATRIC}'
+        SELECT TOP 1 [MATRIC], [FUNCIONARIO] FROM FUNCIONARIOS WHERE 1 = 1 AND [MATRIC] = '${matricula}'
             `.trim()).then(result => result.recordset);
         if (selecionarMatricula.length > 0) {
-            let start = new Date();
             res.cookie("starterBarcode", start);
             res.cookie("MATRIC", selecionarMatricula[0].MATRIC);
             res.cookie("FUNCIONARIO", selecionarMatricula[0].FUNCIONARIO);

@@ -5,20 +5,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.stopPost = void 0;
 const mssql_1 = __importDefault(require("mssql"));
+const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const global_config_1 = require("../../global.config");
 const stopPost = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let numeroOdf = String(req.cookies["NUMERO_ODF"]);
-    let funcionario = String(req.cookies['FUNCIONARIO']);
-    let codigoPeca = String(req.cookies['CODIGO_PECA']);
-    let revisao = Number(req.cookies['REVISAO']) || 0;
-    let numeroOperacao = String(req.cookies['NUMERO_OPERACAO']);
-    let codigoMaq = String(req.cookies['CODIGO_MAQUINA']);
-    let qtdLibMax = Number(req.cookies['qtdLibMax']);
-    let end = new Date().getTime();
-    let start = req.cookies["starterBarcode"];
-    let newStart = Number(new Date(start).getTime());
-    let final = end - newStart;
+    let numeroOdf = String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"].trim)) || null;
+    let funcionario = String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO'].trim)) || null;
+    let codigoPeca = String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA'].trim)) || null;
+    let revisao = Number((0, sanitize_html_1.default)(req.cookies['REVISAO'].trim)) || 0;
+    let numeroOperacao = String(req.cookies['NUMERO_OPERACAO']) || null;
+    let codigoMaq = String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA'].trim)) || null;
+    let qtdLibMax = Number((0, sanitize_html_1.default)(req.cookies['qtdLibMax'].trim)) || 0;
+    let end = new Date().getTime() || 0;
+    let start = Number(req.cookies["starterBarcode"]) || 0;
+    let newStart = Number(new Date(start).getTime()) || 0;
+    let final = Number(end - newStart) || 0;
     try {
         const resour = await connection.query(`
             INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
@@ -35,6 +36,7 @@ const stopPost = async (req, res) => {
         return res.json({ message: "ocorre um erro ao tentar parar a maquina" });
     }
     finally {
+        await connection.close();
     }
 };
 exports.stopPost = stopPost;

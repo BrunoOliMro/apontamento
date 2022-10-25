@@ -1,11 +1,12 @@
 import { RequestHandler } from "express";
 import mssql from "mssql";
+import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";
 
-export const odfData :RequestHandler = async (req, res) => {
-    let numeroOdf: string = String(req.cookies["NUMERO_ODF"])
-    let numOper: string = String(req.cookies["NUMERO_OPERACAO"])
-    let numOpeNew = numOper.toString().replaceAll(' ', "0")
+export const odfData: RequestHandler = async (req, res) => {
+    let numeroOdf = String(sanitize(req.cookies["NUMERO_ODF"])) || null
+    let numOper = String(sanitize(req.cookies["NUMERO_OPERACAO"])) || null
+    let numOpeNew = String(numOper!.toString().replaceAll(' ', "0")) || null
     const connection = await mssql.connect(sqlConfig);
     try {
         const resource = await connection.query(`

@@ -5,16 +5,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.stopSupervisor = void 0;
 const mssql_1 = __importDefault(require("mssql"));
+const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const global_config_1 = require("../../global.config");
 const stopSupervisor = async (req, res) => {
-    let supervisor = String(req.body['supervisor']);
-    let numeroOdf = String(req.cookies['NUMERO_ODF']);
-    let NUMERO_OPERACAO = String(req.cookies['NUMERO_OPERACAO']);
-    let CODIGO_MAQUINA = String(req.cookies['CODIGO_MAQUINA']);
-    let qtdLibMax = String(req.cookies['qtdLibMax']);
-    let funcionario = String(req.cookies['FUNCIONARIO']);
-    let revisao = Number(req.cookies['REVISAO']) || 0;
-    let codigoPeca = String(req.cookies['CODIGO_PECA']);
+    let supervisor = String((0, sanitize_html_1.default)(req.body['supervisor'].trim)) || null;
+    let numeroOdf = String((0, sanitize_html_1.default)(req.cookies['NUMERO_ODF'].trim)) || null;
+    let NUMERO_OPERACAO = String((0, sanitize_html_1.default)(req.cookies['NUMERO_OPERACAO'].trim)) || null;
+    let CODIGO_MAQUINA = String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA'].trim)) || null;
+    let qtdLibMax = String((0, sanitize_html_1.default)(req.cookies['qtdLibMax'].trim)) || null;
+    let funcionario = String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO'].trim)) || null;
+    let revisao = Number((0, sanitize_html_1.default)(req.cookies['REVISAO'].trim)) || 0;
+    let codigoPeca = String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA'].trim)) || null;
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const resource = await connection.query(`

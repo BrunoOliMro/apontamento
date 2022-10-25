@@ -6,35 +6,38 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ripPost = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
+const sanitize_1 = require("../utils/sanitize");
 const ripPost = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let NUMERO_ODF = req.cookies['NUMERO_ODF'];
-    let NUMERO_OPERACAO = req.cookies['NUMERO_OPERACAO'];
-    let CODIGO_MAQUINA = req.cookies['CODIGO_MAQUINA'];
-    let codigoPeca = req.cookies['CODIGO_PECA'];
-    let funcionario = req.cookies['FUNCIONARIO'];
-    let revisao = req.cookies['REVISAO'];
-    let qtdLibMax = req.cookies['qtdLibMax'];
-    let setup = String(req.body['setup']);
+    let NUMERO_ODF = Number((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'].trim)) || 0;
+    let NUMERO_OPERACAO = String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'].trim)) || null;
+    let CODIGO_MAQUINA = String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA'].trim)) || null;
+    let codigoPeca = String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'].trim)) || null;
+    let funcionario = String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'].trim)) || null;
+    let revisao = Number((0, sanitize_1.sanitize)(req.cookies['REVISAO'].trim)) || 0;
+    let qtdLibMax = Number((0, sanitize_1.sanitize)(req.cookies['qtdLibMax'].trim)) || 0;
+    let setup = String((0, sanitize_1.sanitize)(req.body['setup'].trim));
     const updateQtyQuery = [];
-    let especif = req.cookies['especif'];
-    let numCar = req.cookies['numCar'];
-    let lie = req.cookies['lie'];
-    let lse = req.cookies['lse'];
-    let instrumento = req.cookies['instrumento'];
-    let descricao = req.cookies['descricao'];
-    console.log("setup linha 884: ", setup);
+    let especif = String((0, sanitize_1.sanitize)(req.cookies['especif'].trim)) || null;
+    let numCar = String((0, sanitize_1.sanitize)(req.cookies['numCar'].trim)) || null;
+    let lie = String((0, sanitize_1.sanitize)(req.cookies['lie'].trim)) || null;
+    let lse = String((0, sanitize_1.sanitize)(req.cookies['lse'].trim)) || null;
+    let instrumento = String((0, sanitize_1.sanitize)(req.cookies['instrumento'].trim)) || null;
+    let descricao = String((0, sanitize_1.sanitize)(req.cookies['descricao'].trim)) || null;
+    let start = Number((0, sanitize_1.sanitize)(req.cookies["starterBarcode"].trim)) || 0;
+    let tempoDecorrido = Number(new Date(start).getTime()) || 0;
+    let end = new Date().getTime() || 0;
+    let final = Number(end - tempoDecorrido) || 0;
+    let endProdRip = Number(new Date().getDate()) || 0;
+    let startRip = Number(req.cookies["startRip"]) || 0;
+    let tempoDecorridoRip = Number(new Date(startRip).getDate()) || 0;
+    let finalProdRip = Number(tempoDecorridoRip - endProdRip) || 0;
+    console.log("setup linha 31/ ripPost/ ", setup);
+    let x = (0, sanitize_1.sanitize)(setup);
+    console.log('x: linha 38/ ripPost: ', x);
     if (Object.keys(setup).length <= 0) {
         return res.json({ message: "rip vazia" });
     }
-    let end = new Date().getTime();
-    let start = req.cookies["starterBarcode"];
-    let tempoDecorrido = Number(new Date(start).getTime());
-    let final = Number(end - tempoDecorrido);
-    let endProdRip = new Date().getDate();
-    let startRip = req.cookies["startRip"];
-    let tempoDecorridoRip = Number(new Date(startRip).getDate());
-    let finalProdRip = Number(tempoDecorridoRip - endProdRip);
     await connection.query(`
     INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
         VALUES(GETDATE(), '${funcionario}', '${NUMERO_ODF}', '${codigoPeca}', '${revisao}', ${NUMERO_OPERACAO}, ${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}', '${qtdLibMax}', '0', '0', '${funcionario}', '0', '6', '6', 'Fin Prod.', '${finalProdRip}', '${finalProdRip}', '1', '0', '0')`);
@@ -55,12 +58,6 @@ const ripPost = async (req, res) => {
         return acc;
     }, {});
     Object.entries(resultSplitLines).forEach(([row], i) => {
-        if (lie[i] === null) {
-            lie[i] = 0;
-        }
-        if (lse[i] === null) {
-            lse[i] = 0;
-        }
         updateQtyQuery.push(`
         INSERT INTO 
         CST_RIP_ODF_PRODUCAO 
@@ -76,6 +73,7 @@ const ripPost = async (req, res) => {
         return res.json({ message: "ocorreu um erro ao enviar os dados da rip" });
     }
     finally {
+        await connection.close();
     }
 };
 exports.ripPost = ripPost;

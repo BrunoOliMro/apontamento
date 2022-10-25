@@ -6,21 +6,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.returnedValue = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
+const sanitize_1 = require("../utils/sanitize");
 const returnedValue = async (req, res) => {
     console.log(req.body);
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let choosenOption = req.body['quantity'];
-    let supervisor = req.body['supervisor'];
-    let someC = req.body['returnValueStorage'];
+    let choosenOption = String((0, sanitize_1.sanitize)(req.body["quantity"].trim)) || null;
+    let supervisor = String((0, sanitize_1.sanitize)(req.body["supervisor"].trim)) || null;
+    let someC = String((0, sanitize_1.sanitize)(req.body['returnValueStorage'].trim)) || null;
+    let funcionario = String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'].trim)) || null;
     let boas;
     let ruins;
-    req.body["codigoBarrasReturn"] = sanitize(req.body["codigoBarrasReturn"]);
-    let barcode = req.body["codigoBarrasReturn"];
-    function sanitize(input) {
-        const allowedChars = /[A-Za-z0-9]/;
-        return input && input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
-    }
-    barcode = sanitize(barcode);
+    let codigoPeca;
+    let revisao;
+    let qtdLibMax;
+    let faltante;
+    let retrabalhada;
+    let barcode = String((0, sanitize_1.sanitize)(req.body["codigoBarrasReturn"].trim)) || null;
     if (barcode === undefined) {
         return res.redirect("/#/codigobarras?error=invalidBarcode");
     }
@@ -43,7 +44,7 @@ const returnedValue = async (req, res) => {
         ruins = 0;
     }
     const dados = {
-        numOdf: Number(barcode.slice(10)),
+        numOdf: String(barcode.slice(10)),
         numOper: String(barcode.slice(0, 5)),
         codMaq: String(barcode.slice(5, 10)),
     };
@@ -52,9 +53,6 @@ const returnedValue = async (req, res) => {
         dados.numOper = barcode.slice(0, 5);
         dados.codMaq = barcode.slice(5, 11);
     }
-    choosenOption = sanitize(req.body["quantity"]);
-    supervisor = sanitize(req.body["supervisor"]);
-    let funcionario = String(req.cookies['FUNCIONARIO']);
     const resourceOdfData = await connection.query(`
     SELECT TOP 1
             [NUMERO_ODF],
@@ -79,11 +77,11 @@ const returnedValue = async (req, res) => {
             AND [NUMERO_OPERACAO] = ${dados.numOper}
             ORDER BY NUMERO_OPERACAO ASC`.trim()).then(result => result.recordset);
     if (resourceOdfData.length > 0) {
-        let codigoPeca = String(resourceOdfData[0].CODIGO_PECA);
-        let revisao = Number(resourceOdfData[0].REVISAO);
-        let qtdLibMax = String(resourceOdfData[0].QTDE_ODF[0]);
-        let faltante = Number(0);
-        let retrabalhada = Number(0);
+        codigoPeca = String(resourceOdfData[0].CODIGO_PECA);
+        revisao = Number(resourceOdfData[0].REVISAO) || 0;
+        qtdLibMax = Number(resourceOdfData[0].QTDE_ODF[0]) || 0;
+        faltante = Number(0);
+        retrabalhada = Number(0);
         const selectSuper = await connection.query(`
         SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`).then(result => result.recordset);
         if (selectSuper.length > 0) {

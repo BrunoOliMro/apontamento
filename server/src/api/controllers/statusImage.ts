@@ -1,12 +1,13 @@
 import { RequestHandler } from "express";
 import mssql from "mssql";
+import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";
 import { pictures } from "../pictures";
 
-export const statusImage:RequestHandler = async (req, res) => {
-    const numpec: string = req.cookies["CODIGO_PECA"]
-    const revisao: string = req.cookies['REVISAO']
-    let statusImg = "_status"
+export const statusImage: RequestHandler = async (req, res) => {
+    const numpec = String(sanitize(req.cookies["CODIGO_PECA"])) || null
+    const revisao = String(sanitize(req.cookies['REVISAO'])) || null
+    const statusImg = String("_status")
     const connection = await mssql.connect(sqlConfig);
     try {
         const resource = await connection.query(`
@@ -25,7 +26,7 @@ export const statusImage:RequestHandler = async (req, res) => {
             const path = await pictures.getPicturePath(rec["NUMPEC"], rec["IMAGEM"], statusImg, String(i));
             imgResult.push(path);
         }
-        console.log("img", imgResult);
+        //console.log("img", imgResult);
         if (!imgResult) {
             return res.json({ message: 'Erro no servidor' })
         } else {

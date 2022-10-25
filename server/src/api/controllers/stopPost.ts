@@ -1,22 +1,23 @@
 import { RequestHandler } from "express";
 import mssql from "mssql";
+import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";
 
-export const stopPost : RequestHandler= async (req, res) => {
+export const stopPost: RequestHandler = async (req, res) => {
     const connection = await mssql.connect(sqlConfig);
-    let numeroOdf: string = String(req.cookies["NUMERO_ODF"])
-    let funcionario: string = String(req.cookies['FUNCIONARIO'])
-    let codigoPeca: string = String(req.cookies['CODIGO_PECA'])
-    let revisao: number = Number(req.cookies['REVISAO']) || 0
-    let numeroOperacao: string = String(req.cookies['NUMERO_OPERACAO'])
-    let codigoMaq: string = String(req.cookies['CODIGO_MAQUINA'])
-    let qtdLibMax: number = Number(req.cookies['qtdLibMax'])
+    let numeroOdf = String(sanitize(req.cookies["NUMERO_ODF"].trim)) || null
+    let funcionario = String(sanitize(req.cookies['FUNCIONARIO'].trim)) || null
+    let codigoPeca = String(sanitize(req.cookies['CODIGO_PECA'].trim)) || null
+    let revisao = Number(sanitize(req.cookies['REVISAO'].trim)) || 0
+    let numeroOperacao = String(req.cookies['NUMERO_OPERACAO']) || null
+    let codigoMaq = String(sanitize(req.cookies['CODIGO_MAQUINA'].trim)) || null
+    let qtdLibMax = Number(sanitize(req.cookies['qtdLibMax'].trim)) || 0
 
     //Encerra o processo todo
-    let end = new Date().getTime();
-    let start = req.cookies["starterBarcode"]
-    let newStart = Number(new Date(start).getTime())
-    let final: number = end - newStart
+    let end = new Date().getTime() || 0 ;
+    let start = Number(req.cookies["starterBarcode"]) || 0
+    let newStart = Number(new Date(start).getTime()) || 0
+    let final = Number(end - newStart) || 0
 
     try {
         //Insere O CODAPONTA 5
@@ -32,6 +33,6 @@ export const stopPost : RequestHandler= async (req, res) => {
         console.log(error)
         return res.json({ message: "ocorre um erro ao tentar parar a maquina" })
     } finally {
-        // await connection.close()
+        await connection.close()
     }
 }

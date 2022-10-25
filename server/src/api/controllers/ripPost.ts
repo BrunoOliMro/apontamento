@@ -1,52 +1,45 @@
 import { RequestHandler } from "express";
 import mssql from "mssql";
 import { sqlConfig } from "../../global.config";
-export const ripPost :RequestHandler = async (req, res) => {
+import { sanitize } from "../utils/sanitize";
+
+export const ripPost: RequestHandler = async (req, res) => {
     const connection = await mssql.connect(sqlConfig);
-    let NUMERO_ODF = req.cookies['NUMERO_ODF']
-    let NUMERO_OPERACAO = req.cookies['NUMERO_OPERACAO']
-    let CODIGO_MAQUINA = req.cookies['CODIGO_MAQUINA']
-    let codigoPeca = req.cookies['CODIGO_PECA']
-    let funcionario = req.cookies['FUNCIONARIO']
-    let revisao = req.cookies['REVISAO']
-    let qtdLibMax = req.cookies['qtdLibMax']
-    let setup: string = String(req.body['setup'])
+    let NUMERO_ODF = Number(sanitize(req.cookies['NUMERO_ODF'].trim)) || 0
+    let NUMERO_OPERACAO = String(sanitize(req.cookies['NUMERO_OPERACAO'].trim)) || null
+    let CODIGO_MAQUINA = String(sanitize(req.cookies['CODIGO_MAQUINA'].trim)) || null
+    let codigoPeca = String(sanitize(req.cookies['CODIGO_PECA'].trim)) || null
+    let funcionario = String(sanitize(req.cookies['FUNCIONARIO'].trim)) || null
+    let revisao = Number(sanitize(req.cookies['REVISAO'].trim)) || 0
+    let qtdLibMax = Number(sanitize(req.cookies['qtdLibMax'].trim)) || 0
+    let setup = String(sanitize(req.body['setup'].trim))
     const updateQtyQuery: string[] = [];
-    let especif = req.cookies['especif']
-    let numCar = req.cookies['numCar']
-    let lie = req.cookies['lie']
-    let lse = req.cookies['lse']
-    let instrumento = req.cookies['instrumento']
-    let descricao = req.cookies['descricao']
+    let especif = String(sanitize(req.cookies['especif'].trim)) || null
+    let numCar = String(sanitize(req.cookies['numCar'].trim)) || null
+    let lie = String(sanitize(req.cookies['lie'].trim)) || null
+    let lse = String(sanitize(req.cookies['lse'].trim)) || null
+    let instrumento = String(sanitize(req.cookies['instrumento'].trim)) || null
+    let descricao = String(sanitize(req.cookies['descricao'].trim)) || null
+    let start = Number(sanitize(req.cookies["starterBarcode"].trim)) || 0
+    let tempoDecorrido = Number(new Date(start).getTime()) || 0
+    let end = new Date().getTime() || 0;
+    let final = Number(end - tempoDecorrido) || 0
+    //console.log('linha 27 /riPost /', final);
+    // Encerra ao final da Rip
+    let endProdRip = Number(new Date().getDate()) || 0;
+    let startRip = Number(req.cookies["startRip"]) || 0
+    let tempoDecorridoRip = Number(new Date(startRip).getDate()) || 0
+    let finalProdRip = Number(tempoDecorridoRip - endProdRip) || 0
+    //console.log('finalProdRip ', finalProdRip);
 
-    // function sanitize(input?: string) {
-    //     const allowedChars = /[A-Za-z0-9]/;
-    //     return input && input
-    //         .split("")
-    //         .map((char) => (allowedChars.test(char) ? char : ""))
-    //         .join("");
-    // }
-    console.log("setup linha 884: ", setup);
-    //setup = sanitize(setup)
+    console.log("setup linha 31/ ripPost/ ", setup);
 
+    let x = sanitize(setup)
+    console.log('x: linha 38/ ripPost: ', x);
     //Insere os dados no banco
     if (Object.keys(setup).length <= 0) {
         return res.json({ message: "rip vazia" })
     }
-
-    //Encerra o processo todo
-    let end = new Date().getTime();
-    let start: number = req.cookies["starterBarcode"]
-    let tempoDecorrido = Number(new Date(start).getTime())
-    let final: number = Number(end - tempoDecorrido)
-    //console.log('final ', final);
-
-    // Encerra ao final da Rip
-    let endProdRip = new Date().getDate();
-    let startRip: number = req.cookies["startRip"]
-    let tempoDecorridoRip = Number(new Date(startRip).getDate())
-    let finalProdRip: number = Number(tempoDecorridoRip - endProdRip)
-    //console.log('finalProdRip ', finalProdRip);
 
     //Insere O CODAPONTA 6 e Tempo da rip
     await connection.query(`
@@ -71,19 +64,19 @@ export const ripPost :RequestHandler = async (req, res) => {
     }, <{ [k: string]: any; }>{})
 
     Object.entries(resultSplitLines).forEach(([row], i) => {
-        if (lie[i] === null) {
-            lie[i] = 0
-        }
+        // if (lie[i] === null) {
+        //     lie[i] = 0
+        // }
 
-        if (lse[i] === null) {
-            lse[i] = 0
-        }
+        // if (lse[i] === null) {
+        //     lse[i] = 0
+        // }
 
         updateQtyQuery.push(`
         INSERT INTO 
         CST_RIP_ODF_PRODUCAO 
         (ODF, ITEM, REVISAO, NUMCAR, DESCRICAO, ESPECIFICACAO, LIE, LSE, SETUP, M2, M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13, INSTRUMENTO, OPE_MAQUIN, OPERACAO) 
-        VALUES('${NUMERO_ODF}','1', '${revisao}' , '${numCar[i]}', '${descricao[i]}',  '${especif[i]}','${lie[i]}', '${lse[i]}',${resultSplitLines[row].SETUP ? `'${resultSplitLines[row].SETUP}'` : null},${resultSplitLines[row].M2 ? `'${resultSplitLines[row].M2}'` : null},${resultSplitLines[row].M3 ? `'${resultSplitLines[row].M3}'` : null},${resultSplitLines[row].M4 ? `'${resultSplitLines[row].M4}'` : null},${resultSplitLines[row].M5 ? `'${resultSplitLines[row].M5}'` : null},${resultSplitLines[row].M6 ? `'${resultSplitLines[row].M6}'` : null},${resultSplitLines[row].M7 ? `'${resultSplitLines[row].M7}'` : null},${resultSplitLines[row].M8 ? `'${resultSplitLines[row].M8}'` : null},${resultSplitLines[row].M9 ? `'${resultSplitLines[row].M9}'` : null},${resultSplitLines[row].M10 ? `'${resultSplitLines[row].M10}'` : null},${resultSplitLines[row].M11 ? `'${resultSplitLines[row].M11}'` : null},${resultSplitLines[row].M12 ? `'${resultSplitLines[row].M12}'` : null},${resultSplitLines[row].M13 ? `'${resultSplitLines[row].M13}'` : null},'${instrumento[i]}','${CODIGO_MAQUINA}','${NUMERO_OPERACAO}')`)
+        VALUES('${NUMERO_ODF}','1', '${revisao}' , '${numCar![i]}', '${descricao![i]}',  '${especif![i]}','${lie![i]}', '${lse![i]}',${resultSplitLines[row].SETUP ? `'${resultSplitLines[row].SETUP}'` : null},${resultSplitLines[row].M2 ? `'${resultSplitLines[row].M2}'` : null},${resultSplitLines[row].M3 ? `'${resultSplitLines[row].M3}'` : null},${resultSplitLines[row].M4 ? `'${resultSplitLines[row].M4}'` : null},${resultSplitLines[row].M5 ? `'${resultSplitLines[row].M5}'` : null},${resultSplitLines[row].M6 ? `'${resultSplitLines[row].M6}'` : null},${resultSplitLines[row].M7 ? `'${resultSplitLines[row].M7}'` : null},${resultSplitLines[row].M8 ? `'${resultSplitLines[row].M8}'` : null},${resultSplitLines[row].M9 ? `'${resultSplitLines[row].M9}'` : null},${resultSplitLines[row].M10 ? `'${resultSplitLines[row].M10}'` : null},${resultSplitLines[row].M11 ? `'${resultSplitLines[row].M11}'` : null},${resultSplitLines[row].M12 ? `'${resultSplitLines[row].M12}'` : null},${resultSplitLines[row].M13 ? `'${resultSplitLines[row].M13}'` : null},'${instrumento![i]}','${CODIGO_MAQUINA}','${NUMERO_OPERACAO}')`)
     })
     await connection.query(updateQtyQuery.join("\n"))
     try {
@@ -92,6 +85,6 @@ export const ripPost :RequestHandler = async (req, res) => {
         console.log(error)
         return res.json({ message: "ocorreu um erro ao enviar os dados da rip" })
     } finally {
-        // await connection.close()
+        await connection.close()
     }
 }

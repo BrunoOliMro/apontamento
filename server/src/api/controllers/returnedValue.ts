@@ -1,29 +1,26 @@
 import { RequestHandler } from "express";
 import mssql from "mssql";
 import { sqlConfig } from "../../global.config";
+import { sanitize } from "../utils/sanitize";
+
 export const returnedValue: RequestHandler = async (req, res) => {
     console.log(req.body)
     const connection = await mssql.connect(sqlConfig);
-    let choosenOption = req.body['quantity']
-    let supervisor = req.body['supervisor']
-    let someC = req.body['returnValueStorage']
+    let choosenOption = String(sanitize(req.body["quantity"].trim)) || null
+    let supervisor = String(sanitize(req.body["supervisor"].trim)) || null
+    let someC = String(sanitize(req.body['returnValueStorage'].trim)) || null
+    let funcionario = String(sanitize(req.cookies['FUNCIONARIO'].trim)) || null
     let boas;
     let ruins;
-
-    //console.log("choosenOption:  ", choosenOption);
-    //console.log("supervisor:  ", supervisor);
-
-    req.body["codigoBarrasReturn"] = sanitize(req.body["codigoBarrasReturn"]);
-    let barcode = req.body["codigoBarrasReturn"]
+    let codigoPeca: string
+    let revisao: number
+    let qtdLibMax: number
+    let faltante: number
+    let retrabalhada: number
+    let barcode = String(sanitize(req.body["codigoBarrasReturn"].trim)) || null
+    //barcode = sanitize(barcode)
     //console.log("barcode: ", barcode);
 
-    //Sanitização
-    function sanitize(input?: string) {
-        const allowedChars = /[A-Za-z0-9]/;
-        return input && input.split("").map((char) => (allowedChars.test(char) ? char : "")).join("");
-    }
-
-    barcode = sanitize(barcode)
     //Verifica se o codigo de barras veio vazio
     if (barcode === undefined) {
         return res.redirect("/#/codigobarras?error=invalidBarcode")
@@ -55,20 +52,17 @@ export const returnedValue: RequestHandler = async (req, res) => {
 
     //Divide o Codigo de barras em 3 partes para a verificação na proxima etapa
     const dados = {
-        numOdf: Number(barcode.slice(10)),
-        numOper: String(barcode.slice(0, 5)),
-        codMaq: String(barcode.slice(5, 10)),
+        numOdf: String(barcode!.slice(10)),
+        numOper: String(barcode!.slice(0, 5)),
+        codMaq: String(barcode!.slice(5, 10)),
     }
     //Reatribuiu o codigo caso o cado de barras seja maior
-    if (barcode.length > 17) {
-        dados.numOdf = barcode.slice(11)
-        dados.numOper = barcode.slice(0, 5)
-        dados.codMaq = barcode.slice(5, 11)
+    if (barcode!.length > 17) {
+        dados.numOdf = barcode!.slice(11)
+        dados.numOper = barcode!.slice(0, 5)
+        dados.codMaq = barcode!.slice(5, 11)
     }
 
-    choosenOption = sanitize(req.body["quantity"])
-    supervisor = sanitize(req.body["supervisor"])
-    let funcionario: string = String(req.cookies['FUNCIONARIO'])
     const resourceOdfData = await connection.query(`
     SELECT TOP 1
             [NUMERO_ODF],
@@ -93,11 +87,11 @@ export const returnedValue: RequestHandler = async (req, res) => {
             AND [NUMERO_OPERACAO] = ${dados.numOper}
             ORDER BY NUMERO_OPERACAO ASC`.trim()).then(result => result.recordset);
     if (resourceOdfData.length > 0) {
-        let codigoPeca: string = String(resourceOdfData[0].CODIGO_PECA)
-        let revisao: number = Number(resourceOdfData[0].REVISAO)
-        let qtdLibMax = String(resourceOdfData[0].QTDE_ODF[0])
-        let faltante: number = Number(0)
-        let retrabalhada: number = Number(0)
+        codigoPeca = String(resourceOdfData[0].CODIGO_PECA)
+        revisao = Number(resourceOdfData[0].REVISAO) || 0
+        qtdLibMax = Number(resourceOdfData[0].QTDE_ODF[0]) || 0
+        faltante = Number(0)
+        retrabalhada = Number(0)
         const selectSuper = await connection.query(`
         SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`).then(result => result.recordset);
         if (selectSuper.length > 0) {
