@@ -55,11 +55,10 @@ export const ripPost: RequestHandler = async (req, res) => {
         return res.json({ message: 'ocorreu um erro ao enviar os dados da rip' })
     }
 
-    const resultSplitLines: { [k: string]: any; } = Object.keys(setup).reduce((acc: any, interator: any) => {
-        const [col, lin] = interator.split("-")
-        const value = setup[interator];
+    const resultSplitLines: { [k: string]: any; } = Object.keys(setup).reduce((acc: any, iterator: any) => {
+        const [col, lin] = iterator.split("-")
         if (acc[lin] === undefined) acc[lin] = {}
-        acc[lin][col] = Number(value)
+        acc[lin][col] = setup[iterator];
         return acc
     }, <{ [k: string]: any; }>{})
 

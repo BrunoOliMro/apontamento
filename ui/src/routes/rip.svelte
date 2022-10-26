@@ -1,5 +1,7 @@
 <script>
-    import { claim_html_tag } from "svelte/internal";
+    // @ts-nocheck
+
+    import { claim_html_tag, element } from "svelte/internal";
 
     // @ts-nocheck
     import TableRipRow from "../components/Tables/TableRipRow.svelte";
@@ -24,13 +26,10 @@
     async function callRip() {
         const res = await fetch(urlString);
         ripTable = await res.json();
-        //console.log("ripTable: ", ripTable);
 
         lie = ripTable.map((acc) => acc.LIE);
         lsd = ripTable.map((acc) => acc.LSE);
 
-        // console.log("lie: ", lie);
-        // console.log("lsd", lsd);
         if (ripTable.length <= 0) {
             window.location.href = "/#/codigobarras";
             location.reload();
@@ -74,10 +73,12 @@
             window.location.href = "/#/codigobarras";
         }
     };
+
     function createCol() {
+        const quantityReleased = Object.values(setup).length - ripTable.length;
+        const amountTotalToSend = extraColumns.length * ripTable.length;
+
         let arrayToAddCol = ripTable.reduce((acc, int) => {
-            //console.log("acc", acc.values);
-            //console.log('int', int.values);
             if (acc.values === undefined) {
                 return false;
             } else if (acc.values >= 0 && int.values >= 0) {
@@ -85,128 +86,50 @@
             }
         });
 
-        // const resultSplitLines: { [k: string]: any } = Object.keys(
-        //     setup
-        // ).reduce((acc: any, interator: any) => {
-        //     const [col, lin] = interator.split("-");
-        //     const value = setup[interator];
-        //     if (acc[lin] === undefined) acc[lin] = {};
-        //     acc[lin][col] = Number(value);
-        //     return acc;
-        // }, <{ [k: string]: any }>{});
-
-        //console.log("arrayToAddCol linha 90: ", arrayToAddCol);
-
-        // console.log("arrayToAddCol: ", arrayToAddCol);
-        // //filtra o array e encontra os campos com true, ou seja os campos vazios
-        // let filterAddCol = arrayToAddCol.filter((acc, i) => {
-        //     console.log("acc linha 96", acc);
-        //     if (acc[i] === undefined) {
-        //         console.log("wrububvreurvr");
-        //         return true;
-        //     }
-        //     //acc === true
-        // });
-        // console.log("filterAdd,", filterAddCol);
-
-        //Caso o array de campos vazios retorne vazio, adiciona mais uma coluna
-        if (arrayToAddCol === true) {
-            if (extraColumns.length < 13) {
-                extraColumns = [...extraColumns, extraColumns.length + 2];
+        if (amountTotalToSend === quantityReleased) {
+            if (arrayToAddCol === true) {
+                if (extraColumns.length < 13) {
+                    extraColumns = [...extraColumns, extraColumns.length + 2];
+                }
             }
-        } else {
+        } else if (amountTotalToSend !== quantityReleased) {
             showSetup = true;
         }
     }
+
     const check = () => {
-        //let valueFromUser = Object.values(setup).map((acc) => acc);
+        if (Object.values(setup).length <= 0) {
+            return (showSuper = true);
+        }
 
-        //console.log("linha 112", valueFromUser);
-        // var itensComparison = valueFromUser.map((acc, i) => {
-        //     //acc - lie[i] - lsd[i]
-        //     return [acc, lie[i], lsd[i]];
-        // });
+        const rows = Object.keys(setup).reduce((acc, key, i) => {
+            const [col, lin] = key.split("-");
+            if (acc[lin] === undefined) acc[lin] = {};
+            acc[lin][col] = setup[key];
+            if (!acc[lin]["LIE"]) acc[lin]["LIE"] = ripTable[i].LIE;
+            if (!acc[lin]["LSE"]) acc[lin]["LSE"] = ripTable[i].LSE;
+            return acc;
+        }, {});
 
-        //valueFromUser = setup.values
+        const callSupervisor = Object.values(rows).some((row) => {
+            return Object.keys(row)
+                .filter((key) => key !== "LIE" && key !== "LSE")
+                .some((key) => {
+                    const value = row[key];
+                    return value < row["LIE"] || value > row["LSE"];
+                });
+        });
 
-        // let x  = Object.values(setup).reduce((acc, int)=>{
-        //     const [col, lin] = int.split("-");
-        //     const value = setup[int];
-        //     if (acc[lin] === undefined) acc[lin] = {}
-        //     acc[lin][col] = Number(value);
-        // }, {})
-        // console.log("linha 134",  x);
-
-        //console.log("linha 143 ", Object.keys(setup));
-        console.log("linha 144", setup);
-
-        // @ts-ignore
-        let x = Object.values(setup).reduce((acc, int) => {
-            return Number(acc) + Number(int);
-        }, 0);
-
-        console.log(x);
-
-        let y = Object.keys(setup).reduce((acc, int) => {
-            return [acc, int];
-        }, []);
-
-        console.log(y);
-
-        // @ts-ignore
-        let z = Object.keys(setup).reduce(
-            (acc, int) => {
-                const [lin, col] = int.split("-");
-                if (acc[lin] === undefined) acc[lin] = {};
-                console.log("linha 160", setup.key);
-                return [acc, int];
-            },
-            {
-                name: "",
-                value: "",
-            }
-        );
-
-        console.log(z);
-        // @ts-ignore
-        // const valueFromUser = Object.keys(setup).reduce((acc, interator) => {
-        //     const [col, lin] = interator.split("-");
-        //     if (acc[lin] === undefined) acc[lin] = {};
-        //     acc[lin][col] = setup[interator];
-        // }, {});
-
-        // console.log("linha 150", valueFromUser);
-
-        //console.log("linha 141", x);
-
-        // const resultSplitLines: { [k: string]: any } = Object.keys(
-        //     setup
-        // ).reduce((acc: any, interator: any) => {
-        //     const [col, lin] = interator.split("-");
-        //     const value = setup[interator];
-        //     if (acc[lin] === undefined) acc[lin] = {};
-        //     acc[lin][col] = Number(value);
-        //     return acc;
-        // }, <{ [k: string]: any }>{});
-
-        //console.log("linha 107", itensComparison);
-
-        // if (valueFromUser >= lie[0] && valueFromUser <= lsd[0]) {
-        //     doPost();
-        // }
-        // if (valueFromUser < lie[0]) {
-        //     showSuper = true;
-        // }
-
-        // if (valueFromUser > lsd[0]) {
-        //     showSuper = true;
-        // } else if (valueFromUser.length === 0) {
-        //     showErrorEmpty = true;
-        // }
+        if (callSupervisor === true) {
+            showSuper = true;
+        } else if (callSupervisor === false) {
+            doPost();
+        }
     };
 
     function close() {
         showSetup = false;
+        showSuper = false;
     }
 </script>
 
@@ -274,6 +197,7 @@
             id="supervisor"
         />
         <button on:click={doPostSuper}>Confirma</button>
+        <button on:click={close}>close</button>
     {/if}
     {#if showErrorEmpty === true}
         <h3>rip vazia, envio invalido</h3>
@@ -283,7 +207,7 @@
     {/if}
 
     {#if showSetup === true}
-        <h3>Preencha as coluna antes</h3>
+        <h3>Preencha todos os campos</h3>
         <button on:click={close}>Confirma</button>
     {/if}
 </main>

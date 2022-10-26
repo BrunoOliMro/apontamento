@@ -5,6 +5,8 @@
     export let extraColumns;
     export let values;
     export let valuesObj = {
+        LIE: dados.LIE,
+        LSE: dados.LSE,
         setup: "",
         M2: "",
         M3: "",
@@ -26,7 +28,6 @@
         let userInputValue = event.target.value;
         let lie = dados.LIE;
         let lsd = dados.LSE;
-
 
         if (userInputValue < lie && userInputValue.length !== 0) {
             event.target.style.borderColor = "red";
@@ -54,7 +55,7 @@
     }
 
     function preSanitize(input) {
-        const allowedChars = /[A-Za-z0-9]/;
+        const allowedChars = /[A-Za-z0-9.]/;
         const sanitizedOutput = input
             .split("")
             .map((char) => (allowedChars.test(char) ? char : ""))
@@ -68,8 +69,8 @@
     <td>{dados.NUMPEC === null || !dados.NUMPEC ? "S/I" : dados.NUMPEC}</td>
     <td>{dados.DESCRICAO === null ? "S/I" : dados.DESCRICAO}</td>
     <td>{dados.ESPECIF === null || !dados.ESPECIF ? "S/I" : dados.ESPECIF}</td>
-    <td>{dados.LIE === null ? "S/I" : dados.LIE}</td>
-    <td>{dados.LSE === null ? "S/I" : dados.LSE}</td>
+    <td id={"LIE-" + indice}>{dados.LIE === null ? "S/I" : dados.LIE}</td>
+    <td id={"LSE-" + indice}>{dados.LSE === null ? "S/I" : dados.LSE}</td>
     <td>{dados.INSTRUMENTO === null ? "S/I" : dados.INSTRUMENTO}</td>
     <td
         ><input

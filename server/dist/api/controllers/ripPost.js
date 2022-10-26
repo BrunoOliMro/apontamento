@@ -49,12 +49,11 @@ const ripPost = async (req, res) => {
         console.log(error);
         return res.json({ message: 'ocorreu um erro ao enviar os dados da rip' });
     }
-    const resultSplitLines = Object.keys(setup).reduce((acc, interator) => {
-        const [col, lin] = interator.split("-");
-        const value = setup[interator];
+    const resultSplitLines = Object.keys(setup).reduce((acc, iterator) => {
+        const [col, lin] = iterator.split("-");
         if (acc[lin] === undefined)
             acc[lin] = {};
-        acc[lin][col] = Number(value);
+        acc[lin][col] = setup[iterator];
         return acc;
     }, {});
     Object.entries(resultSplitLines).forEach(([row], i) => {
