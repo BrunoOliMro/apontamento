@@ -1,11 +1,6 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const mssql_1 = __importDefault(require("mssql"));
-const global_config_1 = require("../global.config");
 const pointer_1 = require("./controllers/pointer");
 const badFeedMotives_1 = require("./controllers/badFeedMotives");
 const draw_1 = require("./controllers/draw");
@@ -23,6 +18,7 @@ const tools_1 = require("./controllers/tools");
 const point_1 = require("./controllers/point");
 const pointBagde_1 = require("./controllers/pointBagde");
 const getPoint_1 = require("./controllers/getPoint");
+const supervisor_1 = require("./controllers/supervisor");
 const apiRouter = (0, express_1.Router)();
 apiRouter.route("/apontamento")
     .post(pointer_1.pointerPost);
@@ -48,28 +44,7 @@ apiRouter.route("/lancamentoRip")
 apiRouter.route("/returnedValue")
     .post(returnedValue_1.returnedValue);
 apiRouter.route("/supervisor")
-    .post(async (req, res) => {
-    let supervisor = String(req.body['supervisor']);
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    if (supervisor === '' || supervisor === undefined || supervisor === null) {
-        return res.json({ message: 'supervisor não encontrado' });
-    }
-    try {
-        const resource = await connection.query(`
-            SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`).then(result => result.recordset);
-        if (resource.length > 0) {
-            return res.status(200).json({ message: 'supervisor encontrado' });
-        }
-        else {
-            return res.json({ message: 'supervisor não encontrado' });
-        }
-    }
-    catch (error) {
-        return res.json({ message: 'supervisor não encontrado' });
-    }
-    finally {
-    }
-});
+    .post(supervisor_1.supervisor);
 apiRouter.route("/supervisorParada")
     .post(stopSupervisor_1.stopSupervisor);
 apiRouter.route("/motivoParada")

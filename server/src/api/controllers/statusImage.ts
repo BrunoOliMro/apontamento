@@ -30,7 +30,6 @@ export const statusImage: RequestHandler = async (req, res) => {
         if (!imgResult) {
             return res.json({ message: 'Erro no servidor' })
         } else {
-            console.log('linha 378 ok');
             return res.status(200).json(imgResult)
         }
 

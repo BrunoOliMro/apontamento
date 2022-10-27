@@ -1,7 +1,5 @@
 import { Router } from "express";
 //import assert from "node:assert";
-import mssql from "mssql";
-import { sqlConfig } from "../global.config";
 import { pointerPost } from "./controllers/pointer";
 import { badFeedMotives } from "./controllers/badFeedMotives";
 import { draw } from "./controllers/draw";
@@ -19,6 +17,7 @@ import { selectedTools, tools } from "./controllers/tools";
 import { point } from "./controllers/point";
 import { pointBagde } from "./controllers/pointBagde";
 import { getPoint } from "./controllers/getPoint";
+import { supervisor } from "./controllers/supervisor";
 
 // /api/v1/
 const apiRouter = Router();
@@ -1063,27 +1062,29 @@ apiRouter.route("/returnedValue")
 // )
 
 apiRouter.route("/supervisor")
-    .post(async (req, res) => {
-        let supervisor: string = String(req.body['supervisor'])
-        const connection = await mssql.connect(sqlConfig);
+    .post(supervisor)
+    //     async (req, res) => {
+    //     let supervisor: string = String(req.body['supervisor'])
+    //     const connection = await mssql.connect(sqlConfig);
 
-        if (supervisor === '' || supervisor === undefined || supervisor === null) {
-            return res.json({ message: 'supervisor não encontrado' })
-        }
-        try {
-            const resource = await connection.query(`
-            SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`).then(result => result.recordset);
-            if (resource.length > 0) {
-                return res.status(200).json({ message: 'supervisor encontrado' })
-            } else {
-                return res.json({ message: 'supervisor não encontrado' })
-            }
-        } catch (error) {
-            return res.json({ message: 'supervisor não encontrado' })
-        } finally {
-            //await connection.close()
-        }
-    })
+    //     if (supervisor === '' || supervisor === undefined || supervisor === null) {
+    //         return res.json({ message: 'supervisor não encontrado' })
+    //     }
+    //     try {
+    //         const resource = await connection.query(`
+    //         SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`).then(result => result.recordset);
+    //         if (resource.length > 0) {
+    //             return res.status(200).json({ message: 'supervisor encontrado' })
+    //         } else {
+    //             return res.json({ message: 'supervisor não encontrado' })
+    //         }
+    //     } catch (error) {
+    //         return res.json({ message: 'supervisor não encontrado' })
+    //     } finally {
+    //         //await connection.close()
+    //     }
+    // }
+    // )
 
 apiRouter.route("/supervisorParada")
     .post(stopSupervisor)

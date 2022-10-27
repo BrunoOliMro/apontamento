@@ -21,6 +21,9 @@
     let showErrorMessage = false;
     let showRoundedApont = false;
     resultRefugo = getRefugodata();
+    let getSpace;
+    var showAddress = false
+    getIMAGEM()
 
     async function getRefugodata() {
         const res = await fetch(motivoUrl);
@@ -31,8 +34,6 @@
             console.log("linha 31 vazio");
         }
     }
-
-    // if(localStorage)
 
     let apontamentoMsg = "";
     if (window.location.href.includes("?")) {
@@ -93,6 +94,16 @@
         }
     };
 
+
+    async function getIMAGEM() {
+        const res = await fetch(urlS);
+        getSpace = await res.json();
+        if(getSpace.length > 0){
+            showAddress = true
+        }
+        console.log("endereço", getSpace);
+    }
+
     async function doCallPost() {
         Number(badFeed);
         Number(valorFeed);
@@ -138,6 +149,7 @@
         showSuperNotFound = false;
         showRoundedApont = false;
         showErrorMessage = false;
+        showAddress = false;
     }
 </script>
 
@@ -334,6 +346,17 @@
                     <div class="header">
                         <div class="closed">
                             <h2>Supervisor não encontrado</h2>
+                        </div>
+                        <button on:click={close}>fechar</button>
+                    </div>
+                </div>
+            {/if}
+
+            {#if showAddress === true}
+                <div class="fundo">
+                    <div class="header">
+                        <div class="closed">
+                            <h2>{getSpace}</h2>
                         </div>
                         <button on:click={close}>fechar</button>
                     </div>
