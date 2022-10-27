@@ -3,7 +3,7 @@ import mssql from "mssql";
 import { sqlConfig } from "../../global.config";
 import { sanitize } from "../utils/sanitize";
 
-export const point: RequestHandler = async (req, res) => {
+export const point: RequestHandler = async (req, res, next) => {
     const connection = await mssql.connect(sqlConfig);
     let qtdBoas = Number(sanitize(req.body["valorFeed"])) || 0;
     let supervisor = String(sanitize(req.body["supervisor"])) || null
@@ -28,8 +28,7 @@ export const point: RequestHandler = async (req, res) => {
     let startRip = Number(new Date()) || 0;
     let state = Number(0)
     res.cookie("startRip", startRip)
-    //console.log('linha 8 /point/ : ', qtdBoas);
-    //console.log("codigo: ", CODIGO_MAQUINA);
+
     //Encerra o tempo da produção
     let endProdTimer = new Date() || 0;
     //Inicia tempo de Rip
@@ -86,98 +85,6 @@ export const point: RequestHandler = async (req, res) => {
     }
 
     try {
-        state = 3
-        //Caso a operação seja 999 fará baixa no estoque
-        if (CODIGO_MAQUINA === "EX002") {
-            console.log("linha 648/");
-            //Caso seja diferente de "EX"
-            if (CODIGO_MAQUINA !== 'EX002') {
-                console.log('não vai executar aqui linha 651');
-                const s = await connection.query(`
-            SELECT EE.CODIGO AS COD_PRODUTO,NULL AS COD_PRODUTO_EST, CE.CODIGO,CE.ENDERECO, ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE FROM CST_CAD_ENDERECOS CE(NOLOCK)
-            LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO)
-            WHERE ISNULL(EE.QUANTIDADE,0) > 0 AND CE.ENDERECO LIKE '5%' AND UPPER(EE.CODIGO) = UPPER('00240174-1') ORDER BY CE.ENDERECO ASC`).then(result => result.recordset)
-                if (s.length > 0) {
-                    return res.json(s)
-                }
-
-                if (s.length <= 0) {
-                    console.log('não vai executar aqui linha 661');
-                    const e = await connection.query(`
-                    SELECT EE.CODIGO AS COD_PRODUTO,NULL AS COD_PRODUTO_EST, CE.CODIGO,CE.ENDERECO, ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE FROM CST_CAD_ENDERECOS CE(NOLOCK)
-                    LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO)
-                    WHERE ISNULL(EE.QUANTIDADE,0) > 0 AND CE.ENDERECO LIKE '5%' AND UPPER(EE.CODIGO) = UPPER('00240174-1') ORDER BY CE.ENDERECO ASC`).then(result => result.recordset)
-                    return res.json(e)
-                }
-            }
-
-            //Caso seja igual de "EX"
-            if (CODIGO_MAQUINA === 'EX002') {
-                console.log('vai executar aqui linha 670');
-                // const q = await connection.query(`
-                //     SELECT EE.CODIGO AS COD_PRODUTO,NULL AS COD_PRODUTO_EST, CE.CODIGO,CE.ENDERECO, ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE FROM CST_CAD_ENDERECOS CE(NOLOCK)
-                //     LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO)
-                //     WHERE ISNULL(EE.QUANTIDADE,0) > 0 AND CE.ENDERECO LIKE '7%' AND UPPER(EE.CODIGO) = UPPER('00240174') ORDER BY CE.ENDERECO ASC`).then(result => result.recordset)
-                // if (q.length > 0) {
-                //     return res.json(q)
-                // }
-
-                // if (q.length <= 0) {
-                //     console.log('vai executar aqui linha 680');
-                //     const l = await connection.query(`
-                //     SELECT EE.CODIGO AS COD_PRODUTO,NULL AS COD_PRODUTO_EST, CE.CODIGO,CE.ENDERECO, ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE FROM CST_CAD_ENDERECOS CE(NOLOCK)
-                //     LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO)
-                //     WHERE ISNULL(EE.QUANTIDADE,0) <= 0 AND CE.ENDERECO LIKE '7%' ORDER BY CE.ENDERECO ASC`).then(result => result.recordset)
-                //     return res.json(l)
-                // }
-            }
-            state = 4
-            try {
-                state = 5
-                if (CODIGO_MAQUINA === 'EX002') {
-                    console.log("baixa no estoque");
-                    const updateProxOdfToS = await connection.query(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 =1 AND CODIGO = '${codigoPeca}'`)
-                    console.log('updateProxOdfToS: ', updateProxOdfToS);
-                } else {
-                    const updateProxOdfToS = await connection.query(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 =1 AND CODIGO = '${codigoPeca}'`)
-                    console.log('updateProxOdfToS: linha 655 ', updateProxOdfToS);
-                }
-
-                state = 6
-            } catch (error) {
-                state = 5
-                console.log(error);
-                return res.json({ message: 'erro ao inserir estoque' })
-            }
-        }
-    } catch (error) {
-        state = 3
-        console.log(error);
-        return res.json({ message: 'erro ao em localizar espaço' })
-    }
-
-    const hisReal = await connection.query(`SELECT TOP 1 SALDO FROM  HISREAL WHERE 1 = 1`).then(record => record.recordset)
-    try {
-        state = 7
-        await connection.query(`
-        SELECT E.CODIGO,CAST('${NUMERO_ODF}' + '/' + 'DATA HORA' AS VARCHAR(200)),
-        '${qtdBoas}',
-        MAX(VALPAGO),
-        'E', ('${hisReal[0].SALDO}' + '${qtdBoas}'),
-        GETDATE(),0,'${funcionario}','${NUMERO_ODF}',0,1,1,MAX(CUSTO_MEDIO),MAX(CUSTO_TOTAL),
-        MAX(CUSTO_UNITARIO),MAX(CATEGORIA),MAX(E.DESCRI),1,MAX(E.UNIDADE),'S','N','APONTAMENTO',
-        'VERSAO DO APONTAMENTO','47091','7C1501-04','${CODIGO_MAQUINA}' 
-        FROM ESTOQUE E(NOLOCK)
-        WHERE 1 = 1 
-        AND E.CODIGO ='${codigoPeca}' GROUP BY E.CODIGO;`)
-        state = 8
-    } catch (error) {
-        state = 7
-        console.log(error);
-        return res.json({ message: 'erro ao enviar o apontamento' })
-    }
-
-    try {
         state = 9
         //Verifica caso a quantidade seja menor que o valor(assim a produção foi menor que o desejado), e deixa um "S" em apontamento liberado para um possivel apontamento futuro
         if (valorTotalApontado < qtdLibMax) {
@@ -201,6 +108,7 @@ export const point: RequestHandler = async (req, res) => {
         await connection.query(` INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, MOTIVO_REFUGO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
         VALUES(GETDATE(),'${funcionario}',${NUMERO_ODF},'${codigoPeca}','${revisao}','${NUMERO_OPERACAO}','${NUMERO_OPERACAO}', 'D','${CODIGO_MAQUINA}','1',${qtdBoas},${badFeed},'${funcionario}','0','4', '4', 'Fin Prod.',${finalProdTimer},${finalProdTimer}, '1',  UPPER('${motivorefugo}') , ${missingFeed},${reworkFeed})`)
         state = 10
+        next()
         return res.json({ message: 'valores apontados com sucesso' })
     } catch (error) {
         state = 9

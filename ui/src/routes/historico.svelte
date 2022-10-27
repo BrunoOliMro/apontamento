@@ -3,11 +3,12 @@
   import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
   let subtitle = "Historico de Apontamento";
   let HISTORICO = [];
-  let urlString = `/api/v1/HISTORICO`;
+  let urlString = `/api/v1/historic`;
 
   async function getHISTORICO() {
     const res = await fetch(urlString);
     HISTORICO = await res.json();
+    console.log("linha 11", HISTORICO);
   }
   let resultado = getHISTORICO();
 </script>

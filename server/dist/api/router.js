@@ -22,6 +22,7 @@ const stopSupervisor_1 = require("./controllers/stopSupervisor");
 const tools_1 = require("./controllers/tools");
 const point_1 = require("./controllers/point");
 const pointBagde_1 = require("./controllers/pointBagde");
+const getPoint_1 = require("./controllers/getPoint");
 const apiRouter = (0, express_1.Router)();
 apiRouter.route("/apontamento")
     .post(pointer_1.pointerPost);
@@ -33,13 +34,14 @@ apiRouter.route("/imagem")
     .get(statusImage_1.statusImage);
 apiRouter.route("/status")
     .get(status_1.status);
-apiRouter.route("/HISTORICO")
+apiRouter.route("/historic")
     .get(historic_1.historic);
 apiRouter.route("/ferramenta")
     .get(tools_1.tools);
 apiRouter.route("/ferselecionadas")
     .get(tools_1.selectedTools);
 apiRouter.route("/apontar")
+    .get(getPoint_1.getPoint)
     .post(point_1.point);
 apiRouter.route("/lancamentoRip")
     .post(ripPost_1.ripPost);
