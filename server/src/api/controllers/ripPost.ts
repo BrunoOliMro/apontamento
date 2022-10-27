@@ -4,73 +4,74 @@ import { sqlConfig } from "../../global.config";
 import { sanitize } from "../utils/sanitize";
 
 export const ripPost: RequestHandler = async (req, res) => {
+    let setup = (req.body['setup']) || null
+    let keySan
+    let valueSan;
     const connection = await mssql.connect(sqlConfig);
-    let NUMERO_ODF = Number(sanitize(req.cookies['NUMERO_ODF'].trim)) || 0
-    let NUMERO_OPERACAO = String(sanitize(req.cookies['NUMERO_OPERACAO'].trim)) || null
-    let CODIGO_MAQUINA = String(sanitize(req.cookies['CODIGO_MAQUINA'].trim)) || null
-    let codigoPeca = String(sanitize(req.cookies['CODIGO_PECA'].trim)) || null
-    let funcionario = String(sanitize(req.cookies['FUNCIONARIO'].trim)) || null
-    let revisao = Number(sanitize(req.cookies['REVISAO'].trim)) || 0
-    let qtdLibMax = Number(sanitize(req.cookies['qtdLibMax'].trim)) || 0
-    let setup = String(sanitize(req.body['setup'].trim))
+    let NUMERO_ODF = Number(sanitize(req.cookies['NUMERO_ODF'])) || 0
+    let NUMERO_OPERACAO = String(sanitize(req.cookies['NUMERO_OPERACAO'])) || null
+    let CODIGO_MAQUINA = String(sanitize(req.cookies['CODIGO_MAQUINA'])) || null
+    let codigoPeca = String(sanitize(req.cookies['CODIGO_PECA'])) || null
+    let funcionario = String(sanitize(req.cookies['FUNCIONARIO'])) || null
+    let revisao = Number(sanitize(req.cookies['REVISAO'])) || 0
+    let qtdLibMax = Number(sanitize(req.cookies['qtdLibMax'])) || 0
     const updateQtyQuery: string[] = [];
-    let especif = String(sanitize(req.cookies['especif'].trim)) || null
-    let numCar = String(sanitize(req.cookies['numCar'].trim)) || null
-    let lie = String(sanitize(req.cookies['lie'].trim)) || null
-    let lse = String(sanitize(req.cookies['lse'].trim)) || null
-    let instrumento = String(sanitize(req.cookies['instrumento'].trim)) || null
-    let descricao = String(sanitize(req.cookies['descricao'].trim)) || null
-    let start = Number(sanitize(req.cookies["starterBarcode"].trim)) || 0
+    let especif: string[] = (req.cookies['especif']) || null
+    let numCar: string[] = (req.cookies['numCar']) || null
+    let lie: string[] = (req.cookies['lie']) || null
+    let lse: string[] = (req.cookies['lse']) || null
+    let instrumento: string[] = (req.cookies['instrumento']) || null
+    let descricao: string[] = (req.cookies['descricao']) || null
+
+    let start = Number(req.cookies["starterBarcode"]) || 0
+    let end = Number(new Date().getTime()) || 0;
     let tempoDecorrido = Number(new Date(start).getTime()) || 0
-    let end = new Date().getTime() || 0;
-    let final = Number(end - tempoDecorrido) || 0
-    //console.log('linha 27 /riPost /', final);
+    let final = Number(tempoDecorrido - end) || 0 // Errp em type numeric
+
     // Encerra ao final da Rip
-    let endProdRip = Number(new Date().getDate()) || 0;
-    let startRip = Number(req.cookies["startRip"]) || 0
-    let tempoDecorridoRip = Number(new Date(startRip).getDate()) || 0
-    let finalProdRip = Number(tempoDecorridoRip - endProdRip) || 0
-    //console.log('finalProdRip ', finalProdRip);
+    const startRip = Number(req.cookies["startRip"]) || 0
+    const endProdRip = Number(new Date().getDate()) || 0;
+    const tempoDecorridoRip = Number(new Date(startRip).getDate()) || 0
+    const finalProdRip = Number(tempoDecorridoRip - endProdRip) || 0
 
-    console.log("setup linha 31/ ripPost/ ", setup);
-
-    let x = sanitize(setup)
-    console.log('x: linha 38/ ripPost: ', x);
+    //console.log('x', setup);
     //Insere os dados no banco
     if (Object.keys(setup).length <= 0) {
         return res.json({ message: "rip vazia" })
     }
 
+    var objectSanitized: any = {}
+    for (const [key, value] of Object.entries(setup)) {
+        keySan = sanitize(key as string)
+        valueSan = sanitize(value as string)
+        objectSanitized[keySan as string] = valueSan
+    }
+    console.log("linha 51", objectSanitized);
+
     //Insere O CODAPONTA 6 e Tempo da rip
     await connection.query(`
     INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-        VALUES(GETDATE(), '${funcionario}', '${NUMERO_ODF}', '${codigoPeca}', '${revisao}', ${NUMERO_OPERACAO}, ${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}', '${qtdLibMax}', '0', '0', '${funcionario}', '0', '6', '6', 'Fin Prod.', '${finalProdRip}', '${finalProdRip}', '1', '0', '0')`)
+    VALUES(GETDATE(), '${funcionario}', '${NUMERO_ODF}', '${codigoPeca}', '${revisao}', ${NUMERO_OPERACAO}, ${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}', '${qtdLibMax}', '0', '0', '${funcionario}', '0', '6', '6', 'Fin Prod.', ${finalProdRip}, ${finalProdRip}, '1', '0', '0')`)
 
     //Atualiza o tempo total que a operação levou
     try {
         await connection.query(`
-                UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = ${final} WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
+                UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
     } catch (error) {
         console.log(error)
         return res.json({ message: 'ocorreu um erro ao enviar os dados da rip' })
     }
 
-    const resultSplitLines: { [k: string]: any; } = Object.keys(setup).reduce((acc: any, iterator: any) => {
+    const resultSplitLines: { [k: string]: any; } = Object.keys(objectSanitized).reduce((acc: any, iterator: any) => {
         const [col, lin] = iterator.split("-")
         if (acc[lin] === undefined) acc[lin] = {}
-        acc[lin][col] = setup[iterator];
+        acc[lin][col] = objectSanitized[iterator];
         return acc
     }, <{ [k: string]: any; }>{})
 
+    console.log("linha 72", resultSplitLines);
+
     Object.entries(resultSplitLines).forEach(([row], i) => {
-        // if (lie[i] === null) {
-        //     lie[i] = 0
-        // }
-
-        // if (lse[i] === null) {
-        //     lse[i] = 0
-        // }
-
         updateQtyQuery.push(`
         INSERT INTO 
         CST_RIP_ODF_PRODUCAO 

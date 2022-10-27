@@ -8,54 +8,61 @@ const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
 const sanitize_1 = require("../utils/sanitize");
 const ripPost = async (req, res) => {
+    let setup = (req.body['setup']) || null;
+    let keySan;
+    let valueSan;
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let NUMERO_ODF = Number((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'].trim)) || 0;
-    let NUMERO_OPERACAO = String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'].trim)) || null;
-    let CODIGO_MAQUINA = String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA'].trim)) || null;
-    let codigoPeca = String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'].trim)) || null;
-    let funcionario = String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'].trim)) || null;
-    let revisao = Number((0, sanitize_1.sanitize)(req.cookies['REVISAO'].trim)) || 0;
-    let qtdLibMax = Number((0, sanitize_1.sanitize)(req.cookies['qtdLibMax'].trim)) || 0;
-    let setup = String((0, sanitize_1.sanitize)(req.body['setup'].trim));
+    let NUMERO_ODF = Number((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'])) || 0;
+    let NUMERO_OPERACAO = String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])) || null;
+    let CODIGO_MAQUINA = String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA'])) || null;
+    let codigoPeca = String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])) || null;
+    let funcionario = String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])) || null;
+    let revisao = Number((0, sanitize_1.sanitize)(req.cookies['REVISAO'])) || 0;
+    let qtdLibMax = Number((0, sanitize_1.sanitize)(req.cookies['qtdLibMax'])) || 0;
     const updateQtyQuery = [];
-    let especif = String((0, sanitize_1.sanitize)(req.cookies['especif'].trim)) || null;
-    let numCar = String((0, sanitize_1.sanitize)(req.cookies['numCar'].trim)) || null;
-    let lie = String((0, sanitize_1.sanitize)(req.cookies['lie'].trim)) || null;
-    let lse = String((0, sanitize_1.sanitize)(req.cookies['lse'].trim)) || null;
-    let instrumento = String((0, sanitize_1.sanitize)(req.cookies['instrumento'].trim)) || null;
-    let descricao = String((0, sanitize_1.sanitize)(req.cookies['descricao'].trim)) || null;
-    let start = Number((0, sanitize_1.sanitize)(req.cookies["starterBarcode"].trim)) || 0;
+    let especif = (req.cookies['especif']) || null;
+    let numCar = (req.cookies['numCar']) || null;
+    let lie = (req.cookies['lie']) || null;
+    let lse = (req.cookies['lse']) || null;
+    let instrumento = (req.cookies['instrumento']) || null;
+    let descricao = (req.cookies['descricao']) || null;
+    let start = Number(req.cookies["starterBarcode"]) || 0;
+    let end = Number(new Date().getTime()) || 0;
     let tempoDecorrido = Number(new Date(start).getTime()) || 0;
-    let end = new Date().getTime() || 0;
-    let final = Number(end - tempoDecorrido) || 0;
-    let endProdRip = Number(new Date().getDate()) || 0;
-    let startRip = Number(req.cookies["startRip"]) || 0;
-    let tempoDecorridoRip = Number(new Date(startRip).getDate()) || 0;
-    let finalProdRip = Number(tempoDecorridoRip - endProdRip) || 0;
-    console.log("setup linha 31/ ripPost/ ", setup);
-    let x = (0, sanitize_1.sanitize)(setup);
-    console.log('x: linha 38/ ripPost: ', x);
+    let final = Number(tempoDecorrido - end) || 0;
+    const startRip = Number(req.cookies["startRip"]) || 0;
+    const endProdRip = Number(new Date().getDate()) || 0;
+    const tempoDecorridoRip = Number(new Date(startRip).getDate()) || 0;
+    const finalProdRip = Number(tempoDecorridoRip - endProdRip) || 0;
     if (Object.keys(setup).length <= 0) {
         return res.json({ message: "rip vazia" });
     }
+    var objectSanitized = {};
+    for (const [key, value] of Object.entries(setup)) {
+        keySan = (0, sanitize_1.sanitize)(key);
+        valueSan = (0, sanitize_1.sanitize)(value);
+        objectSanitized[keySan] = valueSan;
+    }
+    console.log("linha 51", objectSanitized);
     await connection.query(`
     INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-        VALUES(GETDATE(), '${funcionario}', '${NUMERO_ODF}', '${codigoPeca}', '${revisao}', ${NUMERO_OPERACAO}, ${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}', '${qtdLibMax}', '0', '0', '${funcionario}', '0', '6', '6', 'Fin Prod.', '${finalProdRip}', '${finalProdRip}', '1', '0', '0')`);
+    VALUES(GETDATE(), '${funcionario}', '${NUMERO_ODF}', '${codigoPeca}', '${revisao}', ${NUMERO_OPERACAO}, ${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}', '${qtdLibMax}', '0', '0', '${funcionario}', '0', '6', '6', 'Fin Prod.', ${finalProdRip}, ${finalProdRip}, '1', '0', '0')`);
     try {
         await connection.query(`
-                UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = ${final} WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
+                UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
     }
     catch (error) {
         console.log(error);
         return res.json({ message: 'ocorreu um erro ao enviar os dados da rip' });
     }
-    const resultSplitLines = Object.keys(setup).reduce((acc, iterator) => {
+    const resultSplitLines = Object.keys(objectSanitized).reduce((acc, iterator) => {
         const [col, lin] = iterator.split("-");
         if (acc[lin] === undefined)
             acc[lin] = {};
-        acc[lin][col] = setup[iterator];
+        acc[lin][col] = objectSanitized[iterator];
         return acc;
     }, {});
+    console.log("linha 72", resultSplitLines);
     Object.entries(resultSplitLines).forEach(([row], i) => {
         updateQtyQuery.push(`
         INSERT INTO 

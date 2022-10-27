@@ -55,7 +55,7 @@
     }
 
     function preSanitize(input) {
-        const allowedChars = /[A-Za-z0-9.]/;
+        const allowedChars = /[A-Za-z0-9.,;´`]/;
         const sanitizedOutput = input
             .split("")
             .map((char) => (allowedChars.test(char) ? char : ""))
