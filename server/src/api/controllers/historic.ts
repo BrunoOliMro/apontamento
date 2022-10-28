@@ -17,13 +17,17 @@ export const historic: RequestHandler = async (req, res) => {
         `.trim()).then(result => result.recordset)
 
         if (resource.length <= 0) {
-            return res.json({ error: true, message: "Erro no servidor." });
+            return res.json({ message: 'sem historico a exibir' });
         } else {
-            return res.json(resource)
+            let objRes = {
+                resource: resource,
+                message: 'historico encontrado'
+            }
+            return res.json(objRes)
         }
     } catch (error) {
         console.log(error)
-        return res.status(500).json({ error: true, message: "Erro no servidor." });
+        return res.json({ message: 'erro ao localizar o historico' });
     } finally {
         //await connection.close()
     }

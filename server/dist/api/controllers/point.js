@@ -28,6 +28,7 @@ const point = async (req, res, next) => {
     let OPERACAO_PROXIMA = String((0, sanitize_1.sanitize)(req.cookies['OPERACAO_PROXIMA'])) || null;
     let funcionario = String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])) || null;
     let revisao = Number((0, sanitize_1.sanitize)(req.cookies['REVISAO'])) || 0;
+    let qtdProd = Number((0, sanitize_1.sanitize)(req.cookies['qtdProduzir'])) || 0;
     const updateQtyQuery = [];
     let startRip = Number(new Date()) || 0;
     let state = Number(0);
@@ -35,14 +36,25 @@ const point = async (req, res, next) => {
     let endProdTimer = new Date() || 0;
     let startProd = Number(req.cookies["startProd"] / 1000) || 0;
     let finalProdTimer = Number(endProdTimer.getTime() - startProd / 1000) || 0;
+    let refugoQEstaNoSistema = Number((0, sanitize_1.sanitize)(req.cookies['QTD_REFUGO'])) || 0;
+    let retrabalhadas = reworkFeed - refugoQEstaNoSistema;
+    console.log('retrabalhadas ', retrabalhadas);
     let valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed) + Number(parcialFeed));
     valorTotalApontado = Number(valorTotalApontado);
     qtdLibMax = Number(qtdLibMax);
-    if (motivorefugo === undefined) {
+    let faltante = qtdLibMax - valorTotalApontado;
+    if (motivorefugo === undefined || motivorefugo === "undefined" || motivorefugo === null) {
         motivorefugo = null;
     }
-    if (valorTotalApontado > qtdLibMax) {
+    if (valorTotalApontado > qtdLibMax || valorTotalApontado > qtdProd) {
         return res.json({ message: 'valor apontado maior que a quantidade liberada' });
+    }
+    if (retrabalhadas + qtdBoas + badFeed > qtdLibMax || retrabalhadas + qtdBoas + badFeed > qtdProd) {
+        return res.json({ message: 'valor apontado maior que a quantidade liberada' });
+    }
+    if (retrabalhadas <= 0) {
+        console.log("quantidade de retrabalhadas maior que o que foi apontando");
+        return res.json({ message: 'valor apontado excede o valor do sistema' });
     }
     if (badFeed > 0) {
         const resource = await connection.query(`
@@ -89,10 +101,8 @@ const point = async (req, res, next) => {
         }
         await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
         await connection.query(` INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, MOTIVO_REFUGO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-        VALUES(GETDATE(),'${funcionario}',${NUMERO_ODF},'${codigoPeca}','${revisao}','${NUMERO_OPERACAO}','${NUMERO_OPERACAO}', 'D','${CODIGO_MAQUINA}','1',${qtdBoas},${badFeed},'${funcionario}','0','4', '4', 'Fin Prod.',${finalProdTimer},${finalProdTimer}, '1',  UPPER('${motivorefugo}') , ${missingFeed},${reworkFeed})`);
+        VALUES(GETDATE(),'${funcionario}',${NUMERO_ODF},'${codigoPeca}','${revisao}','${NUMERO_OPERACAO}','${NUMERO_OPERACAO}', 'D','${CODIGO_MAQUINA}','1',${qtdBoas},${badFeed},'${funcionario}','0','4', '4', 'Fin Prod.',${finalProdTimer},${finalProdTimer}, '1',  UPPER('${motivorefugo}') , ${faltante},${retrabalhadas})`);
         state = 10;
-        res.cookie('qtdBoas', qtdBoas);
-        console.log("ok linha 111");
         return res.json({ message: 'valores apontados com sucesso' });
     }
     catch (error) {

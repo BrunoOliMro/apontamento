@@ -1,6 +1,6 @@
 <script>
   // @ts-nocheck
-  import { bind } from "svelte/internal";
+  import { bind, get_slot_changes } from "svelte/internal";
   import Title from "../components/title/title.svelte";
   let value;
   let codigoBarrasReturn = "";
@@ -25,7 +25,8 @@
   let showSupervisor = false;
   let quantityModal = false;
   let errorReturnValue = false;
-
+  let returnValueAvailable;
+  let paradaMsg = ''
   let barcodeMsg = "";
   // if (window.location.href.includes("?")) {
   //   barcodeMsg = window.location.href.split("?")[1].split("=")[1];
@@ -50,10 +51,21 @@
         superSuperMaqPar: !superSuperMaqPar ? "" : superSuperMaqPar,
       }),
     }).then((res) => res.json());
-    if (res.success === "maquina") {
-      superParada = "";
+    console.log("linha 54", res);
+    if (res.message === "maquina") {
       window.location.href = "/#/codigobarras";
       location.reload();
+    }
+    if (res.message === "supervisor não encontrado") {
+      superParada = false;
+      paradaMsg = 'supervisor não encontrado'
+      showmodal = false;
+    }
+
+    if (res.message === "erro na parada de maquina") {
+      showmodal = false;
+      superParada = false;
+      paradaMsg = 'erro na parada de maquina'
     }
   };
 
@@ -177,10 +189,20 @@
       barcodeMsg = "odf não encontrada";
       showmodal = false;
     }
+    if (res.message === "não ha valor que possa ser devolvido") {
+      barcodeMsg = "não ha valor que possa ser devolvido";
+      showmodal = false;
+    }
+    if (res.String === "valor devolvido maior que o permitido") {
+      barcodeMsg = "valor devolvido maior que o permitido";
+      returnValueAvailable = res.qtdLibMax
+      showmodal = false;
+    }
   }
 
   function closePopCor() {
     barcodeMsg = "";
+    paradaMsg = ''
     errorReturnValue = false;
     showSupervisor = false;
     quantityModal = false;
@@ -232,7 +254,7 @@
       <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>Estorno Feito</h5>
-          <p on:keypress={closePopCor} on:click={closePopCor}>Fechar</p>
+          <p autofocus  tabindex="30" on:keypress={closePopCor} on:click={closePopCor}>Fechar</p>
         </div>
       </div>
     {/if}
@@ -241,25 +263,44 @@
       <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>Erro Ao Fazer Estorno</h5>
-          <p on:keypress={closePopCor} on:click={closePopCor}>Fechar</p>
+          <p autofocus tabindex="31"  on:keypress={closePopCor} on:click={closePopCor}>Fechar</p>
         </div>
       </div>
     {/if}
 
-    <!-- {#if barcodeMsg === "anotherodfexpected"}
+    {#if barcodeMsg === 'não ha valor que possa ser devolvido'}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
-          <h5>Outra ODF Esperada</h5>
-          <p on:keypress={closePop} on:click={closePop}>Fechar</p>
+          <h5>Não Há limite Para Estorno</h5>
+          <p autofocus  tabindex="32"  on:keypress={closePopCor} on:click={closePopCor}>Fechar</p>
         </div>
       </div>
-    {/if} -->
+    {/if}
+
+    {#if paradaMsg === 'supervisor não encontrado'}
+    <div class="fundo">
+      <div class="invalidBarcode" id="s">
+        <h5>Supervisor Não Encontrado</h5>
+        <p autofocus tabindex="33"  on:keypress={closePopCor} on:click={closePopCor}>Fechar</p>
+      </div>
+    </div>
+  {/if}
+
+    {#if barcodeMsg === "valor devolvido maior que o permitido"}
+      <div class="fundo">
+        <div class="invalidBarcode" id="s">
+          <h5>Limite De Estorno menor que o apontado</h5>
+          <h3>Limite Disponivel: {returnValueAvailable}</h3>
+          <p autofocus tabindex="34"  on:keypress={closePopCor} on:click={closePopCor}>Fechar</p>
+        </div>
+      </div>
+    {/if}
 
     {#if barcodeMsg === "não há limite na odf"}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>ODF Não Pode Ser Apontada, Aponte Outra</h5>
-          <p on:keypress={closePop} on:click={closePop}>Fechar</p>
+          <p autofocus tabindex="35" on:keypress={closePop} on:click={closePop}>Fechar</p>
         </div>
       </div>
     {/if}

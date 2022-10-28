@@ -22,6 +22,9 @@ const returnedValue = async (req, res) => {
     let qtdLibMax;
     let faltante;
     let retrabalhada;
+    let obj = {};
+    let qtdApontOdf;
+    let qtdOdf;
     if (barcode === null && choosenOption === 0 && supervisor === "undefined") {
         return res.json({ message: "odf não encontrada" });
     }
@@ -46,7 +49,6 @@ const returnedValue = async (req, res) => {
     if (ruins === undefined) {
         ruins = 0;
     }
-    console.log("linha 53 ner");
     const dados = {
         numOdf: String(barcode.slice(10)),
         numOper: String(barcode.slice(0, 5)),
@@ -83,26 +85,42 @@ const returnedValue = async (req, res) => {
     if (resourceOdfData.length > 0) {
         codigoPeca = String(resourceOdfData[0].CODIGO_PECA);
         revisao = Number(resourceOdfData[0].REVISAO) || 0;
-        qtdLibMax = Number(resourceOdfData[0].QTDE_ODF[0]) || 0;
+        qtdOdf = Number(resourceOdfData[0].QTDE_ODF[0]) || 0;
+        qtdApontOdf = Number(resourceOdfData[0].QTDE_APONTADA) || 0;
         faltante = Number(0);
         retrabalhada = Number(0);
+        qtdLibMax = qtdOdf - qtdApontOdf;
+        if (resourceOdfData[0].QTDE_APONTADA <= 0) {
+            qtdLibMax = 0;
+        }
+        if (qtdLibMax <= 0) {
+            return res.json({ message: "não ha valor que possa ser devolvido" });
+        }
+        if (boas > qtdLibMax) {
+            console.log("obj linha 113 /returned/: ", obj);
+            let objRes = {
+                qtdLibMax: qtdLibMax,
+                String: 'valor devolvido maior que o permitido'
+            };
+            return res.json(objRes);
+        }
         const selectSuper = await connection.query(`
         SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`).then(result => result.recordset);
         if (selectSuper.length > 0) {
             try {
                 const insertHisCodReturned = await connection.query(`
                 INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA) 
-                VALUES (GETDATE(), '${funcionario}', '${dados.numOdf}', '${codigoPeca}', ${revisao}, ${dados.numOper}, ${dados.numOper}, 'D', '${dados.codMaq}', ${qtdLibMax} , '0', '0', '${funcionario}', '0', '7', '7', 'Valor Estorn.', '0', '0', '1', ${faltante},${retrabalhada})`);
-                console.log("boas: ", boas);
-                console.log("ruins: ", ruins);
-                console.log('object', dados.numOdf);
-                console.log('object', dados.numOper);
-                console.log('object', dados.codMaq);
-                const s = await connection.query(`
-                UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA - '${boas}', QTD_REFUGO = QTD_REFUGO - ${ruins} WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'`);
-                console.log("linha 114", insertHisCodReturned);
-                console.log("linha 114", s);
-                return res.status(200).json({ message: 'estorno feito' });
+                VALUES (GETDATE(), '${funcionario}', '${dados.numOdf}', '${codigoPeca}', ${revisao}, ${dados.numOper}, ${dados.numOper}, 'D', '${dados.codMaq}', ${qtdLibMax} , '0', '0', '${funcionario}', '0', '7', '7', 'Valor Estorn.', '0', '0', '1', ${faltante},${retrabalhada})`)
+                    .then(record => record.rowsAffected);
+                const insertValuesBack = await connection.query(`
+                UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA - '${boas}', QTD_REFUGO = QTD_REFUGO - ${ruins} WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'`)
+                    .then(record => record.rowsAffected);
+                if (insertHisCodReturned.length > 0 && insertValuesBack.length > 0) {
+                    return res.status(200).json({ message: 'estorno feito' });
+                }
+                else if (insertHisCodReturned.length <= 0 || insertValuesBack.length <= 0) {
+                    return res.json({ message: 'erro de estorno' });
+                }
             }
             catch (error) {
                 console.log(error);

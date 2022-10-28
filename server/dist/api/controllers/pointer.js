@@ -38,9 +38,6 @@ const pointerPost = async (req, res) => {
     let objOdfSelecionada = queryGrupoOdf[indiceDoArrayDeOdfs];
     let objOdfSelecProximo = queryGrupoOdf[indiceDoArrayDeOdfs + 1];
     let objOdfSelecAnterior = queryGrupoOdf[indiceDoArrayDeOdfs - 1];
-    if (objOdfSelecAnterior === undefined) {
-        console.log("objOdfSelecAnterior linha 54 /pointer/ ", objOdfSelecAnterior);
-    }
     let qtdLib = 0;
     let apontLib = '';
     let qntdeJaApontada = 0;
@@ -90,7 +87,6 @@ const pointerPost = async (req, res) => {
     if (objOdfSelecionada['CODIGO_MAQUINA'] === 'RET001') {
         objOdfSelecionada['CODIGO_MAQUINA'] = 'RET001';
     }
-    console.log("linha 122 /pointer / : ", objOdfSelecionada['CODIGO_MAQUINA']);
     console.log('codigoMaq linha 124:', dados.codMaq);
     res.cookie('qtdLibMax', qtdLibMax);
     res.cookie("MAQUINA_PROXIMA", codigoMaquinaProxOdf);
@@ -102,11 +98,10 @@ const pointerPost = async (req, res) => {
     res.cookie("REVISAO", objOdfSelecionada['REVISAO']);
     const codApont = await connection.query(`
     SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND PECA = '${objOdfSelecionada.CODIGO_PECA}' AND ITEM = '${objOdfSelecionada.CODIGO_MAQUINA}'  ORDER BY DATAHORA DESC`.trim()).then(result => result.recordset);
-    if (codApont.length < 0) {
-        codApont[0].CODAPONTA = "0";
-    }
-    if (codApont[0].CODAPONTA === 5) {
-        return res.status(400).json({ message: "paradademaquina" });
+    if (codApont.length > 0) {
+        if (codApont[0]?.CODAPONTA === 5) {
+            return res.json({ message: "paradademaquina" });
+        }
     }
     try {
         const resource2 = await connection.query(`

@@ -1,14 +1,22 @@
 <script>
+  // @ts-nocheck
+
   import TableHistorico from "../components/Tables/TableHistorico.svelte";
   import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
   let subtitle = "Historico de Apontamento";
   let HISTORICO = [];
   let urlString = `/api/v1/historic`;
-
+  let message = "";
   async function getHISTORICO() {
     const res = await fetch(urlString);
     HISTORICO = await res.json();
-    console.log("linha 11", HISTORICO);
+    if (HISTORICO.message === "sem historico a exibir") {
+      message = "sem historico a exibir";
+    }
+
+    if (HISTORICO.message === "historico encontrado") {
+      message = "historico encontrado";
+    }
   }
   let resultado = getHISTORICO();
 </script>
@@ -16,7 +24,7 @@
 <main>
   <Breadcrumb />
   <div class="subtitle">{subtitle}</div>
-  {#if HISTORICO.length !== 0}
+  {#if message === "historico encontrado"}
     <div class="tabela table-responsive">
       <table class="table table-hover table-striped caption-top">
         <thead>
@@ -30,19 +38,19 @@
           </tr>
         </thead>
         <tbody id="corpoTabela">
-          {#each HISTORICO as column, i}
+          {#each HISTORICO.resource as column, i}
             <TableHistorico dados={column} />
           {/each}
         </tbody>
       </table>
     </div>
-  {:else}
+  {/if}
+  {#if message === "sem historico a exibir"}
     <h2>Não há histórico para exibir</h2>
   {/if}
 </main>
 
 <style>
-
   th {
     text-align: center;
   }

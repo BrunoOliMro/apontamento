@@ -51,9 +51,9 @@ export const pointerPost: RequestHandler = async (req, res) => {
     let objOdfSelecAnterior = queryGrupoOdf[indiceDoArrayDeOdfs - 1]
     //console.log("linha 57 /pointer/", objOdfSelecAnterior);
 
-    if (objOdfSelecAnterior === undefined) {
-        console.log("objOdfSelecAnterior linha 54 /pointer/ ", objOdfSelecAnterior);
-    }
+    // if (objOdfSelecAnterior === undefined) {
+    //     console.log("objOdfSelecAnterior linha 54 /pointer/ ", objOdfSelecAnterior);
+    // }
 
     let qtdLib: number = 0
     let apontLib: string = ''
@@ -120,7 +120,7 @@ export const pointerPost: RequestHandler = async (req, res) => {
         objOdfSelecionada['CODIGO_MAQUINA'] = 'RET001'
     }
 
-    console.log("linha 122 /pointer / : ", objOdfSelecionada['CODIGO_MAQUINA']);
+    //console.log("linha 122 /pointer / : ", objOdfSelecionada['CODIGO_MAQUINA']);
 
     console.log('codigoMaq linha 124:', dados.codMaq);
     res.cookie('qtdLibMax', qtdLibMax)
@@ -136,12 +136,10 @@ export const pointerPost: RequestHandler = async (req, res) => {
     SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND PECA = '${objOdfSelecionada.CODIGO_PECA}' AND ITEM = '${objOdfSelecionada.CODIGO_MAQUINA}'  ORDER BY DATAHORA DESC`.trim()
     ).then(result => result.recordset)
 
-    if (codApont.length < 0) {
-        codApont[0].CODAPONTA = "0"
-    }
-
-    if (codApont[0].CODAPONTA === 5) {
-        return res.status(400).json({ message: "paradademaquina" })
+    if(codApont.length > 0){
+        if(codApont[0]?.CODAPONTA === 5){
+            return res.json({ message: "paradademaquina" })
+        }
     }
 
     try {

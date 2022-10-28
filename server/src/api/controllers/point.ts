@@ -24,6 +24,7 @@ export const point: RequestHandler = async (req, res, next) => {
     let OPERACAO_PROXIMA = String(sanitize(req.cookies['OPERACAO_PROXIMA'])) || null
     let funcionario = String(sanitize(req.cookies['FUNCIONARIO'])) || null
     let revisao = Number(sanitize(req.cookies['REVISAO'])) || 0
+    let qtdProd = Number(sanitize(req.cookies['qtdProduzir'])) || 0
     const updateQtyQuery = [];
     let startRip = Number(new Date()) || 0;
     let state = Number(0)
@@ -35,17 +36,32 @@ export const point: RequestHandler = async (req, res, next) => {
     let startProd = Number(req.cookies["startProd"] / 1000) || 0
     let finalProdTimer = Number(endProdTimer.getTime() - startProd / 1000) || 0
 
+    let refugoQEstaNoSistema = Number(sanitize(req.cookies['QTD_REFUGO'])) || 0
+    let retrabalhadas = reworkFeed - refugoQEstaNoSistema
+    console.log('retrabalhadas ', retrabalhadas);
+    
+    
     let valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed) + Number(parcialFeed))
     valorTotalApontado = Number(valorTotalApontado)
     qtdLibMax = Number(qtdLibMax)
+    let faltante = qtdLibMax - valorTotalApontado
 
-    if (motivorefugo === undefined) {
+    if (motivorefugo === undefined || motivorefugo === "undefined" || motivorefugo === null) {
         motivorefugo = null
     }
 
     //Verifica se a quantidade apontada mão é maior que a quantidade maxima liberada
-    if (valorTotalApontado > qtdLibMax) {
+    if (valorTotalApontado > qtdLibMax || valorTotalApontado > qtdProd) {
         return res.json({ message: 'valor apontado maior que a quantidade liberada' })
+    }
+
+    if(retrabalhadas + qtdBoas + badFeed > qtdLibMax ||retrabalhadas + qtdBoas + badFeed > qtdProd ){
+        return res.json({ message: 'valor apontado maior que a quantidade liberada' })
+    }
+
+    if(retrabalhadas <= 0){
+        console.log("quantidade de retrabalhadas maior que o que foi apontando");
+        return res.json({ message: 'valor apontado excede o valor do sistema' })
     }
 
     //Verifica se existe o Supervisor
@@ -106,10 +122,8 @@ export const point: RequestHandler = async (req, res, next) => {
 
         // Insere o CODAPONTA 4, O tempo de produção e as quantidades boas, ruins, retrabalhadas e faltantes(HISAPONTA) 
         await connection.query(` INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, MOTIVO_REFUGO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-        VALUES(GETDATE(),'${funcionario}',${NUMERO_ODF},'${codigoPeca}','${revisao}','${NUMERO_OPERACAO}','${NUMERO_OPERACAO}', 'D','${CODIGO_MAQUINA}','1',${qtdBoas},${badFeed},'${funcionario}','0','4', '4', 'Fin Prod.',${finalProdTimer},${finalProdTimer}, '1',  UPPER('${motivorefugo}') , ${missingFeed},${reworkFeed})`)
+        VALUES(GETDATE(),'${funcionario}',${NUMERO_ODF},'${codigoPeca}','${revisao}','${NUMERO_OPERACAO}','${NUMERO_OPERACAO}', 'D','${CODIGO_MAQUINA}','1',${qtdBoas},${badFeed},'${funcionario}','0','4', '4', 'Fin Prod.',${finalProdTimer},${finalProdTimer}, '1',  UPPER('${motivorefugo}') , ${faltante},${retrabalhadas})`)
         state = 10
-        res.cookie('qtdBoas', qtdBoas)
-        console.log("ok linha 111");
         return res.json({ message: 'valores apontados com sucesso' })
     } catch (error) {
         state = 9

@@ -18,6 +18,9 @@ export const returnedValue: RequestHandler = async (req, res) => {
     let qtdLibMax: number
     let faltante: number
     let retrabalhada: number
+    let obj: any = {}
+    let qtdApontOdf: number;
+    let qtdOdf: number;
     //barcode = sanitize(barcode)
     // console.log("supervisor: ", supervisor);
     // console.log("choosenOption: ", choosenOption);
@@ -52,8 +55,6 @@ export const returnedValue: RequestHandler = async (req, res) => {
     if (ruins === undefined) {
         ruins = 0
     }
-
-    console.log("linha 53 ner");
 
     //Divide o Codigo de barras em 3 partes para a verificação na proxima etapa
     const dados = {
@@ -94,9 +95,32 @@ export const returnedValue: RequestHandler = async (req, res) => {
     if (resourceOdfData.length > 0) {
         codigoPeca = String(resourceOdfData[0].CODIGO_PECA)
         revisao = Number(resourceOdfData[0].REVISAO) || 0
-        qtdLibMax = Number(resourceOdfData[0].QTDE_ODF[0]) || 0
+        qtdOdf = Number(resourceOdfData[0].QTDE_ODF[0]) || 0
+        qtdApontOdf = Number(resourceOdfData[0].QTDE_APONTADA) || 0
         faltante = Number(0)
         retrabalhada = Number(0)
+
+        // console.log("qtdOdf, qtdOdf", resourceOdfData[0]);
+        // console.log("qtdApontOdf, qtdApontOdf", qtdApontOdf);
+        qtdLibMax = qtdOdf - qtdApontOdf
+
+        if (resourceOdfData[0].QTDE_APONTADA <= 0) {
+            qtdLibMax = 0
+        }
+
+        if (qtdLibMax <= 0) {
+            return res.json({ message: "não ha valor que possa ser devolvido" })
+        }
+
+        if (boas > qtdLibMax) {
+            console.log("obj linha 113 /returned/: ", obj);
+            let objRes: any = {
+                qtdLibMax: qtdLibMax,
+                String: 'valor devolvido maior que o permitido'
+            }
+            return res.json(objRes)
+        }
+
         const selectSuper = await connection.query(`
         SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`).then(result => result.recordset);
         if (selectSuper.length > 0) {
@@ -104,26 +128,26 @@ export const returnedValue: RequestHandler = async (req, res) => {
                 const insertHisCodReturned = await connection.query(`
                 INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA) 
                 VALUES (GETDATE(), '${funcionario}', '${dados.numOdf}', '${codigoPeca}', ${revisao}, ${dados.numOper}, ${dados.numOper}, 'D', '${dados.codMaq}', ${qtdLibMax} , '0', '0', '${funcionario}', '0', '7', '7', 'Valor Estorn.', '0', '0', '1', ${faltante},${retrabalhada})`)
-                //.then(record => record.recordset)
+                    .then(record => record.rowsAffected)
 
-
-                console.log("boas: ", boas);
-                console.log("ruins: ", ruins);
-                console.log('object', dados.numOdf);
-                console.log('object', dados.numOper);
-                console.log('object', dados.codMaq);
-                const s = await connection.query(`
+                // console.log("boas: ", boas);
+                // console.log("ruins: ", ruins);
+                // console.log('object', dados.numOdf);
+                // console.log('object', dados.numOper);
+                // console.log('object', dados.codMaq);
+                const insertValuesBack = await connection.query(`
                 UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA - '${boas}', QTD_REFUGO = QTD_REFUGO - ${ruins} WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'`)
-                //.then(record => record.recordset)
+                    .then(record => record.rowsAffected)
 
 
-                console.log("linha 114", insertHisCodReturned);
-                console.log("linha 114", s);
-                // if (!insertHisCodReturned) { 
-                //     return res.json({ message: 'erro de estorno'})
-                // } else {
-                return res.status(200).json({ message: 'estorno feito' })
-                // }
+                // console.log("linha 114", insertHisCodReturned.length);
+                // console.log("linha 114", insertValuesBack.length);
+                if (insertHisCodReturned.length > 0 && insertValuesBack.length > 0) {
+                    return res.status(200).json({ message: 'estorno feito' })
+                } else if (insertHisCodReturned.length <= 0 || insertValuesBack.length <= 0) {
+
+                    return res.json({ message: 'erro de estorno' })
+                }
             } catch (error) {
                 console.log(error)
             } finally {

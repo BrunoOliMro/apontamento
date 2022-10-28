@@ -329,8 +329,8 @@
                             name="supervisor"
                             id="supervisor"
                         />
-                        <button on:keypress={doPost} on:keypress={doPost}>Confirmar</button>
-                        <button on:keypress={close} on:keypress={close}>Fechar</button>
+                        <button on:click={doPost} on:keypress={doPost}>Confirmar</button>
+                        <button on:click={close} on:keypress={close}>Fechar</button>
                     </div>
                 </div>
             {/if}

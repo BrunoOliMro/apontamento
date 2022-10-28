@@ -1,9 +1,5 @@
 <script>
     // @ts-nocheck
-
-    import { claim_html_tag, element } from "svelte/internal";
-
-    // @ts-nocheck
     import TableRipRow from "../components/Tables/TableRipRow.svelte";
     let seq = "Seq";
     let extraColumns = [];
@@ -130,20 +126,28 @@
     function close() {
         showSetup = false;
         showSuper = false;
-        showError = false
-        showErrorEmpty = false
+        showError = false;
+        showErrorEmpty = false;
     }
 </script>
 
 <main>
     <div class="bread" />
     <div class="divBtn">
-        <button on:click={createCol} on:keypress={createCol} tabindex="21" class="sideButton" type="submit"
-            >Adicionar coluna</button
+        <button
+            on:click={createCol}
+            on:keypress={createCol}
+            tabindex="21"
+            class="sideButton"
+            type="submit">Adicionar coluna</button
         >
-        <button on:click={check} on:keypress={check} tabindex="22" class="sideButton" type="submit"
-            >Enviar dados</button
-        >   
+        <button
+            on:click={check}
+            on:keypress={check}
+            tabindex="22"
+            class="sideButton"
+            type="submit">Enviar dados</button
+        >
     </div>
     <div class="title">{Subtitle}</div>
     {#if ripTable.length !== 0}
@@ -169,7 +173,7 @@
                             {/each}
                         </tr>
                     </thead>
-                    <tbody  id="corpoTabela">
+                    <tbody id="corpoTabela">
                         {#each ripTable as row, i}
                             <TableRipRow
                                 bind:setup
@@ -187,35 +191,60 @@
         <h2>Não há histórico para exibir</h2>
     {/if}
     {#if showEnd === true}
-        <h3>ODF FINALIZADA</h3>
+        <div class="fundo">
+            <div class="header">
+                <h3>ODF FINALIZADA</h3>
+            </div>
+        </div>
     {/if}
     {#if showSuper === true}
-        <h3>Supervisor</h3>
-        <input
-        autofocus
-        tabindex="18"
-            bind:value={supervisor}
-            onkeyup="this.value = this.value.toUpperCase()"
-            type="text"
-            name="supervisor"
-            id="supervisor"
-        />
-        <button tabindex="19" on:click={doPostSuper} on:keypress={doPostSuper}>Confirma</button>
-        <button tabindex="20" on:click={close} on:keypress={close}>close</button>
+        <div class="fundo">
+            <div class="header">
+                <h3>Supervisor</h3>
+                <input
+                    autofocus
+                    tabindex="18"
+                    bind:value={supervisor}
+                    onkeyup="this.value = this.value.toUpperCase()"
+                    type="text"
+                    name="supervisor"
+                    id="supervisor"
+                />
+                <button
+                    tabindex="19"
+                    on:click={doPostSuper}
+                    on:keypress={doPostSuper}>Confirma</button
+                >
+                <button tabindex="20" on:click={close} on:keypress={close}
+                    >close</button
+                >
+            </div>
+        </div>
     {/if}
     {#if showErrorEmpty === true}
-        <h3>rip vazia, envio invalido</h3>
-        <button on:click={close} on:keypress={close}>Confirma</button>
+        <div class="fundo">
+            <div class="header">
+                <h3>rip vazia, envio invalido</h3>
+                <button on:click={close} on:keypress={close}>Confirma</button>
+            </div>
+        </div>
     {/if}
     {#if showError === true}
-        <h3>Algo deu errado</h3>
-        <button on:click={close} on:keypress={close}>Confirma</button>
-
+        <div class="fundo">
+            <div class="header">
+                <h3>Algo deu errado</h3>
+                <button on:click={close} on:keypress={close}>Confirma</button>
+            </div>
+        </div>
     {/if}
 
     {#if showSetup === true}
-        <h3>Preencha todos os campos</h3>
-        <button on:click={close} on:keypress={close}>Confirma</button>
+        <div class="fundo">
+            <div class="header">
+                <h3>Preencha todos os campos</h3>
+                <button on:click={close} on:keypress={close}>Fechar</button>
+            </div>
+        </div>
     {/if}
 </main>
 
@@ -238,9 +267,6 @@
     } */
     h2 {
         font-size: 30px;
-    }
-    p {
-        font-size: 25px;
     }
 
     .fundo {
