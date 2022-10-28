@@ -1,5 +1,5 @@
 <script>
-// @ts-nocheck
+  // @ts-nocheck
 
   let urlString = `/api/v1/ferramenta`;
   let fetchItem = [];
@@ -39,7 +39,7 @@
     if (!arrayComp.includes(column)) {
       adicionados += 1;
       arrayComp.push(column);
-      document.getElementById(imgId).style.border = "1px solid green";
+      document.getElementById(imgId).style.border = "2px solid green";
       document.getElementById(imgId).style.transition = "1px";
     }
     if (fetchItem.length === arrayComp.length) {
@@ -59,6 +59,8 @@
       {/if} -->
       {#each item as column, i}
         <img
+          tabindex="${i}"
+          on:keypress={checkIfclicked(column, `img-${i}`)}
           on:click={checkIfclicked(column, `img-${i}`)}
           id="img-{i}"
           class="img"

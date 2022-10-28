@@ -18,24 +18,24 @@
         const res = await fetch(urlString);
         tempodePro = await res.json();
 
-        if(tempodePro === 'erro no tempo'){
-            tempoMax = 0
+        if (tempodePro === "erro no tempo") {
+            tempoMax = 60000;
         }
 
         if (tempoMax === null) {
-            tempoMax = 0;
+            tempoMax = 60000;
         }
 
-        localStorage.setItem('tempoMax', tempoMax)
-        if(localStorage.tempoMax === '0'){
-            tempoMax === 0;
+        localStorage.setItem("tempoMax", tempoMax);
+        if (localStorage.tempoMax === "60000") {
+            tempoMax === 60000;
         }
     }
 
     async function getImagem() {
         const res = await fetch(url);
         imagem = await res.json();
-        if(imagem.length <= 0){
+        if (imagem.length <= 0) {
             console.log("imagem não chegou");
         }
     }
@@ -82,8 +82,8 @@
             body: JSON.stringify({
                 supervisor: supervisor,
             }),
-        });
-        if (res.ok) {
+        }).then((res) => res.json());
+        if (res.message === "supervisor encontrado") {
             shwowSuper = false;
             clearInterval(tempoDaBarra);
         }
@@ -98,13 +98,16 @@
                 <form action="api/v1/apontar" method="POST" />
                 <p>Insira um supervisor para continuar</p>
                 <input
+                    autofocus
+                    tabindex="8"
                     bind:value={supervisor}
                     name="supervisor"
                     id="supervisor"
                     type="text"
                 />
-                <p on:click={doPostSuper}>Confirma</p>
-            </div>
+
+                <p tabindex="9" on:keypress={doPostSuper} on:click={doPostSuper}>Confirma</p>
+            </div> 
         </div>
     {/if}
     {#await resultado}

@@ -75,7 +75,7 @@
                 value: value,
             }),
         }).then((res) => res.json());
-        if (res.message === 'maquina parada com sucesso') {
+        if (res.message === "maquina parada com sucesso") {
             showMaqPar = true;
         }
     };
@@ -94,14 +94,14 @@
                 <div class="header">
                     <div class="closed">
                         <h2>Motivo da Parada</h2>
-                        <button class="closebtn" on:click={closePop}>X</button>
+                        <button class="closebtn" on:keypress={closePop} on:click={closePop}>X</button>
                     </div>
-                    <select bind:value name="id" id="id">
-                        {#each dados as item}
-                            <option>{item}</option>
+                    <select autofocus tabindex="10" bind:value name="id" id="id">
+                        {#each  dados as item}
+                            <option >{item}</option>
                         {/each}
                     </select>
-                    <p on:click={confirm}>Confirmar</p>
+                    <p tabindex="11" on:keypress={confirm} on:click={confirm}>Confirmar</p>
                 </div>
             </div>
         {/if}
@@ -112,8 +112,14 @@
             <div class="header">
                 <div class="closed">
                     <h2>Maquina Parada</h2>
-                    <button class="closebtn" on:click={closeConfirm}>X</button>
-                    <p on:click={closeConfirm}>Confirma</p>
+                    <button
+                        class="closebtn"
+                        autofocus
+                        on:keypress={closeConfirm}
+                        on:click={closeConfirm}
+                    >
+                        Confirma
+                    </button>
                 </div>
             </div>
         </div>
@@ -121,6 +127,7 @@
     <div class="nav">
         <button
             on:click={getMissingFeed}
+            on:keypress={getMissingFeed}
             type="button"
             class="sideButton"
             name="missing"
@@ -128,6 +135,7 @@
         </button>
         <button
             on:click={getReworkFeed}
+            on:keypress={getReworkFeed}
             type="button"
             class="sideButton"
             name="rework"

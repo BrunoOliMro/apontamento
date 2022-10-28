@@ -51,19 +51,22 @@
     </div>
     <div id="subtitle" class="subtitle">{Subtitle}</div>
     <div id="buttons">
-        <button type="button" class="sideButton" on:click={right}
-            >DIREITA</button
+        <button
+            tabindex="1"
+            type="button"
+            class="sideButton"
+            on:click={right}>DIREITA</button
         >
-        <button type="button" class="sideButton" on:click={left}
+        <button tabindex="2" type="button" class="sideButton" on:click={left} on:keypress={left}
             >ESQUERDA</button
         >
-        <button type="button" class="sideButton" on:click={zoomIn}
+        <button tabindex="3" type="button" class="sideButton" on:click={zoomIn} on:keypress={left}
             >ZOOM +</button
         >
-        <button type="button" class="sideButton" on:click={zoomOut}
+        <button tabindex="4" type="button" class="sideButton" on:click={zoomOut} on:keypress={left}
             >ZOOM -</button
         >
-        <button type="button" class="sideButton" on:click={print}
+        <button tabindex="5" type="button" class="sideButton" on:click={print} on:keypress={left}
             >IMPRIMIR</button
         >
     </div>

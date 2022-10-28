@@ -10,13 +10,15 @@ const global_config_1 = require("../../global.config");
 const getPoint = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let NUMERO_ODF = Number((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"])) || 0;
-    let qtdBoas = Number((0, sanitize_html_1.default)(req.body["valorFeed"])) || 0;
+    let qtdBoas = Number((req.cookies["qtdBoas"])) || 0;
     const NUMERO_OPERACAO = req.cookies['NUMERO_OPERACAO'];
     const CODIGO_MAQUINA = req.cookies['CODIGO_MAQUINA'];
     let codigoPeca = String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA'])) || null;
     let funcionario = String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO'])) || null;
     var address;
     const hostname = req.get("host");
+    console.log("host", hostname);
+    console.log("qtdBoas", qtdBoas);
     const { networkInterfaces } = require('os');
     const nets = networkInterfaces();
     const results = {};
@@ -113,17 +115,11 @@ const getPoint = async (req, res) => {
                 let indiceDoArrayDeOdfs = choice.findIndex((callback) => callback === smallerNumber);
                 address = resChoice[indiceDoArrayDeOdfs].ENDERECO;
             }
-        }
-    }
-    catch (error) {
-        console.log(error);
-        return res.json({ message: 'erro ao em localizar espaço' });
-    }
-    try {
-        const hisReal = await connection.query(`SELECT TOP 1  * FROM HISREAL  WHERE 1 = 1 AND CODIGO = '${codigoPeca}' ORDER BY DATA DESC`)
-            .then(record => record.recordset);
-        try {
-            const insertHisReal = await connection.query(`
+            try {
+                const hisReal = await connection.query(`SELECT TOP 1  * FROM HISREAL  WHERE 1 = 1 AND CODIGO = '${codigoPeca}' ORDER BY DATA DESC`)
+                    .then(record => record.recordset);
+                try {
+                    const insertHisReal = await connection.query(`
                 INSERT INTO HISREAL
                     (CODIGO, DOCUMEN, DTRECEB, QTRECEB, VALPAGO, FORMA, SALDO, DATA, LOTE, USUARIO, ODF, NOTA, LOCAL_ORIGEM, LOCAL_DESTINO, CUSTO_MEDIO, CUSTO_TOTAL, CUSTO_UNITARIO, CATEGORIA, DESCRICAO, EMPRESA_RECNO, ESTORNADO_APT_PRODUCAO, CST_ENDERECO, VERSAOSISTEMA, CST_SISTEMA,CST_HOSTNAME,CST_IP) 
                 SELECT 
@@ -132,23 +128,42 @@ const getPoint = async (req, res) => {
                 WHERE 1 = 1 
                 AND CODIGO = '${codigoPeca}' 
                 GROUP BY CODIGO`);
-            console.log("LINHA 106", insertHisReal);
-        }
-        catch (error) {
-            console.log('linha 103', error);
-        }
-        try {
-            if (CODIGO_MAQUINA === 'EX002') {
-                await connection.query(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`);
+                    console.log("LINHA 106", insertHisReal);
+                }
+                catch (error) {
+                    console.log('linha 103', error);
+                    return res.json({ message: 'erro inserir em hisreal' });
+                }
+                try {
+                    if (CODIGO_MAQUINA === 'EX002') {
+                        await connection.query(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`);
+                    }
+                    else {
+                        await connection.query(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`);
+                    }
+                    let objRes = {
+                        address: address,
+                        String: 'endereço com sucesso'
+                    };
+                    if (address === undefined) {
+                        return res.json({ message: 'sem endereço' });
+                    }
+                    else {
+                        return res.json(objRes);
+                    }
+                }
+                catch (error) {
+                    console.log(error);
+                    return res.json({ message: 'erro ao inserir estoque' });
+                }
             }
-            else {
-                await connection.query(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`);
+            catch (error) {
+                console.log(error);
+                return res.json({ message: 'erro ao em localizar espaço' });
             }
-            return res.json(address);
         }
-        catch (error) {
-            console.log(error);
-            return res.json({ message: 'erro ao inserir estoque' });
+        else {
+            return res.json({ message: 'sem endereço' });
         }
     }
     catch (error) {

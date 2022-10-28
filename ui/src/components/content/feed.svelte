@@ -22,15 +22,17 @@
     let showRoundedApont = false;
     resultRefugo = getRefugodata();
     let getSpace;
-    var showAddress = false
-    getIMAGEM()
+    var showAddress = false;
 
     async function getRefugodata() {
         const res = await fetch(motivoUrl);
         dados = await res.json();
-        localStorage.setItem("dados", dados)
-        //console.log('linha 29: ', localStorage.dados);
-        if(localStorage.dados === '' || localStorage.dados === undefined || localStorage.dados === null){
+        localStorage.setItem("dados", dados);
+        if (
+            localStorage.dados === "" ||
+            localStorage.dados === undefined ||
+            localStorage.dados === null
+        ) {
             console.log("linha 31 vazio");
         }
     }
@@ -87,21 +89,24 @@
             showErrorMessage = true;
         }
         if (res.message === "valores apontados com sucesso") {
-            window.location.href = `/#/rip`;
+            getIMAGEM();
         }
         if (res.message === "valor apontado maior que a quantidade liberada") {
             showError = true;
         }
     };
 
-
     async function getIMAGEM() {
         const res = await fetch(urlS);
         getSpace = await res.json();
-        if(getSpace.length > 0){
-            showAddress = true
+        if (
+            getSpace.message === "sem endereço" ||
+            getSpace.address === undefined
+        ) {
+            window.location.href = `/#/rip`;
+        } else if (getSpace.String === "endereço com sucesso") {
+            showAddress = true;
         }
-        console.log("endereço", getSpace);
     }
 
     async function doCallPost() {
@@ -151,6 +156,11 @@
         showErrorMessage = false;
         showAddress = false;
     }
+
+    function closeRedirect() {
+        showAddress = false;
+        window.location.href = `/#/rip`;
+    }
 </script>
 
 {#await resultado}
@@ -169,6 +179,8 @@
                     <div class="write" id="feed">
                         <p>BOAS</p>
                         <input
+                            tabindex="1"
+                            autofocus
                             class="input"
                             id="valorFeed"
                             bind:value={valorFeed}
@@ -178,6 +190,8 @@
                     <div class="write" id="ruins" name="ruins">
                         <p>RUINS</p>
                         <input
+                            tabindex="2"
+                            autofocus
                             bind:value={badFeed}
                             on:input={blockForbiddenChars}
                             class="input"
@@ -188,6 +202,7 @@
                     <div class="write" id="retrabalhar">
                         <p>RETRABALHAR</p>
                         <input
+                            autofocus
                             bind:value={reworkFeed}
                             on:input={blockForbiddenChars}
                             class="input"
@@ -199,6 +214,7 @@
                     <div class="write" id="faltante">
                         <p>FALTANTE</p>
                         <input
+                            autofocus
                             bind:value={missingFeed}
                             on:input={blockForbiddenChars}
                             class="input"
@@ -209,7 +225,13 @@
                     </div>
                 </form>
 
-                <a id="apontar" on:click={doCallPost} type="submit">
+                <a
+                    tabindex="3"
+                    id="apontar"
+                    on:keypress={doCallPost}
+                    on:click={doCallPost}
+                    type="submit"
+                >
                     <span />
                     <span />
                     <span />
@@ -234,14 +256,15 @@
                             </select>
                             <p>Supervisor</p>
                             <input
+                                autofocus
                                 bind:value={supervisor}
                                 class="supervisor"
                                 type="text"
                                 name="supervisor"
                                 id="supervisor"
                             />
-                            <button on:click={doPost}>Confirmar</button>
-                            <button on:click={close}>Fechar</button>
+                            <button on:keypress={doPost} on:click={doPost}>Confirmar</button>
+                            <button on:keypress={close} on:click={close}>Fechar</button>
                         </div>
                     </div>
                 {/if}
@@ -258,13 +281,14 @@
                         </div>
                         <p>Supervisor</p>
                         <input
+                            autofocus
                             bind:value={supervisor}
                             class="supervisor"
                             type="text"
                             name="supervisor"
                             id="supervisor"
                         />
-                        <button on:click={doPost}>Confirmar</button>
+                        <button on:keypress={doPost} on:click={doPost}>Confirmar</button>
                     </div>
                 </div>
             {/if}
@@ -277,13 +301,15 @@
                         </div>
                         <p>Supervisor</p>
                         <input
+                            autofocus
                             bind:value={supervisor}
                             class="supervisor"
                             type="text"
                             name="supervisor"
                             id="supervisor"
                         />
-                        <button on:click={doPost}>Confirmar</button>
+                        <button on:keypress={doPost} on:click={doPost}>Confirmar</button
+                        >
                     </div>
                 </div>
             {/if}
@@ -296,14 +322,15 @@
                         </div>
                         <p>Supervisor</p>
                         <input
+                            autofocus
                             bind:value={supervisor}
                             class="supervisor"
                             type="text"
                             name="supervisor"
                             id="supervisor"
                         />
-                        <button on:click={doPost}>Confirmar</button>
-                        <button on:click={close}>Fechar</button>
+                        <button on:keypress={doPost} on:keypress={doPost}>Confirmar</button>
+                        <button on:keypress={close} on:keypress={close}>Fechar</button>
                     </div>
                 </div>
             {/if}
@@ -314,7 +341,7 @@
                         <div class="closed">
                             <h2>Valor Enviado maior que o possivel</h2>
                         </div>
-                        <button on:click={close}>fechar</button>
+                        <button on:keypress={close} on:click={close}>fechar</button>
                     </div>
                 </div>
             {/if}
@@ -325,7 +352,7 @@
                         <div class="closed">
                             <h2>Erro ao enviar apontamento</h2>
                         </div>
-                        <button on:click={close}>fechar</button>
+                        <button on:keypress={close} on:click={close}>fechar</button>
                     </div>
                 </div>
             {/if}
@@ -336,7 +363,7 @@
                         <div class="closed">
                             <h2>Apontamento Zerado</h2>
                         </div>
-                        <button on:click={close}>fechar</button>
+                        <button on:keypress={close} on:click={close}>fechar</button>
                     </div>
                 </div>
             {/if}
@@ -347,7 +374,7 @@
                         <div class="closed">
                             <h2>Supervisor não encontrado</h2>
                         </div>
-                        <button on:click={close}>fechar</button>
+                        <button on:keypress={close} on:click={close}>fechar</button>
                     </div>
                 </div>
             {/if}
@@ -356,9 +383,9 @@
                 <div class="fundo">
                     <div class="header">
                         <div class="closed">
-                            <h2>{getSpace}</h2>
+                            <h2>{getSpace.address}</h2>
                         </div>
-                        <button on:click={close}>fechar</button>
+                        <button on:keypress={closeRedirect} on:click={closeRedirect}>fechar</button>
                     </div>
                 </div>
             {/if}

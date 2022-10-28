@@ -130,18 +130,20 @@
     function close() {
         showSetup = false;
         showSuper = false;
+        showError = false
+        showErrorEmpty = false
     }
 </script>
 
 <main>
     <div class="bread" />
     <div class="divBtn">
-        <button on:click={createCol} class="sideButton" type="submit"
+        <button on:click={createCol} on:keypress={createCol} tabindex="21" class="sideButton" type="submit"
             >Adicionar coluna</button
         >
-        <button on:click={check} class="sideButton" type="submit"
+        <button on:click={check} on:keypress={check} tabindex="22" class="sideButton" type="submit"
             >Enviar dados</button
-        >
+        >   
     </div>
     <div class="title">{Subtitle}</div>
     {#if ripTable.length !== 0}
@@ -167,7 +169,7 @@
                             {/each}
                         </tr>
                     </thead>
-                    <tbody id="corpoTabela">
+                    <tbody  id="corpoTabela">
                         {#each ripTable as row, i}
                             <TableRipRow
                                 bind:setup
@@ -190,25 +192,30 @@
     {#if showSuper === true}
         <h3>Supervisor</h3>
         <input
+        autofocus
+        tabindex="18"
             bind:value={supervisor}
             onkeyup="this.value = this.value.toUpperCase()"
             type="text"
             name="supervisor"
             id="supervisor"
         />
-        <button on:click={doPostSuper}>Confirma</button>
-        <button on:click={close}>close</button>
+        <button tabindex="19" on:click={doPostSuper} on:keypress={doPostSuper}>Confirma</button>
+        <button tabindex="20" on:click={close} on:keypress={close}>close</button>
     {/if}
     {#if showErrorEmpty === true}
         <h3>rip vazia, envio invalido</h3>
+        <button on:click={close} on:keypress={close}>Confirma</button>
     {/if}
     {#if showError === true}
         <h3>Algo deu errado</h3>
+        <button on:click={close} on:keypress={close}>Confirma</button>
+
     {/if}
 
     {#if showSetup === true}
         <h3>Preencha todos os campos</h3>
-        <button on:click={close}>Confirma</button>
+        <button on:click={close} on:keypress={close}>Confirma</button>
     {/if}
 </main>
 

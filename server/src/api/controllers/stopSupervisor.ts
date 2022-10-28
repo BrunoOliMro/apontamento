@@ -4,14 +4,14 @@ import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";
 
 export const stopSupervisor:RequestHandler = async (req, res) => {
-    let supervisor = String(sanitize(req.body['supervisor'].trim)) || null
-    let numeroOdf = String(sanitize(req.cookies['NUMERO_ODF'].trim))|| null
-    let NUMERO_OPERACAO = String(sanitize(req.cookies['NUMERO_OPERACAO'].trim))|| null
-    let CODIGO_MAQUINA = String(sanitize(req.cookies['CODIGO_MAQUINA'].trim))|| null
-    let qtdLibMax = String(sanitize(req.cookies['qtdLibMax'].trim))|| null
-    let funcionario = String(sanitize(req.cookies['FUNCIONARIO'].trim))|| null
-    let revisao = Number(sanitize(req.cookies['REVISAO'].trim)) || 0
-    let codigoPeca = String(sanitize(req.cookies['CODIGO_PECA'].trim))|| null
+    let supervisor = String(sanitize(req.body['supervisor'])) || null
+    let numeroOdf = String(sanitize(req.cookies['NUMERO_ODF']))|| null
+    let NUMERO_OPERACAO = String(sanitize(req.cookies['NUMERO_OPERACAO']))|| null
+    let CODIGO_MAQUINA = String(sanitize(req.cookies['CODIGO_MAQUINA']))|| null
+    let qtdLibMax = String(sanitize(req.cookies['qtdLibMax']))|| null
+    let funcionario = String(sanitize(req.cookies['FUNCIONARIO']))|| null
+    let revisao = Number(sanitize(req.cookies['REVISAO'])) || 0
+    let codigoPeca = String(sanitize(req.cookies['CODIGO_PECA']))|| null
     const connection = await mssql.connect(sqlConfig);
 
     try {

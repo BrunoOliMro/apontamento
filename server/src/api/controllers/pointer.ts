@@ -8,7 +8,7 @@ export const pointerPost: RequestHandler = async (req, res) => {
 
     //Verifica se o codigo de barras veio vazio
     if (barcode === '' || barcode === undefined || barcode === null) {
-        return res.redirect("/#/codigobarras?error=invalidBarcode")
+        return res.json({ message : 'codigo de barras vazio'})
     }
 
     //console.log("barcode: ", barcode);
@@ -39,10 +39,10 @@ export const pointerPost: RequestHandler = async (req, res) => {
     //Map pelo numero da operação e diz o indice de uma odf antes e uma depois
     let codigoOperArray = queryGrupoOdf.map(e => e.NUMERO_OPERACAO)
     let arrayAfterMap = codigoOperArray.map(e => "00" + e).toString().replaceAll(' ', "0").split(",")
-    let indiceDoArrayDeOdfs: number = arrayAfterMap.findIndex((e: string) => e === dados.numOper)
+    let indiceDoArrayDeOdfs: number = arrayAfterMap.findIndex((callback: string) => callback === dados.numOper)
 
     //Caso indice do array seja o primeiro
-    if (indiceDoArrayDeOdfs < 0) {
+    if (indiceDoArrayDeOdfs <= 0) {
         indiceDoArrayDeOdfs = 0
 
     }
@@ -50,6 +50,7 @@ export const pointerPost: RequestHandler = async (req, res) => {
     let objOdfSelecProximo = queryGrupoOdf[indiceDoArrayDeOdfs + 1]
     let objOdfSelecAnterior = queryGrupoOdf[indiceDoArrayDeOdfs - 1]
     //console.log("linha 57 /pointer/", objOdfSelecAnterior);
+
     if (objOdfSelecAnterior === undefined) {
         console.log("objOdfSelecAnterior linha 54 /pointer/ ", objOdfSelecAnterior);
     }
@@ -89,13 +90,13 @@ export const pointerPost: RequestHandler = async (req, res) => {
     }
 
     if (qtdLib - qntdeJaApontada === 0) {
-        return res.status(400).json({ message: "nolimitonlastodf" })
+        return res.status(400).json({ message: "não há limite na odf" })
     }
     qtdLibMax = qtdLib - qntdeJaApontada
 
-    if (qtdLibMax <= 0 && apontLib === "N") {
-        return res.status(400).redirect("/#/codigobarras?error=anotherodfexpected")
-    }
+    // if (qtdLibMax <= 0 && apontLib === "N") {
+    //     return res.status(400).redirect("/#/codigobarras?error=anotherodfexpected")
+    // }
     // Caso seja a primeira Odf, objOdfSelecAnterior vai vir como undefined
     if (objOdfSelecAnterior === undefined) {
         await connection.query(`

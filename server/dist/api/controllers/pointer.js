@@ -10,7 +10,7 @@ const sanitize_1 = require("../utils/sanitize");
 const pointerPost = async (req, res) => {
     let barcode = String((0, sanitize_1.sanitize)(req.body["codigoBarras"])) || null;
     if (barcode === '' || barcode === undefined || barcode === null) {
-        return res.redirect("/#/codigobarras?error=invalidBarcode");
+        return res.json({ message: 'codigo de barras vazio' });
     }
     const dados = {
         numOdf: String(barcode.slice(10)),
@@ -31,8 +31,8 @@ const pointerPost = async (req, res) => {
     }
     let codigoOperArray = queryGrupoOdf.map(e => e.NUMERO_OPERACAO);
     let arrayAfterMap = codigoOperArray.map(e => "00" + e).toString().replaceAll(' ', "0").split(",");
-    let indiceDoArrayDeOdfs = arrayAfterMap.findIndex((e) => e === dados.numOper);
-    if (indiceDoArrayDeOdfs < 0) {
+    let indiceDoArrayDeOdfs = arrayAfterMap.findIndex((callback) => callback === dados.numOper);
+    if (indiceDoArrayDeOdfs <= 0) {
         indiceDoArrayDeOdfs = 0;
     }
     let objOdfSelecionada = queryGrupoOdf[indiceDoArrayDeOdfs];
@@ -69,12 +69,9 @@ const pointerPost = async (req, res) => {
         apontLib = objOdfSelecionada["APONTAMENTO_LIBERADO"];
     }
     if (qtdLib - qntdeJaApontada === 0) {
-        return res.status(400).json({ message: "nolimitonlastodf" });
+        return res.status(400).json({ message: "não há limite na odf" });
     }
     qtdLibMax = qtdLib - qntdeJaApontada;
-    if (qtdLibMax <= 0 && apontLib === "N") {
-        return res.status(400).redirect("/#/codigobarras?error=anotherodfexpected");
-    }
     if (objOdfSelecAnterior === undefined) {
         await connection.query(`
         UPDATE 

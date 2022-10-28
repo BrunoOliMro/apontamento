@@ -10,10 +10,11 @@ const sanitize_1 = require("../utils/sanitize");
 const returnedValue = async (req, res) => {
     console.log(req.body);
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let choosenOption = String((0, sanitize_1.sanitize)(req.body["quantity"].trim)) || null;
-    let supervisor = String((0, sanitize_1.sanitize)(req.body["supervisor"].trim)) || null;
-    let someC = String((0, sanitize_1.sanitize)(req.body['returnValueStorage'].trim)) || null;
-    let funcionario = String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'].trim)) || null;
+    let choosenOption = Number((0, sanitize_1.sanitize)(req.body["quantity"])) || 0;
+    let supervisor = String((0, sanitize_1.sanitize)(req.body["supervisor"])) || null;
+    let someC = String((0, sanitize_1.sanitize)(req.body['returnValueStorage'])) || null;
+    let funcionario = String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])) || null;
+    let barcode = String((0, sanitize_1.sanitize)(req.body["codigoBarrasReturn"])) || null;
     let boas;
     let ruins;
     let codigoPeca;
@@ -21,15 +22,17 @@ const returnedValue = async (req, res) => {
     let qtdLibMax;
     let faltante;
     let retrabalhada;
-    let barcode = String((0, sanitize_1.sanitize)(req.body["codigoBarrasReturn"].trim)) || null;
-    if (barcode === undefined) {
-        return res.redirect("/#/codigobarras?error=invalidBarcode");
+    if (barcode === null && choosenOption === 0 && supervisor === "undefined") {
+        return res.json({ message: "odf não encontrada" });
     }
-    if (barcode == '') {
-        return res.redirect("/#/codigobarras?error=invalidBarcode");
+    if (barcode === undefined || barcode === null || barcode === 'undefined' || barcode === '') {
+        return res.json({ message: "codigo de barras vazio" });
     }
-    if (supervisor === '') {
+    if (supervisor === "undefined" || supervisor === undefined || supervisor === null || supervisor === '') {
         return res.json({ message: "supervisor esta vazio" });
+    }
+    if (choosenOption === undefined || choosenOption === null || choosenOption === 0) {
+        return res.json({ message: "quantidade esta vazio" });
     }
     if (someC === 'BOAS') {
         boas = choosenOption;
@@ -43,6 +46,7 @@ const returnedValue = async (req, res) => {
     if (ruins === undefined) {
         ruins = 0;
     }
+    console.log("linha 53 ner");
     const dados = {
         numOdf: String(barcode.slice(10)),
         numOper: String(barcode.slice(0, 5)),
@@ -88,17 +92,17 @@ const returnedValue = async (req, res) => {
             try {
                 const insertHisCodReturned = await connection.query(`
                 INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA) 
-                VALUES (GETDATE(), '${funcionario}', '${dados.numOdf}', '${codigoPeca}', ${revisao}, ${dados.numOper}, ${dados.numOper}, 'D', '${dados.codMaq}', ${qtdLibMax} , '0', '0', '${funcionario}', '0', '7', '7', 'Valor Estorn.', '0', '0', '1', ${faltante},${retrabalhada})`)
-                    .then(record => record.recordset);
-                await connection.query(`
-                UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA - '${boas}', QTD_REFUGO = QTD_REFUGO - ${ruins} WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'`)
-                    .then(record => record.recordset);
-                if (!insertHisCodReturned) {
-                    return res.json({ message: 'erro ao fazer estorno feito' });
-                }
-                else {
-                    return res.status(200).json({ message: 'estorno feito' });
-                }
+                VALUES (GETDATE(), '${funcionario}', '${dados.numOdf}', '${codigoPeca}', ${revisao}, ${dados.numOper}, ${dados.numOper}, 'D', '${dados.codMaq}', ${qtdLibMax} , '0', '0', '${funcionario}', '0', '7', '7', 'Valor Estorn.', '0', '0', '1', ${faltante},${retrabalhada})`);
+                console.log("boas: ", boas);
+                console.log("ruins: ", ruins);
+                console.log('object', dados.numOdf);
+                console.log('object', dados.numOper);
+                console.log('object', dados.codMaq);
+                const s = await connection.query(`
+                UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA - '${boas}', QTD_REFUGO = QTD_REFUGO - ${ruins} WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'`);
+                console.log("linha 114", insertHisCodReturned);
+                console.log("linha 114", s);
+                return res.status(200).json({ message: 'estorno feito' });
             }
             catch (error) {
                 console.log(error);
@@ -106,11 +110,11 @@ const returnedValue = async (req, res) => {
             finally {
                 await connection.close();
             }
-            return res.status(400).redirect("/#/codigobarras?error=returnederror");
+            return res.json({ message: 'erro de estorno' });
         }
     }
     else {
-        return res.redirect("/#/codigobarras?error=returnederror");
+        return res.json({ message: 'erro de estorno' });
     }
 };
 exports.returnedValue = returnedValue;

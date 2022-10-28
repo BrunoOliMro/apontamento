@@ -72,8 +72,8 @@
     <td id={"LIE-" + indice}>{dados.LIE === null ? "S/I" : dados.LIE}</td>
     <td id={"LSE-" + indice}>{dados.LSE === null ? "S/I" : dados.LSE}</td>
     <td>{dados.INSTRUMENTO === null ? "S/I" : dados.INSTRUMENTO}</td>
-    <td
-        ><input
+    <td>
+        <input 
             on:input={target}
             on:input={checkColor}
             on:input={blockForbiddenChars}
@@ -82,8 +82,7 @@
             id={"SETUP-" + indice}
             name={"SETUP-" + indice}
             type="text"
-        /></td
-    >
+        /></td>
     <!-- <td> <input
             on:input={checkColor}
             on:input={target}

@@ -3,7 +3,7 @@ import mssql from "mssql";
 import { sqlConfig } from "../../global.config";
 import { sanitize } from "../utils/sanitize";
 
-export const supervisor:RequestHandler = async (req, res) => {
+export const supervisor: RequestHandler = async (req, res) => {
     let supervisor: string = String(sanitize(req.body['supervisor']))
     const connection = await mssql.connect(sqlConfig);
 

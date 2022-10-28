@@ -13,15 +13,23 @@
   let showCorr = false;
   let returnedValueApi = `/api/v1/returnedValue`;
   let returnValueStorage;
+  let superSuperMaqPar;
   let supervisor;
   let quantity;
   let superParada = false;
   let showError = false;
+  let showBadgeNotFound = false;
+  let bagdeEmpty = false;
+  let showBadge = true;
+  let showBarcode = false;
+  let showSupervisor = false;
+  let quantityModal = false;
+  let errorReturnValue = false;
 
   let barcodeMsg = "";
-  if (window.location.href.includes("?")) {
-    barcodeMsg = window.location.href.split("?")[1].split("=")[1];
-  }
+  // if (window.location.href.includes("?")) {
+  //   barcodeMsg = window.location.href.split("?")[1].split("=")[1];
+  // }
 
   let badgeMsg = "";
   if (window.location.href.includes("?")) {
@@ -39,7 +47,7 @@
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        supervisor: !supervisor ? "" : supervisor,
+        superSuperMaqPar: !superSuperMaqPar ? "" : superSuperMaqPar,
       }),
     }).then((res) => res.json());
     if (res.success === "maquina") {
@@ -72,11 +80,14 @@
         codigoBarras: !codigoBarras ? "" : codigoBarras,
       }),
     }).then((res) => res.json());
-    if(res.message === 'odf não encontrada'){
-      showError = true
+    if (res.message === "codigo de barras vazio") {
+      barcodeMsg = "codigo de barras vazio";
     }
-    if (res.message === "nolimitonlastodf") {
-      showError = true;
+    if (res.message === "odf não encontrada") {
+      barcodeMsg = "odf não encontrada";
+    }
+    if (res.message === "não há limite na odf") {
+      barcodeMsg = "não há limite na odf";
     }
     if (res.message === "paradademaquina") {
       superParada = true;
@@ -90,13 +101,23 @@
   const checkBagde = async () => {
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
-    await fetch(urlBagde, {
+    const res = await fetch(urlBagde, {
       method: "POST",
       body: JSON.stringify({
         cracha,
       }),
       headers,
-    });
+    }).then((res) => res.json());
+    if (res.message === "cracha não encontrado") {
+      showBadgeNotFound = true;
+    }
+    if (res.message === "codigo de matricula vazia") {
+      bagdeEmpty = true;
+    }
+    if (res.message === "cracha encontrado") {
+      showBarcode = true;
+      showBadge = false;
+    }
   };
 
   function closePop() {
@@ -122,16 +143,49 @@
         codigoBarrasReturn: !codigoBarrasReturn ? "" : codigoBarrasReturn,
       }),
     }).then((res) => res.json());
-    if ((res.message = "estorno feito")) {
+    console.log("linha 143", res);
+    if (res.message === "supervisor esta vazio") {
+      showSupervisor = true;
+      showmodal = false;
+      //location.reload();
+    }
+    if (res.message === "estorno feito") {
       showmodal = false;
       showCorr = true;
       window.location.href = "/#/codigobarras";
-      location.reload();
+      //location.reload();
+    }
+    if (res.message === "erro de estorno") {
+      errorReturnValue = true;
+      showmodal = false;
+      //location.reload();
+    }
+    if (res.message === "quantidade esta vazio") {
+      quantityModal = true;
+      showmodal = false;
+      //location.reload();
+    }
+    if (res.message === "codigo de barras vazio") {
+      barcodeMsg = "codigo de barras vazio";
+      showmodal = false;
+    }
+    if (res.message === "odf não encontrada") {
+      barcodeMsg = "odf não encontrada";
+      showmodal = false;
+    }
+    if (res.message === "odf não encontrada") {
+      barcodeMsg = "odf não encontrada";
+      showmodal = false;
     }
   }
 
   function closePopCor() {
+    barcodeMsg = "";
+    errorReturnValue = false;
+    showSupervisor = false;
+    quantityModal = false;
     showCorr = false;
+    showmodal = false;
     location.reload();
   }
 </script>
@@ -140,9 +194,13 @@
   <div>
     <div>
       <Title />
-      {#if barcodeMsg === "ok"}
+      {#if showBarcode === true}
         <div class="return">
-          <button on:click={returnValue} class="sideButton">
+          <button
+            on:keypress={returnValue}
+            on:click={returnValue}
+            class="sideButton"
+          >
             Estornar Valores
           </button>
         </div>
@@ -154,14 +212,18 @@
         <div class="invalidBarcode" id="s">
           <h5>Maquina Parada selecione um supervisor</h5>
           <input
+            autofocus
+            tabindex="12"
             id="supervisor"
             name="supervisor"
             type="text"
             on:input={blockForbiddenChars}
             onkeyup="this.value = this.value.toUpperCase()"
-            bind:value={supervisor}
+            bind:value={superSuperMaqPar}
           />
-          <p on:click={doPostSuper}>Confirmar</p>
+          <p tabindex="13" on:keypress={doPostSuper} on:click={doPostSuper}>
+            Confirmar
+          </p>
         </div>
       </div>
     {/if}
@@ -170,68 +232,120 @@
       <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>Estorno Feito</h5>
-          <p on:click={closePopCor}>Fechar</p>
+          <p on:keypress={closePopCor} on:click={closePopCor}>Fechar</p>
         </div>
       </div>
     {/if}
 
-    {#if barcodeMsg === "anotherodfexpected"}
+    {#if errorReturnValue === true}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
-          <h5>Outra Odf Esperada</h5>
-          <p on:click={closePop}>Fechar</p>
+          <h5>Erro Ao Fazer Estorno</h5>
+          <p on:keypress={closePopCor} on:click={closePopCor}>Fechar</p>
         </div>
       </div>
     {/if}
 
-    {#if barcodeMsg === "odflimitquantity"}
+    <!-- {#if barcodeMsg === "anotherodfexpected"}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
-          <h5>ODF JA APONTOU TODA QUANTIDADE</h5>
-          <p on:click={closePop}>Fechar</p>
+          <h5>Outra ODF Esperada</h5>
+          <p on:keypress={closePop} on:click={closePop}>Fechar</p>
         </div>
       </div>
-    {/if}
+    {/if} -->
 
-    {#if showError === true}
+    {#if barcodeMsg === "não há limite na odf"}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
-          <h5>Erro na ODF</h5>
-          <p on:click={closePop}>Fechar</p>
+          <h5>ODF Não Pode Ser Apontada, Aponte Outra</h5>
+          <p on:keypress={closePop} on:click={closePop}>Fechar</p>
         </div>
       </div>
     {/if}
 
-    {#if barcodeMsg === "invalidBarcode"}
+    {#if barcodeMsg === "odf não encontrada"}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
-          <h5>Codigo de barras Invalido</h5>
-          <p on:click={closePop}>Fechar</p>
+          <h5>ODF Não Encontrada</h5>
+          <p autofocus tabindex="23" on:keypress={closePop} on:click={closePop}>
+            Fechar
+          </p>
         </div>
       </div>
     {/if}
 
-    {#if badgeMsg === "invalidBadge"}
+    {#if barcodeMsg === "codigo de barras vazio"}
+      <div class="fundo">
+        <div class="invalidBarcode" id="s">
+          <h5>Codigo De Barras Vazio</h5>
+          <p autofocus tabindex="24" on:keypress={closePop} on:click={closePop}>
+            Fechar
+          </p>
+        </div>
+      </div>
+    {/if}
+
+    {#if showBadgeNotFound === true}
       <!-- {#if showInvalidBagde === true} -->
       <div class="fundo">
         <div class="invalidBadge" id="s">
-          <h5>Crachá Invalido</h5>
-          <p on:click={closePop}>Fechar</p>
+          <h5>Crachá Não Encontrado</h5>
+          <p autofocus tabindex="25" on:keypress={closePop} on:click={closePop}>
+            Fechar
+          </p>
         </div>
       </div>
     {/if}
 
-    {#if barcodeMsg === "ok" || barcodeMsg === "invalidBarcode"}
+    {#if bagdeEmpty === true}
+      <!-- {#if showInvalidBagde === true} -->
+      <div class="fundo">
+        <div class="invalidBadge" id="s">
+          <h5>Crachá Vazio</h5>
+          <p autofocus tabindex="26" on:keypress={closePop} on:click={closePop}>
+            Fechar
+          </p>
+        </div>
+      </div>
+    {/if}
+
+    {#if quantityModal === true}
+      <!-- {#if showInvalidBagde === true} -->
+      <div class="fundo">
+        <div class="invalidBadge" id="s">
+          <h5>Quantidade Indefinida</h5>
+          <p autofocus tabindex="26" on:keypress={closePop} on:click={closePop}>
+            Fechar
+          </p>
+        </div>
+      </div>
+    {/if}
+
+    {#if showSupervisor === true}
+      <!-- {#if showInvalidBagde === true} -->
+      <div class="fundo">
+        <div class="invalidBadge" id="s">
+          <h5>Campo Supervisor Está Vazio</h5>
+          <p autofocus tabindex="26" on:keypress={closePop} on:click={closePop}>
+            Fechar
+          </p>
+        </div>
+      </div>
+    {/if}
+
+    {#if showBarcode === true}
       <form
         action="/api/v1/apontamento"
         method="POST"
         on:submit|preventDefault={doPost}
       >
         <div class="form">
-          <div class="bar" id="title">Código de barras</div>
-          <!-- on:input={setValues} -->
+          <div class="bar" id="title">Código De Barras Da ODF</div>
           <label class="input">
+            <!-- autocomplete="off" -->
             <input
+              autofocus
               on:input={blockForbiddenChars}
               onkeyup="this.value = this.value.toUpperCase()"
               bind:value={codigoBarras}
@@ -244,16 +358,16 @@
       </form>
     {/if}
 
-    {#if badgeMsg === "" || badgeMsg === "invalidBadge"}
-      <form
-        action="/api/v1/apontamentoCracha"
-        method="POST"
-        on:submit={checkBagde}
-      >
+    {#if showBadge === true}
+      <form on:submit|preventDefault={checkBagde}>
+        <!-- on:keypress={checkBagde} -->
         <div id="popUpCracha">
           <div id="title">Colaborador</div>
+          <!-- autocomplete="off" -->
           <input
+            autofocus
             on:input={blockForbiddenChars}
+            bind:value={cracha}
             onkeyup="this.value = this.value.toUpperCase()"
             name="MATRIC"
             id="MATRIC"
@@ -264,57 +378,71 @@
     {/if}
   </div>
   {#if showmodal === true}
-    <form action="/api/v1/returnedValue" method="POST" on:submit={doReturn}>
-      <div class="fundo">
-        <div class="header">
-          <div class="close">
-            <h4>Codigo do Supervisor</h4>
-          </div>
-          <input
-            bind:value={supervisor}
-            class="returnInput"
-            on:input={blockForbiddenChars}
-            onkeyup="this.value = this.value.toUpperCase()"
-            type="text"
-            name="supervisor"
-            id="supervisor"
-          />
-          <h4>Qual irá retornar</h4>
-          <div class="options">
-            <select bind:value={returnValueStorage} name="id" id="id">
-              <option>BOAS</option>
-              <option>RUINS</option>
-              <option>PARCIAL</option>
-              <option>FALTANTE</option>
-            </select>
-          </div>
-          <h4>Insira a quantidade que deseja estornar</h4>
-          <input
-            on:input={blockForbiddenChars}
-            class="returnInput"
-            onkeyup="this.value = this.value.toUpperCase()"
-            bind:value={quantity}
-            type="text"
-            name="returnValueStorage"
-          />
+    <div class="fundo">
+      <div class="header">
+        <div class="close">
+          <h4>Codigo do Supervisor</h4>
+        </div>
+        <!-- autocomplete="off" -->
+        <input
+          autofocus
+          tabindex="14"
+          bind:value={supervisor}
+          class="returnInput"
+          on:input={blockForbiddenChars}
+          onkeyup="this.value = this.value.toUpperCase()"
+          type="text"
+          name="supervisor"
+          id="supervisor"
+        />
+        <h4>Qual irá retornar</h4>
+        <div class="options">
+          <select
+            tabindex="15"
+            bind:value={returnValueStorage}
+            name="id"
+            id="id"
+          >
+            <option>BOAS</option>
+            <option>RUINS</option>
+            <!-- <option>PARCIAL</option>
+              <option>FALTANTE</option> -->
+          </select>
+        </div>
+        <h4>Insira a quantidade que deseja estornar</h4>
+        <input
+          tabindex="15"
+          on:input={blockForbiddenChars}
+          class="returnInput"
+          onkeyup="this.value = this.value.toUpperCase()"
+          bind:value={quantity}
+          type="text"
+          name="returnValueStorage"
+        />
 
-          <h4>Codigo de Barras da Odf</h4>
-          <input
-            on:input={blockForbiddenChars}
-            class="returnInput"
-            onkeyup="this.value = this.value.toUpperCase()"
-            bind:value={codigoBarrasReturn}
-            id="codigoBarras"
-            name="codigoBarras"
-            type="text"
-          />
+        <h4>Codigo de Barras da ODF</h4>
+        <input
+          tabindex="16"
+          on:input={blockForbiddenChars}
+          class="returnInput"
+          onkeyup="this.value = this.value.toUpperCase()"
+          bind:value={codigoBarrasReturn}
+          id="codigoBarras"
+          name="codigoBarras"
+          type="text"
+        />
 
-          <div>
-            <p on:click={doReturn} type="submit">Confirmar</p>
-          </div>
+        <div>
+          <p
+            tabindex="17"
+            on:keypress|preventDefault={doReturn}
+            on:click|preventDefault={doReturn}
+          >
+            Confirmar
+          </p>
         </div>
       </div>
-    </form>
+    </div>
   {/if}
 </main>
 
