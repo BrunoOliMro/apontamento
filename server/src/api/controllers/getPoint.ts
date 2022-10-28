@@ -1,4 +1,4 @@
-import e, { RequestHandler } from "express";
+import { RequestHandler } from "express";
 import mssql from "mssql";
 import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";

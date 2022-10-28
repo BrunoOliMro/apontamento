@@ -6,8 +6,9 @@ import { sanitize } from "../utils/sanitize";
 export const pointBagde: RequestHandler = async (req, res) => {
     let matricula = String(sanitize(req.body["cracha"])) || null
     let start = new Date() || 0;
+
     if (matricula === null) {
-        return res.json({message : "codigo de matricula vazia"})
+        return res.json({ message: "codigo de matricula vazia" })
     }
     const connection = await mssql.connect(sqlConfig);
     try {
@@ -21,14 +22,13 @@ export const pointBagde: RequestHandler = async (req, res) => {
             res.cookie("MATRIC", selecionarMatricula[0].MATRIC)
             res.cookie("FUNCIONARIO", selecionarMatricula[0].FUNCIONARIO)
             res.cookie("CRACHA", selecionarMatricula[0].CRACHA)
-            return res.json({ message : 'cracha encontrado'})
-        }
-        if (selecionarMatricula.length <= 0) {
-            return res.json({ message: 'cracha não encontrado'})
+            return res.json({ message: 'cracha encontrado' })
+        } else {
+            return res.json({ message: 'cracha não encontrado' })
         }
     } catch (error) {
         console.log(error)
-        return res.json({ message : 'erro ao tentar localizar cracha'})
+        return res.json({ message: 'erro ao tentar localizar cracha' })
     } finally {
         //await connection.close()
     }

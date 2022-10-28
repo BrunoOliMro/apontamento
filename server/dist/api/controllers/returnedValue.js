@@ -8,7 +8,6 @@ const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
 const sanitize_1 = require("../utils/sanitize");
 const returnedValue = async (req, res) => {
-    console.log(req.body);
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let choosenOption = Number((0, sanitize_1.sanitize)(req.body["quantity"])) || 0;
     let supervisor = String((0, sanitize_1.sanitize)(req.body["supervisor"])) || null;
@@ -124,10 +123,14 @@ const returnedValue = async (req, res) => {
             }
             catch (error) {
                 console.log(error);
+                return res.json({ message: 'erro de estorno' });
             }
             finally {
                 await connection.close();
             }
+            return res.json({ message: 'erro de estorno' });
+        }
+        else {
             return res.json({ message: 'erro de estorno' });
         }
     }

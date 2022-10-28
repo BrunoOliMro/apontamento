@@ -24,10 +24,10 @@ export const ripPost: RequestHandler = async (req, res) => {
     let descricao: string[] = (req.cookies['descricao']) || null
     var objectSanitized: { [k: string]: any; } = {}
 
-    let start = Number(req.cookies["starterBarcode"]) || 0
-    let end = Number(new Date().getTime()) || 0;
-    let tempoDecorrido = Number(new Date(start).getTime()) || 0
-    let final = Number(tempoDecorrido - end) || 0 // Errp em type numeric
+    //let start = Number(req.cookies["starterBarcode"]) || 0
+    //let end = Number(new Date().getTime()) || 0;
+   // let tempoDecorrido = Number(new Date(start).getTime()) || 0
+    //let final = Number(tempoDecorrido - end) || 0 // Errp em type numeric
 
     // Encerra ao final da Rip
     const startRip = Number(req.cookies["startRip"]) || 0

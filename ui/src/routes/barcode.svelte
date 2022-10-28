@@ -28,6 +28,7 @@
   let returnValueAvailable;
   let paradaMsg = ''
   let barcodeMsg = "";
+  let breadCrumbmodal = ''
   // if (window.location.href.includes("?")) {
   //   barcodeMsg = window.location.href.split("?")[1].split("=")[1];
   // }
@@ -103,6 +104,9 @@
     }
     if (res.message === "paradademaquina") {
       superParada = true;
+    }
+    if (res.message === "paradademaquina") {
+      breadCrumbmodal = true;
     }
     if (res.message === "feito") {
       window.location.href = "/#/ferramenta";
@@ -181,10 +185,10 @@
       barcodeMsg = "codigo de barras vazio";
       showmodal = false;
     }
-    if (res.message === "odf não encontrada") {
-      barcodeMsg = "odf não encontrada";
-      showmodal = false;
-    }
+    // if (res.message === "odf não encontrada") {
+    //   barcodeMsg = "odf não encontrada";
+    //   showmodal = false;
+    // }
     if (res.message === "odf não encontrada") {
       barcodeMsg = "odf não encontrada";
       showmodal = false;
@@ -213,6 +217,16 @@
 </script>
 
 <main>
+  <!-- {#if }
+    
+  {/if} -->
+  <nav class="breadcrumb" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="/#/codigobarras">Colaborador</a>
+      </li>
+    </ol>
+  </nav>
   <div>
     <div>
       <Title />
@@ -262,7 +276,7 @@
     {#if errorReturnValue === true}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
-          <h5>Erro Ao Fazer Estorno</h5>
+          <h5>Erro ao fazer estorno</h5>
           <p autofocus tabindex="31"  on:keypress={closePopCor} on:click={closePopCor}>Fechar</p>
         </div>
       </div>
@@ -271,7 +285,7 @@
     {#if barcodeMsg === 'não ha valor que possa ser devolvido'}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
-          <h5>Não Há limite Para Estorno</h5>
+          <h5>Não há limite para Estorno</h5>
           <p autofocus  tabindex="32"  on:keypress={closePopCor} on:click={closePopCor}>Fechar</p>
         </div>
       </div>
@@ -280,7 +294,7 @@
     {#if paradaMsg === 'supervisor não encontrado'}
     <div class="fundo">
       <div class="invalidBarcode" id="s">
-        <h5>Supervisor Não Encontrado</h5>
+        <h5>Supervisor não encontrado</h5>
         <p autofocus tabindex="33"  on:keypress={closePopCor} on:click={closePopCor}>Fechar</p>
       </div>
     </div>
@@ -289,7 +303,7 @@
     {#if barcodeMsg === "valor devolvido maior que o permitido"}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
-          <h5>Limite De Estorno menor que o apontado</h5>
+          <h5>Limite de estorno menor que o apontado</h5>
           <h3>Limite Disponivel: {returnValueAvailable}</h3>
           <p autofocus tabindex="34"  on:keypress={closePopCor} on:click={closePopCor}>Fechar</p>
         </div>
@@ -299,7 +313,7 @@
     {#if barcodeMsg === "não há limite na odf"}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
-          <h5>ODF Não Pode Ser Apontada, Aponte Outra</h5>
+          <h5>ODF não pode ser apontada, aponte outra</h5>
           <p autofocus tabindex="35" on:keypress={closePop} on:click={closePop}>Fechar</p>
         </div>
       </div>
@@ -308,7 +322,7 @@
     {#if barcodeMsg === "odf não encontrada"}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
-          <h5>ODF Não Encontrada</h5>
+          <h5>ODF não encontrada</h5>
           <p autofocus tabindex="23" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
@@ -319,7 +333,7 @@
     {#if barcodeMsg === "codigo de barras vazio"}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
-          <h5>Codigo De Barras Vazio</h5>
+          <h5>Codigo de barras vazio</h5>
           <p autofocus tabindex="24" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
@@ -331,7 +345,7 @@
       <!-- {#if showInvalidBagde === true} -->
       <div class="fundo">
         <div class="invalidBadge" id="s">
-          <h5>Crachá Não Encontrado</h5>
+          <h5>Crachá não encontrado</h5>
           <p autofocus tabindex="25" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
@@ -343,7 +357,7 @@
       <!-- {#if showInvalidBagde === true} -->
       <div class="fundo">
         <div class="invalidBadge" id="s">
-          <h5>Crachá Vazio</h5>
+          <h5>Crachá vazio</h5>
           <p autofocus tabindex="26" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
@@ -355,7 +369,7 @@
       <!-- {#if showInvalidBagde === true} -->
       <div class="fundo">
         <div class="invalidBadge" id="s">
-          <h5>Quantidade Indefinida</h5>
+          <h5>Quantidade indefinida</h5>
           <p autofocus tabindex="26" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
@@ -367,7 +381,7 @@
       <!-- {#if showInvalidBagde === true} -->
       <div class="fundo">
         <div class="invalidBadge" id="s">
-          <h5>Campo Supervisor Está Vazio</h5>
+          <h5>Campo supervisor está vazio</h5>
           <p autofocus tabindex="26" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
@@ -382,7 +396,7 @@
         on:submit|preventDefault={doPost}
       >
         <div class="form">
-          <div class="bar" id="title">Código De Barras Da ODF</div>
+          <div class="bar" id="title">Código de barras da ODF</div>
           <label class="input">
             <!-- autocomplete="off" -->
             <input
@@ -461,7 +475,7 @@
           name="returnValueStorage"
         />
 
-        <h4>Codigo de Barras da ODF</h4>
+        <h4>Codigo de barras da ODF</h4>
         <input
           tabindex="16"
           on:input={blockForbiddenChars}

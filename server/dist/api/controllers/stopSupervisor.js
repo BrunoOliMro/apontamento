@@ -28,7 +28,7 @@ const stopSupervisor = async (req, res) => {
             VALUES(GETDATE(), '${funcionario}' , '${numeroOdf}' , '${codigoPeca}' , '${revisao}' , ${NUMERO_OPERACAO} ,${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '3' , '3', 'Fin Prod.' , '0' , '0' , '1' ,'0','0')`);
             return res.status(200).json({ message: 'maquina' });
         }
-        else if (resource.length <= 0) {
+        else {
             return res.json({ message: "supervisor não encontrado" });
         }
     }

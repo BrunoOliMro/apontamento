@@ -82,11 +82,15 @@
                 supervisor: supervisor,
             }),
         }).then((res) => res.json());
+        console.log("res:", res);
         if (res.message === "supervisor não encontrado") {
             showSuperNotFound = true;
         }
         if (res.message === "erro ao enviar o apontamento") {
             showErrorMessage = true;
+        }
+        if (res.message === "'valor apontado excede o valor do sistema'") {
+            showError = true;
         }
         if (res.message === "valores apontados com sucesso") {
             getIMAGEM();
@@ -110,38 +114,45 @@
     }
 
     async function doCallPost() {
-        Number(badFeed);
-        Number(valorFeed);
-        Number(qtdPossivelProducao);
-        if (!badFeed) {
+        badFeed = Number(badFeed);
+        valorFeed = valorFeed;
+        qtdPossivelProducao = Number(qtdPossivelProducao);
+        console.log('linha 117', badFeed);
+        console.log('linha 118',valorFeed );
+        console.log('linha 119',qtdPossivelProducao );
+
+
+        if (badFeed === undefined) {
             badFeed = 0;
         }
-        if (!valorFeed) {
+        if (typeof(valorFeed)) {
+            console.log('valor feed post', typeof(valorFeed));
             valorFeed = 0;
         }
-        if (Number(valorFeed) === qtdPossivelProducao && badFeed === 0) {
+        if (valorFeed === qtdPossivelProducao && badFeed === 0) {
+            console.log('doint post');
             doPost();
         }
 
         if (
-            Number(valorFeed) > 0 &&
+            valorFeed > 0 &&
             badFeed === 0 &&
             valorFeed < qtdPossivelProducao
         ) {
             showParcialSuper = true;
         }
 
-        if (badFeed > 0 && Number(valorFeed) === 0) {
+        if (badFeed > 0 && valorFeed === 0) {
             showConfirm = true;
         }
 
-        if (badFeed > 0 && Number(valorFeed) > 0) {
+        if (badFeed > 0 && valorFeed > 0) {
             showParcialAndRef = true;
         }
 
         if (
-            (Number(valorFeed) === 0 && badFeed === 0) ||
-            Number(valorFeed) + badFeed === 0
+            (valorFeed === 0 && badFeed === 0) ||
+            valorFeed + badFeed === 0
         ) {
             showRoundedApont = true;
         }

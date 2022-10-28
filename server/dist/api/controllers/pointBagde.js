@@ -25,7 +25,7 @@ const pointBagde = async (req, res) => {
             res.cookie("CRACHA", selecionarMatricula[0].CRACHA);
             return res.json({ message: 'cracha encontrado' });
         }
-        if (selecionarMatricula.length <= 0) {
+        else {
             return res.json({ message: 'cracha não encontrado' });
         }
     }

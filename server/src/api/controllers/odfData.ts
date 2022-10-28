@@ -20,8 +20,6 @@ export const odfData: RequestHandler = async (req, res) => {
         ORDER BY NUMERO_OPERACAO ASC`.trim()).then(record => record.recordset);
         res.cookie("qtdProduzir", resource[0].QTDE_ODF)
         res.cookie("QTD_REFUGO", resource[0].QTD_REFUGO)
-
-        console.log("RESOURCE", resource[0].QTD_REFUGO);
         let codigoOperArray = resource.map(e => e.NUMERO_OPERACAO)
         let arrayAfterMap = codigoOperArray.map(e => "00" + e).toString().replaceAll(' ', "0").split(",")
         let indiceDoArrayDeOdfs: number = arrayAfterMap.findIndex((e: string) => e === numOpeNew)
@@ -59,7 +57,6 @@ export const odfData: RequestHandler = async (req, res) => {
             //console.log("linha 336 /odf/ ", obj);
             return res.status(200).json(obj);
         }
-
     } catch (error) {
         console.log(error);
         return res.json({ message: "erro ao pegar o tempo" });

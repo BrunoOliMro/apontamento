@@ -4,7 +4,6 @@ import { sqlConfig } from "../../global.config";
 import { sanitize } from "../utils/sanitize";
 
 export const returnedValue: RequestHandler = async (req, res) => {
-    console.log(req.body)
     const connection = await mssql.connect(sqlConfig);
     let choosenOption = Number(sanitize(req.body["quantity"])) || 0
     let supervisor = String(sanitize(req.body["supervisor"])) || null
@@ -145,14 +144,17 @@ export const returnedValue: RequestHandler = async (req, res) => {
                 if (insertHisCodReturned.length > 0 && insertValuesBack.length > 0) {
                     return res.status(200).json({ message: 'estorno feito' })
                 } else if (insertHisCodReturned.length <= 0 || insertValuesBack.length <= 0) {
-
                     return res.json({ message: 'erro de estorno' })
                 }
+                // return res.json({message : 'ok'})
             } catch (error) {
                 console.log(error)
+                return res.json({ message: 'erro de estorno' })
             } finally {
                 await connection.close()
             }
+            return res.json({ message: 'erro de estorno' })
+        } else {
             return res.json({ message: 'erro de estorno' })
         }
     } else {

@@ -27,10 +27,6 @@ const ripPost = async (req, res) => {
     let instrumento = (req.cookies['instrumento']) || null;
     let descricao = (req.cookies['descricao']) || null;
     var objectSanitized = {};
-    let start = Number(req.cookies["starterBarcode"]) || 0;
-    let end = Number(new Date().getTime()) || 0;
-    let tempoDecorrido = Number(new Date(start).getTime()) || 0;
-    let final = Number(tempoDecorrido - end) || 0;
     const startRip = Number(req.cookies["startRip"]) || 0;
     const endProdRip = Number(new Date().getDate()) || 0;
     const tempoDecorridoRip = Number(new Date(startRip).getDate()) || 0;
