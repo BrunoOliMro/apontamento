@@ -1,4 +1,5 @@
 <script>
+    let imageLoader = "/images/axonLoader.gif";
     let badFeed;
     let missingFeed;
     let reworkFeed;
@@ -117,28 +118,23 @@
         badFeed = Number(badFeed);
         valorFeed = valorFeed;
         qtdPossivelProducao = Number(qtdPossivelProducao);
-        console.log('linha 117', badFeed);
-        console.log('linha 118',valorFeed );
-        console.log('linha 119',qtdPossivelProducao );
-
+        console.log("linha 117", badFeed);
+        console.log("linha 118", valorFeed);
+        console.log("linha 119", qtdPossivelProducao);
 
         if (badFeed === undefined) {
             badFeed = 0;
         }
-        if (typeof(valorFeed)) {
-            console.log('valor feed post', typeof(valorFeed));
+        if (typeof valorFeed) {
+            console.log("valor feed post", typeof valorFeed);
             valorFeed = 0;
         }
         if (valorFeed === qtdPossivelProducao && badFeed === 0) {
-            console.log('doint post');
+            console.log("doint post");
             doPost();
         }
 
-        if (
-            valorFeed > 0 &&
-            badFeed === 0 &&
-            valorFeed < qtdPossivelProducao
-        ) {
+        if (valorFeed > 0 && badFeed === 0 && valorFeed < qtdPossivelProducao) {
             showParcialSuper = true;
         }
 
@@ -150,10 +146,7 @@
             showParcialAndRef = true;
         }
 
-        if (
-            (valorFeed === 0 && badFeed === 0) ||
-            valorFeed + badFeed === 0
-        ) {
+        if ((valorFeed === 0 && badFeed === 0) || valorFeed + badFeed === 0) {
             showRoundedApont = true;
         }
     }
@@ -175,7 +168,11 @@
 </script>
 
 {#await resultado}
-    <div>...</div>
+    <div class="imageLoader">
+        <div class="loader">
+            <img src={imageLoader} alt="" />
+        </div>
+    </div>
 {:then itens}
     <main class="main">
         {#if dadosOdf.length !== 0}
@@ -252,7 +249,11 @@
             </div>
 
             {#await resultRefugo}
-                <div>...</div>
+            <div class="imageLoader">
+                <div class="loader">
+                    <img src={imageLoader} alt="" />
+                </div>
+            </div>
             {:then item}
                 {#if showConfirm === true}
                     <div class="fundo">
@@ -274,8 +275,12 @@
                                 name="supervisor"
                                 id="supervisor"
                             />
-                            <button on:keypress={doPost} on:click={doPost}>Confirmar</button>
-                            <button on:keypress={close} on:click={close}>Fechar</button>
+                            <button on:keypress={doPost} on:click={doPost}
+                                >Confirmar</button
+                            >
+                            <button on:keypress={close} on:click={close}
+                                >Fechar</button
+                            >
                         </div>
                     </div>
                 {/if}
@@ -299,7 +304,9 @@
                             name="supervisor"
                             id="supervisor"
                         />
-                        <button on:keypress={doPost} on:click={doPost}>Confirmar</button>
+                        <button on:keypress={doPost} on:click={doPost}
+                            >Confirmar</button
+                        >
                     </div>
                 </div>
             {/if}
@@ -319,7 +326,8 @@
                             name="supervisor"
                             id="supervisor"
                         />
-                        <button on:keypress={doPost} on:click={doPost}>Confirmar</button
+                        <button on:keypress={doPost} on:click={doPost}
+                            >Confirmar</button
                         >
                     </div>
                 </div>
@@ -340,8 +348,12 @@
                             name="supervisor"
                             id="supervisor"
                         />
-                        <button on:click={doPost} on:keypress={doPost}>Confirmar</button>
-                        <button on:click={close} on:keypress={close}>Fechar</button>
+                        <button on:click={doPost} on:keypress={doPost}
+                            >Confirmar</button
+                        >
+                        <button on:click={close} on:keypress={close}
+                            >Fechar</button
+                        >
                     </div>
                 </div>
             {/if}
@@ -352,7 +364,9 @@
                         <div class="closed">
                             <h2>Valor Enviado maior que o possivel</h2>
                         </div>
-                        <button on:keypress={close} on:click={close}>fechar</button>
+                        <button on:keypress={close} on:click={close}
+                            >fechar</button
+                        >
                     </div>
                 </div>
             {/if}
@@ -363,7 +377,9 @@
                         <div class="closed">
                             <h2>Erro ao enviar apontamento</h2>
                         </div>
-                        <button on:keypress={close} on:click={close}>fechar</button>
+                        <button on:keypress={close} on:click={close}
+                            >fechar</button
+                        >
                     </div>
                 </div>
             {/if}
@@ -374,7 +390,9 @@
                         <div class="closed">
                             <h2>Apontamento Zerado</h2>
                         </div>
-                        <button on:keypress={close} on:click={close}>fechar</button>
+                        <button on:keypress={close} on:click={close}
+                            >fechar</button
+                        >
                     </div>
                 </div>
             {/if}
@@ -385,7 +403,9 @@
                         <div class="closed">
                             <h2>Supervisor não encontrado</h2>
                         </div>
-                        <button on:keypress={close} on:click={close}>fechar</button>
+                        <button on:keypress={close} on:click={close}
+                            >fechar</button
+                        >
                     </div>
                 </div>
             {/if}
@@ -396,7 +416,10 @@
                         <div class="closed">
                             <h2>{getSpace.address}</h2>
                         </div>
-                        <button on:keypress={closeRedirect} on:click={closeRedirect}>fechar</button>
+                        <button
+                            on:keypress={closeRedirect}
+                            on:click={closeRedirect}>fechar</button
+                        >
                     </div>
                 </div>
             {/if}
@@ -405,6 +428,34 @@
 {/await}
 
 <style>
+    #apontar{
+        z-index: 1;
+    }
+    .loader {
+        margin: 0%;
+        position: relative;
+        width: 10vw;
+        height: 5vw;
+        padding: 1.5vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999999999;
+    }
+    .imageLoader {
+        margin: 0%;
+        padding: 0%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: black;
+        height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999999999999;
+    }
     .supervisor {
         height: 25px;
     }

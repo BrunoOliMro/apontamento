@@ -18,8 +18,6 @@ export const point: RequestHandler = async (req, res) => {
     var reservedItens: number[] = (req.cookies['reservedItens'])// VER DEPOIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     let NUMERO_ODF = Number(sanitize(req.cookies["NUMERO_ODF"])) || 0
 
-    console.log("frebi brebnribn");
-    
     let NUMERO_OPERACAO = String(sanitize(req.cookies["NUMERO_OPERACAO"])) || null
     let codigoPeca = String(sanitize(req.cookies['CODIGO_PECA'])) || null
     let CODIGO_MAQUINA = String(sanitize(req.cookies["CODIGO_MAQUINA"])) || null

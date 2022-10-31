@@ -1,5 +1,6 @@
 <script>
     // @ts-nocheck
+    let imageLoader = "/images/axonLoader.gif";
     let urlString = `/api/v1/odf`;
     let dadosOdf = [];
     let employeName = document.cookie
@@ -16,6 +17,7 @@
     async function getOdfData() {
         const res = await fetch(urlString);
         dadosOdf = await res.json();
+        console.log("dadosOdf", dadosOdf);
         if (dadosOdf === null || dadosOdf === undefined) {
             dadosOdf = 0;
         }
@@ -24,7 +26,11 @@
 </script>
 
 {#await resultado}
-    <div>...</div>
+    <div class="imageLoader">
+        <div class="loader">
+            <img src={imageLoader} alt="" />
+        </div>
+    </div>
 {:then itens}
     <main>
         <div class="areaCodigos">
@@ -75,6 +81,31 @@
 {/await}
 
 <style>
+    .loader {
+        margin: 0%;
+        position: relative;
+        width: 10vw;
+        height: 5vw;
+        padding: 1.5vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999999999999;
+    }
+    .imageLoader {
+        margin: 0%;
+        padding: 0%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: black;
+        height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999999999999999;
+    }
     main {
         letter-spacing: 1px;
     }

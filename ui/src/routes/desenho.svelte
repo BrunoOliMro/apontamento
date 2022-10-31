@@ -1,5 +1,6 @@
 <script>
     import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
+    const imageLoader = "/images/axonLoader.gif";
     export let Subtitle = "DESENHO";
     let zoomNumber = 400;
     let rotation = 0;
@@ -73,7 +74,11 @@
 
     <div class="newDiv">
         {#await resultado}
-            <div>AGUARDE...</div>
+        <div class="imageLoader">
+            <div class="loader">
+                <img src={imageLoader} alt="" />
+            </div>
+        </div>
         {:then item}
             <div class="frame">
                 {#each imagemBack as column}
@@ -97,6 +102,31 @@
 </main>
 
 <style>
+    .loader {
+        margin: 0%;
+        position: relative;
+        width: 10vw;
+        height: 5vw;
+        padding: 1.5vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999999999;
+    }
+    .imageLoader {
+        margin: 0%;
+        padding: 0%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: black;
+        height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999999999999;
+    }
     .frame {
         display: flex;
         flex-direction: column;

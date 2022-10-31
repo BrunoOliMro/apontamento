@@ -26,9 +26,10 @@
   let quantityModal = false;
   let errorReturnValue = false;
   let returnValueAvailable;
-  let paradaMsg = ''
+  let paradaMsg = "";
   let barcodeMsg = "";
-  let breadCrumbmodal = ''
+  let breadCrumbmodal = "";
+  let showBreadcrumb = false;
   // if (window.location.href.includes("?")) {
   //   barcodeMsg = window.location.href.split("?")[1].split("=")[1];
   // }
@@ -59,14 +60,14 @@
     }
     if (res.message === "supervisor não encontrado") {
       superParada = false;
-      paradaMsg = 'supervisor não encontrado'
+      paradaMsg = "supervisor não encontrado";
       showmodal = false;
     }
 
     if (res.message === "erro na parada de maquina") {
       showmodal = false;
       superParada = false;
-      paradaMsg = 'erro na parada de maquina'
+      paradaMsg = "erro na parada de maquina";
     }
   };
 
@@ -133,6 +134,7 @@
     if (res.message === "cracha encontrado") {
       showBarcode = true;
       showBadge = false;
+      showBreadcrumb = true;
     }
   };
 
@@ -159,7 +161,6 @@
         codigoBarrasReturn: !codigoBarrasReturn ? "" : codigoBarrasReturn,
       }),
     }).then((res) => res.json());
-    console.log("linha 143", res);
     if (res.message === "supervisor esta vazio") {
       showSupervisor = true;
       showmodal = false;
@@ -199,14 +200,14 @@
     }
     if (res.String === "valor devolvido maior que o permitido") {
       barcodeMsg = "valor devolvido maior que o permitido";
-      returnValueAvailable = res.qtdLibMax
+      returnValueAvailable = res.qtdLibMax;
       showmodal = false;
     }
   }
 
   function closePopCor() {
     barcodeMsg = "";
-    paradaMsg = ''
+    paradaMsg = "";
     errorReturnValue = false;
     showSupervisor = false;
     quantityModal = false;
@@ -214,19 +215,26 @@
     showmodal = false;
     location.reload();
   }
+
+  function goBack() {
+    showBreadcrumb = false;
+    showBarcode = false;
+    showBadge = true;
+    cracha = "";
+  }
 </script>
 
 <main>
-  <!-- {#if }
-    
-  {/if} -->
-  <nav class="breadcrumb" aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item">
-        <a href="/#/codigobarras">Colaborador</a>
-      </li>
-    </ol>
-  </nav>
+  {#if showBreadcrumb === true}
+    <nav class="breadcrumb" aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+          <a href="/#/codigobarras" on:click={goBack}>Colaborador</a>
+        </li>
+      </ol>
+    </nav>
+  {/if}
+
   <div>
     <div>
       <Title />
@@ -268,7 +276,14 @@
       <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>Estorno Feito</h5>
-          <p autofocus  tabindex="30" on:keypress={closePopCor} on:click={closePopCor}>Fechar</p>
+          <p
+            autofocus
+            tabindex="30"
+            on:keypress={closePopCor}
+            on:click={closePopCor}
+          >
+            Fechar
+          </p>
         </div>
       </div>
     {/if}
@@ -277,35 +292,63 @@
       <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>Erro ao fazer estorno</h5>
-          <p autofocus tabindex="31"  on:keypress={closePopCor} on:click={closePopCor}>Fechar</p>
+          <p
+            autofocus
+            tabindex="31"
+            on:keypress={closePopCor}
+            on:click={closePopCor}
+          >
+            Fechar
+          </p>
         </div>
       </div>
     {/if}
 
-    {#if barcodeMsg === 'não ha valor que possa ser devolvido'}
+    {#if barcodeMsg === "não ha valor que possa ser devolvido"}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>Não há limite para Estorno</h5>
-          <p autofocus  tabindex="32"  on:keypress={closePopCor} on:click={closePopCor}>Fechar</p>
+          <p
+            autofocus
+            tabindex="32"
+            on:keypress={closePopCor}
+            on:click={closePopCor}
+          >
+            Fechar
+          </p>
         </div>
       </div>
     {/if}
 
-    {#if paradaMsg === 'supervisor não encontrado'}
-    <div class="fundo">
-      <div class="invalidBarcode" id="s">
-        <h5>Supervisor não encontrado</h5>
-        <p autofocus tabindex="33"  on:keypress={closePopCor} on:click={closePopCor}>Fechar</p>
+    {#if paradaMsg === "supervisor não encontrado"}
+      <div class="fundo">
+        <div class="invalidBarcode" id="s">
+          <h5>Supervisor não encontrado</h5>
+          <p
+            autofocus
+            tabindex="33"
+            on:keypress={closePopCor}
+            on:click={closePopCor}
+          >
+            Fechar
+          </p>
+        </div>
       </div>
-    </div>
-  {/if}
+    {/if}
 
     {#if barcodeMsg === "valor devolvido maior que o permitido"}
       <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>Limite de estorno menor que o apontado</h5>
           <h3>Limite Disponivel: {returnValueAvailable}</h3>
-          <p autofocus tabindex="34"  on:keypress={closePopCor} on:click={closePopCor}>Fechar</p>
+          <p
+            autofocus
+            tabindex="34"
+            on:keypress={closePopCor}
+            on:click={closePopCor}
+          >
+            Fechar
+          </p>
         </div>
       </div>
     {/if}
@@ -314,7 +357,9 @@
       <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>ODF não pode ser apontada, aponte outra</h5>
-          <p autofocus tabindex="35" on:keypress={closePop} on:click={closePop}>Fechar</p>
+          <p autofocus tabindex="35" on:keypress={closePop} on:click={closePop}>
+            Fechar
+          </p>
         </div>
       </div>
     {/if}

@@ -1,6 +1,7 @@
 <script>
   // @ts-nocheck
 
+  let imageLoader = "/images/axonLoader.gif";
   import TableHistorico from "../components/Tables/TableHistorico.svelte";
   import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
   let subtitle = "Historico de Apontamento";
@@ -24,33 +25,66 @@
 <main>
   <Breadcrumb />
   <div class="subtitle">{subtitle}</div>
-  {#if message === "historico encontrado"}
-    <div class="tabela table-responsive">
-      <table class="table table-hover table-striped caption-top">
-        <thead>
-          <tr id="header">
-            <th scope="col">OP</th>
-            <th scope="col">MAQUINA</th>
-            <th scope="col">BOAS</th>
-            <th scope="col">REFUGO</th>
-            <th scope="col">FALTANTE</th>
-            <th scope="col">ODF</th>
-          </tr>
-        </thead>
-        <tbody id="corpoTabela">
-          {#each HISTORICO.resource as column, i}
-            <TableHistorico dados={column} />
-          {/each}
-        </tbody>
-      </table>
+  {#await resultado}
+    <div class="imageLoader">
+      <div class="loader">
+        <img src={imageLoader} alt="" />
+      </div>
     </div>
-  {/if}
-  {#if message === "sem historico a exibir"}
-    <h2>Não há histórico para exibir</h2>
-  {/if}
+  {:then itens}
+    {#if message === "historico encontrado"}
+      <div class="tabela table-responsive">
+        <table class="table table-hover table-striped caption-top">
+          <thead>
+            <tr id="header">
+              <th scope="col">OP</th>
+              <th scope="col">MAQUINA</th>
+              <th scope="col">BOAS</th>
+              <th scope="col">REFUGO</th>
+              <th scope="col">FALTANTE</th>
+              <th scope="col">ODF</th>
+            </tr>
+          </thead>
+          <tbody id="corpoTabela">
+            {#each HISTORICO.resource as column, i}
+              <TableHistorico dados={column} />
+            {/each}
+          </tbody>
+        </table>
+      </div>
+    {/if}
+    {#if message === "sem historico a exibir"}
+      <h2>Não há histórico para exibir</h2>
+    {/if}
+  {/await}
 </main>
 
 <style>
+  .loader {
+    margin: 0%;
+    position: relative;
+    width: 10vw;
+    height: 5vw;
+    padding: 1.5vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999999999999999;
+  }
+  .imageLoader {
+    margin: 0%;
+    padding: 0%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: black;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999999999999;
+  }
   th {
     text-align: center;
   }

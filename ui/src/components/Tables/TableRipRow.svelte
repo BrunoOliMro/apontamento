@@ -82,7 +82,8 @@
             id={"SETUP-" + indice}
             name={"SETUP-" + indice}
             type="text"
-        /></td>
+        /></td
+    >
     <!-- <td> <input
             on:input={checkColor}
             on:input={target}

@@ -1,6 +1,6 @@
 <script>
   // @ts-nocheck
-
+  let imageLoader = "/images/axonLoader.gif";
   let urlString = `/api/v1/ferramenta`;
   let fetchItem = [];
   let resultado = getfetchItem();
@@ -19,19 +19,20 @@
     fer = await res.json();
     if (fer.message === "ferramentas selecionadas com successo") {
       window.location.href = "/#/codigobarras/apontamento";
-      location.reload();
+      //location.reload();
     }
   }
 
   async function getfetchItem() {
     const res = await fetch(urlString);
     fetchItem = await res.json();
-    if (fetchItem == "/images/sem_imagem.gif") {
-      window.location.href = "/#/codigobarras/apontamento";
-    }
-    if (fetchItem.length === 0) {
+    console.log("fetch item", fetchItem);
+    if (fetchItem.message === "/images/sem_imagem.gif") {
       ferSelected();
       window.location.href = "/#/codigobarras/apontamento";
+    } else {
+      location.reload
+      window.location.href = "/#/ferramenta";
     }
   }
 
@@ -46,17 +47,20 @@
       ferSelected();
     }
   }
+
+  let x = Promise.all([getfetchItem])
 </script>
 
-<div class="content">
-  {#await fetchItem}
-    <div>AGUARDE...</div>
-  {:then item}
+{#await x}
+  <div class="imageLoader">
+    <div class="loader">
+      <img src={imageLoader} alt="" />
+    </div>
+  </div>
+{:then item}
+  <div class="content">
     <h3>Selecione as Ferramentas para a produção</h3>
     <div class="itens">
-      <!-- {#if fetchItem.length === 0}
-        <h3>Não há Ferramentas para exibir</h3>
-      {/if} -->
       {#each item as column, i}
         <img
           tabindex="${i}"
@@ -69,10 +73,35 @@
         />
       {/each}
     </div>
-  {/await}
-</div>
+  </div>
+{/await}
 
 <style>
+  .loader {
+    margin: 0%;
+    position: relative;
+    width: 10vw;
+    height: 5vw;
+    padding: 1.5vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999999999999999999999999999999999;
+  }
+  .imageLoader {
+    margin: 0%;
+    padding: 0%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: black;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999999999999999999999999999999999;
+  }
   @keyframes rotation {
     from {
       opacity: 1;
@@ -87,6 +116,7 @@
   .itens {
     display: flex;
     flex-direction: row;
+    z-index: 2;
   }
   .img {
     display: flex;
@@ -98,6 +128,7 @@
     justify-content: center;
     align-items: center;
     text-align: center;
+    z-index: 3;
   }
 
   .img:hover {
@@ -107,6 +138,7 @@
   }
 
   .content {
+    z-index: 1;
     margin-left: 5%;
     margin-right: 5%;
     justify-content: center;

@@ -6,23 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.pointerPost = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
-const sanitize_1 = require("../utils/sanitize");
+const unravelBarcode_1 = require("../utils/unravelBarcode");
 const pointerPost = async (req, res) => {
-    let barcode = String((0, sanitize_1.sanitize)(req.body["codigoBarras"])) || null;
-    if (barcode === '' || barcode === undefined || barcode === null) {
-        return res.json({ message: 'codigo de barras vazio' });
-    }
-    const dados = {
-        numOdf: String(barcode.slice(10)),
-        numOper: String(barcode.slice(0, 5)),
-        codMaq: String(barcode.slice(5, 10)),
-    };
-    if (barcode.length > 17) {
-        dados.numOdf = barcode.slice(11);
-        dados.numOper = barcode.slice(0, 5);
-        dados.codMaq = barcode.slice(5, 11);
-    }
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    const dados = (0, unravelBarcode_1.unravelBarcode)(req.body.codigoBarras);
     const queryGrupoOdf = await connection.query(`
     SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' ORDER BY NUMERO_OPERACAO ASC
     `).then(result => result.recordset);
@@ -97,7 +84,7 @@ const pointerPost = async (req, res) => {
     res.cookie("NUMERO_OPERACAO", numeroOper);
     res.cookie("REVISAO", objOdfSelecionada['REVISAO']);
     const codApont = await connection.query(`
-    SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND PECA = '${objOdfSelecionada.CODIGO_PECA}' AND ITEM = '${objOdfSelecionada.CODIGO_MAQUINA}'  ORDER BY DATAHORA DESC`.trim()).then(result => result.recordset);
+    SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND PECA = '${objOdfSelecionada.CODIGO_PECA}' AND ITEM = '${objOdfSelecionada.CODIGO_MAQUINA}' ORDER BY DATAHORA DESC`.trim()).then(result => result.recordset);
     if (codApont.length > 0) {
         if (codApont[0]?.CODAPONTA === 5) {
             return res.json({ message: "paradademaquina" });

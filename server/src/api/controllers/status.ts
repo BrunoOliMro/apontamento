@@ -12,7 +12,10 @@ export const status: RequestHandler = async (req, res) => {
     let tempoDecorrido = Number(tempoAgora - startTimeNow) || 0;
     const connection = await mssql.connect(sqlConfig);
 
-    console.log("maquina: ", maquina);
+
+    // console.log("maquina: linha 16/ status", maquina);
+    // console.log("numpec: linha 16/ status", numpec);
+
     try {
         const resource = await connection.query(`
         SELECT 
@@ -21,15 +24,15 @@ export const status: RequestHandler = async (req, res) => {
         FROM 
         OPERACAO 
         WHERE NUMPEC = '${numpec}' 
-        AND MAQUIN = '${maquina}' 
         ORDER BY REVISAO DESC
         `).then(record => record.recordset)
+        // AND MAQUIN = '${maquina}' 
         //res.cookie("Tempo Execucao", resource[0].EXECUT) 
-        let qtdProd = Number(req.cookies["qtdProduzir"][0]) || 0
+        let qtdProd = Number(req.cookies["qtdProduzir"][0]) 
         //valor em segundos
-        let tempoExecut = Number(resource[0].EXECUT) || 0
+        let tempoExecut = Number(resource[0].EXECUT) 
         //valor vezes a quantidade de peças
-        let tempoTotalExecução = Number(tempoExecut * qtdProd) * 1000 || 0
+        let tempoTotalExecução = Number(tempoExecut * qtdProd) * 1000 
         let tempoRestante = (tempoTotalExecução - tempoDecorrido)
         if (tempoRestante <= 0) {
             tempoRestante = 0

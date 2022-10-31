@@ -1,4 +1,5 @@
 <script>
+  let imageLoader = "/images/axonLoader.gif";
   let dadosOdf = [];
   let urlString = `/api/v1/odf`;
   let horaInicio = "";
@@ -16,15 +17,14 @@
     const res = await fetch(urlString);
     dadosOdf = await res.json();
 
-    dataInicio = dadosOdf.odfSelecionada.DT_INICIO_OP.slice(6, 8)
-    meioInicio = dadosOdf.odfSelecionada.DT_INICIO_OP.slice(4, 6)
-    anoInicio = dadosOdf.odfSelecionada.DT_INICIO_OP.slice(0, 4)
-    horaInicio = dadosOdf.odfSelecionada.HORA_INICIO.slice(11, 19)
+    dataInicio = dadosOdf.odfSelecionada.DT_INICIO_OP.slice(6, 8);
+    meioInicio = dadosOdf.odfSelecionada.DT_INICIO_OP.slice(4, 6);
+    anoInicio = dadosOdf.odfSelecionada.DT_INICIO_OP.slice(0, 4);
+    horaInicio = dadosOdf.odfSelecionada.HORA_INICIO.slice(11, 19);
 
-
-    dataFim = dadosOdf.odfSelecionada.DT_FIM_OP.slice(6, 8)
-    meioFim = dadosOdf.odfSelecionada.DT_FIM_OP.slice(4, 6)
-    anoFim = dadosOdf.odfSelecionada.DT_FIM_OP.slice(0, 4)
+    dataFim = dadosOdf.odfSelecionada.DT_FIM_OP.slice(6, 8);
+    meioFim = dadosOdf.odfSelecionada.DT_FIM_OP.slice(4, 6);
+    anoFim = dadosOdf.odfSelecionada.DT_FIM_OP.slice(0, 4);
     horaFinal = dadosOdf.odfSelecionada.HORA_FIM.slice(11, 19);
   }
 
@@ -32,22 +32,53 @@
 </script>
 
 {#await resultado}
-  <div>...</div>
+  <div class="imageLoader">
+    <div class="loader">
+      <img src={imageLoader} alt="" />
+    </div>
+  </div>
 {:then itens}
   <main class="main">
     <div class="div1">
       <div class="title">INICIO</div>
-      {dataInicio} / {meioInicio} / {anoInicio} - {(horaInicio = horaInicio === null ? "S/I" : horaInicio)}
+      {dataInicio} / {meioInicio} / {anoInicio} - {(horaInicio =
+        horaInicio === null ? "S/I" : horaInicio)}
     </div>
 
     <div class="div2">
       <div class="title">FINAL</div>
-      {dataFim} / {meioFim} /  {anoFim} - {(horaFinal = horaFinal === null ? "S/I" : horaFinal)}
+      {dataFim} / {meioFim} / {anoFim} - {(horaFinal =
+        horaFinal === null ? "S/I" : horaFinal)}
     </div>
   </main>
 {/await}
 
 <style>
+  .loader {
+    margin: 0%;
+    position: relative;
+    width: 10vw;
+    height: 5vw;
+    padding: 1.5vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999999999;
+  }
+  .imageLoader {
+    margin: 0%;
+    padding: 0%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: black;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999999999;
+  }
   main {
     font-weight: bold;
     margin: 1% 0%;

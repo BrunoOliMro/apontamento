@@ -1,4 +1,6 @@
 <script>
+    // @ts-nocheck
+    let imageLoader = "/images/axonLoader.gif";
     let tempoDecorrido = 0;
     let tempodePro = [];
     let supervisorApi = "api/v1/supervisor";
@@ -8,15 +10,16 @@
     let imagem = [];
     let shwowSuper = false;
     let showRed = false;
-    let showGreen = false;
+    let showGreen = true;
     let showBlue = false;
     let supervisor = "";
-    let resultado = getTempo();
-    let callImagem = getImagem();
+    getTempo();
+    getImagem();
 
     async function getTempo() {
         const res = await fetch(urlString);
         tempodePro = await res.json();
+        console.log("tempo", tempodePro);
 
         if (tempodePro === "erro no tempo") {
             tempoMax = 60000;
@@ -25,19 +28,7 @@
         if (tempoMax === null) {
             tempoMax = 60000;
         }
-
-        localStorage.setItem("tempoMax", tempoMax);
-        if (localStorage.tempoMax === "60000") {
-            tempoMax === 60000;
-        }
-    }
-
-    async function getImagem() {
-        const res = await fetch(url);
-        imagem = await res.json();
-        if (imagem.length <= 0) {
-            console.log("imagem não chegou");
-        }
+        return tempodePro;
     }
 
     let tempoDaBarra = setInterval(() => {
@@ -50,7 +41,6 @@
             let excedido = (Number(100) * Number(tempoMax)) / Number(100);
             tempoDecorrido++;
             if (tempoDecorrido <= menorFif) {
-                showGreen = true;
                 showRed = false;
                 showBlue = false;
                 shwowSuper = false;
@@ -74,6 +64,12 @@
         }
     }, 1000);
 
+    async function getImagem() {
+        const res = await fetch(url);
+        imagem = await res.json();
+        return imagem;
+    }
+
     const doPostSuper = async () => {
         const headers = new Headers();
         const res = await fetch(supervisorApi, {
@@ -88,6 +84,8 @@
             clearInterval(tempoDaBarra);
         }
     };
+
+    let resultPromises = Promise.all([getImagem, getTempo, tempoDaBarra]);
 </script>
 
 <div class="content">
@@ -106,12 +104,22 @@
                     type="text"
                 />
 
-                <p tabindex="9" on:keypress={doPostSuper} on:click={doPostSuper}>Confirma</p>
-            </div> 
+                <p
+                    tabindex="9"
+                    on:keypress={doPostSuper}
+                    on:click={doPostSuper}
+                >
+                    Confirma
+                </p>
+            </div>
         </div>
     {/if}
-    {#await resultado}
-        <div>...</div>
+    {#await resultPromises}
+        <div class="imageLoader" id="imageLoader">
+            <div class="loader">
+                <img src={imageLoader} alt="" />
+            </div>
+        </div>
     {:then itens}
         {#if showGreen === true}
             <div
@@ -134,13 +142,39 @@
                 id="tempoDecorrido"
             />
         {/if}
-        {#if callImagem}
-            <img class="img" src={String(imagem)} alt="" />
+
+        {#if resultPromises}
+            <img class="img" src={String(imagem.key)} alt="" />
         {/if}
     {/await}
 </div>
 
 <style>
+    .loader {
+        margin: 0%;
+        position: relative;
+        width: 10vw;
+        height: 5vw;
+        padding: 1.5vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999999999999999999999999999999999999999999999999999999999;
+    }
+    .imageLoader {
+        margin: 0%;
+        padding: 0%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: black;
+        height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999999999999999999999999999999999999999999999999999999;
+    }
     #tempoDecorrido {
         margin: 0%;
         padding: 0%;

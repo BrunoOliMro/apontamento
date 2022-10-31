@@ -19,7 +19,6 @@ const point = async (req, res) => {
     var codigoFilho = ((req.cookies['codigoFilho']));
     var reservedItens = (req.cookies['reservedItens']);
     let NUMERO_ODF = Number((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"])) || 0;
-    console.log("frebi brebnribn");
     let NUMERO_OPERACAO = String((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"])) || null;
     let codigoPeca = String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])) || null;
     let CODIGO_MAQUINA = String((0, sanitize_1.sanitize)(req.cookies["CODIGO_MAQUINA"])) || null;

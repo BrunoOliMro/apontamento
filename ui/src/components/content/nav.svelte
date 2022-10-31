@@ -1,5 +1,5 @@
 <script>
-    import { onMount } from "svelte";
+    let imageLoader = "/images/axonLoader.gif";
     import badFeed from "../content/feed.svelte";
     import reworkFeed from "../content/feed.svelte";
     import missingFeed from "../content/feed.svelte";
@@ -64,6 +64,7 @@
     async function callMotivo() {
         const res = await fetch(apiMotivoParada);
         dados = await res.json();
+        //console.log("dados Nav", dados);
     }
 
     const confirm = async () => {
@@ -87,21 +88,37 @@
     </ul>
 
     {#await resultCall}
-        <div>...</div>
+        <div class="imageLoader">
+            <div class="loader">
+                <img src={imageLoader} alt="" />
+            </div>
+        </div>
     {:then item}
         {#if showmodal === true}
             <div class="fundo">
                 <div class="header">
                     <div class="closed">
                         <h2>Motivo da Parada</h2>
-                        <button class="closebtn" on:keypress={closePop} on:click={closePop}>X</button>
+                        <button
+                            class="closebtn"
+                            on:keypress={closePop}
+                            on:click={closePop}>X</button
+                        >
                     </div>
-                    <select autofocus tabindex="10" bind:value name="id" id="id">
-                        {#each  dados as item}
-                            <option >{item}</option>
+                    <select
+                        autofocus
+                        tabindex="10"
+                        bind:value
+                        name="id"
+                        id="id"
+                    >
+                        {#each dados as item}
+                            <option>{item}</option>
                         {/each}
                     </select>
-                    <p tabindex="11" on:keypress={confirm} on:click={confirm}>Confirmar</p>
+                    <p tabindex="11" on:keypress={confirm} on:click={confirm}>
+                        Confirmar
+                    </p>
                 </div>
             </div>
         {/if}
@@ -157,6 +174,29 @@
 </main>
 
 <style>
+    .loader {
+        margin: 0%;
+        position: relative;
+        width: 10vw;
+        height: 5vw;
+        padding: 1.5vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .imageLoader {
+        margin: 0%;
+        padding: 0%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: black;
+        height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
     .closebtn {
         width: 25px;
         border-radius: 5px;

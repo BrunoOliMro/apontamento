@@ -19,9 +19,11 @@ const point_1 = require("./controllers/point");
 const pointBagde_1 = require("./controllers/pointBagde");
 const getPoint_1 = require("./controllers/getPoint");
 const supervisor_1 = require("./controllers/supervisor");
+const codeNote_1 = require("./controllers/codeNote");
 const apiRouter = (0, express_1.Router)();
 apiRouter.route("/apontamento")
-    .post(pointer_1.pointerPost);
+    .post(pointer_1.pointerPost)
+    .post(codeNote_1.codeNote);
 apiRouter.route("/apontamentoCracha")
     .post(pointBagde_1.pointBagde);
 apiRouter.route("/odf")

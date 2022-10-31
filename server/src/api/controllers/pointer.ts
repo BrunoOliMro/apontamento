@@ -1,35 +1,47 @@
 import type { RequestHandler } from "express";
 import mssql from "mssql";
 import { sqlConfig } from "../../global.config";
-import { sanitize } from "../utils/sanitize";
+import { unravelBarcode } from '../utils/unravelBarcode'
 
 export const pointerPost: RequestHandler = async (req, res) => {
-    let barcode = String(sanitize(req.body["codigoBarras"])) || null;
-
-    //Verifica se o codigo de barras veio vazio
-    if (barcode === '' || barcode === undefined || barcode === null) {
-        return res.json({ message : 'codigo de barras vazio'})
-    }
-
-    //console.log("barcode: ", barcode);
-    //Divide o Codigo de barras em 3 partes para a verificação na proxima etapa
-    const dados = {
-        numOdf: String(barcode!.slice(10)),
-        numOper: String(barcode!.slice(0, 5)),
-        codMaq: String(barcode!.slice(5, 10)),
-    }
-    //Reatribuiu o codigo caso o cado de barras seja maior
-    if (barcode!.length > 17) {
-        dados.numOdf = barcode!.slice(11)
-        dados.numOper = barcode!.slice(0, 5)
-        dados.codMaq = barcode!.slice(5, 11)
-    }
-
-    //Seleciona todos os itens da Odf
+    //let barcode = String(sanitize(req.body["codigoBarras"])) || null;
     const connection = await mssql.connect(sqlConfig);
+    //console.log("linha 09", req.body.codigoBarras);
+    const dados: any = unravelBarcode(req.body.codigoBarras)//.then(async (_callback) => {})
+    
+    //console.log("x linha 09", dados);
+    //console.log("lin, dadosha 12 /pointer/", req.body.codigoBarras);
+    //let barcode = dados
+    
+    //let barcode = dados
+    
+    // //Verifica se o codigo de barras veio vazio
+    // if (barcode === '' || barcode === undefined || barcode === null) {
+        //     return res.json({ message : 'codigo de barras vazio'})
+        // }
+        
+        // //console.log("barcode: ", barcode);
+        // //Divide o Codigo de barras em 3 partes para a verificação na proxima etapa
+    // const dados = {
+        //     numOdf: String(barcode!.slice(10)),
+        //     numOper: String(barcode!.slice(0, 5)),
+        //     codMaq: String(barcode!.slice(5, 10)),
+        // }
+    // //Reatribuiu o codigo caso o cado de barras seja maior
+    // if (barcode!.length > 17) {
+    //     dados.numOdf = barcode!.slice(11)
+    //     dados.numOper = barcode!.slice(0, 5)
+    //     dados.codMaq = barcode!.slice(5, 11)
+    // }
+    //console.log("dados linha 36", dados);
+    //console.log("linha 37", barcode);
+    //barcode.then( res => res.json())
+    
+    //Seleciona todos os itens da Odf
     const queryGrupoOdf = await connection.query(`
     SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' ORDER BY NUMERO_OPERACAO ASC
     `).then(result => result.recordset)
+
 
     //Caso não encontre o numero da odf
     if (queryGrupoOdf.length <= 0) {
@@ -133,11 +145,11 @@ export const pointerPost: RequestHandler = async (req, res) => {
     res.cookie("REVISAO", objOdfSelecionada['REVISAO'])
 
     const codApont = await connection.query(`
-    SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND PECA = '${objOdfSelecionada.CODIGO_PECA}' AND ITEM = '${objOdfSelecionada.CODIGO_MAQUINA}'  ORDER BY DATAHORA DESC`.trim()
+    SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND PECA = '${objOdfSelecionada.CODIGO_PECA}' AND ITEM = '${objOdfSelecionada.CODIGO_MAQUINA}' ORDER BY DATAHORA DESC`.trim()
     ).then(result => result.recordset)
 
-    if(codApont.length > 0){
-        if(codApont[0]?.CODAPONTA === 5){
+    if (codApont.length > 0) {
+        if (codApont[0]?.CODAPONTA === 5) {
             return res.json({ message: "paradademaquina" })
         }
     }

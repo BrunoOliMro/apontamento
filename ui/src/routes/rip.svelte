@@ -1,5 +1,6 @@
 <script>
     // @ts-nocheck
+    let imageLoader = "/images/axonLoader.gif";
     import TableRipRow from "../components/Tables/TableRipRow.svelte";
     let seq = "Seq";
     let extraColumns = [];
@@ -15,7 +16,7 @@
     let supervisorApi = `/api/v1/supervisor`;
     let showError = false;
     let showSetup = false;
-    callRip();
+    let resultado = callRip();
     let lie;
     let lsd;
 
@@ -149,47 +150,56 @@
             type="submit">Enviar dados</button
         >
     </div>
+
     <div class="title">{Subtitle}</div>
-    {#if ripTable.length !== 0}
-        <form action="/api/v1/lancamentoRip" method="POST">
-            <div class="tabela table-responsive">
-                <table class="table table-hover table-striped caption-top">
-                    <thead>
-                        <tr id="header">
-                            <th scope="col">{seq}</th>
-                            <th scope="col">Item</th>
-                            <th scope="col">Descrição</th>
-                            <th scope="col">Especif.</th>
-                            <th scope="col">LIE</th>
-                            <th scope="col">LSE</th>
-                            <th scope="col">Instrumento</th>
-                            <th scope="col">SETUP</th>
-                            <!-- <th scope="col">M 2</th>
+    {#await resultado}
+        <div class="imageLoader">
+            <div class="loader">
+                <img src={imageLoader} alt="" />
+            </div>
+        </div>
+    {:then itens}
+        {#if ripTable.length !== 0}
+            <form action="/api/v1/lancamentoRip" method="POST">
+                <div class="tabela table-responsive">
+                    <table class="table table-hover table-striped caption-top">
+                        <thead>
+                            <tr id="header">
+                                <th scope="col">{seq}</th>
+                                <th scope="col">Item</th>
+                                <th scope="col">Descrição</th>
+                                <th scope="col">Especif.</th>
+                                <th scope="col">LIE</th>
+                                <th scope="col">LSE</th>
+                                <th scope="col">Instrumento</th>
+                                <th scope="col">SETUP</th>
+                                <!-- <th scope="col">M 2</th>
                             <th scope="col">M 3</th>
                             <th scope="col">M 4</th>
                             <th scope="col">M 5</th> -->
-                            {#each extraColumns as columnNumber}
-                                <th scope="col">M {columnNumber}</th>
+                                {#each extraColumns as columnNumber}
+                                    <th scope="col">M {columnNumber}</th>
+                                {/each}
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabela">
+                            {#each ripTable as row, i}
+                                <TableRipRow
+                                    bind:setup
+                                    bind:values={row.values}
+                                    dados={row}
+                                    indice={i + 1}
+                                    {extraColumns}
+                                />
                             {/each}
-                        </tr>
-                    </thead>
-                    <tbody id="corpoTabela">
-                        {#each ripTable as row, i}
-                            <TableRipRow
-                                bind:setup
-                                bind:values={row.values}
-                                dados={row}
-                                indice={i + 1}
-                                {extraColumns}
-                            />
-                        {/each}
-                    </tbody>
-                </table>
-            </div>
-        </form>
-    {:else}
-        <h2>Não há histórico para exibir</h2>
-    {/if}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+        {:else}
+            <h2>Não há histórico para exibir</h2>
+        {/if}
+    {/await}
     {#if showEnd === true}
         <div class="fundo">
             <div class="header">
@@ -249,6 +259,31 @@
 </main>
 
 <style>
+    .loader {
+        margin: 0%;
+        position: relative;
+        width: 10vw;
+        height: 5vw;
+        padding: 1.5vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999999999999;
+    }
+    .imageLoader {
+        margin: 0%;
+        padding: 0%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: black;
+        height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999999999999999;
+    }
     .bread {
         margin-left: 1%;
         margin-top: 5px;
