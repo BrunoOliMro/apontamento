@@ -2,17 +2,12 @@
   // @ts-nocheck
   let imageLoader = "/images/axonLoader.gif";
   let urlString = `/api/v1/ferramenta`;
-  let fetchItem = [];
-  let resultado = getfetchItem();
   let urlFer = `/api/v1/ferselecionadas`;
+  let fetchItem = [];
+  getfetchItem();
   let fer = [];
   let adicionados = 0;
   let arrayComp = [];
-  let toolMsg = "";
-
-  if (window.location.href.includes("?")) {
-    toolMsg = window.location.href.split("?")[1].split("=")[1];
-  }
 
   async function ferSelected() {
     const res = await fetch(urlFer);
@@ -26,12 +21,11 @@
   async function getfetchItem() {
     const res = await fetch(urlString);
     fetchItem = await res.json();
-    console.log("fetch item", fetchItem);
+    //console.log("fetch item", fetchItem);
     if (fetchItem.message === "/images/sem_imagem.gif") {
-      ferSelected();
       window.location.href = "/#/codigobarras/apontamento";
+      location.reload()
     } else {
-      location.reload
       window.location.href = "/#/ferramenta";
     }
   }
@@ -48,10 +42,10 @@
     }
   }
 
-  let x = Promise.all([getfetchItem])
+  let resultPromises = getfetchItem()
 </script>
 
-{#await x}
+{#await resultPromises}
   <div class="imageLoader">
     <div class="loader">
       <img src={imageLoader} alt="" />
@@ -77,6 +71,9 @@
 {/await}
 
 <style>
+  h3{
+    z-index: 5;
+  }
   .loader {
     margin: 0%;
     position: relative;
@@ -128,7 +125,10 @@
     justify-content: center;
     align-items: center;
     text-align: center;
-    z-index: 3;
+    z-index: 1;
+  }
+  img{
+    z-index: 1;
   }
 
   .img:hover {
@@ -138,7 +138,6 @@
   }
 
   .content {
-    z-index: 1;
     margin-left: 5%;
     margin-right: 5%;
     justify-content: center;
@@ -146,8 +145,9 @@
     text-align: center;
     display: flex;
     flex-direction: column;
+    z-index: 3;
   }
-
+/* 
   div {
     margin: 1%;
     border-radius: 5px;
@@ -208,7 +208,7 @@
     /* .subtitle {
       font-size: 20px;
     } */
-  }
+  /* }
 
   @media screen and (min-width: 1600px) {
     div {
@@ -218,5 +218,4 @@
     /* .subtitle {
       font-size: 20px;
     } */
-  }
 </style>

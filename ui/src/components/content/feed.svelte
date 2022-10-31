@@ -1,15 +1,16 @@
 <script>
+    // @ts-nocheck
     let imageLoader = "/images/axonLoader.gif";
-    let badFeed;
-    let missingFeed;
-    let reworkFeed;
+    let badFeed = 0;
+    let missingFeed = 0;
+    let reworkFeed = 0;
     let urlS = `/api/v1/apontar`;
     let urlString = `/api/v1/odf`;
     let motivoUrl = `/api/v1/motivorefugo`;
     let dadosOdf = [];
     let dados = [];
     let showConfirm = false;
-    let valorFeed;
+    let valorFeed = 0;
     let value;
     let supervisor;
     let qtdPossivelProducao;
@@ -28,38 +29,34 @@
     async function getRefugodata() {
         const res = await fetch(motivoUrl);
         dados = await res.json();
-        localStorage.setItem("dados", dados);
-        if (
-            localStorage.dados === "" ||
-            localStorage.dados === undefined ||
-            localStorage.dados === null
-        ) {
-            console.log("linha 31 vazio");
-        }
-    }
-
-    let apontamentoMsg = "";
-    if (window.location.href.includes("?")) {
-        apontamentoMsg = window.location.href.split("?")[1].split("=")[1];
+        //console.log('dados linha feed', dados);
+        //localStorage.setItem('dados', dados);
+        // if (localStorage.dados === '' || localStorage.dados === undefined || localStorage.dados === null ) {
+        //     console.log('linha 31 vazio');
+        // }
     }
 
     async function getOdfData() {
         const res = await fetch(urlString);
         dadosOdf = await res.json();
+        //console.log('linha 41', dadosOdf);
         qtdPossivelProducao = dadosOdf.valorMaxdeProducao;
         if (qtdPossivelProducao <= 0) {
             qtdPossivelProducao = 0;
         }
     }
 
+    /**
+     * @param {{ target: { value: any; }; }} e
+     */
     function blockForbiddenChars(e) {
         let value = e.target.value;
         e.target.value = preSanitize(value);
     }
 
-    // /**
-    //  * @param {string} input
-    //  */
+    /**
+     * @param {string} input
+     */
     function preSanitize(input) {
         const allowedChars = /[0-9]/;
         const sanitizedOutput = input
@@ -83,27 +80,31 @@
                 supervisor: supervisor,
             }),
         }).then((res) => res.json());
+
         console.log("res:", res);
+
         if (res.message === "supervisor não encontrado") {
             showSuperNotFound = true;
         }
-        if (res.message === "erro ao enviar o apontamento") {
-            showErrorMessage = true;
-        }
-        if (res.message === "'valor apontado excede o valor do sistema'") {
-            showError = true;
-        }
+        // if (res.message === "erro ao enviar o apontamento") {
+        //     showErrorMessage = true;
+        // }
+        // if (res.message === 'valor apontado excede o valor do sistema') {
+        //     showError = true;
+        // }
         if (res.message === "valores apontados com sucesso") {
-            getIMAGEM();
+            getSpaceFunc();
         }
         if (res.message === "valor apontado maior que a quantidade liberada") {
             showError = true;
+            showConfirm = false;
         }
     };
 
-    async function getIMAGEM() {
+    async function getSpaceFunc() {
         const res = await fetch(urlS);
         getSpace = await res.json();
+        //console.log('dados 100', getSpace);
         if (
             getSpace.message === "sem endereço" ||
             getSpace.address === undefined
@@ -115,40 +116,84 @@
     }
 
     async function doCallPost() {
-        badFeed = Number(badFeed);
-        valorFeed = valorFeed;
-        qtdPossivelProducao = Number(qtdPossivelProducao);
-        console.log("linha 117", badFeed);
-        console.log("linha 118", valorFeed);
-        console.log("linha 119", qtdPossivelProducao);
+        let numberBadFeed = Number(badFeed);
+        let numberGoodFeed = Number(valorFeed);
+        let numberQtdAllowed = Number(qtdPossivelProducao);
+        let numberMissing = Number(missingFeed);
+        let numberReworkFeed = Number(reworkFeed);
+        // console.log("ba 117", numberBadFeed);
+        // console.log("go 118", numberGoodFeed);
+        // console.log("mi 117", numberMissing);
+        // console.log("re 118", numberReworkFeed);
+        let total =
+            numberBadFeed + numberGoodFeed + numberMissing + numberReworkFeed;
+        // console.log("qt 119", total, "/ :", numberQtdAllowed );
 
-        if (badFeed === undefined) {
-            badFeed = 0;
-        }
-        if (typeof valorFeed) {
-            console.log("valor feed post", typeof valorFeed);
-            valorFeed = 0;
-        }
-        if (valorFeed === qtdPossivelProducao && badFeed === 0) {
-            console.log("doint post");
-            doPost();
+        if (total === 0) {
+            showRoundedApont = true;
         }
 
-        if (valorFeed > 0 && badFeed === 0 && valorFeed < qtdPossivelProducao) {
+        if (
+            numberBadFeed + numberMissing + numberReworkFeed === 0 &&
+            numberGoodFeed > 0 &&
+            numberGoodFeed < numberQtdAllowed
+        ) {
             showParcialSuper = true;
         }
 
-        if (badFeed > 0 && valorFeed === 0) {
+        if (
+            numberBadFeed + numberMissing + numberReworkFeed === 0 &&
+            numberGoodFeed === numberQtdAllowed
+        ) {
+            doPost();
+        }
+
+        if (numberBadFeed > 0 && total <= numberQtdAllowed) {
             showConfirm = true;
         }
 
-        if (badFeed > 0 && valorFeed > 0) {
-            showParcialAndRef = true;
+        if (total > numberQtdAllowed) {
+            showError = true;
         }
 
-        if ((valorFeed === 0 && badFeed === 0) || valorFeed + badFeed === 0) {
-            showRoundedApont = true;
-        }
+        // if (numberBadFeed > 0 && numberBadFeed <= numberQtdAllowed) {
+        //     showConfirm = true;
+        // }
+        // if (badFeed === undefined) {
+        //     badFeed = '';
+        // }
+        // if (typeof valorFeed) {
+        //     console.log('valor feed post', typeof valorFeed);
+        //     valorFeed = 0;
+        // }
+        // if(numberGoodFeed > numberQtdAllowed || numberBadFeed > numberQtdAllowed || missingFeed > numberQtdAllowed || reworkFeed > numberQtdAllowed){
+        //     showError = true
+        // }
+
+        // if(numberBadFeed + numberGoodFeed + missingFeed + reworkFeed> numberQtdAllowed){
+        //     showError = true
+        // }
+
+        // if (numberGoodFeed + numberBadFeed + missingFeed + reworkFeed <= numberQtdAllowed) {
+        //     showConfirm = true
+        // }
+        // // doPost();
+
+        // if (numberGoodFeed > 0 && numberGoodFeed + missingFeed + reworkFeed + badFeed <= numberQtdAllowed && numberBadFeed === 0) {
+        //     showParcialSuper = true;
+        // }
+
+        // if (numberBadFeed > 0 && numberGoodFeed === 0) {
+        //     showConfirm = true;
+        // }
+
+        // if (numberBadFeed > 0 && numberGoodFeed > 0) {
+        //     showParcialAndRef = true;
+        // }
+
+        // if ((numberGoodFeed === 0 && numberBadFeed === 0) || numberGoodFeed + numberBadFeed === 0) {
+        //     showRoundedApont = true;
+        // }
     }
 
     function close() {
@@ -174,8 +219,8 @@
         </div>
     </div>
 {:then itens}
-    <main class="main">
-        {#if dadosOdf.length !== 0}
+    {#if dadosOdf.length !== 0}
+        <main class="main">
             <div class="fullForm">
                 <form action="/api/v1/apontar" method="POST" class="form">
                     <div id="prod" class="write">
@@ -192,6 +237,7 @@
                             class="input"
                             id="valorFeed"
                             bind:value={valorFeed}
+                            on:input={blockForbiddenChars}
                             name="valorFeed"
                         />
                     </div>
@@ -249,17 +295,17 @@
             </div>
 
             {#await resultRefugo}
-            <div class="imageLoader">
-                <div class="loader">
-                    <img src={imageLoader} alt="" />
+                <div class="imageLoader">
+                    <div class="loader">
+                        <img src={imageLoader} alt="" />
+                    </div>
                 </div>
-            </div>
             {:then item}
                 {#if showConfirm === true}
                     <div class="fundo">
                         <div class="header">
                             <div class="closed">
-                                <h2>MOTIVO DO REFUGO</h2>
+                                <h2>APONTAMENTO COM REFUGO</h2>
                             </div>
                             <select bind:value name="id" id="id">
                                 {#each dados as item}
@@ -271,6 +317,7 @@
                                 autofocus
                                 bind:value={supervisor}
                                 class="supervisor"
+                                on:input={blockForbiddenChars}
                                 type="text"
                                 name="supervisor"
                                 id="supervisor"
@@ -290,15 +337,13 @@
                 <div class="fundo">
                     <div class="header">
                         <div class="closed">
-                            <h2>
-                                Para lançar Parcial um supervisor deve ser
-                                avisado
-                            </h2>
+                            <h2>APONTAMENTO PARCIAL</h2>
                         </div>
                         <p>Supervisor</p>
                         <input
                             autofocus
                             bind:value={supervisor}
+                            on:input={blockForbiddenChars}
                             class="supervisor"
                             type="text"
                             name="supervisor"
@@ -321,6 +366,7 @@
                         <input
                             autofocus
                             bind:value={supervisor}
+                            on:input={blockForbiddenChars}
                             class="supervisor"
                             type="text"
                             name="supervisor"
@@ -343,6 +389,7 @@
                         <input
                             autofocus
                             bind:value={supervisor}
+                            on:input={blockForbiddenChars}
                             class="supervisor"
                             type="text"
                             name="supervisor"
@@ -388,7 +435,7 @@
                 <div class="fundo">
                     <div class="header">
                         <div class="closed">
-                            <h2>Apontamento Zerado</h2>
+                            <h2>Apontamento com valores Invalidos</h2>
                         </div>
                         <button on:keypress={close} on:click={close}
                             >fechar</button
@@ -403,8 +450,10 @@
                         <div class="closed">
                             <h2>Supervisor não encontrado</h2>
                         </div>
-                        <button on:keypress={close} on:click={close}
-                            >fechar</button
+                        <button
+                            tabindex="7"
+                            on:keypress={close}
+                            on:click={close}>fechar</button
                         >
                     </div>
                 </div>
@@ -423,12 +472,12 @@
                     </div>
                 </div>
             {/if}
-        {/if}
-    </main>
+        </main>
+    {/if}
 {/await}
 
 <style>
-    #apontar{
+    #apontar {
         z-index: 1;
     }
     .loader {

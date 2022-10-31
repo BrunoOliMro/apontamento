@@ -3,12 +3,12 @@ import mssql from "mssql";
 import { sqlConfig } from "../../global.config";
 import { unravelBarcode } from '../utils/unravelBarcode'
 
-export const pointerPost: RequestHandler = async (req, res) => {
+export const pointerPost: RequestHandler = async (req, res, next) => {
     //let barcode = String(sanitize(req.body["codigoBarras"])) || null;
     const connection = await mssql.connect(sqlConfig);
     //console.log("linha 09", req.body.codigoBarras);
     const dados: any = unravelBarcode(req.body.codigoBarras)//.then(async (_callback) => {})
-    
+    console.log("dados linha 11/pointer/", dados);
     //console.log("x linha 09", dados);
     //console.log("lin, dadosha 12 /pointer/", req.body.codigoBarras);
     //let barcode = dados
@@ -153,7 +153,6 @@ export const pointerPost: RequestHandler = async (req, res) => {
             return res.json({ message: "paradademaquina" })
         }
     }
-
     try {
         //Seleciona as peças filhas, a quantidade para execução e o estoque dos itens
         const resource2 = await connection.query(`
@@ -232,11 +231,13 @@ export const pointerPost: RequestHandler = async (req, res) => {
                 updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
             }
             await connection.query(updateQtyRes.join("\n"));
-            return res.status(200).redirect("/#/ferramenta?status=pdoesntexists")
+            return next()
+            //return res.status(200).redirect("/#/ferramenta?status=pdoesntexists")
         }
 
         if (resource2.length <= 0) {
-            return res.status(200).json({ message: 'feito' })
+            return next()
+            //return res.status(200).json({ message: 'feito' })
         }
     } catch (error) {
         console.log('linha 236: ', error);

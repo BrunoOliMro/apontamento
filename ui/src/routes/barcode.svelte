@@ -94,6 +94,14 @@
         codigoBarras: !codigoBarras ? "" : codigoBarras,
       }),
     }).then((res) => res.json());
+    console.log("linha 97 /barcode /", res);
+    if(res.message === 'codeApont 1 setup iniciado'){
+      console.log("apontamento iniciado, prossiga para seleção de ferramentas");
+      window.location.href = "/#/ferramenta";
+    }
+
+
+
     if (res.message === "codigo de barras vazio") {
       barcodeMsg = "codigo de barras vazio";
     }

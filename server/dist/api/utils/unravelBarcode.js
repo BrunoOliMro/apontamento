@@ -4,9 +4,6 @@ exports.unravelBarcode = void 0;
 const sanitize_1 = require("./sanitize");
 function unravelBarcode(barcode) {
     barcode = String((0, sanitize_1.sanitize)(barcode));
-    if (barcode === '' || barcode === undefined || barcode === null) {
-        return {};
-    }
     const dados = {
         numOdf: String(barcode.slice(10)),
         numOper: String(barcode.slice(0, 5)),
@@ -17,6 +14,7 @@ function unravelBarcode(barcode) {
         dados.numOper = barcode.slice(0, 5);
         dados.codMaq = barcode.slice(5, 11);
     }
+    console.log("dados linha 33 ", dados);
     return dados;
 }
 exports.unravelBarcode = unravelBarcode;

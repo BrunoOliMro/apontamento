@@ -1,1 +1,1 @@
-{"version":3,"file":"getPoint.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/getPoint.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAKzC,eAAO,MAAM,QAAQ,EAAE,cA2KtB,CAAA"}
+{"version":3,"file":"getPoint.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/getPoint.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAKzC,eAAO,MAAM,QAAQ,EAAE,cA4KtB,CAAA"}

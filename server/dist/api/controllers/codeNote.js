@@ -9,8 +9,7 @@ const global_config_1 = require("../../global.config");
 const unravelBarcode_1 = require("../utils/unravelBarcode");
 const codeNote = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let dados = (0, unravelBarcode_1.unravelBarcode)(req.body.codigobarras);
-    console.log("linha 8 codeNote/ ", dados);
+    let dados = (0, unravelBarcode_1.unravelBarcode)(req.body.codigoBarras);
     try {
         const resource = await connection.query(`
             SELECT 
@@ -24,27 +23,28 @@ const codeNote = async (req, res) => {
             AND ITEM = '${dados.codMaq}'
             ORDER BY DATAHORA DESC`)
             .then(result => result.recordset);
-        console.log("linha 23 codeNote");
         if (resource.length > 0) {
-            if (resource[0]?.CODAPONTA === '1') {
+            if (resource[0]?.CODAPONTA === 1) {
                 return res.json({ message: `codeApont 1 setup iniciado` });
             }
-            if (resource[0]?.CODAPONTA === '2') {
+            if (resource[0]?.CODAPONTA === 2) {
                 return res.json({ message: `codeApont 2 setup finalizado` });
             }
-            if (resource[0]?.CODAPONTA === '3') {
+            if (resource[0]?.CODAPONTA === 3) {
                 return res.json({ message: `codeApont 3 prod iniciado` });
             }
-            if (resource[0]?.CODAPONTA === '4') {
+            if (resource[0]?.CODAPONTA === 4) {
                 return res.json({ message: `codeApont 4 prod finalzado` });
             }
-            if (resource[0]?.CODAPONTA === '5') {
+            if (resource[0]?.CODAPONTA === 5) {
                 return res.json({ message: `codeApont 5 maquina parada` });
             }
-            if (resource[0]?.CODAPONTA === '6') {
+            if (resource[0]?.CODAPONTA === 6) {
                 return res.json({ message: `codeApont 6 processo finalizado` });
             }
-            return res.json({ message: `codigo Apontamento valido` });
+            else {
+                return res.json({ message: `qualquer outro codigo` });
+            }
         }
         else {
             return res.json({ message: 'erro ao localizar o codigo apontamento' });

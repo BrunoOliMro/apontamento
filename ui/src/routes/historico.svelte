@@ -1,6 +1,5 @@
 <script>
   // @ts-nocheck
-
   let imageLoader = "/images/axonLoader.gif";
   import TableHistorico from "../components/Tables/TableHistorico.svelte";
   import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
@@ -8,6 +7,7 @@
   let HISTORICO = [];
   let urlString = `/api/v1/historic`;
   let message = "";
+  
   async function getHISTORICO() {
     const res = await fetch(urlString);
     HISTORICO = await res.json();

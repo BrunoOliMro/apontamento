@@ -7,9 +7,10 @@ exports.pointerPost = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
 const unravelBarcode_1 = require("../utils/unravelBarcode");
-const pointerPost = async (req, res) => {
+const pointerPost = async (req, res, next) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     const dados = (0, unravelBarcode_1.unravelBarcode)(req.body.codigoBarras);
+    console.log("dados linha 11/pointer/", dados);
     const queryGrupoOdf = await connection.query(`
     SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' ORDER BY NUMERO_OPERACAO ASC
     `).then(result => result.recordset);
@@ -149,10 +150,10 @@ const pointerPost = async (req, res) => {
                 updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
             }
             await connection.query(updateQtyRes.join("\n"));
-            return res.status(200).redirect("/#/ferramenta?status=pdoesntexists");
+            return next();
         }
         if (resource2.length <= 0) {
-            return res.status(200).json({ message: 'feito' });
+            return next();
         }
     }
     catch (error) {

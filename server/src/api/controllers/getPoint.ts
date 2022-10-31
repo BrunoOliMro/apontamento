@@ -4,6 +4,7 @@ import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";
 
 export const getPoint: RequestHandler = async (req, res) => {
+    console.log(" aerub eur bububru");
     const connection = await mssql.connect(sqlConfig);
     let NUMERO_ODF = Number(sanitize(req.cookies["NUMERO_ODF"])) || 0
     let qtdBoas = Number((req.cookies["qtdBoas"])) || 0;
@@ -13,8 +14,8 @@ export const getPoint: RequestHandler = async (req, res) => {
     let funcionario = String(sanitize(req.cookies['FUNCIONARIO'])) || null
     var address;
     const hostname = req.get("host")
-    console.log("host", hostname);
-    console.log("qtdBoas", qtdBoas);
+   // console.log("host", hostname);
+   // console.log("qtdBoas", qtdBoas);
     const { networkInterfaces } = require('os');
     const nets = networkInterfaces();
     const results: any = {}; // Or just '{}', an empty object

@@ -12,10 +12,6 @@ export const status: RequestHandler = async (req, res) => {
     let tempoDecorrido = Number(tempoAgora - startTimeNow) || 0;
     const connection = await mssql.connect(sqlConfig);
 
-
-    // console.log("maquina: linha 16/ status", maquina);
-    // console.log("numpec: linha 16/ status", numpec);
-
     try {
         const resource = await connection.query(`
         SELECT 
@@ -34,15 +30,16 @@ export const status: RequestHandler = async (req, res) => {
         //valor vezes a quantidade de peças
         let tempoTotalExecução = Number(tempoExecut * qtdProd) * 1000 
         let tempoRestante = (tempoTotalExecução - tempoDecorrido)
+        tempoRestante = 600000
+
         if (tempoRestante <= 0) {
             tempoRestante = 0
         }
-        if (tempoRestante <= 0) {
-            return res.json({ message: 'erro no tempo' })
-        } else {
-            //console.log('linha 407: /status/ : ', tempoRestante);
+        // if (tempoRestante <= 0) {
+        //     return res.json({ message: 'erro no tempo' })
+        // } else {
             return res.status(200).json(tempoRestante)
-        }
+        // }
     } catch (error) {
         console.log(error)
         return res.json({ error: true, message: "Erro no servidor." });

@@ -15,7 +15,6 @@ const point = async (req, res) => {
     let badFeed = Number((0, sanitize_1.sanitize)(req.body["badFeed"])) || 0;
     let missingFeed = Number((0, sanitize_1.sanitize)(req.body["missingFeed"])) || 0;
     let reworkFeed = Number((0, sanitize_1.sanitize)(req.body["reworkFeed"])) || 0;
-    let parcialFeed = Number((0, sanitize_1.sanitize)(req.body["parcialFeed"])) || 0;
     var codigoFilho = ((req.cookies['codigoFilho']));
     var reservedItens = (req.cookies['reservedItens']);
     let NUMERO_ODF = Number((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"])) || 0;
@@ -28,7 +27,6 @@ const point = async (req, res) => {
     let OPERACAO_PROXIMA = String((0, sanitize_1.sanitize)(req.cookies['OPERACAO_PROXIMA'])) || null;
     let funcionario = String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])) || null;
     let revisao = Number((0, sanitize_1.sanitize)(req.cookies['REVISAO'])) || 0;
-    let qtdProd = Number((0, sanitize_1.sanitize)(req.cookies['qtdProduzir'])) || 0;
     const updateQtyQuery = [];
     let startRip = Number(new Date()) || 0;
     res.cookie("startRip", startRip);
@@ -36,19 +34,20 @@ const point = async (req, res) => {
     let startProd = Number(req.cookies["startProd"] / 1000) || 0;
     let finalProdTimer = Number(endProdTimer.getTime() - startProd / 1000) || 0;
     let refugoQEstaNoSistema = Number((0, sanitize_1.sanitize)(req.cookies['QTD_REFUGO'])) || 0;
-    let retrabalhadas = reworkFeed - refugoQEstaNoSistema;
-    let valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed) + Number(parcialFeed));
-    valorTotalApontado = Number(valorTotalApontado);
-    qtdLibMax = Number(qtdLibMax);
+    let retrabalhadas;
+    let valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed));
     let faltante = qtdLibMax - valorTotalApontado;
+    if (missingFeed <= 0) {
+        faltante = qtdLibMax - valorTotalApontado;
+    }
+    if (reworkFeed > 0) {
+        retrabalhadas = reworkFeed - refugoQEstaNoSistema;
+    }
+    console.log("faltante: ", faltante);
     if (motivorefugo === undefined || motivorefugo === "undefined" || motivorefugo === null) {
         motivorefugo = null;
     }
-    console.log("0korvrev");
-    if (valorTotalApontado > qtdLibMax || valorTotalApontado > qtdProd) {
-        return res.json({ message: 'valor apontado maior que a quantidade liberada' });
-    }
-    if (retrabalhadas + qtdBoas + badFeed > qtdLibMax || retrabalhadas + qtdBoas + badFeed > qtdProd) {
+    if (valorTotalApontado > qtdLibMax) {
         return res.json({ message: 'valor apontado maior que a quantidade liberada' });
     }
     if (badFeed > 0) {
@@ -91,8 +90,9 @@ const point = async (req, res) => {
             await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'N' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
         }
         await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
-        await connection.query(` INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, MOTIVO_REFUGO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-        VALUES(GETDATE(),'${funcionario}',${NUMERO_ODF},'${codigoPeca}','${revisao}','${NUMERO_OPERACAO}','${NUMERO_OPERACAO}', 'D','${CODIGO_MAQUINA}','1',${qtdBoas},${badFeed},'${funcionario}','0','4', '4', 'Fin Prod.',${finalProdTimer},${finalProdTimer}, '1',  UPPER('${motivorefugo}') , ${faltante},${retrabalhadas})`);
+        await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, MOTIVO_REFUGO, CST_PC_FALTANTE)
+        VALUES(GETDATE(),'${funcionario}',${NUMERO_ODF},'${codigoPeca}','${revisao}','${NUMERO_OPERACAO}','${NUMERO_OPERACAO}', 'D','${CODIGO_MAQUINA}','1',${qtdBoas},${badFeed},'${funcionario}','0','4', '4', 'Fin Prod.',${finalProdTimer},${finalProdTimer}, '1',  UPPER('${motivorefugo}') , ${faltante})`);
+        res.cookie('qtdBoas', qtdBoas);
         return res.json({ message: 'valores apontados com sucesso' });
     }
     catch (error) {

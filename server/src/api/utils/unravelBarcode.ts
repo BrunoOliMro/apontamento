@@ -5,12 +5,12 @@ import { sanitize } from "./sanitize";
 
 export function unravelBarcode(barcode: string) {
     barcode = String(sanitize(barcode)) //|| null;
-
+    //console.log("barcode", barcode );
     // barcode = '4418184181818'
 
-    if (barcode === '' || barcode === undefined || barcode === null) {
-        return {}
-    }
+    // if (barcode === '' || barcode === undefined || barcode === null) {
+    //     return {}
+    // }
     //console.log("linha 7 /unravel/", barcode);
 
     //Reatribuiu o codigo caso o cado de barras seja maior
@@ -30,6 +30,7 @@ export function unravelBarcode(barcode: string) {
 
     //console.log("barcode", barcode);
     //console.log("dados linha 32", dados);
+    console.log("dados linha 33 ", dados);
     return dados
 }
 

@@ -1,9 +1,9 @@
 <script>
     // @ts-nocheck
-    let imageLoader = "/images/axonLoader.gif";
+    let imageLoader = `/images/axonLoader.gif`;
     let tempoDecorrido = 0;
     let tempodePro = [];
-    let supervisorApi = "api/v1/supervisor";
+    let supervisorApi = `/api/v1/supervisor`;
     let urlString = `/api/v1/status`;
     let url = `/api/v1/imagem`;
     let tempoMax = null;
@@ -16,25 +16,49 @@
     getTempo();
     getImagem();
 
+    /**
+     * @param {{ target: { value: any; }; }} e
+     */
+     function blockForbiddenChars(e) {
+        let value = e.target.value;
+        e.target.value = preSanitize(value);
+    }
+
+    /**
+     * @param {string} input
+     */
+    function preSanitize(input) {
+        const allowedChars = /[0-9]/;
+        const sanitizedOutput = input
+            .split("")
+            .map((char) => (allowedChars.test(char) ? char : ""))
+            .join("");
+        return sanitizedOutput;
+    }
+
     async function getTempo() {
         const res = await fetch(urlString);
         tempodePro = await res.json();
-        console.log("tempo", tempodePro);
+        console.log("linha ", tempodePro);
+        tempodePro = 6500000;
+        // console.log("tempo", tempodePro);
+        // tempodePro = 600000
 
-        if (tempodePro === "erro no tempo") {
-            tempoMax = 60000;
-        }
+        // if (tempodePro === "erro no tempo") {
+        //     tempoMax = 60000;
+        // }
 
-        if (tempoMax === null) {
-            tempoMax = 60000;
-        }
-        return tempodePro;
+        // if (tempoMax === null) {
+        //     tempoMax = 60000;
+        // }
+        //return tempodePro;
     }
 
     let tempoDaBarra = setInterval(() => {
         if (tempoMax <= 0) {
             shwowSuper = true;
             showRed = true;
+            showGreen = false;
         } else {
             let menorFif = (Number(50) * Number(tempoMax)) / Number(100);
             let maiorFif = (Number(75) * Number(tempoMax)) / Number(100);
@@ -58,6 +82,7 @@
             }
             if (tempoDecorrido >= excedido) {
                 shwowSuper = true;
+                showGreen = false;
             } else {
                 shwowSuper = false;
             }
@@ -67,7 +92,7 @@
     async function getImagem() {
         const res = await fetch(url);
         imagem = await res.json();
-        return imagem;
+        //return imagem;
     }
 
     const doPostSuper = async () => {
@@ -99,6 +124,7 @@
                     autofocus
                     tabindex="8"
                     bind:value={supervisor}
+                    on:input={blockForbiddenChars}
                     name="supervisor"
                     id="supervisor"
                     type="text"
@@ -143,9 +169,9 @@
             />
         {/if}
 
-        {#if resultPromises}
-            <img class="img" src={String(imagem.key)} alt="" />
-        {/if}
+        <!-- {#if resultPromises} -->
+        <img class="img" src={String(imagem.key)} alt="" />
+        <!-- {/if} -->
     {/await}
 </div>
 
