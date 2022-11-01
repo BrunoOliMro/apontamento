@@ -20,6 +20,7 @@ const pointBagde_1 = require("./controllers/pointBagde");
 const getPoint_1 = require("./controllers/getPoint");
 const supervisor_1 = require("./controllers/supervisor");
 const codeNote_1 = require("./controllers/codeNote");
+const getBefSel_1 = require("./controllers/getBefSel");
 const apiRouter = (0, express_1.Router)();
 apiRouter.route("/apontamento")
     .post(codeNote_1.codeNote)
@@ -27,6 +28,7 @@ apiRouter.route("/apontamento")
 apiRouter.route("/apontamentoCracha")
     .post(pointBagde_1.pointBagde);
 apiRouter.route("/odf")
+    .get(getBefSel_1.getBefore)
     .get(odfData_1.odfData);
 apiRouter.route("/imagem")
     .get(statusImage_1.statusImage);

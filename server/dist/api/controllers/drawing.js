@@ -8,26 +8,19 @@ const mssql_1 = __importDefault(require("mssql"));
 const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const global_config_1 = require("../../global.config");
 const pictures_1 = require("../pictures");
+const select_1 = require("../services/select");
 const draw = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     const revisao = Number((0, sanitize_html_1.default)(req.cookies['REVISAO'])) || 0;
     const numpec = String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"])) || null;
     let desenho = String("_desenho");
+    let querySelect = select_1.selectDrawing;
+    console.log("linha 15", querySelect);
     if (revisao === 0) {
         console.log("linha 13 / draw/ ");
     }
     try {
-        const resource = await connection.query(`
-        SELECT
-        DISTINCT
-            [NUMPEC],
-            [IMAGEM],
-            [REVISAO]
-        FROM  QA_LAYOUT(NOLOCK) 
-        WHERE 1 = 1 
-            AND NUMPEC = '${numpec}'
-            AND REVISAO = ${revisao}
-            AND IMAGEM IS NOT NULL`).then(res => res.recordset);
+        const resource = await connection.query(querySelect).then(record => record.recordset);
         let imgResult = [];
         for await (let [i, record] of resource.entries()) {
             const rec = await record;

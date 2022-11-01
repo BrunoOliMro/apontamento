@@ -19,6 +19,7 @@ import { pointBagde } from "./controllers/pointBagde";
 import { getPoint } from "./controllers/getPoint";
 import { supervisor } from "./controllers/supervisor";
 import { codeNote } from "./controllers/codeNote";
+import { getBefore } from "./controllers/getBefSel";
 
 // /api/v1/
 const apiRouter = Router();
@@ -315,6 +316,7 @@ apiRouter.route("/apontamentoCracha")
 // );
 
 apiRouter.route("/odf")
+    .get(getBefore)
     .get(odfData)
 //     async (req, res) => {
 //     let numeroOdf: string = String(req.cookies["NUMERO_ODF"])

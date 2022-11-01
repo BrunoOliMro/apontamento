@@ -137,10 +137,7 @@
             showParcialSuper = true;
         }
 
-        if (
-            numberBadFeed + numberMissing + numberReworkFeed === 0 &&
-            numberGoodFeed === numberQtdAllowed
-        ) {
+        if (numberBadFeed + numberMissing + numberReworkFeed === 0 && numberGoodFeed === numberQtdAllowed) {
             doPost();
         }
 
