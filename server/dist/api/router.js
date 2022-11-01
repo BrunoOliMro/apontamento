@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const pointer_1 = require("./controllers/pointer");
 const badFeedMotives_1 = require("./controllers/badFeedMotives");
-const draw_1 = require("./controllers/draw");
+const drawing_1 = require("./controllers/drawing");
 const historic_1 = require("./controllers/historic");
 const odfData_1 = require("./controllers/odfData");
 const returnedValue_1 = require("./controllers/returnedValue");
@@ -22,8 +22,8 @@ const supervisor_1 = require("./controllers/supervisor");
 const codeNote_1 = require("./controllers/codeNote");
 const apiRouter = (0, express_1.Router)();
 apiRouter.route("/apontamento")
-    .post(pointer_1.pointerPost)
-    .post(codeNote_1.codeNote);
+    .post(codeNote_1.codeNote)
+    .post(pointer_1.pointerPost);
 apiRouter.route("/apontamentoCracha")
     .post(pointBagde_1.pointBagde);
 apiRouter.route("/odf")
@@ -58,6 +58,6 @@ apiRouter.route("/motivorefugo")
 apiRouter.route("/rip")
     .get(rip_1.rip);
 apiRouter.route("/desenho")
-    .get(draw_1.draw);
+    .get(drawing_1.draw);
 exports.default = apiRouter;
 //# sourceMappingURL=router.js.map

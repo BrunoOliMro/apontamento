@@ -1,8 +1,11 @@
 <script>
+    function clear (){
+        localStorage.clear()
+    }
 </script>
 
 <main class="logobar">
-    <a href="/#/codigobarras"><img src="/images/LogoCIM.png" alt="" /></a>
+    <a on:click={clear} on:keypress={clear} href="/#/codigobarras"><img src="/images/LogoCIM.png" alt="" /></a>
 </main>
 
 <style>

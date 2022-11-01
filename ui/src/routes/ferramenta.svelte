@@ -8,25 +8,32 @@
   let fer = [];
   let adicionados = 0;
   let arrayComp = [];
+  let ferr = false;
+  let breadFer;
 
   async function ferSelected() {
     const res = await fetch(urlFer);
     fer = await res.json();
+    console.log("res", fer);
     if (fer.message === "ferramentas selecionadas com successo") {
       window.location.href = "/#/codigobarras/apontamento";
-      //location.reload();
+      location.reload();
     }
   }
 
   async function getfetchItem() {
     const res = await fetch(urlString);
     fetchItem = await res.json();
-    //console.log("fetch item", fetchItem);
+    console.log("fetch item", fetchItem);
     if (fetchItem.message === "/images/sem_imagem.gif") {
-      window.location.href = "/#/codigobarras/apontamento";
-      location.reload()
-    } else {
-      window.location.href = "/#/ferramenta";
+      ferSelected();
+      //window.location.href = "/#/codigobarras/apontamento";
+      //location.reload()
+    }
+    if (fetchItem.length > 0) {
+      localStorage.setItem('breadFer', 'true')
+      ferr = true;
+      // window.location.href = "/#/ferramenta";
     }
   }
 
@@ -42,10 +49,19 @@
     }
   }
 
-  let resultPromises = getfetchItem()
+  let resultPromises = getfetchItem();
 </script>
 
-{#await resultPromises}
+{#if ferr === true}
+  <nav class="breadcrumb" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="/#/codigobarras">Colaborador</a>
+      </li>
+    </ol>
+  </nav>
+{/if}
+{#await fetchItem}
   <div class="imageLoader">
     <div class="loader">
       <img src={imageLoader} alt="" />
@@ -71,7 +87,13 @@
 {/await}
 
 <style>
-  h3{
+  .breadcrumb {
+    margin-top: 5px;
+    margin-left: 1%;
+    margin-bottom: 0%;
+    text-decoration: underline;
+  }
+  h3 {
     z-index: 5;
   }
   .loader {
@@ -127,7 +149,7 @@
     text-align: center;
     z-index: 1;
   }
-  img{
+  img {
     z-index: 1;
   }
 
@@ -147,7 +169,7 @@
     flex-direction: column;
     z-index: 3;
   }
-/* 
+  /* 
   div {
     margin: 1%;
     border-radius: 5px;

@@ -10,15 +10,15 @@ const unravelBarcode_1 = require("../utils/unravelBarcode");
 const pointerPost = async (req, res, next) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     const dados = (0, unravelBarcode_1.unravelBarcode)(req.body.codigoBarras);
-    console.log("dados linha 11/pointer/", dados);
+    let message = String(req.body.message);
     const queryGrupoOdf = await connection.query(`
     SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' ORDER BY NUMERO_OPERACAO ASC
     `).then(result => result.recordset);
     if (queryGrupoOdf.length <= 0) {
-        return res.json({ message: "odf não encontrada" });
+        return res.json({ message: 'odf não encontrada' });
     }
     let codigoOperArray = queryGrupoOdf.map(e => e.NUMERO_OPERACAO);
-    let arrayAfterMap = codigoOperArray.map(e => "00" + e).toString().replaceAll(' ', "0").split(",");
+    let arrayAfterMap = codigoOperArray.map(e => '00' + e).toString().replaceAll(' ', '0').split(',');
     let indiceDoArrayDeOdfs = arrayAfterMap.findIndex((callback) => callback === dados.numOper);
     if (indiceDoArrayDeOdfs <= 0) {
         indiceDoArrayDeOdfs = 0;
@@ -33,28 +33,28 @@ const pointerPost = async (req, res, next) => {
     let codigoMaquinaProxOdf;
     let codMaqProxOdf;
     if (indiceDoArrayDeOdfs === 0) {
-        codigoMaquinaProxOdf = objOdfSelecProximo["CODIGO_MAQUINA"];
-        codMaqProxOdf = objOdfSelecProximo["NUMERO_OPERACAO"];
-        qntdeJaApontada = objOdfSelecionada["QTDE_APONTADA"];
-        qtdLib = objOdfSelecionada["QTDE_ODF"];
-        apontLib = objOdfSelecionada["APONTAMENTO_LIBERADO"];
+        codigoMaquinaProxOdf = objOdfSelecProximo['CODIGO_MAQUINA'];
+        codMaqProxOdf = objOdfSelecProximo['NUMERO_OPERACAO'];
+        qntdeJaApontada = objOdfSelecionada['QTDE_APONTADA'];
+        qtdLib = objOdfSelecionada['QTDE_ODF'];
+        apontLib = objOdfSelecionada['APONTAMENTO_LIBERADO'];
     }
     if (indiceDoArrayDeOdfs === codigoOperArray.length - 1) {
-        codigoMaquinaProxOdf = objOdfSelecionada["CODIGO_MAQUINA"];
-        codMaqProxOdf = objOdfSelecionada["NUMERO_OPERACAO"];
-        qntdeJaApontada = objOdfSelecionada["QTDE_APONTADA"];
-        qtdLib = objOdfSelecAnterior["QTDE_APONTADA"];
-        apontLib = objOdfSelecionada["APONTAMENTO_LIBERADO"];
+        codigoMaquinaProxOdf = objOdfSelecionada['CODIGO_MAQUINA'];
+        codMaqProxOdf = objOdfSelecionada['NUMERO_OPERACAO'];
+        qntdeJaApontada = objOdfSelecionada['QTDE_APONTADA'];
+        qtdLib = objOdfSelecAnterior['QTDE_APONTADA'];
+        apontLib = objOdfSelecionada['APONTAMENTO_LIBERADO'];
     }
     if (indiceDoArrayDeOdfs > 0 && indiceDoArrayDeOdfs < codigoOperArray.length - 1) {
-        codigoMaquinaProxOdf = objOdfSelecProximo["CODIGO_MAQUINA"];
-        codMaqProxOdf = objOdfSelecProximo["NUMERO_OPERACAO"];
-        qntdeJaApontada = objOdfSelecionada["QTDE_APONTADA"];
-        qtdLib = objOdfSelecAnterior["QTDE_APONTADA"];
-        apontLib = objOdfSelecionada["APONTAMENTO_LIBERADO"];
+        codigoMaquinaProxOdf = objOdfSelecProximo['CODIGO_MAQUINA'];
+        codMaqProxOdf = objOdfSelecProximo['NUMERO_OPERACAO'];
+        qntdeJaApontada = objOdfSelecionada['QTDE_APONTADA'];
+        qtdLib = objOdfSelecAnterior['QTDE_APONTADA'];
+        apontLib = objOdfSelecionada['APONTAMENTO_LIBERADO'];
     }
     if (qtdLib - qntdeJaApontada === 0) {
-        return res.status(400).json({ message: "não há limite na odf" });
+        return res.status(400).json({ message: 'não há limite na odf' });
     }
     qtdLibMax = qtdLib - qntdeJaApontada;
     if (objOdfSelecAnterior === undefined) {
@@ -71,28 +71,39 @@ const pointerPost = async (req, res, next) => {
     if (objOdfSelecAnterior === undefined) {
         objOdfSelecAnterior = 0;
     }
-    let numeroOper = '00' + objOdfSelecionada.NUMERO_OPERACAO.replaceAll(" ", '0');
+    let numeroOper = '00' + objOdfSelecionada.NUMERO_OPERACAO.replaceAll(' ', '0');
     if (objOdfSelecionada['CODIGO_MAQUINA'] === 'RET001') {
         objOdfSelecionada['CODIGO_MAQUINA'] = 'RET001';
     }
-    console.log('codigoMaq linha 124:', dados.codMaq);
+    console.log('codigoMaq linha 108', message);
     res.cookie('qtdLibMax', qtdLibMax);
-    res.cookie("MAQUINA_PROXIMA", codigoMaquinaProxOdf);
-    res.cookie("OPERACAO_PROXIMA", codMaqProxOdf);
-    res.cookie("NUMERO_ODF", objOdfSelecionada["NUMERO_ODF"]);
-    res.cookie("CODIGO_PECA", objOdfSelecionada['CODIGO_PECA']);
-    res.cookie("CODIGO_MAQUINA", objOdfSelecionada['CODIGO_MAQUINA']);
-    res.cookie("NUMERO_OPERACAO", numeroOper);
-    res.cookie("REVISAO", objOdfSelecionada['REVISAO']);
-    const codApont = await connection.query(`
-    SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND PECA = '${objOdfSelecionada.CODIGO_PECA}' AND ITEM = '${objOdfSelecionada.CODIGO_MAQUINA}' ORDER BY DATAHORA DESC`.trim()).then(result => result.recordset);
-    if (codApont.length > 0) {
-        if (codApont[0]?.CODAPONTA === 5) {
-            return res.json({ message: "paradademaquina" });
-        }
+    res.cookie('MAQUINA_PROXIMA', codigoMaquinaProxOdf);
+    res.cookie('OPERACAO_PROXIMA', codMaqProxOdf);
+    res.cookie('NUMERO_ODF', objOdfSelecionada['NUMERO_ODF']);
+    res.cookie('CODIGO_PECA', objOdfSelecionada['CODIGO_PECA']);
+    res.cookie('CODIGO_MAQUINA', objOdfSelecionada['CODIGO_MAQUINA']);
+    res.cookie('NUMERO_OPERACAO', numeroOper);
+    res.cookie('REVISAO', objOdfSelecionada['REVISAO']);
+    if (message === 'codeApont 2 setup finalizado') {
+        return res.json({ message: 'codeApont 2 setup finalizado' });
+    }
+    if (message === 'codeApont 3 prod iniciado') {
+        return res.json({ message: 'codeApont 3 prod iniciado' });
+    }
+    if (message === 'codeApont 4 prod finalzado') {
+        return res.json({ message: 'codeApont 4 prod finalzado' });
+    }
+    if (message === 'codeApont 5 prod iniciado') {
+        return res.json({ message: 'codeApont 5 prod iniciado' });
+    }
+    if (message === 'codeApont 6 prod iniciado') {
+        return res.json({ message: 'codeApont 6 prod iniciado' });
+    }
+    if (message === 'qualquer outro codigo') {
+        return res.json({ message: 'qualquer outro codigo' });
     }
     try {
-        const resource2 = await connection.query(`
+        const selectKnowHasP = await connection.query(`
                     SELECT DISTINCT                 
                        OP.NUMITE,                 
                        CAST(OP.EXECUT AS INT) AS EXECUT,
@@ -110,10 +121,10 @@ const pointerPost = async (req, res, next) => {
                        AND OP.CONDIC ='P'                 
                        AND PCP.NUMERO_ODF = '${dados.numOdf}'    
                     `.trim()).then(result => result.recordset);
-        if (resource2.length > 0) {
-            res.cookie("CONDIC", resource2[0].CONDIC);
-            let codigoNumite = resource2.map(e => e.NUMITE);
-            res.cookie("NUMITE", codigoNumite);
+        if (selectKnowHasP.length > 0) {
+            res.cookie('CONDIC', selectKnowHasP[0].CONDIC);
+            let codigoNumite = selectKnowHasP.map(e => e.NUMITE);
+            res.cookie('NUMITE', codigoNumite);
             function calMaxQuant(qtdNecessPorPeca, saldoReal) {
                 const pecasPaiPorComponente = qtdNecessPorPeca.map((qtdPorPeca, i) => {
                     return Math.floor((saldoReal[i] || 0) / qtdPorPeca);
@@ -124,41 +135,41 @@ const pointerPost = async (req, res, next) => {
                 Math.round(qtdMaxProduzivel);
                 return (qtdMaxProduzivel === Infinity ? 0 : qtdMaxProduzivel);
             }
-            const execut = resource2.map(item => item.EXECUT);
-            const saldoReal = resource2.map(item => item.SALDOREAL);
+            const execut = selectKnowHasP.map(item => item.EXECUT);
+            const saldoReal = selectKnowHasP.map(item => item.SALDOREAL);
             let qtdTotal = calMaxQuant(execut, saldoReal);
             const reservedItens = execut.map((quantItens) => {
                 return Math.floor((qtdTotal || 0) * quantItens);
             }, Infinity);
-            res.cookie("reservedItens", reservedItens);
-            const codigoFilho = resource2.map(item => item.NUMITE);
-            res.cookie("codigoFilho", codigoFilho);
-            let qtdProdOdf = Number(resource2[0].QTDE_ODF);
+            res.cookie('reservedItens', reservedItens);
+            const codigoFilho = selectKnowHasP.map(item => item.NUMITE);
+            res.cookie('codigoFilho', codigoFilho);
+            let qtdProdOdf = Number(selectKnowHasP[0].QTDE_ODF);
             let resultadoFinalProducao = Number(Number(qtdTotal) - Number(qtdProdOdf));
             if (resultadoFinalProducao <= 0) {
                 resultadoFinalProducao = 0;
                 return resultadoFinalProducao;
             }
-            res.cookie("resultadoFinalProducao", resultadoFinalProducao);
+            res.cookie('resultadoFinalProducao', resultadoFinalProducao);
             const updateQtyQuery = [];
             const updateQtyRes = [];
             for (const [i, qtdItem] of reservedItens.entries()) {
                 updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
             }
-            await connection.query(updateQtyQuery.join("\n"));
+            await connection.query(updateQtyQuery.join('\n'));
             for (const [i, qtdItem] of reservedItens.entries()) {
                 updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
             }
-            await connection.query(updateQtyRes.join("\n"));
-            return next();
+            await connection.query(updateQtyRes.join('\n'));
+            return res.json({ message: `valores reservados` });
         }
-        if (resource2.length <= 0) {
-            return next();
+        if (selectKnowHasP.length <= 0) {
+            return res.json({ message: 'não foi necessario reservar' });
         }
     }
     catch (error) {
-        console.log('linha 236: ', error);
-        return res.json({ message: "CATCH ERRO NO TRY" });
+        console.log('linha 214: ', error);
+        return res.json({ message: 'CATCH ERRO NO TRY' });
     }
     finally {
     }

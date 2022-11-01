@@ -7,7 +7,7 @@
   let HISTORICO = [];
   let urlString = `/api/v1/historic`;
   let message = "";
-  
+
   async function getHISTORICO() {
     const res = await fetch(urlString);
     HISTORICO = await res.json();
@@ -23,7 +23,14 @@
 </script>
 
 <main>
-  <Breadcrumb />
+  <!-- <Breadcrumb /> -->
+  <nav class="breadcrumb" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="/#/codigobarras/apontamento">Apontamento</a>
+      </li>
+    </ol>
+  </nav>
   <div class="subtitle">{subtitle}</div>
   {#await resultado}
     <div class="imageLoader">

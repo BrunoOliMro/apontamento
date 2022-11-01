@@ -30,7 +30,7 @@ export function unravelBarcode(barcode: string) {
 
     //console.log("barcode", barcode);
     //console.log("dados linha 32", dados);
-    console.log("dados linha 33 ", dados);
+    //console.log("dados linha 33 ", dados);
     return dados
 }
 

@@ -7,7 +7,7 @@ exports.codeNote = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
 const unravelBarcode_1 = require("../utils/unravelBarcode");
-const codeNote = async (req, res) => {
+const codeNote = async (req, res, next) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let dados = (0, unravelBarcode_1.unravelBarcode)(req.body.codigoBarras);
     try {
@@ -21,33 +21,42 @@ const codeNote = async (req, res) => {
             AND ODF = '${dados.numOdf}'
             AND NUMOPE = '${dados.numOper}'
             AND ITEM = '${dados.codMaq}'
-            ORDER BY DATAHORA DESC`)
+            ORDER BY DATAHORA DESC
+            `)
             .then(result => result.recordset);
+        console.log('linha 23 codeNote', resource);
         if (resource.length > 0) {
             if (resource[0]?.CODAPONTA === 1) {
-                return res.json({ message: `codeApont 1 setup iniciado` });
+                req.body.message = 'codeApont 1 setup iniciado';
+                next();
             }
             if (resource[0]?.CODAPONTA === 2) {
-                return res.json({ message: `codeApont 2 setup finalizado` });
+                req.body.message = 'codeApont 2 setup finalizado';
+                next();
             }
             if (resource[0]?.CODAPONTA === 3) {
-                return res.json({ message: `codeApont 3 prod iniciado` });
+                req.body.message = 'codeApont 3 prod iniciado';
+                next();
             }
             if (resource[0]?.CODAPONTA === 4) {
-                return res.json({ message: `codeApont 4 prod finalzado` });
+                req.body.message = 'codeApont 4 prod finalzado';
+                next();
             }
             if (resource[0]?.CODAPONTA === 5) {
-                return res.json({ message: `codeApont 5 maquina parada` });
+                req.body.message = 'codeApont 5 maquina parada';
+                next();
             }
             if (resource[0]?.CODAPONTA === 6) {
-                return res.json({ message: `codeApont 6 processo finalizado` });
+                req.body.message = 'codeApont 6 processo finalizado';
+                next();
             }
-            else {
-                return res.json({ message: `qualquer outro codigo` });
+            if (!resource[0]?.CODAPONTA) {
+                req.body.message = `qualquer outro codigo`;
+                next();
             }
         }
-        else {
-            return res.json({ message: 'erro ao localizar o codigo apontamento' });
+        if (resource.length <= 0) {
+            next();
         }
     }
     catch (error) {

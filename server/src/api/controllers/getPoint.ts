@@ -4,7 +4,6 @@ import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";
 
 export const getPoint: RequestHandler = async (req, res) => {
-    console.log(" aerub eur bububru");
     const connection = await mssql.connect(sqlConfig);
     let NUMERO_ODF = Number(sanitize(req.cookies["NUMERO_ODF"])) || 0
     let qtdBoas = Number((req.cookies["qtdBoas"])) || 0;

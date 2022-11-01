@@ -1,4 +1,5 @@
 <script>
+// @ts-nocheck
     let imageLoader = '/images/axonLoader.gif';
     import badFeed from '../content/feed.svelte';
     import reworkFeed from '../content/feed.svelte';
@@ -6,6 +7,7 @@
     import ruins from '../content/feed.svelte';
     import retrabalhar from '../content/feed.svelte';
     import faltante from '../content/feed.svelte';
+    import Title from '../title/title.svelte';
     let apiMotivoParada = 'api/v1/motivoParada';
     let postParada = `/api/v1/postParada`;
     let dadosOdf = [];
@@ -14,6 +16,7 @@
     let showmodal = false;
     let resultCall = callMotivo();
     let showMaqPar = false;
+    let ferr = localStorage.getItem("breadFer")
 
     const getMissingFeed = async () => {
         document.getElementById('faltante').style.display = 'block';
@@ -81,6 +84,17 @@
 </script>
 
 <main>
+    {#if ferr === "true"}
+        <nav class='breadcrumb' aria-label='breadcrumb'>
+            <ol class='breadcrumb'>
+                <li class='breadcrumb-item'>
+                    <a href='/#/ferramenta'>Ferramentas</a>
+                </li>
+            </ol>
+        </nav>
+    {/if}
+
+    <Title />
     <ul class='nav2'>
         <li>Parcial</li>
     </ul>
@@ -162,8 +176,12 @@
         <a class='out' href='/#/historico/'
             ><button type='button' class='sideButton'> Historico </button>
         </a>
-        <button type='button' class='sideButton' on:click={parada}
-        on:keypress={parada}>
+        <button
+            type='button'
+            class='sideButton'
+            on:click={parada}
+            on:keypress={parada}
+        >
             Parada
         </button>
         <a class='out' href='/#/desenho/'
@@ -173,6 +191,12 @@
 </main>
 
 <style>
+    .breadcrumb{
+        margin-top: 5px;
+        margin-left: 0%;
+        margin-bottom: 0%;
+        text-decoration: underline;
+    }
     .loader {
         margin: 0%;
         position: relative;

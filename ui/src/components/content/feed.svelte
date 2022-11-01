@@ -133,11 +133,7 @@
             showRoundedApont = true;
         }
 
-        if (
-            numberBadFeed + numberMissing + numberReworkFeed === 0 &&
-            numberGoodFeed > 0 &&
-            numberGoodFeed < numberQtdAllowed
-        ) {
+        if (numberBadFeed + numberMissing + numberReworkFeed === 0 && numberGoodFeed > 0 && numberGoodFeed < numberQtdAllowed) {
             showParcialSuper = true;
         }
 

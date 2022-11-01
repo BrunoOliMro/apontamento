@@ -14,7 +14,6 @@ function unravelBarcode(barcode) {
         dados.numOper = barcode.slice(0, 5);
         dados.codMaq = barcode.slice(5, 11);
     }
-    console.log("dados linha 33 ", dados);
     return dados;
 }
 exports.unravelBarcode = unravelBarcode;

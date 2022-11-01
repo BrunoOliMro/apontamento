@@ -2,7 +2,7 @@ import { Router } from "express";
 //import assert from "node:assert";
 import { pointerPost } from "./controllers/pointer";
 import { badFeedMotives } from "./controllers/badFeedMotives";
-import { draw } from "./controllers/draw";
+import { draw } from "./controllers/drawing";
 import { historic } from "./controllers/historic";
 import { odfData } from "./controllers/odfData";
 import { returnedValue } from "./controllers/returnedValue";
@@ -24,8 +24,8 @@ import { codeNote } from "./controllers/codeNote";
 const apiRouter = Router();
 
 apiRouter.route("/apontamento")
-    .post(pointerPost)
     .post(codeNote)
+    .post(pointerPost)
 
 // async (req, res) => {
 //     req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());

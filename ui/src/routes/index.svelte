@@ -7,8 +7,8 @@
 </script>
 
 <main>
-   <Breadcrumb />
-   <Title/>
+   <!-- <Breadcrumb /> -->
+   <!-- <Title/> -->
    <Nav />
    <Container/>
    <Footer/>

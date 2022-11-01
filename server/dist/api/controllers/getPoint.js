@@ -8,7 +8,6 @@ const mssql_1 = __importDefault(require("mssql"));
 const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const global_config_1 = require("../../global.config");
 const getPoint = async (req, res) => {
-    console.log(" aerub eur bububru");
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let NUMERO_ODF = Number((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"])) || 0;
     let qtdBoas = Number((req.cookies["qtdBoas"])) || 0;

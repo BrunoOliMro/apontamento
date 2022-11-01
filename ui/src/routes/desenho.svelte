@@ -48,7 +48,14 @@
 
 <main class="main">
     <div class="breadCrumb">
-        <Breadcrumb />
+        <!-- <Breadcrumb /> -->
+        <nav class="breadcrumb" aria-label="breadcrumb">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item">
+                <a href="/#/codigobarras/apontamento">Apontamento</a>
+              </li>
+            </ol>
+          </nav>
     </div>
     <div id="subtitle" class="subtitle">{Subtitle}</div>
     <div id="buttons">

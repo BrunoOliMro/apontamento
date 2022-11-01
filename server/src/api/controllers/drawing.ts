@@ -9,6 +9,7 @@ export const draw: RequestHandler = async (req, res) => {
     const revisao = Number(sanitize(req.cookies['REVISAO'])) || 0
     const numpec = String(sanitize(req.cookies["CODIGO_PECA"])) || null
     let desenho = String("_desenho")
+
     if (revisao === 0) {
         console.log("linha 13 / draw/ ");
     }
@@ -22,7 +23,7 @@ export const draw: RequestHandler = async (req, res) => {
         FROM  QA_LAYOUT(NOLOCK) 
         WHERE 1 = 1 
             AND NUMPEC = '${numpec}'
-            AND REVISAO = '${revisao}'
+            AND REVISAO = ${revisao}
             AND IMAGEM IS NOT NULL`).then(res => res.recordset)
         let imgResult = [];
         for await (let [i, record] of resource.entries()) {

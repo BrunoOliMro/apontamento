@@ -8,6 +8,7 @@ export const odfData: RequestHandler = async (req, res) => {
     let numOper = String(sanitize(req.cookies["NUMERO_OPERACAO"])) || null
     let numOpeNew = String(numOper!.toString().replaceAll(' ', "0")) || null
     const connection = await mssql.connect(sqlConfig);
+
     try {
         const resource = await connection.query(`
         SELECT 
