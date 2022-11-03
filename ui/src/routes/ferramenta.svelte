@@ -4,12 +4,12 @@
   let urlString = `/api/v1/ferramenta`;
   let urlFer = `/api/v1/ferselecionadas`;
   let fetchItem = [];
+  let loader = true
   getfetchItem();
   let fer = [];
   let adicionados = 0;
   let arrayComp = [];
-  let ferr = false;
-  let breadFer;
+  export let breadFer;
 
   async function ferSelected() {
     const res = await fetch(urlFer);
@@ -27,13 +27,11 @@
     console.log("fetch item", fetchItem);
     if (fetchItem.message === "/images/sem_imagem.gif") {
       ferSelected();
-      //window.location.href = "/#/codigobarras/apontamento";
-      //location.reload()
     }
     if (fetchItem.length > 0) {
-      localStorage.setItem('breadFer', 'true')
-      ferr = true;
-      // window.location.href = "/#/ferramenta";
+      loader = false
+      //localStorage.setItem('breadFer', 'true')
+      //breadFer = true
     }
   }
 
@@ -45,14 +43,15 @@
       document.getElementById(imgId).style.transition = "1px";
     }
     if (fetchItem.length === arrayComp.length) {
+      loader = true
       ferSelected();
     }
   }
 
-  let resultPromises = getfetchItem();
+  //let resultPromises = getfetchItem();
 </script>
 
-{#if ferr === true}
+{#if breadFer === true}
   <nav class="breadcrumb" aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item">
@@ -60,6 +59,13 @@
       </li>
     </ol>
   </nav>
+{/if}
+{#if loader === true }
+<div class="imageLoader">
+  <div class="loader">
+    <img src={imageLoader} alt="" />
+  </div>
+</div>
 {/if}
 {#await fetchItem}
   <div class="imageLoader">

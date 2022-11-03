@@ -1,3 +1,7 @@
+<script>
+  export let breadFer;
+</script>
+
 <nav class="breadcrumb" aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item">

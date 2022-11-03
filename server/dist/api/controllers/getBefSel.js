@@ -12,6 +12,7 @@ const getBefore = async (req, res, next) => {
     const numerOdf = Number((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]));
     const numerOper = String((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"]));
     const codMaq = String((0, sanitize_1.sanitize)(req.cookies["CODIGO_MAQUINA"]));
+    const numeroPeca = String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA']));
     try {
         const checkForOdf = await connection.query(`
         SELECT
@@ -25,11 +26,14 @@ const getBefore = async (req, res, next) => {
         AND CODIGO_MAQUINA = '${codMaq}'
         ORDER BY NUMERO_OPERACAO ASC
         `).then(res => res.recordset);
+        if (numeroPeca !== checkForOdf[0].CODIGO_PECA) {
+            return res.json({ message: 'dados não conferem' });
+        }
         if (checkForOdf.length > 0) {
             next();
         }
-        if (checkForOdf.length <= 0) {
-            return res.json({ message: 'dados não conferem conferidos' });
+        else {
+            return res.json({ message: 'dados não conferem' });
         }
     }
     catch (error) {

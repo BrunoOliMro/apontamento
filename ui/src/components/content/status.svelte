@@ -39,8 +39,8 @@
     async function getTempo() {
         const res = await fetch(urlString);
         tempodePro = await res.json();
-        console.log("linha ", tempodePro);
         tempodePro = 6500000;
+        tempoMax = 600000
         // console.log("tempo", tempodePro);
         // tempodePro = 600000
 

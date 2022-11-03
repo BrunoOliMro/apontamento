@@ -60,6 +60,7 @@ export const codeNote: RequestHandler = async (req, res, next) => {
             }
         }
         if (resource.length <= 0) {
+            req.body.message = 'insira cod 1'
             next()
         }
     } catch (error) {

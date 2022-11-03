@@ -1,14 +1,13 @@
 <script>
   // @ts-nocheck
-  import { bind, get_slot_changes } from 'svelte/internal';
-  import Title from '../components/title/title.svelte';
-  let value;
-  let codigoBarrasReturn = '';
-  let codigoBarras = '';
+  import Title from "../components/title/title.svelte";
+  let imageLoader = "/images/axonLoader.gif";
+  let codigoBarrasReturn = "";
+  let codigoBarras = "";
   let urlS = `/api/v1/apontamento`;
   let urlBagde = `/api/v1/apontamentoCracha`;
-  let supervisorApi = 'api/v1/supervisorParada';
-  let cracha = '';
+  let supervisorApi = "api/v1/supervisorParada";
+  let cracha = "";
   let showmodal = false;
   let showCorr = false;
   let returnedValueApi = `/api/v1/returnedValue`;
@@ -26,48 +25,44 @@
   let quantityModal = false;
   let errorReturnValue = false;
   let returnValueAvailable;
-  let paradaMsg = '';
-  let barcodeMsg = '';
-  let breadCrumbmodal = '';
+  let paradaMsg = "";
+  let barcodeMsg = "";
   let showBreadcrumb = false;
-  // if (window.location.href.includes('?')) {
-  //   barcodeMsg = window.location.href.split('?')[1].split('=')[1];
-  // }
+  let loader = false;
+  let crachModal = "";
 
-  let badgeMsg = '';
-  if (window.location.href.includes('?')) {
-    badgeMsg = window.location.href.split('?')[1].split('=')[1];
+  let badgeMsg = "";
+  if (window.location.href.includes("?")) {
+    badgeMsg = window.location.href.split("?")[1].split("=")[1];
   }
 
-  // if (window.location.href.includes('?')) {
-  //   superParada = window.location.href.split('?')[1].split('=')[1];
-  // }
-
   const doPostSuper = async () => {
+    loader = true;
     const headers = new Headers();
-    headers.append('Content-Type', 'application/json');
+    headers.append("Content-Type", "application/json");
     const res = await fetch(supervisorApi, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        superSuperMaqPar: !superSuperMaqPar ? '' : superSuperMaqPar,
+        superSuperMaqPar: !superSuperMaqPar ? "" : superSuperMaqPar,
       }),
     }).then((res) => res.json());
-    console.log('linha 54', res);
-    if (res.message === 'maquina') {
-      window.location.href = '/#/codigobarras';
+    console.log("linha 54", res);
+    if (res.message === "maquina") {
+      loader = false;
+      window.location.href = "/#/codigobarras";
       location.reload();
     }
-    if (res.message === 'supervisor não encontrado') {
+    if (res.message === "supervisor não encontrado") {
       superParada = false;
-      paradaMsg = 'supervisor não encontrado';
+      paradaMsg = "supervisor não encontrado";
       showmodal = false;
     }
 
-    if (res.message === 'erro na parada de maquina') {
+    if (res.message === "erro na parada de maquina") {
       showmodal = false;
       superParada = false;
-      paradaMsg = 'erro na parada de maquina';
+      paradaMsg = "erro na parada de maquina";
     }
   };
 
@@ -78,105 +73,111 @@
   function preSanitize(input) {
     const allowedChars = /[A-Za-z0-9]/;
     const sanitizedOutput = input
-      .split('')
-      .map((char) => (allowedChars.test(char) ? char : ''))
-      .join('');
+      .split("")
+      .map((char) => (allowedChars.test(char) ? char : ""))
+      .join("");
     return sanitizedOutput;
   }
 
+  function checkForPost(event) {
+    console.log("linha 93", event);
+    // if (event.inputType === 'insertText') {
+    // if (codigoBarras.length >= 18) {
+    //   doPost();
+    //   // }
+    // }
+    if (codigoBarras.length === 17) {
+      console.log("linha 90");
+      doPost();
+    }
+  }
+
   const doPost = async () => {
+    loader = true;
     const headers = new Headers();
-    headers.append('Content-Type', 'application/json');
+    headers.append("Content-Type", "application/json");
     const res = await fetch(urlS, {
-      method: 'POST',
+      method: "POST",
       headers: headers,
       body: JSON.stringify({
-        codigoBarras: !codigoBarras ? '' : codigoBarras,
+        codigoBarras,
       }),
     }).then((res) => res.json());
-
-    //console.log('RES', res);
-
-    if (res.message === 'não foi necessario reservar' || res.message === 'valores reservados' ) {
-      window.location.href = '/#/ferramenta';
+    console.log("res", res);
+    if (
+      res.message === "codeApont 1 setup iniciado" ||
+      res.message === "insira cod 1" ||
+      res.message === "não foi necessario reservar" ||
+      res.message === "valores reservados"
+    ) {
+      loader = false;
+      window.location.href = "/#/ferramenta";
     }
 
-    // if(res.message === 'codeApont 1 setup iniciado' || res.message === 'insert cod 1'){
-    //   window.location.href = '/#/ferramenta';
-    // }
-    if (res.message === 'codeApont 2 setup finalizado') {
-      window.location.href = '/#/ferramenta';
+    if (res.message === "codeApont 3 prod iniciado") {
+      console.log('linha 118 barcode');
+      loader = false;
+      window.location.href = "/#/codigobarras/apontamento";
     }
-    if (res.message === 'codeApont 3 prod iniciado') {
-      console.log('vai passar aqui');
-      window.location.href = '/#/codigobarras/apontamento';
+    if (res.message === "codeApont 4 prod finalzado") {
+      window.location.href = "/#/rip";
     }
-    if (res.message === 'codeApont 4 prod finalzado') {
-      window.location.href = '/#/rip';
-    }
-    if (res.message === 'codeApont 5 maquina parada') {
-      window.location.href = '/#/codigobarras';
+    if (res.message === "codeApont 5 maquina parada") {
+      console.log("linha 128");
+      loader = false;
       superParada = true;
-      breadCrumbmodal = true;
     }
-    if (res.message === 'codeApont 6 processo finalizado' ||  res.message === 'qualquer outro codigo') {
-      window.location.href = '/#/codigobarras';
-      location.reload();
+    if (res.message === "codigo de barras vazio") {
+      barcodeMsg = "codigo de barras vazio";
     }
-    // if(res.message === 'qualquer outro codigo'){
-    //   window.location.href = '/#/codigobarras';
-    // }
-    // if(res.message === 'algo deu errado ao buscar pelo codigo de apontamentoo'){
-    //   console.log('erro ao localizar o codigo apontamento');
-    //   barcodeMsg = 'odf não encontrada'
-    // }
-    // if (res.message === 'codigo de barras vazio') {
-    //   barcodeMsg = 'codigo de barras vazio';
-    // }
-    // if (res.message === 'odf não encontrada') {
-    //   barcodeMsg = 'odf não encontrada';
-    // }
-    // if (res.message === 'não há limite na odf') {
-    //   barcodeMsg = 'não há limite na odf';
-    // }
-    // if (res.message === 'paradademaquina') {
-    //   superParada = true;
-    // }
-    // if (res.message === 'paradademaquina') {
-    //   breadCrumbmodal = true;
-    // }
-    // if (res.message === 'feito') {
-    //   window.location.href = '/#/ferramenta';
-    //   //location.reload();
-    // }
+    if (res.message === "odf não encontrada") {
+      loader = false;
+      barcodeMsg = "odf não encontrada";
+    }
+    if (res.message === "não há limite na odf") {
+      loader = false;
+      barcodeMsg = "não há limite na odf";
+    }
   };
 
+  function checkBeforeBadge() {
+    console.log("linha 170", cracha);
+    if (cracha === "000000") {
+      crachModal = "cracha invalido";
+    } else if (cracha.length === 6) {
+      checkBagde();
+    }
+  }
+
   const checkBagde = async () => {
+    loader = true;
     const headers = new Headers();
-    headers.append('Content-Type', 'application/json');
+    headers.append("Content-Type", "application/json");
     const res = await fetch(urlBagde, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({
         cracha,
       }),
       headers,
     }).then((res) => res.json());
-    if (res.message === 'cracha não encontrado') {
-      showBadgeNotFound = true;
-    }
-    if (res.message === 'codigo de matricula vazia') {
-      bagdeEmpty = true;
-    }
-    if (res.message === 'cracha encontrado') {
+    loader = false;
+    console.log("linha 191", res.message);
+    if (res.message === "cracha encontrado") {
       showBarcode = true;
       showBadge = false;
       showBreadcrumb = true;
     }
+    if (res.message === "cracha não encontrado") {
+      showBadgeNotFound = true;
+    }
+    if (res.message === "codigo de matricula vazia") {
+      bagdeEmpty = true;
+    }
   };
 
   function closePop() {
-    document.getElementById('s').style.display = 'none';
-    window.location.href = '/#/codigobarras';
+    document.getElementById("s").style.display = "none";
+    window.location.href = "/#/codigobarras";
     location.reload();
   }
   function returnValue() {
@@ -187,63 +188,62 @@
     }
   }
   async function doReturn() {
+    loader = true;
     const res = await fetch(returnedValueApi, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         returnValueStorage: returnValueStorage,
         supervisor: supervisor,
         quantity: quantity,
-        codigoBarrasReturn: !codigoBarrasReturn ? '' : codigoBarrasReturn,
+        codigoBarrasReturn: !codigoBarrasReturn ? "" : codigoBarrasReturn,
       }),
     }).then((res) => res.json());
-    if (res.message === 'supervisor esta vazio') {
+    loader = false;
+    if (res.message === "supervisor esta vazio") {
       showSupervisor = true;
       showmodal = false;
       //location.reload();
     }
-    if (res.message === 'estorno feito') {
+    if (res.message === "estorno feito") {
       showmodal = false;
       showCorr = true;
-      window.location.href = '/#/codigobarras';
+      window.location.href = "/#/codigobarras";
       //location.reload();
     }
-    if (res.message === 'erro de estorno') {
+    if (res.message === "erro de estorno") {
       errorReturnValue = true;
       showmodal = false;
       //location.reload();
     }
-    if (res.message === 'quantidade esta vazio') {
+    if (res.message === "quantidade esta vazio") {
       quantityModal = true;
       showmodal = false;
       //location.reload();
     }
-    if (res.message === 'codigo de barras vazio') {
-      barcodeMsg = 'codigo de barras vazio';
+    if (res.message === "codigo de barras vazio") {
+      barcodeMsg = "codigo de barras vazio";
       showmodal = false;
     }
-    // if (res.message === 'odf não encontrada') {
-    //   barcodeMsg = 'odf não encontrada';
-    //   showmodal = false;
-    // }
-    if (res.message === 'odf não encontrada') {
-      barcodeMsg = 'odf não encontrada';
+    if (res.message === "odf não encontrada") {
+      barcodeMsg = "odf não encontrada";
       showmodal = false;
     }
-    if (res.message === 'não ha valor que possa ser devolvido') {
-      barcodeMsg = 'não ha valor que possa ser devolvido';
+    if (res.message === "não ha valor que possa ser devolvido") {
+      barcodeMsg = "não ha valor que possa ser devolvido";
       showmodal = false;
     }
-    if (res.String === 'valor devolvido maior que o permitido') {
-      barcodeMsg = 'valor devolvido maior que o permitido';
+    if (res.String === "valor devolvido maior que o permitido") {
+      barcodeMsg = "valor devolvido maior que o permitido";
       returnValueAvailable = res.qtdLibMax;
       showmodal = false;
     }
   }
 
   function closePopCor() {
-    barcodeMsg = '';
-    paradaMsg = '';
+    barcodeMsg = "";
+    paradaMsg = "";
+    crachModal = "";
     errorReturnValue = false;
     showSupervisor = false;
     quantityModal = false;
@@ -256,17 +256,18 @@
     showBreadcrumb = false;
     showBarcode = false;
     showBadge = true;
-    cracha = '';
-    codigoBarras = '';
+    cracha = "";
+    codigoBarras = "";
+    crachModal = "";
   }
 </script>
 
 <main>
   {#if showBreadcrumb === true}
-    <nav class='breadcrumb' aria-label='breadcrumb'>
-      <ol class='breadcrumb'>
-        <li class='breadcrumb-item'>
-          <a href='/#/codigobarras' on:click={goBack}>Colaborador</a>
+    <nav class="breadcrumb" aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+          <a href="/#/codigobarras" on:click={goBack}>Colaborador</a>
         </li>
       </ol>
     </nav>
@@ -275,12 +276,21 @@
   <div>
     <div>
       <Title />
+
+      {#if loader === true}
+        <div class="imageLoader">
+          <div class="loader">
+            <img src={imageLoader} alt="" />
+          </div>
+        </div>
+      {/if}
+
       {#if showBarcode === true}
-        <div class='return'>
+        <div class="return">
           <button
             on:keypress={returnValue}
             on:click={returnValue}
-            class='sideButton'
+            class="sideButton"
           >
             Estornar Valores
           </button>
@@ -289,20 +299,20 @@
     </div>
 
     {#if superParada === true}
-      <div class='fundo'>
-        <div class='invalidBarcode' id='s'>
-          <h5>Maquina Parada selecione um supervisor</h5>
+      <div class="fundo">
+        <div class="invalidBarcode" id="s">
+          <h5>Maquina parada selecione um supervisor</h5>
           <input
             autofocus
-            tabindex='12'
-            id='supervisor'
-            name='supervisor'
-            type='text'
+            tabindex="12"
+            id="supervisor"
+            name="supervisor"
+            type="text"
             on:input={blockForbiddenChars}
-            onkeyup='this.value = this.value.toUpperCase()'
+            onkeyup="this.value = this.value.toUpperCase()"
             bind:value={superSuperMaqPar}
           />
-          <p tabindex='13' on:keypress={doPostSuper} on:click={doPostSuper}>
+          <p tabindex="13" on:keypress={doPostSuper} on:click={doPostSuper}>
             Confirmar
           </p>
         </div>
@@ -310,12 +320,12 @@
     {/if}
 
     {#if showCorr === true}
-      <div class='fundo'>
-        <div class='invalidBarcode' id='s'>
+      <div class="fundo">
+        <div class="invalidBarcode" id="s">
           <h5>Estorno Feito</h5>
           <p
             autofocus
-            tabindex='30'
+            tabindex="30"
             on:keypress={closePopCor}
             on:click={closePopCor}
           >
@@ -326,12 +336,12 @@
     {/if}
 
     {#if errorReturnValue === true}
-      <div class='fundo'>
-        <div class='invalidBarcode' id='s'>
+      <div class="fundo">
+        <div class="invalidBarcode" id="s">
           <h5>Erro ao fazer estorno</h5>
           <p
             autofocus
-            tabindex='31'
+            tabindex="31"
             on:keypress={closePopCor}
             on:click={closePopCor}
           >
@@ -341,13 +351,13 @@
       </div>
     {/if}
 
-    {#if barcodeMsg === 'não ha valor que possa ser devolvido'}
-      <div class='fundo'>
-        <div class='invalidBarcode' id='s'>
+    {#if barcodeMsg === "não ha valor que possa ser devolvido"}
+      <div class="fundo">
+        <div class="invalidBarcode" id="s">
           <h5>Não há limite para Estorno</h5>
           <p
             autofocus
-            tabindex='32'
+            tabindex="32"
             on:keypress={closePopCor}
             on:click={closePopCor}
           >
@@ -357,13 +367,13 @@
       </div>
     {/if}
 
-    {#if paradaMsg === 'supervisor não encontrado'}
-      <div class='fundo'>
-        <div class='invalidBarcode' id='s'>
+    {#if paradaMsg === "supervisor não encontrado"}
+      <div class="fundo">
+        <div class="invalidBarcode" id="s">
           <h5>Supervisor não encontrado</h5>
           <p
             autofocus
-            tabindex='33'
+            tabindex="33"
             on:keypress={closePopCor}
             on:click={closePopCor}
           >
@@ -373,14 +383,14 @@
       </div>
     {/if}
 
-    {#if barcodeMsg === 'valor devolvido maior que o permitido'}
-      <div class='fundo'>
-        <div class='invalidBarcode' id='s'>
+    {#if barcodeMsg === "valor devolvido maior que o permitido"}
+      <div class="fundo">
+        <div class="invalidBarcode" id="s">
           <h5>Limite de estorno menor que o apontado</h5>
           <h3>Limite Disponivel: {returnValueAvailable}</h3>
           <p
             autofocus
-            tabindex='34'
+            tabindex="34"
             on:keypress={closePopCor}
             on:click={closePopCor}
           >
@@ -390,33 +400,33 @@
       </div>
     {/if}
 
-    {#if barcodeMsg === 'não há limite na odf'}
-      <div class='fundo'>
-        <div class='invalidBarcode' id='s'>
+    {#if barcodeMsg === "não há limite na odf"}
+      <div class="fundo">
+        <div class="invalidBarcode" id="s">
           <h5>ODF não pode ser apontada, aponte outra</h5>
-          <p autofocus tabindex='35' on:keypress={closePop} on:click={closePop}>
+          <p autofocus tabindex="35" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
         </div>
       </div>
     {/if}
 
-    {#if barcodeMsg === 'odf não encontrada'}
-      <div class='fundo'>
-        <div class='invalidBarcode' id='s'>
+    {#if barcodeMsg === "odf não encontrada"}
+      <div class="fundo">
+        <div class="invalidBarcode" id="s">
           <h5>ODF não encontrada</h5>
-          <p autofocus tabindex='23' on:keypress={closePop} on:click={closePop}>
+          <p autofocus tabindex="23" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
         </div>
       </div>
     {/if}
 
-    {#if barcodeMsg === 'codigo de barras vazio'}
-      <div class='fundo'>
-        <div class='invalidBarcode' id='s'>
+    {#if barcodeMsg === "codigo de barras vazio"}
+      <div class="fundo">
+        <div class="invalidBarcode" id="s">
           <h5>Codigo de barras vazio</h5>
-          <p autofocus tabindex='24' on:keypress={closePop} on:click={closePop}>
+          <p autofocus tabindex="24" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
         </div>
@@ -425,10 +435,10 @@
 
     {#if showBadgeNotFound === true}
       <!-- {#if showInvalidBagde === true} -->
-      <div class='fundo'>
-        <div class='invalidBadge' id='s'>
+      <div class="fundo">
+        <div class="invalidBadge" id="s">
           <h5>Crachá não encontrado</h5>
-          <p autofocus tabindex='25' on:keypress={closePop} on:click={closePop}>
+          <p autofocus tabindex="25" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
         </div>
@@ -437,10 +447,10 @@
 
     {#if bagdeEmpty === true}
       <!-- {#if showInvalidBagde === true} -->
-      <div class='fundo'>
-        <div class='invalidBadge' id='s'>
+      <div class="fundo">
+        <div class="invalidBadge" id="s">
           <h5>Crachá vazio</h5>
-          <p autofocus tabindex='26' on:keypress={closePop} on:click={closePop}>
+          <p autofocus tabindex="26" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
         </div>
@@ -449,10 +459,10 @@
 
     {#if quantityModal === true}
       <!-- {#if showInvalidBagde === true} -->
-      <div class='fundo'>
-        <div class='invalidBadge' id='s'>
+      <div class="fundo">
+        <div class="invalidBadge" id="s">
           <h5>Quantidade indefinida</h5>
-          <p autofocus tabindex='26' on:keypress={closePop} on:click={closePop}>
+          <p autofocus tabindex="26" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
         </div>
@@ -461,34 +471,49 @@
 
     {#if showSupervisor === true}
       <!-- {#if showInvalidBagde === true} -->
-      <div class='fundo'>
-        <div class='invalidBadge' id='s'>
+      <div class="fundo">
+        <div class="invalidBadge" id="s">
           <h5>Campo supervisor está vazio</h5>
-          <p autofocus tabindex='26' on:keypress={closePop} on:click={closePop}>
+          <p autofocus tabindex="26" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
         </div>
       </div>
     {/if}
 
+    {#if crachModal === "cracha invalido"}
+      <!-- {#if showInvalidBagde === true} -->
+      <div class="fundo">
+        <div class="invalidBadge" id="s">
+          <h5>Cracha invalido</h5>
+          <p
+            autofocus
+            tabindex="26"
+            on:keypress={closePopCor}
+            on:click={closePopCor}
+          >
+            Fechar
+          </p>
+        </div>
+      </div>
+    {/if}
+
+    <!-- on:keypress={checkForPost} -->
+    <!-- on:click={checkForPost} -->
     {#if showBarcode === true}
-      <form
-        action='/api/v1/apontamento'
-        method='POST'
-        on:submit|preventDefault={doPost}
-      >
-        <div class='form'>
-          <div class='bar' id='title'>Código de barras da ODF</div>
-          <label class='input'>
+      <form on:input={checkForPost}>
+        <div class="form">
+          <div class="bar" id="title">CÓDIGO DE BARRAS DA ODF</div>
+          <label class="input">
             <!-- autocomplete='off' -->
             <input
               autofocus
               on:input={blockForbiddenChars}
-              onkeyup='this.value = this.value.toUpperCase()'
               bind:value={codigoBarras}
-              id='codigoBarras'
-              name='codigoBarras'
-              type='text'
+              onkeyup="this.value = this.value.toUpperCase()"
+              id="codigoBarras"
+              name="codigoBarras"
+              type="text"
             />
           </label>
         </div>
@@ -496,49 +521,48 @@
     {/if}
 
     {#if showBadge === true}
-      <form on:submit|preventDefault={checkBagde}>
-        <!-- on:keypress={checkBagde} -->
-        <div id='popUpCracha'>
-          <div id='title'>Colaborador</div>
+      <form on:input={checkBeforeBadge}>
+        <div id="popUpCracha">
+          <div id="title">COLABORADOR</div>
           <!-- autocomplete='off' -->
           <input
             autofocus
             on:input={blockForbiddenChars}
             bind:value={cracha}
-            onkeyup='this.value = this.value.toUpperCase()'
-            name='MATRIC'
-            id='MATRIC'
-            type='text'
+            onkeyup="this.value = this.value.toUpperCase()"
+            name="MATRIC"
+            id="MATRIC"
+            type="text"
           />
         </div>
       </form>
     {/if}
   </div>
   {#if showmodal === true}
-    <div class='fundo'>
-      <div class='header'>
-        <div class='close'>
+    <div class="fundo">
+      <div class="header">
+        <div class="close">
           <h4>Codigo do Supervisor</h4>
         </div>
         <!-- autocomplete='off' -->
         <input
           autofocus
-          tabindex='14'
+          tabindex="14"
           bind:value={supervisor}
-          class='returnInput'
+          class="returnInput"
           on:input={blockForbiddenChars}
-          onkeyup='this.value = this.value.toUpperCase()'
-          type='text'
-          name='supervisor'
-          id='supervisor'
+          onkeyup="this.value = this.value.toUpperCase()"
+          type="text"
+          name="supervisor"
+          id="supervisor"
         />
         <h4>Qual irá retornar</h4>
-        <div class='options'>
+        <div class="options">
           <select
-            tabindex='15'
+            tabindex="15"
             bind:value={returnValueStorage}
-            name='id'
-            id='id'
+            name="id"
+            id="id"
           >
             <option>BOAS</option>
             <option>RUINS</option>
@@ -548,30 +572,30 @@
         </div>
         <h4>Insira a quantidade que deseja estornar</h4>
         <input
-          tabindex='15'
+          tabindex="15"
           on:input={blockForbiddenChars}
-          class='returnInput'
-          onkeyup='this.value = this.value.toUpperCase()'
+          class="returnInput"
+          onkeyup="this.value = this.value.toUpperCase()"
           bind:value={quantity}
-          type='text'
-          name='returnValueStorage'
+          type="text"
+          name="returnValueStorage"
         />
 
-        <h4>Codigo de barras da ODF</h4>
+        <h4>CÓDIGO DE BARRAS DA ODF</h4>
         <input
-          tabindex='16'
+          tabindex="16"
           on:input={blockForbiddenChars}
-          class='returnInput'
-          onkeyup='this.value = this.value.toUpperCase()'
+          class="returnInput"
+          onkeyup="this.value = this.value.toUpperCase()"
           bind:value={codigoBarrasReturn}
-          id='codigoBarras'
-          name='codigoBarras'
-          type='text'
+          id="codigoBarras"
+          name="codigoBarras"
+          type="text"
         />
 
         <div>
           <p
-            tabindex='17'
+            tabindex="17"
             on:keypress|preventDefault={doReturn}
             on:click|preventDefault={doReturn}
           >
@@ -584,6 +608,31 @@
 </main>
 
 <style>
+  .loader {
+    margin: 0%;
+    position: relative;
+    width: 10vw;
+    height: 5vw;
+    padding: 1.5vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999999999;
+  }
+  .imageLoader {
+    margin: 0%;
+    padding: 0%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: black;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999999999;
+  }
   div {
     margin: 0%;
     padding: 0%;

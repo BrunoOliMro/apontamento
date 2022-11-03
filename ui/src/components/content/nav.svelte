@@ -1,44 +1,53 @@
 <script>
-// @ts-nocheck
-    let imageLoader = '/images/axonLoader.gif';
-    import badFeed from '../content/feed.svelte';
-    import reworkFeed from '../content/feed.svelte';
-    import missingFeed from '../content/feed.svelte';
-    import ruins from '../content/feed.svelte';
-    import retrabalhar from '../content/feed.svelte';
-    import faltante from '../content/feed.svelte';
-    import Title from '../title/title.svelte';
-    let apiMotivoParada = 'api/v1/motivoParada';
+    // @ts-nocheck
+    let imageLoader = "/images/axonLoader.gif";
+    import Breadcrumb from "../breadcrumb/breadcrumb.svelte";
+    import breadFer from "../breadcrumb/breadcrumb.svelte";
+
+    import badFeed from "../content/feed.svelte";
+    import reworkFeed from "../content/feed.svelte";
+    import missingFeed from "../content/feed.svelte";
+    import ruins from "../content/feed.svelte";
+    import retrabalhar from "../content/feed.svelte";
+    import faltante from "../content/feed.svelte";
+    import Title from "../title/title.svelte";
+    let apiMotivoParada = "api/v1/motivoParada";
     let postParada = `/api/v1/postParada`;
     let dadosOdf = [];
     let dados = [];
-    let value = '';
+    let value = "";
     let showmodal = false;
     let resultCall = callMotivo();
     let showMaqPar = false;
-    let ferr = localStorage.getItem("breadFer")
+    let ferr = localStorage.getItem("breadFer");
+    //import breadFer from "/src/routes/ferramenta.svelte";
+    //import Ferramenta from "src/routes/ferramenta.svelte"
+    import Ferramenta from "/src/routes/ferramenta.svelte";
+
+    console.log("linha 22", breadFer);
+    //console.log("linha 24", Ferramenta);
 
     const getMissingFeed = async () => {
-        document.getElementById('faltante').style.display = 'block';
-        document.getElementById('missingFeed').style.display = 'block';
-        document.getElementById('retrabalhar').style.display = 'none';
-        document.getElementById('ruins').style.display = 'none';
-        document.getElementById('badFeed').style.display = 'none';
+        document.getElementById("faltante").style.display = "block";
+        document.getElementById("missingFeed").style.display = "block";
+        document.getElementById("retrabalhar").style.display = "none";
+        document.getElementById("ruins").style.display = "none";
+        document.getElementById("badFeed").style.display = "none";
     };
 
     const getReworkFeed = async () => {
-        document.getElementById('faltante').style.display = 'none';
-        document.getElementById('retrabalhar').style.display = 'block';
-        document.getElementById('reworkFeed').style.display = 'block';
-        document.getElementById('ruins').style.display = 'none';
-        document.getElementById('badFeed').style.display = 'none';
+        document.getElementById("faltante").style.display = "none";
+        document.getElementById("retrabalhar").style.display = "block";
+        document.getElementById("reworkFeed").style.display = "block";
+        document.getElementById("ruins").style.display = "none";
+        document.getElementById("badFeed").style.display = "none";
     };
 
     const getParcial = async () => {
-        document.getElementById('faltante').style.display = 'none';
-        document.getElementById('retrabalhar').style.display = 'none';
-        document.getElementById('ruins').style.display = 'none';
-        document.getElementById('badFeed').style.display = 'none';
+        document.getElementById("faltante").style.display = "none";
+        document.getElementById("retrabalhar").style.display = "none";
+        document.getElementById("ruins").style.display = "none";
+        document.getElementById("badFeed").style.display = "none";
     };
     function parada() {
         if (showmodal === false) {
@@ -71,64 +80,68 @@
     const confirm = async () => {
         const headers = new Headers();
         const res = await fetch(postParada, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 value: value,
             }),
         }).then((res) => res.json());
-        if (res.message === 'maquina parada com sucesso') {
+        if (res.message === "maquina parada com sucesso") {
             showMaqPar = true;
         }
     };
 </script>
 
 <main>
-    {#if ferr === "true"}
-        <nav class='breadcrumb' aria-label='breadcrumb'>
-            <ol class='breadcrumb'>
-                <li class='breadcrumb-item'>
-                    <a href='/#/ferramenta'>Ferramentas</a>
+    <!-- <Ferramenta breadFer = true /> -->
+    <!-- //<BreadFer -->
+    {#if breadFer === true}
+        <nav class="breadcrumb" aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/#/ferramenta">Ferramentas</a>
                 </li>
             </ol>
         </nav>
     {/if}
+    <!-- <Ferramenta breadFer === true /> -->
 
     <Title />
-    <ul class='nav2'>
+
+    <ul class="nav2">
         <li>Parcial</li>
     </ul>
 
     {#await resultCall}
-        <div class='imageLoader'>
-            <div class='loader'>
-                <img src={imageLoader} alt='' />
+        <div class="imageLoader">
+            <div class="loader">
+                <img src={imageLoader} alt="" />
             </div>
         </div>
     {:then item}
         {#if showmodal === true}
-            <div class='fundo'>
-                <div class='header'>
-                    <div class='closed'>
+            <div class="fundo">
+                <div class="header">
+                    <div class="closed">
                         <h2>Motivo da Parada</h2>
                         <button
-                            class='closebtn'
+                            class="closebtn"
                             on:keypress={closePop}
                             on:click={closePop}>X</button
                         >
                     </div>
                     <select
                         autofocus
-                        tabindex='10'
+                        tabindex="10"
                         bind:value
-                        name='id'
-                        id='id'
+                        name="id"
+                        id="id"
                     >
                         {#each dados as item}
                             <option>{item}</option>
                         {/each}
                     </select>
-                    <p tabindex='11' on:keypress={confirm} on:click={confirm}>
+                    <p tabindex="11" on:keypress={confirm} on:click={confirm}>
                         Confirmar
                     </p>
                 </div>
@@ -137,12 +150,12 @@
     {/await}
 
     {#if showMaqPar === true}
-        <div class='fundo'>
-            <div class='header'>
-                <div class='closed'>
+        <div class="fundo">
+            <div class="header">
+                <div class="closed">
                     <h2>Maquina Parada</h2>
                     <button
-                        class='closebtn'
+                        class="closebtn"
                         autofocus
                         on:keypress={closeConfirm}
                         on:click={closeConfirm}
@@ -153,45 +166,45 @@
             </div>
         </div>
     {/if}
-    <div class='nav'>
+    <div class="nav">
         <button
             on:click={getMissingFeed}
             on:keypress={getMissingFeed}
-            type='button'
-            class='sideButton'
-            name='missing'
+            type="button"
+            class="sideButton"
+            name="missing"
             >Faltante
         </button>
         <button
             on:click={getReworkFeed}
             on:keypress={getReworkFeed}
-            type='button'
-            class='sideButton'
-            name='rework'
+            type="button"
+            class="sideButton"
+            name="rework"
             >Retrabalhar
         </button>
-        <a class='out' href='/#/rip/'
-            ><button type='button' class='sideButton'>Inspeção</button></a
+        <a class="out" href="/#/rip/"
+            ><button type="button" class="sideButton">Inspeção</button></a
         >
-        <a class='out' href='/#/historico/'
-            ><button type='button' class='sideButton'> Historico </button>
+        <a class="out" href="/#/historico/"
+            ><button type="button" class="sideButton"> Historico </button>
         </a>
         <button
-            type='button'
-            class='sideButton'
+            type="button"
+            class="sideButton"
             on:click={parada}
             on:keypress={parada}
         >
             Parada
         </button>
-        <a class='out' href='/#/desenho/'
-            ><button type='button' class='sideButton'>Desenho</button></a
+        <a class="out" href="/#/desenho/"
+            ><button type="button" class="sideButton">Desenho</button></a
         >
     </div>
 </main>
 
 <style>
-    .breadcrumb{
+    .breadcrumb {
         margin-top: 5px;
         margin-left: 0%;
         margin-bottom: 0%;

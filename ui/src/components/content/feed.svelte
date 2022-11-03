@@ -1,16 +1,16 @@
 <script>
     // @ts-nocheck
     let imageLoader = "/images/axonLoader.gif";
-    let badFeed = 0;
-    let missingFeed = 0;
-    let reworkFeed = 0;
+    let badFeed;
+    let missingFeed;
+    let reworkFeed;
     let urlS = `/api/v1/apontar`;
-    let urlString = `/api/v1/odf`;
+    let urlString = `/api/v1/odfQtd`;
     let motivoUrl = `/api/v1/motivorefugo`;
     let dadosOdf = [];
     let dados = [];
     let showConfirm = false;
-    let valorFeed = 0;
+    let valorFeed;
     let value;
     let supervisor;
     let qtdPossivelProducao;
@@ -25,6 +25,7 @@
     resultRefugo = getRefugodata();
     let getSpace;
     var showAddress = false;
+    let loader = false;
 
     async function getRefugodata() {
         const res = await fetch(motivoUrl);
@@ -66,7 +67,15 @@
         return sanitizedOutput;
     }
 
+    function checkForSuper() {
+        if (supervisor.length === 6) {
+            doPost();
+        }
+    }
+
     const doPost = async () => {
+        console.log("linha 78", supervisor);
+        loader = true;
         const headers = new Headers();
         const res = await fetch(urlS, {
             method: "POST",
@@ -93,7 +102,8 @@
         //     showError = true;
         // }
         if (res.message === "valores apontados com sucesso") {
-            getSpaceFunc();
+            window.location.href = `/#/rip`;
+            //getSpaceFunc();
         }
         if (res.message === "valor apontado maior que a quantidade liberada") {
             showError = true;
@@ -101,48 +111,56 @@
         }
     };
 
-    async function getSpaceFunc() {
-        const res = await fetch(urlS);
-        getSpace = await res.json();
-        //console.log('dados 100', getSpace);
-        if (
-            getSpace.message === "sem endereço" ||
-            getSpace.address === undefined
-        ) {
-            window.location.href = `/#/rip`;
-        } else if (getSpace.String === "endereço com sucesso") {
-            showAddress = true;
-        }
-    }
+    // async function getSpaceFunc() {
+    //     const res = await fetch(urlS);
+    //     getSpace = await res.json();
+    //     //console.log('dados 100', getSpace);
+    //     if (
+    //         getSpace.message === "sem endereço" ||
+    //         getSpace.address === undefined
+    //     ) {
+    //         window.location.href = `/#/rip`;
+    //     } else if (getSpace.String === "endereço com sucesso") {
+    //         showAddress = true;
+    //     }
+    // }
 
     async function doCallPost() {
-        let numberBadFeed = Number(badFeed);
-        let numberGoodFeed = Number(valorFeed);
+        let numberBadFeed = Number(badFeed || 0);
+        let numberGoodFeed = Number(valorFeed || 0);
         let numberQtdAllowed = Number(qtdPossivelProducao);
-        let numberMissing = Number(missingFeed);
-        let numberReworkFeed = Number(reworkFeed);
-        // console.log("ba 117", numberBadFeed);
-        // console.log("go 118", numberGoodFeed);
+        let numberMissing = Number(missingFeed || 0);
+        let numberReworkFeed = Number(reworkFeed || 0);
+        // console.log("linha 122", numberBadFeed );
+        // console.log("ba 117", numberGoodFeed);
         // console.log("mi 117", numberMissing);
         // console.log("re 118", numberReworkFeed);
+
         let total =
             numberBadFeed + numberGoodFeed + numberMissing + numberReworkFeed;
-        // console.log("qt 119", total, "/ :", numberQtdAllowed );
+        // console.log("re 118", total);
 
+        if (numberBadFeed > 0 && total <= numberQtdAllowed) {
+            showConfirm = true;
+        }
         if (total === 0) {
             showRoundedApont = true;
         }
 
-        if (numberBadFeed + numberMissing + numberReworkFeed === 0 && numberGoodFeed > 0 && numberGoodFeed < numberQtdAllowed) {
+        if (
+            numberBadFeed + numberMissing + numberReworkFeed === 0 &&
+            numberGoodFeed > 0 &&
+            numberGoodFeed < numberQtdAllowed
+        ) {
             showParcialSuper = true;
         }
 
-        if (numberBadFeed + numberMissing + numberReworkFeed === 0 && numberGoodFeed === numberQtdAllowed) {
+        if (
+            numberBadFeed + numberMissing + numberReworkFeed === 0 &&
+            numberGoodFeed === numberQtdAllowed
+        ) {
             doPost();
-        }
-
-        if (numberBadFeed > 0 && total <= numberQtdAllowed) {
-            showConfirm = true;
+            loader = true;
         }
 
         if (total > numberQtdAllowed) {
@@ -204,6 +222,14 @@
         window.location.href = `/#/rip`;
     }
 </script>
+
+{#if loader === true}
+    <div class="imageLoader">
+        <div class="loader">
+            <img src={imageLoader} alt="" />
+        </div>
+    </div>
+{/if}
 
 {#await resultado}
     <div class="imageLoader">
@@ -308,6 +334,7 @@
                             <p>Supervisor</p>
                             <input
                                 autofocus
+                                on:input={checkForSuper}
                                 bind:value={supervisor}
                                 class="supervisor"
                                 on:input={blockForbiddenChars}
@@ -315,9 +342,10 @@
                                 name="supervisor"
                                 id="supervisor"
                             />
-                            <button on:keypress={doPost} on:click={doPost}
-                                >Confirmar</button
-                            >
+                            <!-- <button
+                                on:keypress={checkForSuper}
+                                on:click={checkForSuper}>Confirmar</button
+                            > -->
                             <button on:keypress={close} on:click={close}
                                 >Fechar</button
                             >
@@ -336,20 +364,24 @@
                         <input
                             autofocus
                             bind:value={supervisor}
+                            on:input={checkForSuper}
                             on:input={blockForbiddenChars}
                             class="supervisor"
                             type="text"
                             name="supervisor"
                             id="supervisor"
                         />
-                        <button on:keypress={doPost} on:click={doPost}
+                        <!-- <button on:keypress={doPost} on:click={doPost}
                             >Confirmar</button
+                        > -->
+                        <button on:keypress={close} on:click={close}
+                            >Fechar</button
                         >
                     </div>
                 </div>
             {/if}
 
-            {#if showParcialAndRef === true}
+            <!-- {#if showParcialAndRef === true}
                 <div class="fundo">
                     <div class="header">
                         <div class="closed">
@@ -370,9 +402,9 @@
                         >
                     </div>
                 </div>
-            {/if}
+            {/if} -->
 
-            {#if showParcialSuper === true}
+            <!-- {#if showParcialSuper === true}
                 <div class="fundo">
                     <div class="header">
                         <div class="closed">
@@ -396,7 +428,7 @@
                         >
                     </div>
                 </div>
-            {/if}
+            {/if} -->
 
             {#if showError === true}
                 <div class="fundo">

@@ -1,7 +1,8 @@
 <script>
 	import Index from "./routes/index.svelte";
 	import Router from "svelte-spa-router";
-	import Ferramenta from "./routes/ferramenta.svelte";
+	//import Ferramenta from "src/routes/Ferramenta.svelte";
+	import Ferramenta from '../src/routes/Ferramenta.svelte'
 	import Rip from "./routes/rip.svelte";
 	import Desenho from "./routes/desenho.svelte";
 	import Barcode from "./routes/barcode.svelte";

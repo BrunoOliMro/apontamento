@@ -8,7 +8,6 @@ export const point: RequestHandler = async (req, res) => {
     let qtdBoas = Number(sanitize(req.body["valorFeed"])) || 0;
     let supervisor = String(sanitize(req.body["supervisor"])) || null
     let motivorefugo = String(sanitize(req.body["value"])) || null
-
     let badFeed = Number(sanitize(req.body["badFeed"])) || 0;
     let missingFeed = Number(sanitize(req.body["missingFeed"])) || 0;
     let reworkFeed = Number(sanitize(req.body["reworkFeed"])) || 0;
@@ -16,7 +15,6 @@ export const point: RequestHandler = async (req, res) => {
     var codigoFilho: string[] = ((req.cookies['codigoFilho'])) // VER DEPOIS !!!!!!!!!!!!!!
     var reservedItens: number[] = (req.cookies['reservedItens'])// VER DEPOIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     let NUMERO_ODF = Number(sanitize(req.cookies["NUMERO_ODF"])) || 0
-
     let NUMERO_OPERACAO = String(sanitize(req.cookies["NUMERO_OPERACAO"])) || null
     let codigoPeca = String(sanitize(req.cookies['CODIGO_PECA'])) || null
     let CODIGO_MAQUINA = String(sanitize(req.cookies["CODIGO_MAQUINA"])) || null
@@ -49,7 +47,7 @@ export const point: RequestHandler = async (req, res) => {
     if (reworkFeed > 0) {
         retrabalhadas = reworkFeed - refugoQEstaNoSistema
     }
-    console.log("faltante: ", faltante);
+    //console.log("faltante: ", faltante);
 
     if (motivorefugo === undefined || motivorefugo === "undefined" || motivorefugo === null) {
         motivorefugo = null

@@ -9,7 +9,7 @@ export const ripPost: RequestHandler = async (req, res) => {
     let valueSan;
     const connection = await mssql.connect(sqlConfig);
     let NUMERO_ODF = Number(sanitize(req.cookies['NUMERO_ODF'])) || 0
-    let NUMERO_OPERACAO = String(sanitize(req.cookies['NUMERO_OPERACAO'])) || null
+    let NUMERO_OPERACAO = String(req.cookies['NUMERO_OPERACAO']) || null
     let CODIGO_MAQUINA = String(sanitize(req.cookies['CODIGO_MAQUINA'])) || null
     let codigoPeca = String(sanitize(req.cookies['CODIGO_PECA'])) || null
     let funcionario = String(sanitize(req.cookies['FUNCIONARIO'])) || null
@@ -35,7 +35,6 @@ export const ripPost: RequestHandler = async (req, res) => {
     const tempoDecorridoRip = Number(new Date(startRip).getDate()) || 0
     const finalProdRip = Number(tempoDecorridoRip - endProdRip) || 0
 
-    //console.log('x', setup);
     //Insere os dados no banco
     if (Object.keys(setup).length <= 0) {
         return res.json({ message: "rip vazia" })
@@ -47,17 +46,15 @@ export const ripPost: RequestHandler = async (req, res) => {
         objectSanitized[keySan as string] = valueSan
     }
 
-    console.log("NUMPER", NUMERO_OPERACAO);
-
     //Insere O CODAPONTA 6 e Tempo da rip
     await connection.query(`
     INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-    VALUES(GETDATE(), '${funcionario}', '${NUMERO_ODF}', '${codigoPeca}', '${revisao}', ${NUMERO_OPERACAO}, ${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}', '${qtdLibMax}', '0', '0', '${funcionario}', '0', '6', '6', 'Final.', ${finalProdRip}, ${finalProdRip}, '1', '0', '0')`)
+    VALUES(GETDATE(), '${funcionario}', ${NUMERO_ODF}, '${codigoPeca}', ${revisao}, '${NUMERO_OPERACAO}', '${NUMERO_OPERACAO}', 'D', '${CODIGO_MAQUINA}', ${qtdLibMax}, '0', '0', '${funcionario}', '0', '6', '6', 'ODF ENC.', ${finalProdRip}, ${finalProdRip}, '1', '0', '0')`)
 
     //Atualiza o tempo total que a operação levou
     try {
         await connection.query(`
-                UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
+                UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${NUMERO_ODF} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${NUMERO_OPERACAO} AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
     } catch (error) {
         console.log(error)
         return res.json({ message: 'ocorreu um erro ao enviar os dados da rip' })

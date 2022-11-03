@@ -13,7 +13,7 @@ const ripPost = async (req, res) => {
     let valueSan;
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let NUMERO_ODF = Number((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'])) || 0;
-    let NUMERO_OPERACAO = String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])) || null;
+    let NUMERO_OPERACAO = String(req.cookies['NUMERO_OPERACAO']) || null;
     let CODIGO_MAQUINA = String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA'])) || null;
     let codigoPeca = String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])) || null;
     let funcionario = String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])) || null;
@@ -39,13 +39,12 @@ const ripPost = async (req, res) => {
         valueSan = (0, sanitize_1.sanitize)(value);
         objectSanitized[keySan] = valueSan;
     }
-    console.log("NUMPER", NUMERO_OPERACAO);
     await connection.query(`
     INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-    VALUES(GETDATE(), '${funcionario}', '${NUMERO_ODF}', '${codigoPeca}', '${revisao}', ${NUMERO_OPERACAO}, ${NUMERO_OPERACAO}, 'D', '${CODIGO_MAQUINA}', '${qtdLibMax}', '0', '0', '${funcionario}', '0', '6', '6', 'Final.', ${finalProdRip}, ${finalProdRip}, '1', '0', '0')`);
+    VALUES(GETDATE(), '${funcionario}', ${NUMERO_ODF}, '${codigoPeca}', ${revisao}, '${NUMERO_OPERACAO}', '${NUMERO_OPERACAO}', 'D', '${CODIGO_MAQUINA}', ${qtdLibMax}, '0', '0', '${funcionario}', '0', '6', '6', 'ODF ENC.', ${finalProdRip}, ${finalProdRip}, '1', '0', '0')`);
     try {
         await connection.query(`
-                UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
+                UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${NUMERO_ODF} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${NUMERO_OPERACAO} AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`);
     }
     catch (error) {
         console.log(error);

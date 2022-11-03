@@ -2,7 +2,7 @@ import { Router } from "express";
 //import assert from "node:assert";
 import { pointerPost } from "./controllers/pointer";
 import { badFeedMotives } from "./controllers/badFeedMotives";
-import { draw } from "./controllers/drawing";
+import { drawing } from "./controllers/drawing";
 import { historic } from "./controllers/historic";
 import { odfData } from "./controllers/odfData";
 import { returnedValue } from "./controllers/returnedValue";
@@ -20,6 +20,7 @@ import { getPoint } from "./controllers/getPoint";
 import { supervisor } from "./controllers/supervisor";
 import { codeNote } from "./controllers/codeNote";
 import { getBefore } from "./controllers/getBefSel";
+import { odfDataQtd } from "./controllers/odfDataQtd";
 
 // /api/v1/
 const apiRouter = Router();
@@ -318,6 +319,12 @@ apiRouter.route("/apontamentoCracha")
 apiRouter.route("/odf")
     .get(getBefore)
     .get(odfData)
+
+
+
+apiRouter.route("/odfQtd")
+    .get(getBefore)
+    .get(odfDataQtd)
 //     async (req, res) => {
 //     let numeroOdf: string = String(req.cookies["NUMERO_ODF"])
 //     let numOper: string = String(req.cookies["NUMERO_OPERACAO"])
@@ -382,6 +389,7 @@ apiRouter.route("/odf")
 // )
 
 apiRouter.route("/imagem")
+    .get(getBefore)
     .get(statusImage)
 //     async (req, res) => {
 //     const numpec: string = req.cookies["CODIGO_PECA"]
@@ -423,6 +431,7 @@ apiRouter.route("/imagem")
 // );
 
 apiRouter.route("/status")
+    .get(getBefore)
     .get(status)
 //     async (req, res) => {
 //     let numpec = req.cookies['CODIGO_PECA']
@@ -469,6 +478,7 @@ apiRouter.route("/status")
 // );
 
 apiRouter.route("/historic")
+    .get(getBefore)
     .get(historic)
 //     async (req, res) => {
 //     const connection = await mssql.connect(sqlConfig);
@@ -499,6 +509,7 @@ apiRouter.route("/historic")
 
 apiRouter.route("/ferramenta")
     //GET das Fotos das desenhodiv
+    .get(getBefore)
     .get(tools)
 //     async (req, res) => {
 //     const connection = await mssql.connect(sqlConfig);
@@ -566,6 +577,7 @@ apiRouter.route("/ferramenta")
 // );
 
 apiRouter.route("/ferselecionadas")
+    .get(getBefore)
     .get(selectedTools)
 //     async (req,  res) => {
 //     let numero_odf: string = String(req.cookies['NUMERO_ODF'])
@@ -622,6 +634,7 @@ apiRouter.route("/ferselecionadas")
 // )
 
 apiRouter.route("/apontar")
+    .get(getBefore)
     .get(getPoint)
     .post(point)
 //     async (req, res) => {
@@ -838,6 +851,7 @@ apiRouter.route("/apontar")
 // )
 
 apiRouter.route("/lancamentoRip")
+    .get(getBefore)
     .post(ripPost)
 //     async (req, res) => {
 //     const connection = await mssql.connect(sqlConfig);
@@ -936,6 +950,7 @@ apiRouter.route("/lancamentoRip")
 // )
 
 apiRouter.route("/returnedValue")
+    .get(getBefore)
     .post(returnedValue)
 //     async (req, res) => {
 //     console.log(req.body)
@@ -1066,6 +1081,7 @@ apiRouter.route("/returnedValue")
 // )
 
 apiRouter.route("/supervisor")
+    .get(getBefore)
     .post(supervisor)
 //     async (req, res) => {
 //     let supervisor: string = String(req.body['supervisor'])
@@ -1091,6 +1107,7 @@ apiRouter.route("/supervisor")
 // )
 
 apiRouter.route("/supervisorParada")
+    .get(getBefore)
     .post(stopSupervisor)
 //     async (req, res) => {
 //     let supervisor: string = String(req.body['supervisor'])
@@ -1122,6 +1139,7 @@ apiRouter.route("/supervisorParada")
 // )
 
 apiRouter.route("/motivoParada")
+    .get(getBefore)
     .get(stopMotives)
 //     async (_req, res) => {
 //     const connection = await mssql.connect(sqlConfig);
@@ -1143,6 +1161,7 @@ apiRouter.route("/motivoParada")
 // )
 
 apiRouter.route("/postParada")
+    .get(getBefore)
     .post(stopPost)
 //     async (req, res) => {
 //     const connection = await mssql.connect(sqlConfig);
@@ -1180,6 +1199,7 @@ apiRouter.route("/postParada")
 // )
 
 apiRouter.route("/motivorefugo")
+    .get(getBefore)
     .get(badFeedMotives)
 //     async (_req, res) => {
 //     const connection = await mssql.connect(sqlConfig);
@@ -1203,6 +1223,7 @@ apiRouter.route("/motivorefugo")
 // )
 
 apiRouter.route("/rip")
+    .get(getBefore)
     .get(rip)
 //     async (req, res) => {
 //     const connection = await mssql.connect(sqlConfig);
@@ -1261,7 +1282,8 @@ apiRouter.route("/rip")
 
 apiRouter.route("/desenho")
     //GET Desenho TECNICO
-    .get(draw)
+    .get(getBefore)
+    .get(drawing)
 //     async (req, res) => {
 //     const connection = await mssql.connect(sqlConfig);
 //     const revisao: number = Number(req.cookies['REVISAO']) || 0

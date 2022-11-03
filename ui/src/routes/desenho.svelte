@@ -6,10 +6,15 @@
     let rotation = 0;
     let imagemBack = [];
     let urlString = `/api/v1/desenho?`;
+    let imagemMsg = ''
 
     async function getIMAGEM() {
         const res = await fetch(urlString);
         imagemBack = await res.json();
+        console.log("linha imagem:", imagemBack);
+        if(imagemBack.message === 'dados não conferem conferidos'){
+            imagemMsg = 'dados não conferem conferidos'
+        }
     }
 
     let resultado = getIMAGEM();
@@ -103,9 +108,9 @@
         {/await}
     </div>
 
-    <!-- {#if imagemBack == "/images/sem_imagem.gif"}
-        <h3>Não existe imagem</h3>
-    {/if} -->
+    {#if imagemMsg === 'dados não conferem'}
+        <h3>Dados não conferem</h3>
+    {/if}
 </main>
 
 <style>

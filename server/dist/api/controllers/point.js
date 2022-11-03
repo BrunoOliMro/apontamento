@@ -43,7 +43,6 @@ const point = async (req, res) => {
     if (reworkFeed > 0) {
         retrabalhadas = reworkFeed - refugoQEstaNoSistema;
     }
-    console.log("faltante: ", faltante);
     if (motivorefugo === undefined || motivorefugo === "undefined" || motivorefugo === null) {
         motivorefugo = null;
     }

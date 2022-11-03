@@ -8,6 +8,7 @@ export const getBefore: RequestHandler = async (req, res, next) => {
     const numerOdf = Number(sanitize(req.cookies["NUMERO_ODF"]))
     const numerOper = String(sanitize(req.cookies["NUMERO_OPERACAO"]))
     const codMaq = String(sanitize(req.cookies["CODIGO_MAQUINA"]))
+    const numeroPeca = String(sanitize(req.cookies['CODIGO_PECA']))
 
     try {
         const checkForOdf = await connection.query(`
@@ -23,15 +24,18 @@ export const getBefore: RequestHandler = async (req, res, next) => {
         ORDER BY NUMERO_OPERACAO ASC
         `).then(res => res.recordset)
 
-        if (checkForOdf.length > 0) {
-            next()
-        }
-        
-        if (checkForOdf.length <= 0) {
-            return res.json({ message: 'dados não conferem conferidos' });
+        //console.log("LINHA 28", checkForOdf);
+
+        if(numeroPeca !== checkForOdf[0].CODIGO_PECA ){
+            return res.json({ message: 'dados não conferem' });
         }
 
-        //return res.json({message : 'erro ao localizar odf'})
+        if (checkForOdf.length > 0) {
+            next()
+            //return res.json({ message: "dados conferidos com sucesso"})
+        } else {
+            return res.json({ message: 'dados não conferem' });
+        }
     } catch (error) {
         console.log(error)
         return res.json({ error: true, message: "Erro no servidor." });

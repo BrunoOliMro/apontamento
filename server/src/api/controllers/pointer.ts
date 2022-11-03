@@ -102,9 +102,12 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
     if (objOdfSelecionada['CODIGO_MAQUINA'] === 'RET001') {
         objOdfSelecionada['CODIGO_MAQUINA'] = 'RET001'
     }
+    let funcionario = req.cookies['FUNCIONARIO']
+    let codigoPeca = req.cookies['CODIGO_PECA']
+    let revisao = req.cookies['REVISAO']
+    let startTime = req.cookies['starterBarcode']
 
-
-    console.log('codigoMaq linha 108', message);
+    //console.log('codigoMaq linha 108', message);
     res.cookie('qtdLibMax', qtdLibMax)
     res.cookie('MAQUINA_PROXIMA', codigoMaquinaProxOdf)
     res.cookie('OPERACAO_PROXIMA', codMaqProxOdf)
@@ -114,25 +117,41 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
     res.cookie('NUMERO_OPERACAO', numeroOper)
     res.cookie('REVISAO', objOdfSelecionada['REVISAO'])
 
-    // if (message === 'codeApont 1 setup iniciado') {
-    //     return res.json({ message: 'paradademaquina' })
-    // }
+    if (message === 'insira cod 1' || message === 'codeApont 6 processo finalizado') {
+        await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
+        VALUES (GETDATE(), '${funcionario}', ${dados.numOdf}, '${codigoPeca}', ${revisao},'${dados.numOper}', '${dados.numOper}', 'D', '${dados.codMaq}',0, 0, 0, '${funcionario}', '0', '1', '1', 'Ini Set.', 0, 0, '1', 0, 0 )
+        `)
+        //.then(record => record.rowsAffected)
+    }
+
+    if (message === 'codeApont 1 setup iniciado') {
+        console.log("linha 128", message);
+        return res.json({ message: 'codeApont 1 setup iniciado' })
+    }
 
     if (message === 'codeApont 2 setup finalizado') {
         return res.json({ message: 'codeApont 2 setup finalizado' })
     }
-    if (message === 'codeApont 3 prod iniciado') {
-        return res.json({ message: 'codeApont 3 prod iniciado' })
+    console.log("linha 135");
+    try {
+        if (message === 'codeApont 3 prod iniciado') {
+            console.log("message", message);
+            return res.json({ message: 'codeApont 3 prod iniciado' })
+        }
+    } catch (error) {
+        console.log('linha 141', error);
     }
+    console.log("linha 139");
+
     if (message === 'codeApont 4 prod finalzado') {
         return res.json({ message: 'codeApont 4 prod finalzado' })
     }
-    if (message === 'codeApont 5 prod iniciado') {
-        return res.json({ message: 'codeApont 5 prod iniciado' })
+    if (message === 'codeApont 5 maquina parada') {
+        return res.json({ message: 'codeApont 5 maquina parada' })
     }
-    if (message === 'codeApont 6 prod iniciado') {
-        return res.json({ message: 'codeApont 6 prod iniciado' })
-    }
+    // if (message === 'codeApont 6 prod iniciado') {
+    //     return res.json({ message: 'codeApont 6 prod iniciado' })
+    // }
     if (message === 'qualquer outro codigo') {
         return res.json({ message: 'qualquer outro codigo' })
     }
@@ -158,7 +177,7 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
                        AND PCP.NUMERO_ODF = '${dados.numOdf}'    
                     `.trim()
         ).then(result => result.recordset)
-        //console.log('RESOURCE: ', resource2);
+        console.log('RESOURCE: ', selectKnowHasP);
 
         if (selectKnowHasP.length > 0) {
             res.cookie('CONDIC', selectKnowHasP[0].CONDIC)

@@ -19,6 +19,8 @@
     let resultado = callRip();
     let lie;
     let lsd;
+    let loader = false;
+    let odfFinish = false;
 
     async function callRip() {
         const res = await fetch(urlString);
@@ -28,12 +30,14 @@
         lsd = ripTable.map((acc) => acc.LSE);
 
         if (ripTable.length <= 0) {
+            loader = true;
             window.location.href = "/#/codigobarras";
             location.reload();
         }
     }
 
     const doPostSuper = async () => {
+        loader = true;
         const headers = new Headers();
         headers.append("Content-Type", "application/json");
         const res = await fetch(supervisorApi, {
@@ -43,9 +47,11 @@
                 supervisor: !supervisor ? "" : supervisor,
             }),
         }).then((res) => res.json());
+        loader = false;
         if (res.message === "supervisor encontrado") {
             showSuper = false;
             doPost();
+            odfFinish = true
             window.location.href = "/#/codigobarras";
             location.reload();
         } else if (res.message === "supervisor não encontrado") {
@@ -54,6 +60,7 @@
     };
 
     const doPost = async () => {
+        loader = true;
         const headers = new Headers();
         const res = await fetch(urlS, {
             method: "POST",
@@ -62,14 +69,20 @@
                 setup: setup,
             }),
         }).then((res) => res.json());
+        loader = false;
         if (res.message === "rip vazia") {
             showErrorEmpty = true;
         }
         if (res.message === "rip enviada, odf finalizada") {
-            showEnd = true;
-            window.location.href = "/#/codigobarras";
+            odfFinish = true;
+            //window.location.href = "/#/codigobarras";
         }
     };
+
+    function finish() {
+        odfFinish = false;
+        window.location.href = "/#/codigobarras";
+    }
 
     function createCol() {
         const quantityReleased = Object.values(setup).length - ripTable.length;
@@ -95,6 +108,7 @@
     }
 
     const check = () => {
+        loader = true;
         if (Object.values(setup).length <= 0) {
             return (showSuper = true);
         }
@@ -118,8 +132,10 @@
         });
 
         if (callSupervisor === true) {
+            loader = false;
             showSuper = true;
         } else if (callSupervisor === false) {
+            loader = true;
             doPost();
         }
     };
@@ -152,6 +168,14 @@
     </div>
 
     <div class="title">{Subtitle}</div>
+    {#if loader === true}
+        <div class="imageLoader">
+            <div class="loader">
+                <img src={imageLoader} alt="" />
+            </div>
+        </div>
+    {/if}
+
     {#await resultado}
         <div class="imageLoader">
             <div class="loader">
@@ -200,10 +224,11 @@
             <h2>Não há histórico para exibir</h2>
         {/if}
     {/await}
-    {#if showEnd === true}
+    {#if odfFinish === true}
         <div class="fundo">
             <div class="header">
                 <h3>ODF FINALIZADA</h3>
+                <button on:click={finish} on:keypress={finish}>Fechar</button>
             </div>
         </div>
     {/if}
@@ -226,7 +251,7 @@
                     on:keypress={doPostSuper}>Confirma</button
                 >
                 <button tabindex="20" on:click={close} on:keypress={close}
-                    >close</button
+                    >Fechar</button
                 >
             </div>
         </div>
@@ -234,7 +259,7 @@
     {#if showErrorEmpty === true}
         <div class="fundo">
             <div class="header">
-                <h3>rip vazia, envio invalido</h3>
+                <h3>Rip vazia, envio inválido</h3>
                 <button on:click={close} on:keypress={close}>Confirma</button>
             </div>
         </div>
