@@ -7,7 +7,7 @@ export const codeNote: RequestHandler = async (req, res, next) => {
     const connection = await mssql.connect(sqlConfig);
     let dados: any = unravelBarcode(req.body.codigoBarras)
     try {
-        const resource = await connection.query(`
+        const codIdApontamento = await connection.query(`
             SELECT 
             TOP 1 
             CODAPONTA 
@@ -20,46 +20,48 @@ export const codeNote: RequestHandler = async (req, res, next) => {
             ORDER BY DATAHORA DESC
             `)
             .then(result => result.recordset);
+        // console.log("linha 23, numOdf", dados.numOdf);
+        // console.log("linha 23, numOper", dados.numOper);
+        // console.log("linha 23, codMaq", dados.codMaq);
+        // console.log('linha 23 codeNote', codIdApontamento);
 
-        console.log('linha 23 codeNote', resource);
-
-        if (resource.length > 0) {
-            if (resource[0]?.CODAPONTA === 1) {
+        if (codIdApontamento.length > 0) {
+            if (codIdApontamento[0]?.CODAPONTA === 1) {
                 req.body.message = 'codeApont 1 setup iniciado'
                 next()
                 //return res.json({ message: `codeApont 1 setup iniciado` })
             }
-            if (resource[0]?.CODAPONTA === 2) {
+            if (codIdApontamento[0]?.CODAPONTA === 2) {
                 req.body.message = 'codeApont 2 setup finalizado'
                 next()
                 //return res.json({ message: `codeApont 2 setup finalizado` })
             }
-            if (resource[0]?.CODAPONTA === 3) {
+            if (codIdApontamento[0]?.CODAPONTA === 3) {
                 req.body.message = 'codeApont 3 prod iniciado'
                 next()
                 //return res.json({ message: `codeApont 3 prod iniciado` })
             }
-            if (resource[0]?.CODAPONTA === 4) {
+            if (codIdApontamento[0]?.CODAPONTA === 4) {
                 req.body.message = 'codeApont 4 prod finalzado'
                 next()
                 //return res.json({ message: `codeApont 4 prod finalzado` })
             }
-            if (resource[0]?.CODAPONTA === 5) {
+            if (codIdApontamento[0]?.CODAPONTA === 5) {
                 req.body.message = 'codeApont 5 maquina parada'
                 next()
                 //return res.json({ message: `codeApont 5 maquina parada` })
             }
-            if (resource[0]?.CODAPONTA === 6) {
+            if (codIdApontamento[0]?.CODAPONTA === 6) {
                 req.body.message = 'codeApont 6 processo finalizado'
                 next()
                 //return res.json({ message: `codeApont 6 processo finalizado` })
             }
-            if (!resource[0]?.CODAPONTA) {
+            if (!codIdApontamento[0]?.CODAPONTA) {
                 req.body.message = `qualquer outro codigo`
                 next()
             }
         }
-        if (resource.length <= 0) {
+        if (codIdApontamento.length <= 0) {
             req.body.message = 'insira cod 1'
             next()
         }

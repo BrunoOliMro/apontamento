@@ -18,9 +18,6 @@ export const tools: RequestHandler = async (req, res) => {
     let qtdLibMax = Number(sanitize(req.cookies['qtdLibMax'])) || 0
     let startTime = Number(new Date(start).getTime()) || 0
 
-    // await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
-    //         VALUES (GETDATE(), '${funcionario}', ${numeroOdf}, '${codigoPeca}', '${revisao}', '${numeroOperacao}', '${numeroOperacao}', 'D', '${codigoMaq}', ${qtdLibMax}, 0, 0, '${funcionario}', '0', '1', '1', 'Ini Set.', ${startTime}, ${startTime}, '1', 0, 0 )`).then(record => record.rowsAffected)
-
     try {
         const toolsImg = await connection.query(`
             SELECT
@@ -37,9 +34,6 @@ export const tools: RequestHandler = async (req, res) => {
             const path = await pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], ferramenta, String(i));
             result.push(path);
         }
-
-        // console.log("result", result)
-        // console.log("linha 39", tools);;
 
         const verifyInsert = await connection.query(`SELECT * FROM HISAPONTA WHERE 1 = 1 AND ODF = '${numeroOdf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}' ORDER BY CODAPONTA DESC
         `).then(record => record.rowsAffected)

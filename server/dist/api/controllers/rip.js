@@ -12,8 +12,15 @@ const rip = async (req, res) => {
     let numpec = String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"])) || null;
     let revisao = String((0, sanitize_html_1.default)(req.cookies['REVISAO'])) || null;
     let codMaq = String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA'])) || null;
+    let codigoPeca = String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"])) || null;
+    let numeroOdf = Number((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"])) || 0;
+    let numeroOperacao = String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"])) || null;
+    let funcionario = String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO'])) || null;
+    let start = Number((0, sanitize_html_1.default)(req.cookies["starterBarcode"])) || 0;
+    let qtdLibMax = Number((0, sanitize_html_1.default)(req.cookies['qtdLibMax'])) || 0;
+    let startTime = Number(new Date(start).getTime()) || 0;
     try {
-        const resource = await connection.query(`
+        const ripDetails = await connection.query(`
         SELECT  DISTINCT
         PROCESSO.NUMPEC,
         PROCESSO.REVISAO,
@@ -36,7 +43,7 @@ const rip = async (req, res) => {
         AND NUMCAR < '2999'
         ORDER BY NUMPEC ASC
             `.trim()).then(result => result.recordset);
-        let arrayNumope = resource.map((acc) => {
+        let arrayNumope = ripDetails.map((acc) => {
             if (acc.CST_NUMOPE === codMaq) {
                 return acc;
             }
@@ -49,6 +56,10 @@ const rip = async (req, res) => {
         res.cookie('instrumento', numopeFilter.map(acc => acc.INSTRUMENTO));
         res.cookie('lie', numopeFilter.map(acc => acc.LIE));
         res.cookie('lse', numopeFilter.map(acc => acc.LSE));
+        if (numopeFilter.length <= 0) {
+            await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
+            VALUES (GETDATE(), '${funcionario}', ${numeroOdf}, '${codigoPeca}', '${revisao}', '${numeroOperacao}', '${numeroOperacao}', 'D', '${codMaq}', ${qtdLibMax}, 0, 0, '${funcionario}', '0', '6', '6', 'ODF Fin.', ${startTime}, ${startTime}, '1', 0, 0 )`).then(record => record.rowsAffected);
+        }
         return res.json(numopeFilter);
     }
     catch (error) {

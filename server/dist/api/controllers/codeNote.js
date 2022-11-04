@@ -11,7 +11,7 @@ const codeNote = async (req, res, next) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let dados = (0, unravelBarcode_1.unravelBarcode)(req.body.codigoBarras);
     try {
-        const resource = await connection.query(`
+        const codIdApontamento = await connection.query(`
             SELECT 
             TOP 1 
             CODAPONTA 
@@ -24,38 +24,37 @@ const codeNote = async (req, res, next) => {
             ORDER BY DATAHORA DESC
             `)
             .then(result => result.recordset);
-        console.log('linha 23 codeNote', resource);
-        if (resource.length > 0) {
-            if (resource[0]?.CODAPONTA === 1) {
+        if (codIdApontamento.length > 0) {
+            if (codIdApontamento[0]?.CODAPONTA === 1) {
                 req.body.message = 'codeApont 1 setup iniciado';
                 next();
             }
-            if (resource[0]?.CODAPONTA === 2) {
+            if (codIdApontamento[0]?.CODAPONTA === 2) {
                 req.body.message = 'codeApont 2 setup finalizado';
                 next();
             }
-            if (resource[0]?.CODAPONTA === 3) {
+            if (codIdApontamento[0]?.CODAPONTA === 3) {
                 req.body.message = 'codeApont 3 prod iniciado';
                 next();
             }
-            if (resource[0]?.CODAPONTA === 4) {
+            if (codIdApontamento[0]?.CODAPONTA === 4) {
                 req.body.message = 'codeApont 4 prod finalzado';
                 next();
             }
-            if (resource[0]?.CODAPONTA === 5) {
+            if (codIdApontamento[0]?.CODAPONTA === 5) {
                 req.body.message = 'codeApont 5 maquina parada';
                 next();
             }
-            if (resource[0]?.CODAPONTA === 6) {
+            if (codIdApontamento[0]?.CODAPONTA === 6) {
                 req.body.message = 'codeApont 6 processo finalizado';
                 next();
             }
-            if (!resource[0]?.CODAPONTA) {
+            if (!codIdApontamento[0]?.CODAPONTA) {
                 req.body.message = `qualquer outro codigo`;
                 next();
             }
         }
-        if (resource.length <= 0) {
+        if (codIdApontamento.length <= 0) {
             req.body.message = 'insira cod 1';
             next();
         }

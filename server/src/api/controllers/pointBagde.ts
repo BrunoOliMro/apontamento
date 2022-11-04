@@ -22,7 +22,6 @@ export const pointBagde: RequestHandler = async (req, res) => {
             res.cookie("MATRIC", selecionarMatricula[0].MATRIC)
             res.cookie("FUNCIONARIO", selecionarMatricula[0].FUNCIONARIO)
             res.cookie("CRACHA", selecionarMatricula[0].CRACHA)
-            console.log("aqui linha 25");
             return res.json({ message: 'cracha encontrado' })
         } else {
             return res.json({ message: 'cracha não encontrado' })

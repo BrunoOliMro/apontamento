@@ -47,7 +47,7 @@
         superSuperMaqPar: !superSuperMaqPar ? "" : superSuperMaqPar,
       }),
     }).then((res) => res.json());
-    console.log("linha 54", res);
+    //console.log("linha 54", res);
     if (res.message === "maquina") {
       loader = false;
       window.location.href = "/#/codigobarras";
@@ -79,19 +79,6 @@
     return sanitizedOutput;
   }
 
-  function checkForPost(event) {
-    console.log("linha 93", event);
-    // if (event.inputType === 'insertText') {
-    // if (codigoBarras.length >= 18) {
-    //   doPost();
-    //   // }
-    // }
-    if (codigoBarras.length === 17) {
-      console.log("linha 90");
-      doPost();
-    }
-  }
-
   const doPost = async () => {
     loader = true;
     const headers = new Headers();
@@ -115,7 +102,7 @@
     }
 
     if (res.message === "codeApont 3 prod iniciado") {
-      console.log('linha 118 barcode');
+      //console.log("linha 118 barcode");
       loader = false;
       window.location.href = "/#/codigobarras/apontamento";
     }
@@ -123,7 +110,7 @@
       window.location.href = "/#/rip";
     }
     if (res.message === "codeApont 5 maquina parada") {
-      console.log("linha 128");
+      //console.log("linha 128");
       loader = false;
       superParada = true;
     }
@@ -140,8 +127,22 @@
     }
   };
 
+  function checkForPost(event) {
+    // console.log("linha 93", event.inputType);
+    // console.log("length", codigoBarras.length);
+    if (event.inputType === undefined) {
+      if (codigoBarras.length >= 18) {
+        doPost();
+      }
+    } 
+    if (codigoBarras.length === 17) {
+      doPost();
+    }
+  }
+
+
   function checkBeforeBadge() {
-    console.log("linha 170", cracha);
+    //console.log("linha 170", cracha);
     if (cracha === "000000") {
       crachModal = "cracha invalido";
     } else if (cracha.length === 6) {
@@ -161,7 +162,7 @@
       headers,
     }).then((res) => res.json());
     loader = false;
-    console.log("linha 191", res.message);
+    //console.log("linha 191", res.message);
     if (res.message === "cracha encontrado") {
       showBarcode = true;
       showBadge = false;
@@ -506,6 +507,7 @@
           <div class="bar" id="title">CÓDIGO DE BARRAS DA ODF</div>
           <label class="input">
             <!-- autocomplete='off' -->
+            <!-- on:keypress={checkForPost} -->
             <input
               autofocus
               on:input={blockForbiddenChars}
