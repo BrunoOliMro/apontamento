@@ -109,6 +109,7 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
 
     //console.log('codigoMaq linha 108', message);
     res.cookie('qtdLibMax', qtdLibMax)
+    res.cookie('starterBarcode', startTime)
     res.cookie('MAQUINA_PROXIMA', codigoMaquinaProxOdf)
     res.cookie('OPERACAO_PROXIMA', codMaqProxOdf)
     res.cookie('NUMERO_ODF', objOdfSelecionada['NUMERO_ODF'])

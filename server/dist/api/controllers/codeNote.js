@@ -24,6 +24,7 @@ const codeNote = async (req, res, next) => {
             ORDER BY DATAHORA DESC
             `)
             .then(result => result.recordset);
+        console.log('linha 23 codeNote', codIdApontamento);
         if (codIdApontamento.length > 0) {
             if (codIdApontamento[0]?.CODAPONTA === 1) {
                 req.body.message = 'codeApont 1 setup iniciado';
@@ -47,6 +48,10 @@ const codeNote = async (req, res, next) => {
             }
             if (codIdApontamento[0]?.CODAPONTA === 6) {
                 req.body.message = 'codeApont 6 processo finalizado';
+                next();
+            }
+            if (codIdApontamento[0]?.CODAPONTA === 7) {
+                req.body.message = 'codeApont 7 estorno realizado';
                 next();
             }
             if (!codIdApontamento[0]?.CODAPONTA) {

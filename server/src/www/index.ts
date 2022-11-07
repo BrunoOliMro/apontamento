@@ -3,7 +3,7 @@
 import app from "../app";
 import http from "node:http";
 
-const PORT = normalizePort( "3000");
+const PORT = normalizePort("3000");
 
 app.set("port", PORT);
 

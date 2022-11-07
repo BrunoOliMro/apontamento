@@ -1,4 +1,5 @@
 <script>
+// @ts-nocheck
   // @ts-nocheck
   import Title from "../components/title/title.svelte";
   let imageLoader = "/images/axonLoader.gif";
@@ -127,25 +128,18 @@
     }
   };
 
-  function checkForPost(event) {
-    // console.log("linha 93", event.inputType);
-    // console.log("length", codigoBarras.length);
-    if (event.inputType === undefined) {
-      if (codigoBarras.length >= 18) {
-        doPost();
-      }
-    } 
-    if (codigoBarras.length === 17) {
+  function writeOnHand(event) {
+    console.log("linha 135", event);
+    if (event.key === "Enter" && codigoBarras.length >= 16) {
       doPost();
     }
   }
 
-
-  function checkBeforeBadge() {
-    //console.log("linha 170", cracha);
+  function checkBeforeBadge(event) {
     if (cracha === "000000") {
       crachModal = "cracha invalido";
-    } else if (cracha.length === 6) {
+    }
+    if (cracha.length >= 6 && event.key === "Enter") {
       checkBagde();
     }
   }
@@ -499,45 +493,38 @@
       </div>
     {/if}
 
-    <!-- on:keypress={checkForPost} -->
-    <!-- on:click={checkForPost} -->
     {#if showBarcode === true}
-      <form on:input={checkForPost}>
-        <div class="form">
-          <div class="bar" id="title">CÓDIGO DE BARRAS DA ODF</div>
-          <label class="input">
-            <!-- autocomplete='off' -->
-            <!-- on:keypress={checkForPost} -->
-            <input
-              autofocus
-              on:input={blockForbiddenChars}
-              bind:value={codigoBarras}
-              onkeyup="this.value = this.value.toUpperCase()"
-              id="codigoBarras"
-              name="codigoBarras"
-              type="text"
-            />
-          </label>
-        </div>
-      </form>
+      <div id="popUpCracha">
+        <div id="title">CÓDIGO DE BARRAS DA ODF</div>
+        <input
+          autocomplete="off"
+          autofocus
+          on:keypress={writeOnHand}
+          on:input|preventDefault={blockForbiddenChars}
+          bind:value={codigoBarras}
+          onkeyup="this.value = this.value.toUpperCase()"
+          name="MATRIC"
+          id="MATRIC"
+          type="text"
+        />
+      </div>
     {/if}
 
     {#if showBadge === true}
-      <form on:input={checkBeforeBadge}>
-        <div id="popUpCracha">
-          <div id="title">COLABORADOR</div>
-          <!-- autocomplete='off' -->
-          <input
-            autofocus
-            on:input={blockForbiddenChars}
-            bind:value={cracha}
-            onkeyup="this.value = this.value.toUpperCase()"
-            name="MATRIC"
-            id="MATRIC"
-            type="text"
-          />
-        </div>
-      </form>
+      <div id="popUpCracha">
+        <div id="title">COLABORADOR</div>
+        <input
+          autocomplete="off"
+          autofocus
+          on:keypress={checkBeforeBadge}
+          on:input|preventDefault={blockForbiddenChars}
+          bind:value={cracha}
+          onkeyup="this.value = this.value.toUpperCase()"
+          name="MATRIC"
+          id="MATRIC"
+          type="text"
+        />
+      </div>
     {/if}
   </div>
   {#if showmodal === true}

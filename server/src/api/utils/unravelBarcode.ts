@@ -5,8 +5,8 @@ import { sanitize } from "./sanitize";
 
 export function unravelBarcode(barcode: string) {
     barcode = String(sanitize(barcode)) //|| null;
+
     //console.log("barcode", barcode );
-    // barcode = '4418184181818'
 
     // if (barcode === '' || barcode === undefined || barcode === null) {
     //     return {}
@@ -30,7 +30,6 @@ export function unravelBarcode(barcode: string) {
 
     //console.log("barcode", barcode);
     //console.log("dados linha 32", dados);
-    //console.log("dados linha 33 ", dados);
     return dados
 }
 

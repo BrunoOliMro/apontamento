@@ -23,7 +23,7 @@ export const codeNote: RequestHandler = async (req, res, next) => {
         // console.log("linha 23, numOdf", dados.numOdf);
         // console.log("linha 23, numOper", dados.numOper);
         // console.log("linha 23, codMaq", dados.codMaq);
-        // console.log('linha 23 codeNote', codIdApontamento);
+        console.log('linha 23 codeNote', codIdApontamento);
 
         if (codIdApontamento.length > 0) {
             if (codIdApontamento[0]?.CODAPONTA === 1) {
@@ -53,6 +53,12 @@ export const codeNote: RequestHandler = async (req, res, next) => {
             }
             if (codIdApontamento[0]?.CODAPONTA === 6) {
                 req.body.message = 'codeApont 6 processo finalizado'
+                next()
+                //return res.json({ message: `codeApont 6 processo finalizado` })
+            }
+
+            if (codIdApontamento[0]?.CODAPONTA === 7) {
+                req.body.message = 'codeApont 7 estorno realizado'
                 next()
                 //return res.json({ message: `codeApont 6 processo finalizado` })
             }

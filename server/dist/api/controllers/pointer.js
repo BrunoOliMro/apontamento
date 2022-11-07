@@ -80,6 +80,7 @@ const pointerPost = async (req, res, next) => {
     let revisao = req.cookies['REVISAO'];
     let startTime = req.cookies['starterBarcode'];
     res.cookie('qtdLibMax', qtdLibMax);
+    res.cookie('starterBarcode', startTime);
     res.cookie('MAQUINA_PROXIMA', codigoMaquinaProxOdf);
     res.cookie('OPERACAO_PROXIMA', codMaqProxOdf);
     res.cookie('NUMERO_ODF', objOdfSelecionada['NUMERO_ODF']);
