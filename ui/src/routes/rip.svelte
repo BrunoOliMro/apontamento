@@ -21,6 +21,7 @@
     let lsd;
     let loader = false;
     let odfFinish = false;
+    let crachModal = "";
 
     async function callRip() {
         const res = await fetch(urlString);
@@ -33,6 +34,14 @@
             loader = true;
             window.location.href = "/#/codigobarras";
             location.reload();
+        }
+    }
+    function checkSuper(event) {
+        if (supervisor.length >= 6 && event.key === "Enter") {
+            if (supervisor === "000000") {
+                crachModal = "cracha invalido";
+            }
+            doPostSuper();
         }
     }
 
@@ -51,7 +60,7 @@
         if (res.message === "supervisor encontrado") {
             showSuper = false;
             doPost();
-            odfFinish = true
+            odfFinish = true;
             window.location.href = "/#/codigobarras";
             location.reload();
         } else if (res.message === "supervisor não encontrado") {
@@ -75,6 +84,10 @@
         }
         if (res.message === "rip enviada, odf finalizada") {
             odfFinish = true;
+            //window.location.href = "/#/codigobarras";
+        }
+        if (res.message === "ocorreu um erro ao enviar os dados da rip") {
+            crachModal = "ocorreu um erro ao enviar os dados da rip";
             //window.location.href = "/#/codigobarras";
         }
     };
@@ -108,12 +121,17 @@
     }
 
     const check = () => {
-        loader = true;
+        //loader = true;
         if (Object.values(setup).length <= 0) {
             return (showSuper = true);
         }
 
         const rows = Object.keys(setup).reduce((acc, key, i) => {
+            if (ripTable[i].LSE === null && ripTable[i].LIE === null) {
+                ripTable[i].LSE = "OK";
+                ripTable[i].LIE = "OK";
+            }
+
             const [col, lin] = key.split("-");
             if (acc[lin] === undefined) acc[lin] = {};
             acc[lin][col] = setup[key];
@@ -126,7 +144,10 @@
             return Object.keys(row)
                 .filter((key) => key !== "LIE" && key !== "LSE")
                 .some((key) => {
-                    const value = row[key];
+                    let value = row[key];
+                    if (value === "ok") {
+                        value = false;
+                    }
                     return value < row["LIE"] || value > row["LSE"];
                 });
         });
@@ -240,16 +261,12 @@
                     autofocus
                     tabindex="18"
                     bind:value={supervisor}
+                    on:keypress={checkSuper}
                     onkeyup="this.value = this.value.toUpperCase()"
                     type="text"
                     name="supervisor"
                     id="supervisor"
                 />
-                <button
-                    tabindex="19"
-                    on:click={doPostSuper}
-                    on:keypress={doPostSuper}>Confirma</button
-                >
                 <button tabindex="20" on:click={close} on:keypress={close}
                     >Fechar</button
                 >
@@ -277,6 +294,15 @@
         <div class="fundo">
             <div class="header">
                 <h3>Preencha todos os campos</h3>
+                <button on:click={close} on:keypress={close}>Fechar</button>
+            </div>
+        </div>
+    {/if}
+
+    {#if crachModal === "ocorreu um erro ao enviar os dados da rip"}
+        <div class="fundo">
+            <div class="header">
+                <h3>Erro ao enviar a rip</h3>
                 <button on:click={close} on:keypress={close}>Fechar</button>
             </div>
         </div>

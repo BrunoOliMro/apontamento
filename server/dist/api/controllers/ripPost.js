@@ -12,13 +12,13 @@ const ripPost = async (req, res) => {
     let keySan;
     let valueSan;
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let NUMERO_ODF = Number((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'])) || 0;
+    let NUMERO_ODF = Number((req.cookies['NUMERO_ODF'])) || 0;
     let NUMERO_OPERACAO = String(req.cookies['NUMERO_OPERACAO']) || null;
-    let CODIGO_MAQUINA = String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA'])) || null;
-    let codigoPeca = String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])) || null;
-    let funcionario = String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])) || null;
-    let revisao = Number((0, sanitize_1.sanitize)(req.cookies['REVISAO'])) || 0;
-    let qtdLibMax = Number((0, sanitize_1.sanitize)(req.cookies['qtdLibMax'])) || 0;
+    let CODIGO_MAQUINA = String((req.cookies['CODIGO_MAQUINA'])) || null;
+    let codigoPeca = String((req.cookies['CODIGO_PECA'])) || null;
+    let funcionario = String((req.cookies['FUNCIONARIO'])) || null;
+    let revisao = Number((req.cookies['REVISAO'])) || 0;
+    let qtdLibMax = Number((req.cookies['qtdLibMax'])) || 0;
     const updateQtyQuery = [];
     let especif = (req.cookies['especif']) || null;
     let numCar = (req.cookies['numCar']) || null;
@@ -59,11 +59,14 @@ const ripPost = async (req, res) => {
     }, {});
     try {
         Object.entries(resultSplitLines).forEach(([row], i) => {
+            if (resultSplitLines[row].SETUP === "ok" && lie[i] === null && lse[i] === null) {
+                resultSplitLines[row] = 0;
+            }
             updateQtyQuery.push(`
             INSERT INTO 
                 CST_RIP_ODF_PRODUCAO 
                     (ODF, ITEM, REVISAO, NUMCAR, DESCRICAO, ESPECIFICACAO, LIE, LSE, SETUP, M2, M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13, INSTRUMENTO, OPE_MAQUIN, OPERACAO) 
-                VALUES('${NUMERO_ODF}','1', '${revisao}' , '${numCar[i]}', '${descricao[i]}',  '${especif[i]}','${lie[i]}', '${lse[i]}',${resultSplitLines[row].SETUP ? `'${resultSplitLines[row].SETUP}'` : null},${resultSplitLines[row].M2 ? `'${resultSplitLines[row].M2}'` : null},${resultSplitLines[row].M3 ? `'${resultSplitLines[row].M3}'` : null},${resultSplitLines[row].M4 ? `'${resultSplitLines[row].M4}'` : null},${resultSplitLines[row].M5 ? `'${resultSplitLines[row].M5}'` : null},${resultSplitLines[row].M6 ? `'${resultSplitLines[row].M6}'` : null},${resultSplitLines[row].M7 ? `'${resultSplitLines[row].M7}'` : null},${resultSplitLines[row].M8 ? `'${resultSplitLines[row].M8}'` : null},${resultSplitLines[row].M9 ? `'${resultSplitLines[row].M9}'` : null},${resultSplitLines[row].M10 ? `'${resultSplitLines[row].M10}'` : null},${resultSplitLines[row].M11 ? `'${resultSplitLines[row].M11}'` : null},${resultSplitLines[row].M12 ? `'${resultSplitLines[row].M12}'` : null},${resultSplitLines[row].M13 ? `'${resultSplitLines[row].M13}'` : null},'${instrumento[i]}','${CODIGO_MAQUINA}','${NUMERO_OPERACAO}')`);
+                VALUES('${NUMERO_ODF}','1', '${revisao}' , '${numCar[i]}', '${descricao[i]}',  '${especif[i]}',${lie[i]}, ${lse[i]},${resultSplitLines[row].SETUP ? `'${resultSplitLines[row].SETUP}'` : null},${resultSplitLines[row].M2 ? `${resultSplitLines[row].M2}` : null},${resultSplitLines[row].M3 ? `${resultSplitLines[row].M3}` : null},${resultSplitLines[row].M4 ? `${resultSplitLines[row].M4}` : null},${resultSplitLines[row].M5 ? `${resultSplitLines[row].M5}` : null},${resultSplitLines[row].M6 ? `${resultSplitLines[row].M6}` : null},${resultSplitLines[row].M7 ? `${resultSplitLines[row].M7}` : null},${resultSplitLines[row].M8 ? `${resultSplitLines[row].M8}` : null},${resultSplitLines[row].M9 ? `${resultSplitLines[row].M9}` : null},${resultSplitLines[row].M10 ? `${resultSplitLines[row].M10}` : null},${resultSplitLines[row].M11 ? `${resultSplitLines[row].M11}` : null},${resultSplitLines[row].M12 ? `${resultSplitLines[row].M12}` : null},${resultSplitLines[row].M13 ? `${resultSplitLines[row].M13}` : null},'${instrumento[i]}','${CODIGO_MAQUINA}','${NUMERO_OPERACAO}')`);
         });
         await connection.query(updateQtyQuery.join("\n"));
         return res.json({ message: "rip enviada, odf finalizada" });

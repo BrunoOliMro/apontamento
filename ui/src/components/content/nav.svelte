@@ -19,14 +19,11 @@
     let showmodal = false;
     let resultCall = callMotivo();
     let showMaqPar = false;
-    let ferr = localStorage.getItem("breadFer");
+    //let ferr = localStorage.getItem("breadFer");
     //import breadFer from "/src/routes/ferramenta.svelte";
     //import Ferramenta from "src/routes/ferramenta.svelte"
     import Ferramenta from "/src/routes/ferramenta.svelte";
-
-    console.log("linha 22", breadFer);
-    //console.log("linha 24", Ferramenta);
-
+    
     const getMissingFeed = async () => {
         document.getElementById("faltante").style.display = "block";
         document.getElementById("missingFeed").style.display = "block";
@@ -88,8 +85,10 @@
         }).then((res) => res.json());
         if (res.message === "maquina parada com sucesso") {
             showMaqPar = true;
+            showmodal = false
         }
     };
+
 </script>
 
 <main>
@@ -120,52 +119,64 @@
         </div>
     {:then item}
         {#if showmodal === true}
-            <div class="fundo">
-                <div class="header">
-                    <div class="closed">
-                        <h2>Motivo da Parada</h2>
+            <div class="modalBackground" >
+                <div class="itensInsideModal">
+                    <div class="closePopDiv">
                         <button
-                            class="closebtn"
+                            class="btnPop"
+                            id="closePop"
                             on:keypress={closePop}
-                            on:click={closePop}>X</button
+                            on:click={closePop}>FECHAR</button
                         >
                     </div>
-                    <select
-                        autofocus
-                        tabindex="10"
-                        bind:value
-                        name="id"
-                        id="id"
-                    >
-                        {#each dados as item}
-                            <option>{item}</option>
-                        {/each}
-                    </select>
-                    <p tabindex="11" on:keypress={confirm} on:click={confirm}>
-                        Confirmar
-                    </p>
+
+                    <div class="modalContent">
+                        <h2 class="modalTitle">Motivo da Parada</h2>
+                        <div class="optionsBar">
+                            <select autofocus tabindex="10" bind:value>
+                                {#each dados as item}
+                                    <option>{item}</option>
+                                {/each}
+                            </select>
+                        </div>
+
+                        <div class="confirmPopDiv">
+                            <button
+                                class="btnPop"
+                                id="confirmPop"
+                                tabindex="11"
+                                on:keypress={confirm}
+                                on:click={confirm}
+                            >
+                                CONFIRMAR
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         {/if}
     {/await}
 
     {#if showMaqPar === true}
-        <div class="fundo">
-            <div class="header">
-                <div class="closed">
-                    <h2>Maquina Parada</h2>
-                    <button
-                        class="closebtn"
-                        autofocus
-                        on:keypress={closeConfirm}
-                        on:click={closeConfirm}
-                    >
-                        Confirma
-                    </button>
+            <div class="modalBackground" >
+                <div class="confirmationModal">
+                    <div class="onlyConfirmModalContent">
+                        <h2 class="modalTitle">Maquina Parada</h2>
+                        <div class="onlyConfirmPop">
+                            <button
+                                class="btnPopConfirm"
+                                id="confirmPop"
+                                tabindex="11"
+                                on:keypress={closeConfirm}
+                                on:click={closeConfirm}
+                            >
+                                CONFIRMAR
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    {/if}
+        {/if}
     <div class="nav">
         <button
             on:click={getMissingFeed}
@@ -204,6 +215,88 @@
 </main>
 
 <style>
+    .confirmationModal{
+        transition: all 1s;
+        animation: ease-in;
+        margin: 0%;
+        padding: 0%;
+        color: white;
+        background-color: #252525;
+        top: 0;
+        left: 0;
+        width: 460px;
+        height: 225px;
+        display: block;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        border-radius: 8px;
+    }
+    .onlyConfirmModalContent{
+        margin-top: 50px;
+        margin-bottom: 0%;
+        margin-left: 25px;
+        margin-right: 0%;
+        padding: 0%;
+
+    }
+    .onlyConfirmPop{
+        justify-content: right;
+        margin-right: 1%;
+        align-items: right;
+        text-align: right;
+    }
+    .btnPopConfirm{
+        border: none;
+        background-color: transparent;
+        color: white;
+    }
+    .modalContent {
+        margin-left: 25px;
+        margin-top: 0%;
+        margin-bottom: 0%;
+        margin-right: 0%;
+    }
+    button {
+        letter-spacing: 0.5px;
+        width: fit-content;
+        height: 28px;
+    }
+    .optionsBar {
+        margin-bottom: 10px;
+        padding: 0%;
+        justify-content: left;
+        align-items: left;
+        text-align: left;
+    }
+    .modalTitle {
+        margin-left: 0px;
+        margin-bottom: 25px;
+        margin-right: 0px;
+        margin-top: 0px;
+        padding: 0%;
+        justify-content: left;
+        align-items: left;
+        text-align: left;
+    }
+    .closePopDiv {
+        font-size: 12px;
+        margin-right: 2%;
+        margin-top: 2%;
+        padding: 0%;
+        justify-content: right;
+        align-items: right;
+        text-align: right;
+    }
+    .confirmPopDiv {
+        font-size: 16px;
+        margin: 0%;
+        padding: 0%;
+        justify-content: left;
+        align-items: left;
+        text-align: left;
+    }
     .breadcrumb {
         margin-top: 5px;
         margin-left: 0%;
@@ -233,38 +326,44 @@
         align-items: center;
         justify-content: center;
     }
-    .closebtn {
-        width: 25px;
+    .btnPop {
+        margin: 0%;
+        padding: 0%;
+        background-color: transparent;
         border-radius: 5px;
+        opacity: 0.5;
+        color: white;
+        border: none;
     }
+    .btnPop:hover {
+        transition: 1s;
+        opacity: 1;
+    }
+
     h2 {
-        width: 460px;
-        justify-content: center;
-        display: flex;
-    }
-    .closed {
+        font-size: 55px;
+        margin: 0px, 0px, 0px, 0px;
+        padding: 0px;
+        width: 450px;
+        align-items: left;
+        text-align: left;
+        justify-content: left;
         display: flex;
     }
     select {
-        width: 200px;
+        width: 350px;
+        height: 25px;
         background-color: #252525;
         border-radius: 5px;
         color: #fff;
     }
     option {
-        width: 35px;
+        font-size: 18px;
         background-color: #252525;
     }
-    p {
-        display: flex;
-        justify-content: center;
-        text-decoration: none;
-        padding: 5px;
-        background: #252525;
-        color: #fff;
-    }
 
-    .fundo {
+    .modalBackground {
+        transition: 1s;
         position: fixed;
         top: 0;
         left: 0;
@@ -277,21 +376,23 @@
         justify-content: center;
         z-index: 999999999999999999999999999999;
     }
-    .header {
+    .itensInsideModal {
+        transition: all 1s;
+        animation: ease-in;
         margin: 0%;
         padding: 0%;
         color: white;
         background-color: #252525;
         top: 0;
         left: 0;
-        width: 450px;
-        height: 250px;
+        width: 625px;
+        height: 300px;
         display: block;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         text-align: center;
-        border-radius: 5px;
+        border-radius: 8px;
     }
     .out {
         text-decoration: none;

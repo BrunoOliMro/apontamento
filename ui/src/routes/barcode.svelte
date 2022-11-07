@@ -1,5 +1,5 @@
 <script>
-// @ts-nocheck
+  // @ts-nocheck
   // @ts-nocheck
   import Title from "../components/title/title.svelte";
   let imageLoader = "/images/axonLoader.gif";
@@ -129,17 +129,16 @@
   };
 
   function writeOnHand(event) {
-    console.log("linha 135", event);
     if (event.key === "Enter" && codigoBarras.length >= 16) {
       doPost();
     }
   }
 
   function checkBeforeBadge(event) {
-    if (cracha === "000000") {
-      crachModal = "cracha invalido";
-    }
     if (cracha.length >= 6 && event.key === "Enter") {
+      if (cracha === "000000") {
+        crachModal = "cracha invalido";
+      }
       checkBagde();
     }
   }
@@ -478,7 +477,7 @@
 
     {#if crachModal === "cracha invalido"}
       <!-- {#if showInvalidBagde === true} -->
-      <div class="fundo">
+      <!-- <div class="fundo">
         <div class="invalidBadge" id="s">
           <h5>Cracha invalido</h5>
           <p
@@ -490,40 +489,60 @@
             Fechar
           </p>
         </div>
+      </div> -->
+
+      <div class="modalBackground">
+        <div class="confirmationModal">
+          <div class="onlyConfirmModalContent">
+            <h2 class="modalTitle">Cracha invalido</h2>
+            <button
+              autofocus
+              tabindex="26"
+              on:keypress={closePopCor}
+              on:input={blockForbiddenChars}
+              class="btnPop"
+              type="text">FECHAR</button
+            >
+          </div>
+        </div>
       </div>
     {/if}
 
     {#if showBarcode === true}
-      <div id="popUpCracha">
-        <div id="title">CÓDIGO DE BARRAS DA ODF</div>
-        <input
-          autocomplete="off"
-          autofocus
-          on:keypress={writeOnHand}
-          on:input|preventDefault={blockForbiddenChars}
-          bind:value={codigoBarras}
-          onkeyup="this.value = this.value.toUpperCase()"
-          name="MATRIC"
-          id="MATRIC"
-          type="text"
-        />
+      <div class="form">
+        <div id="popUpCracha">
+          <div id="title">CÓDIGO DE BARRAS DA ODF</div>
+          <input
+            autocomplete="off"
+            autofocus
+            on:keypress={writeOnHand}
+            on:input|preventDefault={blockForbiddenChars}
+            bind:value={codigoBarras}
+            onkeyup="this.value = this.value.toUpperCase()"
+            name="MATRIC"
+            id="MATRIC"
+            type="text"
+          />
+        </div>
       </div>
     {/if}
 
     {#if showBadge === true}
-      <div id="popUpCracha">
-        <div id="title">COLABORADOR</div>
-        <input
-          autocomplete="off"
-          autofocus
-          on:keypress={checkBeforeBadge}
-          on:input|preventDefault={blockForbiddenChars}
-          bind:value={cracha}
-          onkeyup="this.value = this.value.toUpperCase()"
-          name="MATRIC"
-          id="MATRIC"
-          type="text"
-        />
+      <div class="form">
+        <div id="popUpCracha">
+          <div id="title">COLABORADOR</div>
+          <input
+            autocomplete="off"
+            autofocus
+            on:keypress={checkBeforeBadge}
+            on:input|preventDefault={blockForbiddenChars}
+            bind:value={cracha}
+            onkeyup="this.value = this.value.toUpperCase()"
+            name="MATRIC"
+            id="MATRIC"
+            type="text"
+          />
+        </div>
       </div>
     {/if}
   </div>
@@ -597,7 +616,95 @@
 </main>
 
 <style>
-  .loader {
+  .modalTitle {
+        margin-left: 0px;
+        margin-bottom: 25px;
+        margin-right: 0px;
+        margin-top: 0px;
+        padding: 0%;
+        justify-content: left;
+        align-items: left;
+        text-align: left;
+    }
+    .closePopDiv {
+        font-size: 12px;
+        margin-right: 2%;
+        margin-top: 2%;
+        padding: 0%;
+        justify-content: right;
+        align-items: right;
+        text-align: right;
+    }
+    .confirmPopDiv {
+        font-size: 16px;
+        margin: 0%;
+        padding: 0%;
+        justify-content: left;
+        align-items: left;
+        text-align: left;
+    }
+    .breadcrumb {
+        margin-top: 5px;
+        margin-left: 0%;
+        margin-bottom: 0%;
+        text-decoration: underline;
+    }
+    .loader {
+        margin: 0%;
+        position: relative;
+        width: 10vw;
+        height: 5vw;
+        padding: 1.5vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .imageLoader {
+        margin: 0%;
+        padding: 0%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: black;
+        height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .btnPop {
+        margin: 0%;
+        padding: 0%;
+        background-color: transparent;
+        border-radius: 5px;
+        opacity: 0.5;
+        color: white;
+        border: none;
+    }
+    .btnPop:hover {
+        transition: 1s;
+        opacity: 1;
+    }
+
+    h2 {
+        font-size: 55px;
+        margin: 0px, 0px, 0px, 0px;
+        padding: 0px;
+        width: 450px;
+        align-items: left;
+        text-align: left;
+        justify-content: left;
+        display: flex;
+    }
+    button {
+        letter-spacing: 0.5px;
+        width: fit-content;
+        height: 28px;
+        border: none;
+        color: white;
+        background-color: transparent;
+    }
+  /* .loader {
     margin: 0%;
     position: relative;
     width: 10vw;
@@ -607,7 +714,7 @@
     align-items: center;
     justify-content: center;
     z-index: 99999999999;
-  }
+  } */
   .imageLoader {
     margin: 0%;
     padding: 0%;
@@ -669,7 +776,7 @@
     border-color: grey;
     box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
   }
-  .fundo {
+  /* .fundo {
     margin: 0%;
     padding: 0%;
     position: fixed;
@@ -698,7 +805,7 @@
     text-align: center;
     border-radius: 3px;
     z-index: 9;
-  }
+  } */
   .return {
     display: flex;
     justify-content: flex-end;
@@ -764,21 +871,6 @@
   main {
     margin: 1%;
   }
-  .bar {
-    font-size: 35px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    margin: 1%;
-  }
-  .input {
-    font-size: 35px;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    display: flex;
-  }
 
   #popUpCracha {
     margin: 1%;
@@ -791,12 +883,5 @@
     justify-content: center;
     text-align: center;
     align-items: center;
-  }
-  form {
-    border-radius: 3px;
-    height: 180px;
-    letter-spacing: 1px;
-    border-color: grey;
-    box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
   }
 </style>

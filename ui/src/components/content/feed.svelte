@@ -26,6 +26,7 @@
     let getSpace;
     var showAddress = false;
     let loader = false;
+    let crachModal = ''
 
     async function getRefugodata() {
         const res = await fetch(motivoUrl);
@@ -67,14 +68,17 @@
         return sanitizedOutput;
     }
 
-    function checkForSuper() {
-        if (supervisor.length === 6) {
+    function checkForSuper(event) {
+        if (supervisor.length >= 6 && event.key === "Enter") {
+            if (supervisor === "000000") {
+                crachModal = "cracha invalido";
+            }
             doPost();
         }
     }
 
     const doPost = async () => {
-        console.log("linha 78", supervisor);
+        //console.log("linha 78", supervisor);
         loader = true;
         const headers = new Headers();
         const res = await fetch(urlS, {
@@ -334,7 +338,7 @@
                             <p>Supervisor</p>
                             <input
                                 autofocus
-                                on:input={checkForSuper}
+                                on:keypress={checkForSuper}
                                 bind:value={supervisor}
                                 class="supervisor"
                                 on:input={blockForbiddenChars}
@@ -364,7 +368,7 @@
                         <input
                             autofocus
                             bind:value={supervisor}
-                            on:input={checkForSuper}
+                            on:keypress={checkForSuper}
                             on:input={blockForbiddenChars}
                             class="supervisor"
                             type="text"
@@ -442,6 +446,20 @@
                     </div>
                 </div>
             {/if}
+
+            {#if crachModal === 'cracha invalido'}
+                <div class="fundo">
+                    <div class="header">
+                        <div class="closed">
+                            <h2>Supervisor inválido</h2>
+                        </div>
+                        <button on:keypress={close} on:click={close}
+                            >fechar</button
+                        >
+                    </div>
+                </div>
+            {/if}
+
 
             {#if showErrorMessage === true}
                 <div class="fundo">
