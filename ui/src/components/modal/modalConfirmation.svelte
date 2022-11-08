@@ -1,10 +1,7 @@
 <script>
     export let title = "Maquina Parada";
-
     import { createEventDispatcher } from "svelte";
-
     const dispatch = createEventDispatcher();
-
     function confirma() {
         dispatch("message", {
             text: "teste basso cabaço",
@@ -68,6 +65,7 @@
         color: white;
     }
     button {
+        border: none;
         letter-spacing: 0.5px;
         width: fit-content;
         height: 28px;

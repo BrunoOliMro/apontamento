@@ -40,6 +40,42 @@ export const point: RequestHandler = async (req, res) => {
     let valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed)) //+ Number(parcialFeed))
     let faltante = qtdLibMax - valorTotalApontado
 
+    if(supervisor === undefined || supervisor === null || supervisor === '' || supervisor === '000000' || supervisor === '0' || supervisor === '00' || supervisor === '000' || supervisor === '0000' || supervisor === '00000'){
+        return res.json({message : 'Supervisor inválido'})
+    }
+
+    if(qtdLibMax === undefined || qtdLibMax === null || qtdLibMax === 0){
+        return res.json({message : 'Quantidade inválida'  })
+    }
+
+    if (CODIGO_MAQUINA === null || CODIGO_MAQUINA === undefined || CODIGO_MAQUINA === '' || CODIGO_MAQUINA === '0' || CODIGO_MAQUINA === '00' || CODIGO_MAQUINA === '000' || CODIGO_MAQUINA === '0000' || CODIGO_MAQUINA === '00000') {
+        return res.json({ message: 'Código máquina inválido' })
+    }
+
+    if (NUMERO_OPERACAO === null || NUMERO_OPERACAO === undefined || NUMERO_OPERACAO === '' || NUMERO_OPERACAO === '0' || NUMERO_OPERACAO === '00' || NUMERO_OPERACAO === '000' || NUMERO_OPERACAO === '0000' || NUMERO_OPERACAO === '00000') {
+        return res.json({ message: 'Número operação inválido' })
+    }
+
+    if (codigoPeca === null || codigoPeca === undefined || codigoPeca === '' || codigoPeca === '0' || codigoPeca === '00' || codigoPeca === '000' || codigoPeca === '0000' || codigoPeca === '00000') {
+        return res.json({ message: 'Código de peça inválido' })
+    }
+
+    if (NUMERO_ODF === 0 || NUMERO_ODF === null || NUMERO_ODF === undefined) {
+        return res.json({ message: 'Número odf inválido' })
+    }
+
+    if (funcionario === undefined || funcionario === null || funcionario === '' || funcionario === '0') {
+        return res.json({ message: 'Funcionário Inválido' })
+    }
+
+    if (qtdBoas > qtdLibMax || valorTotalApontado > qtdLibMax || badFeed > qtdLibMax || missingFeed > qtdLibMax || reworkFeed > qtdLibMax) {
+        return res.json({ message: 'Quantidade excedida' })
+    }
+
+    if(qtdBoas === null || qtdBoas === undefined || missingFeed === null || missingFeed === undefined || valorTotalApontado === null || valorTotalApontado === undefined ){
+        return res.json({ message : 'Quantidade inválida'})
+    }
+
     if (missingFeed <= 0) {
         faltante = qtdLibMax - valorTotalApontado
     }
@@ -63,7 +99,7 @@ export const point: RequestHandler = async (req, res) => {
         SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'
         `).then(result => result.recordset);
         if (resource.length <= 0) {
-            return res.json({ message: 'supervisor não encontrado' })
+            return res.json({ message: 'Supervisor não encontrado' })
         }
     }
 
@@ -118,10 +154,10 @@ export const point: RequestHandler = async (req, res) => {
 
         res.cookie('qtdBoas', qtdBoas)
 
-        return res.json({ message: 'valores apontados com sucesso' })
+        return res.json({ message: 'Sucesso ao apontar' })
     } catch (error) {
         console.log(error);
-        return res.json({ message: 'erro ao enviar o apontamento' })
+        return res.json({ message: 'Erro ao apontar' })
     } finally {
         //await connection.close()
     }

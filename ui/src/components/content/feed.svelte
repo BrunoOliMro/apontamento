@@ -1,5 +1,7 @@
 <script>
     // @ts-nocheck
+    import Rework from "../inputs/rework.svelte";
+    let supervisorApi = `/api/v1/supervisor`;
     let imageLoader = "/images/axonLoader.gif";
     let badFeed;
     let missingFeed;
@@ -18,7 +20,7 @@
     let resultRefugo;
     let resultado = getOdfData();
     let showParcialSuper = false;
-    let showParcialAndRef = false;
+    //let showParcialAndRef = false;
     let showSuperNotFound = false;
     let showErrorMessage = false;
     let showRoundedApont = false;
@@ -26,16 +28,17 @@
     let getSpace;
     var showAddress = false;
     let loader = false;
-    let crachModal = ''
+    let modalMessage = "";
+    let rework = false;
+    let missing = false;
+
+    function call(event) {
+        alert(event.detail.text);
+    }
 
     async function getRefugodata() {
         const res = await fetch(motivoUrl);
         dados = await res.json();
-        //console.log('dados linha feed', dados);
-        //localStorage.setItem('dados', dados);
-        // if (localStorage.dados === '' || localStorage.dados === undefined || localStorage.dados === null ) {
-        //     console.log('linha 31 vazio');
-        // }
     }
 
     async function getOdfData() {
@@ -68,11 +71,21 @@
         return sanitizedOutput;
     }
 
-    function checkForSuper(event) {
-        if (supervisor.length >= 6 && event.key === "Enter") {
+    async function checkForSuper(event) {
+        if (supervisor.length >= 5 && event.key === "Enter") {
             if (supervisor === "000000") {
-                crachModal = "cracha invalido";
+                modalMessage = "Crachá inválido";
             }
+        }
+        const headers = new Headers();
+        const res = await fetch(supervisorApi, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                supervisor: supervisor,
+            }),
+        }).then((res) => res.json());
+        if (res.message === "Supervisor encontrado") {
             doPost();
         }
     }
@@ -90,44 +103,69 @@
                 missingFeed: missingFeed,
                 reworkFeed: reworkFeed,
                 value: value,
-                supervisor: supervisor,
             }),
         }).then((res) => res.json());
 
         console.log("res:", res);
 
+        if (res.message === "Supervisor inválido") {
+            modalMessage = "Supervisor inválido";
+        }
         if (res.message === "supervisor não encontrado") {
-            showSuperNotFound = true;
+            modalMessage = "Supervisor não encontrado";
+            //showSuperNotFound = true;
         }
-        // if (res.message === "erro ao enviar o apontamento") {
-        //     showErrorMessage = true;
-        // }
-        // if (res.message === 'valor apontado excede o valor do sistema') {
-        //     showError = true;
-        // }
-        if (res.message === "valores apontados com sucesso") {
+        if (res.message === "Quantidade inválida") {
+            modalMessage = "Quantidade inválida";
+        }
+        if (res.message === "Código máquina inválido") {
+            modalMessage = "Número operação inválido";
+            //showSuperNotFound = true;
+        }
+        if (res.message === "Código de peça inválido") {
+            modalMessage = "Código de peça inválido";
+        }
+
+        if (res.message === "Número operação inválido") {
+            modalMessage = "Número operação inválido";
+        }
+
+        if (res.message === "Número odf inválido") {
+            modalMessage = "Número ODF inválido";
+        }
+        if (res.message === "Funcionário Inválido") {
+            modalMessage = "Funcionário Inválido";
+        }
+        if (res.message === "Quantidade excedida") {
+            modalMessage = "Quantidade excedida";
+        }
+        if (res.message === "Quantidade inválida") {
+            modalMessage = "Quantidade inválida";
+        }
+        if (res.message === "Erro ao apontar") {
+            modalMessage = "Erro ao apontar";
+        }
+        if (res.message === "Sucesso ao apontar") {
+            loader = true;
             window.location.href = `/#/rip`;
-            //getSpaceFunc();
-        }
-        if (res.message === "valor apontado maior que a quantidade liberada") {
-            showError = true;
+            modalMessage = "";
             showConfirm = false;
         }
     };
 
-    // async function getSpaceFunc() {
-    //     const res = await fetch(urlS);
-    //     getSpace = await res.json();
-    //     //console.log('dados 100', getSpace);
-    //     if (
-    //         getSpace.message === "sem endereço" ||
-    //         getSpace.address === undefined
-    //     ) {
-    //         window.location.href = `/#/rip`;
-    //     } else if (getSpace.String === "endereço com sucesso") {
-    //         showAddress = true;
-    //     }
-    // }
+    async function getSpaceFunc() {
+        const res = await fetch(urlS);
+        getSpace = await res.json();
+
+        if (
+            getSpace.message === "sem endereço" ||
+            getSpace.address === undefined
+        ) {
+            window.location.href = `/#/rip`;
+        } else if (getSpace.String === "endereço com sucesso") {
+            showAddress = true;
+        }
+    }
 
     async function doCallPost() {
         let numberBadFeed = Number(badFeed || 0);
@@ -148,7 +186,7 @@
             showConfirm = true;
         }
         if (total === 0) {
-            showRoundedApont = true;
+            modalMessage = "Apontamento vazio";
         }
 
         if (
@@ -156,7 +194,8 @@
             numberGoodFeed > 0 &&
             numberGoodFeed < numberQtdAllowed
         ) {
-            showParcialSuper = true;
+            modalMessage = "Apontamento parcial";
+            //showParcialSuper = true;
         }
 
         if (
@@ -219,9 +258,11 @@
         showRoundedApont = false;
         showErrorMessage = false;
         showAddress = false;
+        modalMessage = "";
     }
 
     function closeRedirect() {
+        modalMessage = "";
         showAddress = false;
         window.location.href = `/#/rip`;
     }
@@ -245,7 +286,7 @@
     {#if dadosOdf.length !== 0}
         <main class="main">
             <div class="fullForm">
-                <form action="/api/v1/apontar" method="POST" class="form">
+                <div class="form">
                     <div id="prod" class="write">
                         <p>PRODUZIR</p>
                         <div>
@@ -264,7 +305,8 @@
                             name="valorFeed"
                         />
                     </div>
-                    <div class="write" id="ruins" name="ruins">
+
+                    <!-- <div class="write" id="ruins" name="ruins">
                         <p>RUINS</p>
                         <input
                             tabindex="2"
@@ -275,8 +317,28 @@
                             id="badFeed"
                             name="badFeed"
                         />
-                    </div>
-                    <div class="write" id="retrabalhar">
+                    </div> -->
+
+                    <!-- bind:value={reworkFeed} -->
+                    <!-- on:input={blockForbiddenChars} -->
+                    {#if rework === true}
+                        <Rework on:message={call} />
+                        <!-- <div class="write" id="ruins" name="ruins">
+                            <p>RETRABALHAR</p>
+                            <input
+                                tabindex="2"
+                                autofocus
+                                bind:value={reworkFeed}
+                                on:input={blockForbiddenChars}
+                                class="input"
+                                id="reworkFeed"
+                                type="text"
+                                name="reworkFeed"
+                            />
+                        </div> -->
+                    {/if}
+
+                    <!-- <div class="write" id="retrabalhar">
                         <p>RETRABALHAR</p>
                         <input
                             autofocus
@@ -287,7 +349,8 @@
                             type="text"
                             name="reworkFeed"
                         />
-                    </div>
+                    </div> -->
+
                     <div class="write" id="faltante">
                         <p>FALTANTE</p>
                         <input
@@ -300,8 +363,7 @@
                             name="missingFeed"
                         />
                     </div>
-                </form>
-
+                </div>
                 <a
                     tabindex="3"
                     id="apontar"
@@ -328,9 +390,9 @@
                     <div class="fundo">
                         <div class="header">
                             <div class="closed">
-                                <h2>APONTAMENTO COM REFUGO</h2>
+                                <h2>Apontamento com refugo</h2>
                             </div>
-                            <select bind:value name="id" id="id">
+                            <select bind:value nam e="id" id="id">
                                 {#each dados as item}
                                     <option>{item}</option>
                                 {/each}
@@ -358,11 +420,11 @@
                 {/if}
             {/await}
 
-            {#if showParcialSuper === true}
+            {#if modalMessage === "Apontamento parcial"}
                 <div class="fundo">
                     <div class="header">
                         <div class="closed">
-                            <h2>APONTAMENTO PARCIAL</h2>
+                            <h2>{modalMessage}</h2>
                         </div>
                         <p>Supervisor</p>
                         <input
@@ -434,11 +496,11 @@
                 </div>
             {/if} -->
 
-            {#if showError === true}
+            {#if modalMessage === "Quantidade excedida"}
                 <div class="fundo">
                     <div class="header">
                         <div class="closed">
-                            <h2>Valor Enviado maior que o possivel</h2>
+                            <h2>{modalMessage}</h2>
                         </div>
                         <button on:keypress={close} on:click={close}
                             >fechar</button
@@ -447,11 +509,11 @@
                 </div>
             {/if}
 
-            {#if crachModal === 'cracha invalido'}
+            {#if modalMessage === "Funcionário Inválido"}
                 <div class="fundo">
                     <div class="header">
                         <div class="closed">
-                            <h2>Supervisor inválido</h2>
+                            <h2>{modalMessage}</h2>
                         </div>
                         <button on:keypress={close} on:click={close}
                             >fechar</button
@@ -460,12 +522,11 @@
                 </div>
             {/if}
 
-
-            {#if showErrorMessage === true}
+            {#if modalMessage === "Número ODF inválido"}
                 <div class="fundo">
                     <div class="header">
                         <div class="closed">
-                            <h2>Erro ao enviar apontamento</h2>
+                            <h2>{modalMessage}</h2>
                         </div>
                         <button on:keypress={close} on:click={close}
                             >fechar</button
@@ -474,11 +535,11 @@
                 </div>
             {/if}
 
-            {#if showRoundedApont === true}
+            {#if modalMessage === "Crachá inválido"}
                 <div class="fundo">
                     <div class="header">
                         <div class="closed">
-                            <h2>Apontamento com valores Invalidos</h2>
+                            <h2>{modalMessage}</h2>
                         </div>
                         <button on:keypress={close} on:click={close}
                             >fechar</button
@@ -487,11 +548,63 @@
                 </div>
             {/if}
 
-            {#if showSuperNotFound === true}
+            {#if modalMessage === "Erro ao apontar"}
                 <div class="fundo">
                     <div class="header">
                         <div class="closed">
-                            <h2>Supervisor não encontrado</h2>
+                            <h2>{modalMessage}</h2>
+                        </div>
+                        <button on:keypress={close} on:click={close}
+                            >fechar</button
+                        >
+                    </div>
+                </div>
+            {/if}
+
+            {#if modalMessage === "Supervisor inválido"}
+                <div class="fundo">
+                    <div class="header">
+                        <div class="closed">
+                            <h2>{modalMessage}</h2>
+                        </div>
+                        <button on:keypress={close} on:click={close}
+                            >fechar</button
+                        >
+                    </div>
+                </div>
+            {/if}
+
+            {#if modalMessage === "Número operação inválido"}
+                <div class="fundo">
+                    <div class="header">
+                        <div class="closed">
+                            <h2>{modalMessage}</h2>
+                        </div>
+                        <button on:keypress={close} on:click={close}
+                            >fechar</button
+                        >
+                    </div>
+                </div>
+            {/if}
+
+            {#if modalMessage === "Apontamento vazio"}
+                <div class="fundo">
+                    <div class="header">
+                        <div class="closed">
+                            <h2>{modalMessage}</h2>
+                        </div>
+                        <button on:keypress={close} on:click={close}
+                            >fechar</button
+                        >
+                    </div>
+                </div>
+            {/if}
+
+            {#if modalMessage === "Supervisor não encontrado"}
+                <div class="fundo">
+                    <div class="header">
+                        <div class="closed">
+                            <h2>{modalMessage}</h2>
                         </div>
                         <button
                             tabindex="7"
@@ -520,6 +633,15 @@
 {/await}
 
 <style>
+    button {
+        display: flex;
+        justify-content: right;
+        text-align: right;
+        align-items: right;
+        border: none;
+        background-color: transparent;
+        color: white;
+    }
     #apontar {
         z-index: 1;
     }
@@ -735,7 +857,7 @@
         letter-spacing: 1px;
     }
     p {
-        margin: 1%;
+        margin: 0%;
         padding: 0%;
     }
 

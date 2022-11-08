@@ -9,7 +9,7 @@
     import missingFeed from "../content/feed.svelte";
     import ruins from "../content/feed.svelte";
     import retrabalhar from "../content/feed.svelte";
-    import faltante from "../content/feed.svelte";
+    import faltante from "../content/feed.svelte"
     import Title from "../title/title.svelte";
     let apiMotivoParada = "api/v1/motivoParada";
     let postParada = `/api/v1/postParada`;
@@ -19,6 +19,7 @@
     let showmodal = false;
     let resultCall = callMotivo();
     let showMaqPar = false;
+
     //let ferr = localStorage.getItem("breadFer");
     //import breadFer from "/src/routes/ferramenta.svelte";
     //import Ferramenta from "src/routes/ferramenta.svelte"
@@ -33,13 +34,15 @@
         document.getElementById("badFeed").style.display = "none";
     };
 
-    const getReworkFeed = async () => {
-        document.getElementById("faltante").style.display = "none";
-        document.getElementById("retrabalhar").style.display = "block";
-        document.getElementById("reworkFeed").style.display = "block";
-        document.getElementById("ruins").style.display = "none";
-        document.getElementById("badFeed").style.display = "none";
-    };
+
+
+    // const getReworkFeed = async () => {
+    //     document.getElementById("faltante").style.display = "none";
+    //     document.getElementById("retrabalhar").style.display = "block";
+    //     document.getElementById("reworkFeed").style.display = "block";
+    //     document.getElementById("ruins").style.display = "none";
+    //     document.getElementById("badFeed").style.display = "none";
+    // };
 
     // const getParcial = async () => {
     //     document.getElementById("faltante").style.display = "none";
@@ -47,6 +50,8 @@
     //     document.getElementById("ruins").style.display = "none";
     //     document.getElementById("badFeed").style.display = "none";
     // };
+
+
     function parada() {
         if (showmodal === false) {
             showmodal = true;
@@ -56,7 +61,6 @@
     }
 
     function closeConfirm() {
-        console.log("linha 59 rejubuyer");
         showMaqPar = false;
         showmodal = false;
         window.location.href = `/#/codigobarras`;
@@ -114,9 +118,9 @@
 
     <Title />
 
-    <ul class="nav2">
+    <!-- <ul class="nav2">
         <li>Parcial</li>
-    </ul>
+    </ul> -->
 
     {#await resultCall}
         <div class="imageLoader">
@@ -195,9 +199,11 @@
             name="missing"
             >Faltante
         </button>
+        <!-- on:click={getReworkFeed}
+        on:keypress={getReworkFeed} -->
+        <!-- on:click={call} -->
         <button
-            on:click={getReworkFeed}
-            on:keypress={getReworkFeed}
+        on:message={sayHello}
             type="button"
             class="sideButton"
             name="rework"
@@ -224,7 +230,7 @@
 </main>
 
 <style>
-    .confirmationModal{
+    /* .confirmationModal{
         transition: all 1s;
         animation: ease-in;
         margin: 0%;
@@ -260,7 +266,7 @@
         border: none;
         background-color: transparent;
         color: white;
-    }
+    } */
     .modalContent {
         margin-left: 25px;
         margin-top: 0%;
@@ -446,7 +452,7 @@
         transition: 1s;
     }
     .nav {
-        margin: 0%;
+        margin: 1%;
         padding: 0%;
         width: 100%;
         display: flex;
@@ -459,7 +465,7 @@
         box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4); */
     }
 
-    @media screen and (max-width: 500px) {
+    /* @media screen and (max-width: 500px) {
         .nav2 {
             display: none;
         }
@@ -489,5 +495,5 @@
         .nav2 {
             display: none;
         }
-    }
+    } */
 </style>

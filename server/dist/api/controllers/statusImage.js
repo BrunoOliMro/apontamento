@@ -34,11 +34,7 @@ const statusImage = async (req, res) => {
             return res.json({ message: 'Erro no servidor' });
         }
         else {
-            let obj = {
-                key: imgResult,
-                message: 'img found'
-            };
-            return res.status(200).json(obj);
+            return res.status(200).json(imgResult);
         }
     }
     catch (error) {

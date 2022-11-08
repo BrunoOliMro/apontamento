@@ -1,5 +1,7 @@
 <script>
     // @ts-nocheck
+    import ModalConfirmation from '../modal/modalConfirmation.svelte';
+    // @ts-nocheck
     let imageLoader = `/images/axonLoader.gif`;
     let tempoDecorrido = 0;
     let prodTime = [];
@@ -12,7 +14,8 @@
     let showRed = false;
     let showGreen = true;
     let showBlue = false;
-    let supervisor = "";
+    let supervisor = '';
+    let modalMessage = '';
 
     getTempo();
     getImagem();
@@ -31,22 +34,20 @@
     function preSanitize(input) {
         const allowedChars = /[0-9]/;
         const sanitizedOutput = input
-            .split("")
-            .map((char) => (allowedChars.test(char) ? char : ""))
-            .join("");
+            .split('')
+            .map((char) => (allowedChars.test(char) ? char : ''))
+            .join('');
         return sanitizedOutput;
     }
 
     async function getTempo() {
         const res = await fetch(urlString);
         prodTime = await res.json();
-        tempoMax = prodTime
-        console.log("linha 46", tempoMax);
-        if(tempoMax === null){
-            tempoMax = 600000
+        tempoMax = prodTime;
+        if (tempoMax === null || tempoMax === 0) {
+            tempoMax = 600000;
         }
     }
-
 
     let tempoDaBarra = setInterval(() => {
         if (tempoMax <= 0) {
@@ -77,6 +78,7 @@
             if (tempoDecorrido >= excedido) {
                 shwowSuper = true;
                 showGreen = false;
+                showRed = true
             } else {
                 shwowSuper = false;
             }
@@ -88,103 +90,104 @@
         imagem = await res.json();
     }
 
+    function checkForSuper(event) {
+        if (event.key === 'Enter' && supervisor.length >= 6) {
+            doPostSuper();
+        }
+    }
+
     const doPostSuper = async () => {
-        const headers = new Headers();
-        const res = await fetch(supervisorApi, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                supervisor: supervisor,
-            }),
-        }).then((res) => res.json());
-        if (res.message === "supervisor encontrado") {
-            shwowSuper = false;
-            clearInterval(tempoDaBarra);
+        if (
+            supervisor === '' ||
+            supervisor === '0' ||
+            supervisor === '00' ||
+            supervisor === '000' ||
+            supervisor === '0000' ||
+            supervisor === '00000' ||
+            supervisor === '000000'
+        ) {
+            supervisor = '';
+            modalMessage = 'Supervisor não encontrado';
+        }
+
+        if (supervisor.length > 5) {
+            const headers = new Headers();
+            const res = await fetch(supervisorApi, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    supervisor: supervisor,
+                }),
+            }).then((res) => res.json());
+            if (res.message === 'Supervisor encontrado') {
+                shwowSuper = false;
+                clearInterval(tempoDaBarra);
+            }
+            if (res.message === 'Supervisor não encontrado') {
+                modalMessage = 'Supervisor não encontrado';
+                supervisor = '';
+            }
+        } else {
+            supervisor = '';
+            modalMessage = 'Erro ao localizar supervisor';
         }
     };
 
     let resultPromises = Promise.all([getImagem, getTempo, tempoDaBarra]);
+
+    function close() {
+        modalMessage = '';
+    }
 </script>
 
-    {#if shwowSuper === true}
-        <!-- <div class="fundo">
-            <div class="timeOver">
-                <h3>Tempo Excedido</h3>
-                <form action="api/v1/apontar" method="POST" />
-                <p>Insira um supervisor para continuar</p>
+{#if shwowSuper === true}
+    <div class='modalBackground'>
+        <div class='confirmationModal'>
+            <div class='onlyConfirmModalContent'>
+                <h2 class='modalTitle'>Tempo Excedido</h2>
+                <h3 class='modalSubtitle'>
+                    Insira um supervisor para continuar
+                </h3>
+
                 <input
                     autofocus
-                    tabindex="8"
+                    autocomplete='off'
+                    tabindex='8'
                     bind:value={supervisor}
+                    on:keypress={checkForSuper}
                     on:input={blockForbiddenChars}
-                    name="supervisor"
-                    id="supervisor"
-                    type="text"
+                    name='supervisor'
+                    id='supervisor'
+                    type='text'
                 />
-
-                <p
-                    tabindex="9"
-                    on:keypress={doPostSuper}
-                    on:click={doPostSuper}
-                >
-                    Confirma
-                </p>
-            </div>
-        </div> -->
-
-        <div class="modalBackground">
-            <div class="confirmationModal">
-                <div class="onlyConfirmModalContent">
-                    <h2 class="modalTitle">Tempo Excedido</h2>
-                    <h3 class="modalSubtitle">
-                        Insira um supervisor para continuar
-                    </h3>
-
-                    <input
-                        autofocus
-                        tabindex="8"
-                        bind:value={supervisor}
-                        on:keypress={doPostSuper}
-                        on:input={blockForbiddenChars}
-                        name="supervisor"
-                        id="supervisor"
-                        type="text"
-                    />
-                </div>
             </div>
         </div>
+    </div>
+{/if}
+
+{#if modalMessage === 'Supervisor não encontrado' || modalMessage === 'Erro ao localizar supervisor'}
+    <ModalConfirmation on:message={close} title={modalMessage} />
+{/if}
+
+{#await resultPromises}
+    <div class='imageLoader' id='imageLoader'>
+        <div class='loader'>
+            <img src={imageLoader} alt='' />
+        </div>
+    </div>
+{:then itens}
+    {#if showGreen === true}
+        <div class='item' style='background-color:green' id='tempoDecorrido' />
     {/if}
-    {#await resultPromises}
-        <div class="imageLoader" id="imageLoader">
-            <div class="loader">
-                <img src={imageLoader} alt="" />
-            </div>
-        </div>
-    {:then itens}
-        {#if showGreen === true}
-            <div
-                class="item"
-                style="background-color:green"
-                id="tempoDecorrido"
-            />
-        {/if}
-        {#if showBlue === true}
-            <div
-                class="item"
-                style="background-color:blue"
-                id="tempoDecorrido"
-            />
-        {/if}
-        {#if showRed === true}
-            <div
-                class="item"
-                style="background-color:red"
-                id="tempoDecorrido"
-            />
-        {/if}
+    {#if showBlue === true}
+        <div class='item' style='background-color:blue' id='tempoDecorrido' />
+    {/if}
+    {#if showRed === true}
+        <div class='item' style='background-color:red' id='tempoDecorrido' />
+    {/if}
 
-        <img class="img" src={String(imagem.key)} alt="" />
-    {/await}
+    <img class='img' src={String(imagem)} alt='' />
+{/await}
 
 <style>
     h3 {
@@ -197,10 +200,10 @@
         justify-content: left;
         display: flex;
     }
-    h2{
+    h2 {
         font-size: 32px;
     }
-    input{
+    input {
         border-radius: 12px;
         height: 40px;
         width: 375px;
@@ -303,7 +306,8 @@
         margin-right: 2%;
     }
     .item {
-        width: 20px;
+        width: 40px;
+        z-index: 999999999999999999999999999999999999999999999999999999999999999999;
     }
 
     img {

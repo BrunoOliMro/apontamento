@@ -177,7 +177,7 @@
   };
 
   function closePop() {
-    modalMessage = ''
+    modalMessage = "";
     //document.getElementById("s").style.display = "none";
     window.location.href = "/#/codigobarras";
     location.reload();
@@ -310,7 +310,7 @@
 
     {#if superParada === true}
       <div class="modalBackground">
-        <div class="confirmationModal" >
+        <div class="confirmationModal">
           <h5>Maquina parada selecione um supervisor</h5>
           <input
             autofocus
@@ -583,7 +583,7 @@
           <h4>Codigo do Supervisor</h4>
         </div>
         <input
-        autocomplete='off'
+          autocomplete="off"
           autofocus
           tabindex="14"
           bind:value={supervisor}
@@ -649,19 +649,19 @@
 
 <style>
   .modalBackground {
-        transition: 1s;
-        position: fixed;
-        top: 0;
-        left: 0;
-        background-color: rgba(17, 17, 17, 0.618);
-        height: 100vh;
-        width: 100vw;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
-        z-index: 999999999999999999999999999999;
-    }
+    transition: 1s;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: rgba(17, 17, 17, 0.618);
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999999999999999999999999999;
+  }
   .breadcrumb {
     margin-top: 5px;
     margin-left: 0%;
@@ -772,7 +772,7 @@
     border-color: grey;
     box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
   }
-   .fundo {
+  .fundo {
     margin: 0%;
     padding: 0%;
     position: fixed;
@@ -798,7 +798,6 @@
   }
 
   .sideButton {
-    background-color: black;
     color: black;
     margin: 1%;
     padding: 0%;
@@ -811,7 +810,9 @@
     align-items: center;
     border-radius: 3px;
     background-color: transparent;
-    border-radius: 4px;
+    letter-spacing: 1px;
+    border-color: grey;
+    box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
   }
 
   .sideButton:hover {
@@ -829,7 +830,6 @@
     font-size: 45px;
   }
 
-
   main {
     margin: 1%;
   }
@@ -846,26 +846,26 @@
     text-align: center;
     align-items: center;
   }
-  input{
+  input {
     border-radius: 8px;
   }
 
   .confirmationModal {
-        transition: all 1s;
-        animation: ease-in;
-        margin: 0%;
-        padding: 0%;
-        color: white;
-        background-color: #252525;
-        top: 0;
-        left: 0;
-        width: 550px;
-        height: 250px;
-        display: block;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        border-radius: 8px;
-    }
+    transition: all 1s;
+    animation: ease-in;
+    margin: 0%;
+    padding: 0%;
+    color: white;
+    background-color: #252525;
+    top: 0;
+    left: 0;
+    width: 550px;
+    height: 250px;
+    display: block;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-radius: 8px;
+  }
 </style>
