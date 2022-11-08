@@ -1,7 +1,4 @@
 import { sanitize } from "./sanitize";
-//import { RequestHandler } from "express";
-//import mssql from "mssql";
-//import { sqlConfig } from "../../global.config";
 
 export function unravelBarcode(barcode: string) {
     barcode = String(sanitize(barcode)) //|| null;

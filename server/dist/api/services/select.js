@@ -1,7 +1,29 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.selectDrawing = void 0;
-const selectDrawing = (numpec, revisao) => {
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-exports.selectDrawing = selectDrawing;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.selectOdfFromPcp = void 0;
+const mssql_1 = __importDefault(require("mssql"));
+const global_config_1 = require("../../global.config");
+const selectOdfFromPcp = async (dados) => {
+    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    let response = {};
+    const data = await connection.query(`
+    SELECT 
+    * 
+    FROM 
+    VW_APP_APTO_PROGRAMACAO_PRODUCAO 
+    WHERE 1 = 1 
+    AND NUMERO_ODF = '${dados.numOdf}' 
+    ORDER BY NUMERO_OPERACAO ASC
+    `).then((result) => result.recordset);
+    if (data.length <= 0) {
+        return response.message = "odf nao encontrada";
+    }
+    if (data.length >= 0) {
+        return response.data = data;
+    }
+};
+exports.selectOdfFromPcp = selectOdfFromPcp;
 //# sourceMappingURL=select.js.map

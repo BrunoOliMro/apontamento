@@ -1,27 +1,32 @@
 import type { RequestHandler } from 'express';
 import mssql from 'mssql';
 import { sqlConfig } from '../../global.config';
+import { selectOdfFromPcp } from '../services/select';
+import { selectToKnowIfHasP } from '../services/selectIfHasP';
 import { unravelBarcode } from '../utils/unravelBarcode'
 
 export const pointerPost: RequestHandler = async (req, res, next) => {
     const connection = await mssql.connect(sqlConfig);
     const dados: any = unravelBarcode(req.body.codigoBarras)
-    let message = String(req.body.message)
+    let message = String(req.body.message) || null
+    let qtdLib: number = 0
+    let apontLib: string = ''
+    let qntdeJaApontada: number = 0
+    let qtdLibMax: number = 0
+    let codigoMaquinaProxOdf;
+    let codMaqProxOdf;
 
     //Seleciona todos os itens da Odf
-    const queryGrupoOdf = await connection.query(`
-    SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' ORDER BY NUMERO_OPERACAO ASC
-    `).then(result => result.recordset)
+    const queryGrupoOdf: any = await selectOdfFromPcp(dados)
 
-
-    //Caso não encontre o numero da odf
-    if (queryGrupoOdf.length <= 0) {
+    // //Caso não encontre o numero da odf
+    if (queryGrupoOdf!.message === 'odf não encontrada') {
         return res.json({ message: 'odf não encontrada' })
     }
 
     //Map pelo numero da operação e diz o indice de uma odf antes e uma depois
-    let codigoOperArray = queryGrupoOdf.map(e => e.NUMERO_OPERACAO)
-    let arrayAfterMap = codigoOperArray.map(e => '00' + e).toString().replaceAll(' ', '0').split(',')
+    let codigoOperArray = queryGrupoOdf!.map((e: any) => e.NUMERO_OPERACAO)
+    let arrayAfterMap = codigoOperArray.map((e: any) => '00' + e).toString().replaceAll(' ', '0').split(',')
     let indiceDoArrayDeOdfs: number = arrayAfterMap.findIndex((callback: string) => callback === dados.numOper)
 
     //Caso indice do array seja o primeiro
@@ -29,21 +34,14 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
         indiceDoArrayDeOdfs = 0
 
     }
-    let objOdfSelecionada = queryGrupoOdf[indiceDoArrayDeOdfs]
-    let objOdfSelecProximo = queryGrupoOdf[indiceDoArrayDeOdfs + 1]
-    let objOdfSelecAnterior = queryGrupoOdf[indiceDoArrayDeOdfs - 1]
+    let objOdfSelecionada = queryGrupoOdf![indiceDoArrayDeOdfs]
+    let objOdfSelecProximo = queryGrupoOdf![indiceDoArrayDeOdfs + 1]
+    let objOdfSelecAnterior = queryGrupoOdf![indiceDoArrayDeOdfs - 1]
     //console.log('linha 57 /pointer/', objOdfSelecAnterior);
 
     // if (objOdfSelecAnterior === undefined) {
     //     console.log('objOdfSelecAnterior linha 54 /pointer/ ', objOdfSelecAnterior);
     // }
-
-    let qtdLib: number = 0
-    let apontLib: string = ''
-    let qntdeJaApontada: number = 0
-    let qtdLibMax: number = 0
-    let codigoMaquinaProxOdf;
-    let codMaqProxOdf;
 
     //Verifica caso o indice seja o primeiro e caso seja seta a quantidade liberada para a quantidade da odf seleciona
     if (indiceDoArrayDeOdfs === 0) {
@@ -77,9 +75,6 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
     }
     qtdLibMax = qtdLib - qntdeJaApontada
 
-    // if (qtdLibMax <= 0 && apontLib === 'N') {
-    //     return res.status(400).redirect('/#/codigobarras?error=anotherodfexpected')
-    // }
     // Caso seja a primeira Odf, objOdfSelecAnterior vai vir como undefined
     if (objOdfSelecAnterior === undefined) {
         await connection.query(`
@@ -157,96 +152,110 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
         return res.json({ message: 'qualquer outro codigo' })
     }
 
-    try {
-        //Seleciona as peças filhas, a quantidade para execução e o estoque dos itens
-        const selectKnowHasP = await connection.query(`
-                    SELECT DISTINCT                 
-                       OP.NUMITE,                 
-                       CAST(OP.EXECUT AS INT) AS EXECUT,
-                       CONDIC,       
-                       CAST(E.SALDOREAL AS INT) AS SALDOREAL,                 
-                       CAST(((E.SALDOREAL - ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO AND CA.ODF = PCP.NUMERO_ODF),0)) / ISNULL(OP.EXECUT,0)) AS INT) AS QTD_LIBERADA_PRODUZIR,
-                       ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO),0) as saldo_alocado
-                       FROM PROCESSO PRO (NOLOCK)                  
-                       INNER JOIN OPERACAO OP (NOLOCK) ON OP.RECNO_PROCESSO = PRO.R_E_C_N_O_                  
-                       INNER JOIN ESTOQUE E (NOLOCK) ON E.CODIGO = OP.NUMITE                
-                       INNER JOIN PCP_PROGRAMACAO_PRODUCAO PCP (NOLOCK) ON PCP.CODIGO_PECA = OP.NUMPEC                
-                       WHERE 1=1                    
-                       AND PRO.ATIVO ='S'                   
-                       AND PRO.CONCLUIDO ='T'                
-                       AND OP.CONDIC ='P'                 
-                       AND PCP.NUMERO_ODF = '${dados.numOdf}'    
-                    `.trim()
-        ).then(result => result.recordset)
-        console.log('RESOURCE: ', selectKnowHasP);
-
-        if (selectKnowHasP.length > 0) {
-            res.cookie('CONDIC', selectKnowHasP[0].CONDIC)
-            let codigoNumite = selectKnowHasP.map(e => e.NUMITE)
-            res.cookie('NUMITE', codigoNumite)
-            /**
-             * Calcula quantas peças pai podem ser produzidas com o estoque atual de componentes
-             */
-            function calMaxQuant(qtdNecessPorPeca: number[], saldoReal: number[]): number {
-                // Quantas peças pai o estoque do componente poderia produzir
-                const pecasPaiPorComponente = qtdNecessPorPeca.map((qtdPorPeca, i) => {
-                    return Math.floor((saldoReal[i] || 0) / qtdPorPeca);
-                });
-
-                const qtdMaxProduzivel = pecasPaiPorComponente.reduce((qtdMax, pecasPorComp) => {
-                    return Math.min(qtdMax, pecasPorComp);
-                }, Infinity);
-
-                Math.round(qtdMaxProduzivel)
-                return (qtdMaxProduzivel === Infinity ? 0 : qtdMaxProduzivel);
-            }
-
-            //Map na quantidade de itens para execução e map do estoque
-            const execut = selectKnowHasP.map(item => item.EXECUT);
-            const saldoReal = selectKnowHasP.map(item => item.SALDOREAL);
-
-            let qtdTotal = calMaxQuant(execut, saldoReal);
-
-            //Retorna um array com a quantidade de itens total da execução
-            const reservedItens = execut.map((quantItens) => {
-                return Math.floor((qtdTotal || 0) * quantItens)
-            }, Infinity)
-            res.cookie('reservedItens', reservedItens)
-            const codigoFilho = selectKnowHasP.map(item => item.NUMITE)
-            res.cookie('codigoFilho', codigoFilho)
-
-            let qtdProdOdf: Number = Number(selectKnowHasP[0].QTDE_ODF)
-            let resultadoFinalProducao: Number = Number(Number(qtdTotal) - Number(qtdProdOdf))
-            if (resultadoFinalProducao <= 0) {
-                resultadoFinalProducao = 0
-                return resultadoFinalProducao
-            }
-            res.cookie('resultadoFinalProducao', resultadoFinalProducao)
-            // Loop para atualizar os dados no DB
-            const updateQtyQuery = [];
-            const updateQtyRes = [];
-
-            for (const [i, qtdItem] of reservedItens.entries()) {
-                updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
-            }
-            await connection.query(updateQtyQuery.join('\n'));
-
-
-            for (const [i, qtdItem] of reservedItens.entries()) {
-                updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
-            }
-            await connection.query(updateQtyRes.join('\n'));
-            return res.json({ message: `valores reservados` })
-        }
-
-        if (selectKnowHasP.length <= 0) {
-            return res.json({ message: 'não foi necessario reservar' })
-        }
-
-    } catch (error) {
-        console.log('linha 214: ', error);
-        return res.json({ message: 'CATCH ERRO NO TRY' })
-    } finally {
-        // await connection.close()
+    let data: any = await selectToKnowIfHasP(dados)
+    if (data! === 'não foi necessario reservar') {
+        return res.json({ message: 'não foi necessario reservar' })
     }
+
+    // console.log("linha 80 hasP", response);
+
+    if (data === 'valores reservados') {
+        res.cookie('reservedItens', data!.reservedItens)
+        res.cookie('codigoFilho', data!.codigoFilho)
+        res.cookie('CONDIC', data!.selectKnowHasP[0].CONDIC)
+        res.cookie('NUMITE', data!.codigoNumite)
+        res.cookie('resultadoFinalProducao', data!.resultadoFinalProducao)
+    }
+    //     try {
+    //         //Seleciona as peças filhas, a quantidade para execução e o estoque dos itens
+    //         const selectKnowHasP = await connection.query(`
+    //                     SELECT DISTINCT                 
+    //                        OP.NUMITE,                 
+    //                        CAST(OP.EXECUT AS INT) AS EXECUT,
+    //                        CONDIC,       
+    //                        CAST(E.SALDOREAL AS INT) AS SALDOREAL,                 
+    //                        CAST(((E.SALDOREAL - ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO AND CA.ODF = PCP.NUMERO_ODF),0)) / ISNULL(OP.EXECUT,0)) AS INT) AS QTD_LIBERADA_PRODUZIR,
+    //                        ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO),0) as saldo_alocado
+    //                        FROM PROCESSO PRO (NOLOCK)                  
+    //                        INNER JOIN OPERACAO OP (NOLOCK) ON OP.RECNO_PROCESSO = PRO.R_E_C_N_O_                  
+    //                        INNER JOIN ESTOQUE E (NOLOCK) ON E.CODIGO = OP.NUMITE                
+    //                        INNER JOIN PCP_PROGRAMACAO_PRODUCAO PCP (NOLOCK) ON PCP.CODIGO_PECA = OP.NUMPEC                
+    //                        WHERE 1=1                    
+    //                        AND PRO.ATIVO ='S'                   
+    //                        AND PRO.CONCLUIDO ='T'                
+    //                        AND OP.CONDIC ='P'                 
+    //                        AND PCP.NUMERO_ODF = '${dados.numOdf}'    
+    //                     `.trim()
+    //         ).then(result => result.recordset)
+    //         console.log('RESOURCE: ', selectKnowHasP);
+
+    //         if (selectKnowHasP.length > 0) {
+    //             res.cookie('CONDIC', selectKnowHasP[0].CONDIC)
+    //             let codigoNumite = selectKnowHasP.map(e => e.NUMITE)
+    //             res.cookie('NUMITE', codigoNumite)
+    //             /**
+    //              * Calcula quantas peças pai podem ser produzidas com o estoque atual de componentes
+    //              */
+    //             function calMaxQuant(qtdNecessPorPeca: number[], saldoReal: number[]): number {
+    //                 // Quantas peças pai o estoque do componente poderia produzir
+    //                 const pecasPaiPorComponente = qtdNecessPorPeca.map((qtdPorPeca, i) => {
+    //                     return Math.floor((saldoReal[i] || 0) / qtdPorPeca);
+    //                 });
+
+    //                 const qtdMaxProduzivel = pecasPaiPorComponente.reduce((qtdMax, pecasPorComp) => {
+    //                     return Math.min(qtdMax, pecasPorComp);
+    //                 }, Infinity);
+
+    //                 Math.round(qtdMaxProduzivel)
+    //                 return (qtdMaxProduzivel === Infinity ? 0 : qtdMaxProduzivel);
+    //             }
+
+    //             //Map na quantidade de itens para execução e map do estoque
+    //             const execut = selectKnowHasP.map(item => item.EXECUT);
+    //             const saldoReal = selectKnowHasP.map(item => item.SALDOREAL);
+
+    //             let qtdTotal = calMaxQuant(execut, saldoReal);
+
+    //             //Retorna um array com a quantidade de itens total da execução
+    //             const reservedItens = execut.map((quantItens) => {
+    //                 return Math.floor((qtdTotal || 0) * quantItens)
+    //             }, Infinity)
+    //             res.cookie('reservedItens', reservedItens)
+    //             const codigoFilho = selectKnowHasP.map(item => item.NUMITE)
+    //             res.cookie('codigoFilho', codigoFilho)
+
+    //             let qtdProdOdf: Number = Number(selectKnowHasP[0].QTDE_ODF)
+    //             let resultadoFinalProducao: Number = Number(Number(qtdTotal) - Number(qtdProdOdf))
+    //             if (resultadoFinalProducao <= 0) {
+    //                 resultadoFinalProducao = 0
+    //                 return resultadoFinalProducao
+    //             }
+    //             res.cookie('resultadoFinalProducao', resultadoFinalProducao)
+    //             // Loop para atualizar os dados no DB
+    //             const updateQtyQuery = [];
+    //             const updateQtyRes = [];
+
+    //             for (const [i, qtdItem] of reservedItens.entries()) {
+    //                 updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
+    //             }
+    //             await connection.query(updateQtyQuery.join('\n'));
+
+
+    //             for (const [i, qtdItem] of reservedItens.entries()) {
+    //                 updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
+    //             }
+    //             await connection.query(updateQtyRes.join('\n'));
+    //             return res.json({ message: `valores reservados` })
+    //         }
+
+    //         if (selectKnowHasP.length <= 0) {
+    //             return res.json({ message: 'não foi necessario reservar' })
+    //         }
+
+    //     } catch (error) {
+    //         console.log('linha 214: ', error);
+    //         return res.json({ message: 'CATCH ERRO NO TRY' })
+    //     } finally {
+    //         // await connection.close()
+    //     }
 }
