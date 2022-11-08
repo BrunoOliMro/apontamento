@@ -23,13 +23,14 @@ const status = async (req, res) => {
         FROM 
         OPERACAO 
         WHERE NUMPEC = '${numpec}' 
+        AND MAQUIN = '${maquina}' 
         ORDER BY REVISAO DESC
         `).then(record => record.recordset);
+        console.log("rfeo", resource);
         let qtdProd = Number(req.cookies["qtdProduzir"][0]);
         let tempoExecut = Number(resource[0].EXECUT);
         let tempoTotalExecução = Number(tempoExecut * qtdProd) * 1000;
         let tempoRestante = (tempoTotalExecução - tempoDecorrido);
-        tempoRestante = 600000;
         if (tempoRestante <= 0) {
             tempoRestante = 0;
         }

@@ -268,6 +268,6 @@
     input {
         border-color: black;
         width: 80px;
-        border-radius: 3px;
+        border-radius: 8px;
     }
 </style>

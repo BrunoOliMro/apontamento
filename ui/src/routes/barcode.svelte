@@ -1,6 +1,7 @@
 <script>
   // @ts-nocheck
   // @ts-nocheck
+  import ModalConfirmation from "../../src/components/modal/modalConfirmation.svelte";
   import Title from "../components/title/title.svelte";
   let imageLoader = "/images/axonLoader.gif";
   let codigoBarrasReturn = "";
@@ -17,20 +18,21 @@
   let supervisor;
   let quantity;
   let superParada = false;
-  let showError = false;
-  let showBadgeNotFound = false;
-  let bagdeEmpty = false;
+  // let showError = false;
+  // let showBadgeNotFound = false;
+  //let bagdeEmpty = false;
   let showBadge = true;
   let showBarcode = false;
   let showSupervisor = false;
-  let quantityModal = false;
-  let errorReturnValue = false;
+  let quantityModal = "";
+  //let errorReturnValue = false;
   let returnValueAvailable;
   let paradaMsg = "";
   let barcodeMsg = "";
   let showBreadcrumb = false;
   let loader = false;
-  let crachModal = "";
+  let modalMessage = "";
+  //let modalTitle = "Crachaaaaaaaaaaaaaaaaaaa";
 
   let badgeMsg = "";
   if (window.location.href.includes("?")) {
@@ -55,15 +57,17 @@
       location.reload();
     }
     if (res.message === "supervisor não encontrado") {
+      modalMessage = "Supervisor não encontrado";
       superParada = false;
-      paradaMsg = "supervisor não encontrado";
+      //paradaMsg = "supervisor não encontrado";
       showmodal = false;
     }
 
     if (res.message === "erro na parada de maquina") {
+      modalMessage = "Erro na parada de máquina";
       showmodal = false;
       superParada = false;
-      paradaMsg = "erro na parada de maquina";
+      //paradaMsg = "erro na parada de maquina";
     }
   };
 
@@ -116,15 +120,18 @@
       superParada = true;
     }
     if (res.message === "codigo de barras vazio") {
-      barcodeMsg = "codigo de barras vazio";
+      modalMessage = "Código de barras vazio";
+      //barcodeMsg = "codigo de barras vazio";
     }
     if (res.message === "odf não encontrada") {
+      modalMessage = "ODF não encontrada";
       loader = false;
-      barcodeMsg = "odf não encontrada";
+      //barcodeMsg = "odf não encontrada";
     }
     if (res.message === "não há limite na odf") {
+      modalMessage = "Não há limite na ODF";
       loader = false;
-      barcodeMsg = "não há limite na odf";
+      //barcodeMsg = "não há limite na odf";
     }
   };
 
@@ -137,7 +144,7 @@
   function checkBeforeBadge(event) {
     if (cracha.length >= 6 && event.key === "Enter") {
       if (cracha === "000000") {
-        crachModal = "cracha invalido";
+        modalMessage = "Crachá inválido";
       }
       checkBagde();
     }
@@ -155,22 +162,23 @@
       headers,
     }).then((res) => res.json());
     loader = false;
-    //console.log("linha 191", res.message);
+    console.log("linha 165", res);
     if (res.message === "cracha encontrado") {
       showBarcode = true;
       showBadge = false;
       showBreadcrumb = true;
     }
     if (res.message === "cracha não encontrado") {
-      showBadgeNotFound = true;
+      modalMessage = "Crachá não encontrado";
     }
     if (res.message === "codigo de matricula vazia") {
-      bagdeEmpty = true;
+      modalMessage = "Crachá vazio";
     }
   };
 
   function closePop() {
-    document.getElementById("s").style.display = "none";
+    modalMessage = ''
+    //document.getElementById("s").style.display = "none";
     window.location.href = "/#/codigobarras";
     location.reload();
   }
@@ -195,40 +203,48 @@
     }).then((res) => res.json());
     loader = false;
     if (res.message === "supervisor esta vazio") {
+      modalMessage = "Campo supervisor está vazio";
       showSupervisor = true;
       showmodal = false;
       //location.reload();
     }
     if (res.message === "estorno feito") {
+      modalMessage = "Estorno realizado";
       showmodal = false;
-      showCorr = true;
+      //showCorr = true;
       window.location.href = "/#/codigobarras";
       //location.reload();
     }
     if (res.message === "erro de estorno") {
-      errorReturnValue = true;
+      modalMessage === "Erro ao fazer estorno";
+      //errorReturnValue = true;
       showmodal = false;
       //location.reload();
     }
     if (res.message === "quantidade esta vazio") {
-      quantityModal = true;
+      modalMessage = "Quantidade esta vazia";
+      quantityModal = "quantidade esta vazio";
       showmodal = false;
       //location.reload();
     }
     if (res.message === "codigo de barras vazio") {
-      barcodeMsg = "codigo de barras vazio";
+      modalMessage === "Código de barras está vazio";
+      //barcodeMsg = "codigo de barras vazio";
       showmodal = false;
     }
     if (res.message === "odf não encontrada") {
-      barcodeMsg = "odf não encontrada";
+      modalMessage === "ODF não encontrada";
+      //barcodeMsg = "odf não encontrada";
       showmodal = false;
     }
     if (res.message === "não ha valor que possa ser devolvido") {
-      barcodeMsg = "não ha valor que possa ser devolvido";
+      modalMessage === "Não há valor a ser devolvido";
+      //barcodeMsg = "não ha valor que possa ser devolvido";
       showmodal = false;
     }
     if (res.String === "valor devolvido maior que o permitido") {
-      barcodeMsg = "valor devolvido maior que o permitido";
+      modalMessage === "Limite de estorno excedido";
+      //barcodeMsg = "valor devolvido maior que o permitido";
       returnValueAvailable = res.qtdLibMax;
       showmodal = false;
     }
@@ -237,12 +253,12 @@
   function closePopCor() {
     barcodeMsg = "";
     paradaMsg = "";
-    crachModal = "";
-    errorReturnValue = false;
+    //errorReturnValue = false;
     showSupervisor = false;
-    quantityModal = false;
+    quantityModal = "";
     showCorr = false;
     showmodal = false;
+    modalMessage = "";
     location.reload();
   }
 
@@ -252,7 +268,7 @@
     showBadge = true;
     cracha = "";
     codigoBarras = "";
-    crachModal = "";
+    modalMessage = "";
   }
 </script>
 
@@ -293,8 +309,8 @@
     </div>
 
     {#if superParada === true}
-      <div class="fundo">
-        <div class="invalidBarcode" id="s">
+      <div class="modalBackground">
+        <div class="confirmationModal" >
           <h5>Maquina parada selecione um supervisor</h5>
           <input
             autofocus
@@ -313,8 +329,9 @@
       </div>
     {/if}
 
-    {#if showCorr === true}
-      <div class="fundo">
+    {#if modalMessage === "Estorno realizado"}
+      <ModalConfirmation title={modalMessage} on:message={closePopCor} />
+      <!-- <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>Estorno Feito</h5>
           <p
@@ -326,11 +343,12 @@
             Fechar
           </p>
         </div>
-      </div>
+      </div> -->
     {/if}
 
-    {#if errorReturnValue === true}
-      <div class="fundo">
+    {#if modalMessage === "Erro ao fazer estorno"}
+      <ModalConfirmation on:message={closePopCor} title={modalMessage} />
+      <!-- <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>Erro ao fazer estorno</h5>
           <p
@@ -342,11 +360,12 @@
             Fechar
           </p>
         </div>
-      </div>
+      </div> -->
     {/if}
 
-    {#if barcodeMsg === "não ha valor que possa ser devolvido"}
-      <div class="fundo">
+    {#if modalMessage === "Não há valor a ser devolvido"}
+      <ModalConfirmation on:message={closePopCor} title={modalMessage} />
+      <!-- <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>Não há limite para Estorno</h5>
           <p
@@ -358,11 +377,12 @@
             Fechar
           </p>
         </div>
-      </div>
+      </div> -->
     {/if}
 
-    {#if paradaMsg === "supervisor não encontrado"}
-      <div class="fundo">
+    {#if modalMessage === "Supervisor não encontrado"}
+      <ModalConfirmation on:message={closePopCor} title={modalMessage} />
+      <!-- <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>Supervisor não encontrado</h5>
           <p
@@ -374,11 +394,12 @@
             Fechar
           </p>
         </div>
-      </div>
+      </div> -->
     {/if}
 
-    {#if barcodeMsg === "valor devolvido maior que o permitido"}
-      <div class="fundo">
+    {#if modalMessage === "Limite de estorno excedido"}
+      <ModalConfirmation on:message={closePopCor} title={modalMessage} />
+      <!-- <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>Limite de estorno menor que o apontado</h5>
           <h3>Limite Disponivel: {returnValueAvailable}</h3>
@@ -391,91 +412,100 @@
             Fechar
           </p>
         </div>
-      </div>
+      </div> -->
     {/if}
 
-    {#if barcodeMsg === "não há limite na odf"}
-      <div class="fundo">
+    {#if modalMessage === "Não há limite na ODF"}
+      <ModalConfirmation on:message={closePop} title={modalMessage} />
+      <!-- <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>ODF não pode ser apontada, aponte outra</h5>
           <p autofocus tabindex="35" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
         </div>
-      </div>
+      </div> -->
     {/if}
 
-    {#if barcodeMsg === "odf não encontrada"}
-      <div class="fundo">
+    {#if modalMessage === "ODF não encontrada"}
+      <ModalConfirmation on:message={closePop} title={modalMessage} />
+      <!-- <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>ODF não encontrada</h5>
           <p autofocus tabindex="23" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
         </div>
-      </div>
+      </div> -->
     {/if}
 
-    {#if barcodeMsg === "codigo de barras vazio"}
-      <div class="fundo">
+    {#if modalMessage === "Código de barras está vazio"}
+      <ModalConfirmation on:message={closePop} title={modalMessage} />
+
+      <!-- <div class="fundo">
         <div class="invalidBarcode" id="s">
           <h5>Codigo de barras vazio</h5>
           <p autofocus tabindex="24" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
         </div>
-      </div>
+      </div> -->
     {/if}
 
-    {#if showBadgeNotFound === true}
-      <!-- {#if showInvalidBagde === true} -->
-      <div class="fundo">
+    {#if modalMessage === "Crachá não encontrado"}
+      <ModalConfirmation on:message={closePop} title={modalMessage} />
+      <!-- <div class="fundo">
         <div class="invalidBadge" id="s">
           <h5>Crachá não encontrado</h5>
           <p autofocus tabindex="25" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
         </div>
-      </div>
+      </div> -->
     {/if}
 
-    {#if bagdeEmpty === true}
+    {#if modalMessage === "Crachá vazio"}
+      // bagdeEmpty === true
+      <ModalConfirmation on:message={closePop} title={modalMessage} />
       <!-- {#if showInvalidBagde === true} -->
-      <div class="fundo">
+      <!-- <div class="fundo">
         <div class="invalidBadge" id="s">
           <h5>Crachá vazio</h5>
           <p autofocus tabindex="26" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
         </div>
-      </div>
+      </div> -->
     {/if}
 
-    {#if quantityModal === true}
-      <!-- {#if showInvalidBagde === true} -->
-      <div class="fundo">
+    {#if modalMessage === "Quantidade está vazia"}
+      <ModalConfirmation on:message={closePop} title={modalMessage} />
+      <!-- <div class="fundo">
         <div class="invalidBadge" id="s">
           <h5>Quantidade indefinida</h5>
           <p autofocus tabindex="26" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
         </div>
-      </div>
+      </div> -->
     {/if}
 
-    {#if showSupervisor === true}
+    {#if modalMessage === "Campo supervisor está vazio"}
       <!-- {#if showInvalidBagde === true} -->
-      <div class="fundo">
+      <ModalConfirmation on:message={closePop} title={modalMessage} />
+
+      <!-- <div class="fundo">
         <div class="invalidBadge" id="s">
           <h5>Campo supervisor está vazio</h5>
           <p autofocus tabindex="26" on:keypress={closePop} on:click={closePop}>
             Fechar
           </p>
         </div>
-      </div>
+      </div> -->
     {/if}
 
-    {#if crachModal === "cracha invalido"}
+    {#if modalMessage === "Crachá inválido"}
+      <ModalConfirmation on:message={closePopCor} title={modalMessage} />
       <!-- {#if showInvalidBagde === true} -->
       <!-- <div class="fundo">
         <div class="invalidBadge" id="s">
@@ -491,7 +521,7 @@
         </div>
       </div> -->
 
-      <div class="modalBackground">
+      <!-- <div class="modalBackground">
         <div class="confirmationModal">
           <div class="onlyConfirmModalContent">
             <h2 class="modalTitle">Cracha invalido</h2>
@@ -505,7 +535,7 @@
             >
           </div>
         </div>
-      </div>
+      </div> -->
     {/if}
 
     {#if showBarcode === true}
@@ -552,8 +582,8 @@
         <div class="close">
           <h4>Codigo do Supervisor</h4>
         </div>
-        <!-- autocomplete='off' -->
         <input
+        autocomplete='off'
           autofocus
           tabindex="14"
           bind:value={supervisor}
@@ -582,6 +612,7 @@
         <input
           tabindex="15"
           on:input={blockForbiddenChars}
+          autocomplete="off"
           class="returnInput"
           onkeyup="this.value = this.value.toUpperCase()"
           bind:value={quantity}
@@ -593,6 +624,7 @@
         <input
           tabindex="16"
           on:input={blockForbiddenChars}
+          autocomplete="off"
           class="returnInput"
           onkeyup="this.value = this.value.toUpperCase()"
           bind:value={codigoBarrasReturn}
@@ -616,94 +648,58 @@
 </main>
 
 <style>
-  .modalTitle {
-        margin-left: 0px;
-        margin-bottom: 25px;
-        margin-right: 0px;
-        margin-top: 0px;
-        padding: 0%;
-        justify-content: left;
-        align-items: left;
-        text-align: left;
-    }
-    .closePopDiv {
-        font-size: 12px;
-        margin-right: 2%;
-        margin-top: 2%;
-        padding: 0%;
-        justify-content: right;
-        align-items: right;
-        text-align: right;
-    }
-    .confirmPopDiv {
-        font-size: 16px;
-        margin: 0%;
-        padding: 0%;
-        justify-content: left;
-        align-items: left;
-        text-align: left;
-    }
-    .breadcrumb {
-        margin-top: 5px;
-        margin-left: 0%;
-        margin-bottom: 0%;
-        text-decoration: underline;
-    }
-    .loader {
-        margin: 0%;
-        position: relative;
-        width: 10vw;
-        height: 5vw;
-        padding: 1.5vw;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .imageLoader {
-        margin: 0%;
-        padding: 0%;
+  .modalBackground {
+        transition: 1s;
         position: fixed;
         top: 0;
         left: 0;
-        background-color: black;
+        background-color: rgba(17, 17, 17, 0.618);
         height: 100vh;
-        width: 100%;
+        width: 100vw;
         display: flex;
+        flex-direction: row;
         align-items: center;
         justify-content: center;
+        z-index: 999999999999999999999999999999;
     }
-    .btnPop {
-        margin: 0%;
-        padding: 0%;
-        background-color: transparent;
-        border-radius: 5px;
-        opacity: 0.5;
-        color: white;
-        border: none;
-    }
-    .btnPop:hover {
-        transition: 1s;
-        opacity: 1;
-    }
+  .breadcrumb {
+    margin-top: 5px;
+    margin-left: 0%;
+    margin-bottom: 0%;
+    text-decoration: underline;
+  }
+  .loader {
+    margin: 0%;
+    position: relative;
+    width: 10vw;
+    height: 5vw;
+    padding: 1.5vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .imageLoader {
+    margin: 0%;
+    padding: 0%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: black;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-    h2 {
-        font-size: 55px;
-        margin: 0px, 0px, 0px, 0px;
-        padding: 0px;
-        width: 450px;
-        align-items: left;
-        text-align: left;
-        justify-content: left;
-        display: flex;
-    }
-    button {
-        letter-spacing: 0.5px;
-        width: fit-content;
-        height: 28px;
-        border: none;
-        color: white;
-        background-color: transparent;
-    }
+  button {
+    letter-spacing: 0.5px;
+    width: fit-content;
+    height: 28px;
+    border: none;
+    color: white;
+    background-color: transparent;
+  }
   /* .loader {
     margin: 0%;
     position: relative;
@@ -776,13 +772,13 @@
     border-color: grey;
     box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
   }
-  /* .fundo {
+   .fundo {
     margin: 0%;
     padding: 0%;
     position: fixed;
     top: 0;
     left: 0;
-    background-color: rgba(17, 17, 17, 0.618);
+    background-color: #252525;
     height: 100vh;
     width: 100vw;
     display: flex;
@@ -791,28 +787,19 @@
     justify-content: center;
     z-index: 8;
   }
-  .header {
-    margin: 0%;
-    padding: 0%;
-    color: white;
-    background-color: #252525;
-    width: 450px;
-    height: 300px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    border-radius: 3px;
-    z-index: 9;
-  } */
+
   .return {
     display: flex;
     justify-content: flex-end;
     text-align: center;
     align-items: center;
+    color: black;
+    background-color: transparent;
   }
+
   .sideButton {
+    background-color: black;
+    color: black;
     margin: 1%;
     padding: 0%;
     font-size: 14px;
@@ -824,6 +811,7 @@
     align-items: center;
     border-radius: 3px;
     background-color: transparent;
+    border-radius: 4px;
   }
 
   .sideButton:hover {
@@ -832,42 +820,16 @@
     color: white;
     transition: 1s;
   }
+
   #MATRIC {
     margin: 1%;
   }
+
   h5 {
     font-size: 45px;
   }
-  .invalidBadge {
-    color: white;
-    background-color: black;
-    width: 500px;
-    height: 250px;
-    /* position: absolute;
-        top: 20%;
-        left: 40%; */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    border-radius: 3px;
-  }
-  .invalidBarcode {
-    color: white;
-    background-color: black;
-    width: 500px;
-    height: 250px;
-    /* position: absolute;
-    top: 20%;
-    left: 40%; */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    border-radius: 3px;
-  }
+
+
   main {
     margin: 1%;
   }
@@ -884,4 +846,26 @@
     text-align: center;
     align-items: center;
   }
+  input{
+    border-radius: 8px;
+  }
+
+  .confirmationModal {
+        transition: all 1s;
+        animation: ease-in;
+        margin: 0%;
+        padding: 0%;
+        color: white;
+        background-color: #252525;
+        top: 0;
+        left: 0;
+        width: 550px;
+        height: 250px;
+        display: block;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        border-radius: 8px;
+    }
 </style>

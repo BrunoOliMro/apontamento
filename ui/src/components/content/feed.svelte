@@ -691,7 +691,7 @@
 
     input {
         border-color: grey;
-        border-radius: 3px;
+        border-radius: 8px;
         width: 100%;
     }
     .header {

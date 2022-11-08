@@ -3,7 +3,7 @@
     let imageLoader = "/images/axonLoader.gif";
     import Breadcrumb from "../breadcrumb/breadcrumb.svelte";
     import breadFer from "../breadcrumb/breadcrumb.svelte";
-
+    import ModalConfirmation from "../modal/modalConfirmation.svelte";
     import badFeed from "../content/feed.svelte";
     import reworkFeed from "../content/feed.svelte";
     import missingFeed from "../content/feed.svelte";
@@ -23,7 +23,8 @@
     //import breadFer from "/src/routes/ferramenta.svelte";
     //import Ferramenta from "src/routes/ferramenta.svelte"
     import Ferramenta from "/src/routes/ferramenta.svelte";
-    
+    let modalTitle = 'Maquina Parada '
+
     const getMissingFeed = async () => {
         document.getElementById("faltante").style.display = "block";
         document.getElementById("missingFeed").style.display = "block";
@@ -40,12 +41,12 @@
         document.getElementById("badFeed").style.display = "none";
     };
 
-    const getParcial = async () => {
-        document.getElementById("faltante").style.display = "none";
-        document.getElementById("retrabalhar").style.display = "none";
-        document.getElementById("ruins").style.display = "none";
-        document.getElementById("badFeed").style.display = "none";
-    };
+    // const getParcial = async () => {
+    //     document.getElementById("faltante").style.display = "none";
+    //     document.getElementById("retrabalhar").style.display = "none";
+    //     document.getElementById("ruins").style.display = "none";
+    //     document.getElementById("badFeed").style.display = "none";
+    // };
     function parada() {
         if (showmodal === false) {
             showmodal = true;
@@ -55,6 +56,7 @@
     }
 
     function closeConfirm() {
+        console.log("linha 59 rejubuyer");
         showMaqPar = false;
         showmodal = false;
         window.location.href = `/#/codigobarras`;
@@ -89,6 +91,11 @@
         }
     };
 
+    function handleMessage(event) {
+		//alert(event.detail.text);
+        closeConfirm()
+        //implementar função aqui
+	}
 </script>
 
 <main>
@@ -158,7 +165,8 @@
     {/await}
 
     {#if showMaqPar === true}
-            <div class="modalBackground" >
+    <ModalConfirmation title={modalTitle} on:message={handleMessage}/>
+            <!-- <div class="modalBackground" >
                 <div class="confirmationModal">
                     <div class="onlyConfirmModalContent">
                         <h2 class="modalTitle">Maquina Parada</h2>
@@ -175,8 +183,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
         {/if}
+
     <div class="nav">
         <button
             on:click={getMissingFeed}

@@ -2,7 +2,7 @@
     // @ts-nocheck
     let imageLoader = `/images/axonLoader.gif`;
     let tempoDecorrido = 0;
-    let tempodePro = [];
+    let prodTime = [];
     let supervisorApi = `/api/v1/supervisor`;
     let urlString = `/api/v1/status`;
     let url = `/api/v1/imagem`;
@@ -13,6 +13,7 @@
     let showGreen = true;
     let showBlue = false;
     let supervisor = "";
+
     getTempo();
     getImagem();
 
@@ -38,16 +39,20 @@
 
     async function getTempo() {
         const res = await fetch(urlString);
-        tempodePro = await res.json();
-        tempoMax = tempodePro
-        return tempoMax;
+        prodTime = await res.json();
+        tempoMax = prodTime
+        console.log("linha 46", tempoMax);
+        if(tempoMax === null){
+            tempoMax = 600000
+        }
     }
+
 
     let tempoDaBarra = setInterval(() => {
         if (tempoMax <= 0) {
             shwowSuper = true;
             showRed = true;
-            showGreen = false;
+            //showGreen = false;
         } else {
             let menorFif = (Number(50) * Number(tempoMax)) / Number(100);
             let maiorFif = (Number(75) * Number(tempoMax)) / Number(100);
@@ -81,7 +86,6 @@
     async function getImagem() {
         const res = await fetch(url);
         imagem = await res.json();
-        //return imagem;
     }
 
     const doPostSuper = async () => {
