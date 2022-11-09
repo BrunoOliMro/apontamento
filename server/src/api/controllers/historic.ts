@@ -15,7 +15,18 @@ export const historic: RequestHandler = async (req, res) => {
         AND ODF = '${NUMERO_ODF}'
         ORDER BY OP ASC
         `.trim()).then(result => result.recordset)
+        console.log("vakes", resource[0].BOAS);
 
+        let boas = Number(resource[0].BOAS)
+        let refugo = Number(resource[0].REFUGO)
+        let faltante = Number(resource[0].PC_FALTANTE)
+        
+
+        if(boas + refugo + faltante === 0){
+            return res.json({message : 'Não há histórico a exibir'})
+        }
+
+        console.log("linha 19 /historic/", resource);
         if (resource.length <= 0) {
             return res.json({ message: 'sem historico a exibir' });
         } else {

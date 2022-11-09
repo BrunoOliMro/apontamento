@@ -9,7 +9,7 @@
     import missingFeed from "../content/feed.svelte";
     import ruins from "../content/feed.svelte";
     import retrabalhar from "../content/feed.svelte";
-    import faltante from "../content/feed.svelte"
+    import faltante from "../content/feed.svelte";
     import Title from "../title/title.svelte";
     let apiMotivoParada = "api/v1/motivoParada";
     let postParada = `/api/v1/postParada`;
@@ -19,22 +19,27 @@
     let showmodal = false;
     let resultCall = callMotivo();
     let showMaqPar = false;
+    let rework = false;
 
     //let ferr = localStorage.getItem("breadFer");
     //import breadFer from "/src/routes/ferramenta.svelte";
     //import Ferramenta from "src/routes/ferramenta.svelte"
     import Ferramenta from "/src/routes/ferramenta.svelte";
-    let modalTitle = 'Maquina Parada '
+   // let modalTitle = "Maquina Parada ";
 
-    const getMissingFeed = async () => {
-        document.getElementById("faltante").style.display = "block";
-        document.getElementById("missingFeed").style.display = "block";
-        document.getElementById("retrabalhar").style.display = "none";
-        document.getElementById("ruins").style.display = "none";
-        document.getElementById("badFeed").style.display = "none";
-    };
+    // const getMissingFeed = async () => {
+    //     document.getElementById("faltante").style.display = "block";
+    //     document.getElementById("missingFeed").style.display = "block";
+    //     document.getElementById("retrabalhar").style.display = "none";
+    //     document.getElementById("ruins").style.display = "none";
+    //     document.getElementById("badFeed").style.display = "none";
+    // };
 
-
+    // import { createEventDispatcher } from "svelte";
+    // import ReworkButton from "../buttons/reworkButton.svelte";
+    // import MissingButton from "../buttons/missingButton.svelte";
+    // import Rework from "../inputs/rework.svelte";
+    // const dispatch = createEventDispatcher();
 
     // const getReworkFeed = async () => {
     //     document.getElementById("faltante").style.display = "none";
@@ -50,7 +55,6 @@
     //     document.getElementById("ruins").style.display = "none";
     //     document.getElementById("badFeed").style.display = "none";
     // };
-
 
     function parada() {
         if (showmodal === false) {
@@ -91,15 +95,9 @@
         }).then((res) => res.json());
         if (res.message === "maquina parada com sucesso") {
             showMaqPar = true;
-            showmodal = false
+            showmodal = false;
         }
     };
-
-    function handleMessage(event) {
-		//alert(event.detail.text);
-        closeConfirm()
-        //implementar função aqui
-	}
 </script>
 
 <main>
@@ -116,7 +114,7 @@
     {/if}
     <!-- <Ferramenta breadFer === true /> -->
 
-    <Title />
+    <!-- <Title /> -->
 
     <!-- <ul class="nav2">
         <li>Parcial</li>
@@ -130,7 +128,7 @@
         </div>
     {:then item}
         {#if showmodal === true}
-            <div class="modalBackground" >
+            <div class="modalBackground">
                 <div class="itensInsideModal">
                     <div class="closePopDiv">
                         <button
@@ -169,8 +167,8 @@
     {/await}
 
     {#if showMaqPar === true}
-    <ModalConfirmation title={modalTitle} on:message={handleMessage}/>
-            <!-- <div class="modalBackground" >
+        <ModalConfirmation title={modalTitle} on:message={closeConfirm} />
+        <!-- <div class="modalBackground" >
                 <div class="confirmationModal">
                     <div class="onlyConfirmModalContent">
                         <h2 class="modalTitle">Maquina Parada</h2>
@@ -188,27 +186,28 @@
                     </div>
                 </div>
             </div> -->
-        {/if}
+    {/if}
 
     <div class="nav">
-        <button
+        <ReworkButton on:message={showStuff}   />
+        <!-- <button
             on:click={getMissingFeed}
             on:keypress={getMissingFeed}
             type="button"
             class="sideButton"
             name="missing"
             >Faltante
-        </button>
-        <!-- on:click={getReworkFeed}
-        on:keypress={getReworkFeed} -->
-        <!-- on:click={call} -->
-        <button
-        on:message={sayHello}
+        </button> -->
+
+        <MissingButton />
+        <!-- <button
+            on:click={messageDispatch}
             type="button"
             class="sideButton"
             name="rework"
             >Retrabalhar
-        </button>
+        </button> -->
+
         <a class="out" href="/#/rip/"
             ><button type="button" class="sideButton">Inspeção</button></a
         >
@@ -228,6 +227,24 @@
         >
     </div>
 </main>
+
+<div>
+    <!-- {#if rework === true} -->
+        <!-- <Rework /> -->
+        <!-- <div class="write" id="ruins" name="ruins">
+            <p>RETRABALHAR</p>
+            <input
+                tabindex="2"
+                autofocus
+                on:input={blockForbiddenChars}
+                class="input"
+                id="reworkFeed"
+                type="text"
+                name="reworkFeed"
+            />
+        </div> -->
+    <!-- {/if} -->
+</div>
 
 <style>
     /* .confirmationModal{

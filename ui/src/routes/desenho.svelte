@@ -1,6 +1,8 @@
 <script>
     import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
     const imageLoader = "/images/axonLoader.gif";
+    let back = "/images/icons8-go-back-24.png";
+
     export let Subtitle = "DESENHO";
     let zoomNumber = 400;
     let rotation = 0;
@@ -57,7 +59,7 @@
         <nav class="breadcrumb" aria-label="breadcrumb">
             <ol class="breadcrumb">
               <li class="breadcrumb-item">
-                <a href="/#/codigobarras/apontamento">Apontamento</a>
+                <a href="/#/codigobarras/apontamento"><img src={back} alt="">Apontamento</a>
               </li>
             </ol>
           </nav>
@@ -114,6 +116,15 @@
 </main>
 
 <style>
+    a{
+        font-size:20px;
+        color:#252525;
+    }
+
+    a:hover{
+        opacity: 0.5;
+        transition: all 1s;
+    }
     .loader {
         margin: 0%;
         position: relative;

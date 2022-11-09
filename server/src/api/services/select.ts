@@ -19,7 +19,7 @@ export const selectOdfFromPcp = async (dados: any) => {
     if (data.length <= 0) {
         return response.message = "odf nao encontrada"
     }
-    
+
     if(data.length >= 0){
         return response.data = data
     }

@@ -18,21 +18,16 @@
   let supervisor;
   let quantity;
   let superParada = false;
-  // let showError = false;
-  // let showBadgeNotFound = false;
-  //let bagdeEmpty = false;
   let showBadge = true;
   let showBarcode = false;
   let showSupervisor = false;
   let quantityModal = "";
-  //let errorReturnValue = false;
   let returnValueAvailable;
   let paradaMsg = "";
   let barcodeMsg = "";
   let showBreadcrumb = false;
   let loader = false;
   let modalMessage = "";
-  //let modalTitle = "Crachaaaaaaaaaaaaaaaaaaa";
 
   let badgeMsg = "";
   if (window.location.href.includes("?")) {
@@ -270,6 +265,7 @@
     codigoBarras = "";
     modalMessage = "";
   }
+  let back = "/images/icons8-go-back-24.png";
 </script>
 
 <main>
@@ -277,7 +273,7 @@
     <nav class="breadcrumb" aria-label="breadcrumb">
       <ol class="breadcrumb">
         <li class="breadcrumb-item">
-          <a href="/#/codigobarras" on:click={goBack}>Colaborador</a>
+          <a href="/#/codigobarras" on:click={goBack}> <img src={back} alt="">Colaborador</a>
         </li>
       </ol>
     </nav>
@@ -648,6 +644,15 @@
 </main>
 
 <style>
+  a{
+    color: #252525;
+    font-size: 20px;
+  }
+
+  a:hover{
+    opacity: 0.5s;
+    transition: all 1s;
+  }
   .modalBackground {
     transition: 1s;
     position: fixed;
@@ -811,8 +816,8 @@
     border-radius: 3px;
     background-color: transparent;
     letter-spacing: 1px;
-    border-color: grey;
-    box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
+    /* border-color: grey;
+    box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4); */
   }
 
   .sideButton:hover {

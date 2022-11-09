@@ -4,15 +4,15 @@
     import Status from "./status.svelte";
 </script>
 
-<main class="content">
-    <div class="areaImagem">
+<!-- <main class="content"> -->
+    <!-- <div class="areaImagem">
         <div><Status /></div>
         <div><Cod /></div>
-    </div>
-    <div>
-        <Feed />
-    </div>
-</main>
+    </div> -->
+    <!-- <div> -->
+        <!-- <Feed/> -->
+    <!-- </div> -->
+<!-- </main> -->
 
 <style>
     main {
@@ -24,7 +24,7 @@
         box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
         border-radius: 5px;
     }
-    .areaImagem {
+    /* .areaImagem {
         margin-right: 1%;
         padding: 0%;
         height: 100%;
@@ -35,7 +35,7 @@
     .content {
         margin: 0%;
         padding: 0%;
-    }
+    } */
 
     /* @media screen and (max-width: 500px) {
         main {

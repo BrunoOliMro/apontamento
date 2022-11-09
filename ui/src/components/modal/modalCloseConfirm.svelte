@@ -8,38 +8,33 @@
             text: "teste basso cabaço",
         });
     }
-
-    // function closePop(){
-    //     dispatch("message", {
-    //         text: "teste2222222",
-    //     });
-    // }
 </script>
 
 <div>
-<div class="modalBackground">
-    <div class="itensInsideModal">
-        <div class="closePopDiv">
-            <button
-                class="btnPop"
-                id="closePop"
-                on:keypress={confirma}
-                on:click={confirma}>FECHAR</button>
-        </div>
+    <div class="modalBackground">
+        <div class="itensInsideModal">
+            <div class="closePopDiv">
+                <button
+                    class="btnPop"
+                    id="closePop"
+                    on:keypress={confirma}
+                    on:click={confirma}>FECHAR</button
+                >
+            </div>
 
-        <!-- <div class="modalContent">
-            <h2 class="modalTitle">Motivo da Parada</h2>
-            <div class="optionsBar">
-                <select autofocus tabindex="10" bind:value>
-                    {#each dados as item}
-                        <option>{item}</option>
-                    {/each}
-                </select>
-            </div> -->
+            <!-- <div class="modalContent">
+                <h2 class="modalTitle">Motivo da Parada</h2>
+                <div class="optionsBar">
+                    <select autofocus tabindex="10" bind:value>
+                        {#each dados as item}
+                            <option>{item}</option>
+                        {/each}
+                    </select>
+                </div> -->
 
             <div class="confirmPopDiv">
                 <button
-                autofocus
+                    autofocus
                     class="btnPop"
                     id="confirmPop"
                     tabindex="11"
@@ -76,7 +71,6 @@
         align-items: left;
         text-align: left;
     }
-
 
     .btnPop {
         margin: 0%;

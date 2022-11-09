@@ -1,6 +1,6 @@
 <script>
     // @ts-nocheck
-    import ModalConfirmation from '../modal/modalConfirmation.svelte';
+    import ModalConfirmation from "../modal/modalConfirmation.svelte";
     // @ts-nocheck
     let imageLoader = `/images/axonLoader.gif`;
     let tempoDecorrido = 0;
@@ -14,8 +14,8 @@
     let showRed = false;
     let showGreen = true;
     let showBlue = false;
-    let supervisor = '';
-    let modalMessage = '';
+    let supervisor = "";
+    let modalMessage = "";
 
     getTempo();
     getImagem();
@@ -34,9 +34,9 @@
     function preSanitize(input) {
         const allowedChars = /[0-9]/;
         const sanitizedOutput = input
-            .split('')
-            .map((char) => (allowedChars.test(char) ? char : ''))
-            .join('');
+            .split("")
+            .map((char) => (allowedChars.test(char) ? char : ""))
+            .join("");
         return sanitizedOutput;
     }
 
@@ -50,38 +50,45 @@
     }
 
     let tempoDaBarra = setInterval(() => {
+        let menorFif = (Number(50) * Number(tempoMax)) / Number(100);
+        let maiorFif = (Number(75) * Number(tempoMax)) / Number(100);
+        let excedido = (Number(100) * Number(tempoMax)) / Number(100);
+
+        tempoDecorrido++;
+
+        if (tempoDecorrido <= menorFif) {
+            showRed = false;
+            showBlue = false;
+            shwowSuper = false;
+            showGreen = true;
+        }
+        if (tempoDecorrido >= menorFif && tempoDecorrido <= maiorFif) {
+            showGreen = false;
+            showBlue = true;
+            showRed = false;
+            shwowSuper = false;
+        }
+        if (tempoDecorrido >= maiorFif) {
+            showRed = true;
+            showGreen = false;
+            showBlue = false;
+        }
+        if (tempoDecorrido >= excedido) {
+            shwowSuper = true;
+            showGreen = false;
+            showRed = true;
+        } else {
+            shwowSuper = false;
+        }
+
         if (tempoMax <= 0) {
             shwowSuper = true;
             showRed = true;
             //showGreen = false;
-        } else {
-            let menorFif = (Number(50) * Number(tempoMax)) / Number(100);
-            let maiorFif = (Number(75) * Number(tempoMax)) / Number(100);
-            let excedido = (Number(100) * Number(tempoMax)) / Number(100);
-            tempoDecorrido++;
-            if (tempoDecorrido <= menorFif) {
-                showRed = false;
-                showBlue = false;
-                shwowSuper = false;
-            }
-            if (tempoDecorrido >= menorFif && tempoDecorrido <= maiorFif) {
-                showGreen = false;
-                showBlue = true;
-                showRed = false;
-                shwowSuper = false;
-            }
-            if (tempoDecorrido >= maiorFif) {
-                showRed = true;
-                showGreen = false;
-                showBlue = false;
-            }
-            if (tempoDecorrido >= excedido) {
-                shwowSuper = true;
-                showGreen = false;
-                showRed = true
-            } else {
-                shwowSuper = false;
-            }
+        }
+
+        if (tempoMax === null) {
+            showRed = true;
         }
     }, 1000);
 
@@ -91,105 +98,131 @@
     }
 
     function checkForSuper(event) {
-        if (event.key === 'Enter' && supervisor.length >= 6) {
+        if (event.key === "Enter" && supervisor.length >= 6) {
             doPostSuper();
         }
     }
 
     const doPostSuper = async () => {
         if (
-            supervisor === '' ||
-            supervisor === '0' ||
-            supervisor === '00' ||
-            supervisor === '000' ||
-            supervisor === '0000' ||
-            supervisor === '00000' ||
-            supervisor === '000000'
+            supervisor === "" ||
+            supervisor === "0" ||
+            supervisor === "00" ||
+            supervisor === "000" ||
+            supervisor === "0000" ||
+            supervisor === "00000" ||
+            supervisor === "000000"
         ) {
-            supervisor = '';
-            modalMessage = 'Supervisor não encontrado';
+            supervisor = "";
+            modalMessage = "Supervisor não encontrado";
         }
 
         if (supervisor.length > 5) {
             const headers = new Headers();
             const res = await fetch(supervisorApi, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     supervisor: supervisor,
                 }),
             }).then((res) => res.json());
-            if (res.message === 'Supervisor encontrado') {
+            if (res.message === "Supervisor encontrado") {
                 shwowSuper = false;
                 clearInterval(tempoDaBarra);
             }
-            if (res.message === 'Supervisor não encontrado') {
-                modalMessage = 'Supervisor não encontrado';
-                supervisor = '';
+            if (res.message === "Supervisor não encontrado") {
+                modalMessage = "Supervisor não encontrado";
+                supervisor = "";
             }
         } else {
-            supervisor = '';
-            modalMessage = 'Erro ao localizar supervisor';
+            supervisor = "";
+            modalMessage = "Erro ao localizar supervisor";
         }
     };
 
     let resultPromises = Promise.all([getImagem, getTempo, tempoDaBarra]);
 
     function close() {
-        modalMessage = '';
+        modalMessage = "";
     }
 </script>
 
 {#if shwowSuper === true}
-    <div class='modalBackground'>
-        <div class='confirmationModal'>
-            <div class='onlyConfirmModalContent'>
-                <h2 class='modalTitle'>Tempo Excedido</h2>
-                <h3 class='modalSubtitle'>
+    <div class="modalBackground">
+        <div class="confirmationModal">
+            <div class="onlyConfirmModalContent">
+                <h2 class="modalTitle">Tempo Excedido</h2>
+                <h3 class="modalSubtitle">
                     Insira um supervisor para continuar
                 </h3>
 
                 <input
                     autofocus
-                    autocomplete='off'
-                    tabindex='8'
+                    autocomplete="off"
+                    tabindex="8"
                     bind:value={supervisor}
                     on:keypress={checkForSuper}
                     on:input={blockForbiddenChars}
-                    name='supervisor'
-                    id='supervisor'
-                    type='text'
+                    name="supervisor"
+                    id="supervisor"
+                    type="text"
                 />
             </div>
         </div>
     </div>
 {/if}
 
-{#if modalMessage === 'Supervisor não encontrado' || modalMessage === 'Erro ao localizar supervisor'}
+{#if modalMessage === "Supervisor não encontrado" || modalMessage === "Erro ao localizar supervisor"}
     <ModalConfirmation on:message={close} title={modalMessage} />
 {/if}
 
 {#await resultPromises}
-    <div class='imageLoader' id='imageLoader'>
-        <div class='loader'>
-            <img src={imageLoader} alt='' />
+    <div class="imageLoader" id="imageLoader">
+        <div class="loader">
+            <img src={imageLoader} alt="" />
         </div>
     </div>
 {:then itens}
+<div class="conj">
     {#if showGreen === true}
-        <div class='item' style='background-color:green' id='tempoDecorrido' />
+        <div class="green" id="tempoDecorrido"/>
     {/if}
     {#if showBlue === true}
-        <div class='item' style='background-color:blue' id='tempoDecorrido' />
+        <div class="blue" id="tempoDecorrido" />
     {/if}
     {#if showRed === true}
-        <div class='item' style='background-color:red' id='tempoDecorrido' />
+        <div class="red" id="tempoDecorrido" />
     {/if}
-
-    <img class='img' src={String(imagem)} alt='' />
+    <img class="img" src={String(imagem)} alt="" />
+</div>
 {/await}
 
 <style>
+    .conj{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        text-align: center;
+        justify-content: left;
+        margin: 0%;
+        padding: 0%;
+    }
+
+    .green {
+        background-color: green;
+    }
+    .red {
+        background-color: red;
+    }
+    .blue {
+        background-color: blue;
+    }
+    /* .status{
+        display: flex;
+        flex-direction: column;
+        align-items: left;
+        text-align: left;
+    } */
     h3 {
         font-size: 20px;
         margin: 0px, 0px, 0px, 0px;
@@ -295,9 +328,11 @@
         border-radius: 4px 0px 0px 4px;
         border-color: grey;
         box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
+        width: 45px;
+        height: 300px;
     }
     div {
-        margin: 0%;
+        margin: 5%;
         padding: 0%;
     }
     div {
@@ -305,14 +340,10 @@
         margin-top: 5%;
         margin-right: 2%;
     }
-    .item {
-        width: 40px;
-        z-index: 999999999999999999999999999999999999999999999999999999999999999999;
-    }
 
     img {
         width: 18rem;
-        height: 270px;
+        height: 300px;
         border-radius: 3px;
     }
 

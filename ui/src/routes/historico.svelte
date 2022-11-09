@@ -11,6 +11,12 @@
   async function getHISTORICO() {
     const res = await fetch(urlString);
     HISTORICO = await res.json();
+console.log('his', HISTORICO);
+
+    if(HISTORICO.message === 'Não há histórico a exibir'){
+      message = 'Não há histórico a exibir'
+    }
+
     if (HISTORICO.message === "sem historico a exibir") {
       message = "sem historico a exibir";
     }
@@ -20,6 +26,7 @@
     }
   }
   let resultado = getHISTORICO();
+  let back = "/images/icons8-go-back-24.png";
 </script>
 
 <main>
@@ -27,7 +34,7 @@
   <nav class="breadcrumb" aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item">
-        <a href="/#/codigobarras/apontamento">Apontamento</a>
+        <a href="/#/codigobarras/apontamento"> <img src={back} alt=""> Apontamento </a>
       </li>
     </ol>
   </nav>
@@ -60,13 +67,41 @@
         </table>
       </div>
     {/if}
-    {#if message === "sem historico a exibir"}
+    {#if message === 'Não há histórico a exibir'}
+    <div class="ifs">
       <h2>Não há histórico para exibir</h2>
+    </div>
     {/if}
   {/await}
 </main>
 
 <style>
+  a{
+    color: #252525;
+    font-size: 20px;
+  }
+  .breadcrumb{
+    margin-top: 10px;
+    margin-left: 10px;
+    margin-bottom: 0%;
+    margin-right: 0%;
+  }
+
+  a:hover{
+    transition:all 1s;
+    opacity: 0.5;
+  }
+
+
+  .ifs{
+    margin-left: 1%;
+  }
+  .subtitle{
+    margin-bottom: 1%;
+    margin-top: 1%;
+    margin-left: 1%;
+    padding: 0%;
+  }
   .loader {
     margin: 0%;
     position: relative;
@@ -96,26 +131,25 @@
     text-align: center;
   }
 
-  @media screen and (max-width: 550px) {
+  /* @media screen and (max-width: 550px) {
     main {
-      margin: 1%;
+      
     }
 
     .subtitle {
       font-size: 23px;
-      margin: 1%;
     }
-  }
+  } */
 
   @media screen and (min-width: 551px) {
-    main {
-      margin: 1%;
+    /* main {
+      
     }
 
     .subtitle {
       font-size: 25px;
-      margin: 1%;
-    }
+      
+    } */
     /* .main {
       display: flex;
       justify-content: center;
@@ -126,12 +160,12 @@
 
   @media screen and (min-width: 860px) {
     main {
-      margin: 1%;
+      
     }
 
     .subtitle {
       font-size: 28px;
-      margin: 1%;
+      
     }
     /* .main {
       display: flex;
@@ -142,12 +176,12 @@
   }
   @media screen and (min-width: 1000px) {
     main {
-      margin: 1%;
+      
     }
 
     .subtitle {
       font-size: 30px;
-      margin: 1%;
+      
     }
     /* .main {
       display: flex;
@@ -156,10 +190,10 @@
       text-align: center;
     } */
   }
-  @media screen and (min-width: 1200px) {
+  /* @media screen and (min-width: 1200px) {
     main {
-      margin: 1%;
-    }
+      
+    } */
 
     /* .main {
       display: flex;
@@ -167,15 +201,15 @@
       align-items: center;
       text-align: center;
     } */
-    .subtitle {
+    /* .subtitle {
       font-size: 35px;
-      margin: 1%;
+      
     }
-  }
-  @media screen and (min-width: 1400px) {
+  } */
+  /* @media screen and (min-width: 1400px) {
     main {
-      margin: 1%;
-    }
+      
+    } */
 
     /* .main {
       display: flex;
@@ -183,16 +217,16 @@
       align-items: center;
       text-align: center;
     } */
-    .subtitle {
+    /* .subtitle {
       font-size: 35px;
-      margin: 1%;
+      
     }
-  }
+  } */
 
-  @media screen and (min-width: 1600px) {
-    main {
-      margin: 1%;
-    }
+  /* @media screen and (min-width: 1600px) { */
+    /* main {
+      
+    } */
 
     /* .main {
       display: flex;
@@ -200,9 +234,9 @@
       align-items: center;
       text-align: center;
     } */
-    .subtitle {
+    /* .subtitle {
       font-size: 35px;
-      margin: 1%;
+      
     }
-  }
+  } */
 </style>

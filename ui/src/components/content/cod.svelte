@@ -17,7 +17,6 @@
     async function getOdfData() {
         const res = await fetch(urlString);
         dadosOdf = await res.json();
-        //console.log("dadosOdf", dadosOdf);
         if (dadosOdf === null || dadosOdf === undefined) {
             dadosOdf = 0;
         }

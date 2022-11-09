@@ -1,6 +1,17 @@
 <script>
     // @ts-nocheck
+    import DrawingButton from "../buttons/drawingButton.svelte";
+    import HistoricButton from "../buttons/historicButton.svelte";
+    import MissingButton from "../buttons/missingButton.svelte";
+    import ReworkButton from "../buttons/reworkButton.svelte";
+    import StopButton from "../buttons/stopButton.svelte";
+    import Bad from "../inputs/bad.svelte";
+    import Missing from "../inputs/missing.svelte";
     import Rework from "../inputs/rework.svelte";
+    import ModalConfirmation from "../modal/modalConfirmation.svelte";
+    import Cod from "./cod.svelte";
+    import Status from "./status.svelte";
+
     let supervisorApi = `/api/v1/supervisor`;
     let imageLoader = "/images/axonLoader.gif";
     let badFeed;
@@ -20,7 +31,6 @@
     let resultRefugo;
     let resultado = getOdfData();
     let showParcialSuper = false;
-    //let showParcialAndRef = false;
     let showSuperNotFound = false;
     let showErrorMessage = false;
     let showRoundedApont = false;
@@ -31,9 +41,56 @@
     let modalMessage = "";
     let rework = false;
     let missing = false;
+    let stopModal = false;
+    let bad = true;
+    let showMaqPar = false;
+    let modalTitle = "Máquina Parada ";
+    let apiMotivoParada = "api/v1/motivoParada";
+    callMotivo();
 
-    function call(event) {
-        alert(event.detail.text);
+    function showRework(event) {
+        if (rework === false) {
+            rework = true;
+            bad = false;
+            missing = false;
+        } else {
+            rework = false;
+            bad = true;
+        }
+    }
+
+    function showMissing(event) {
+        if (missing === false) {
+            missing = true;
+            bad = false;
+            rework = false;
+        } else {
+            bad = true;
+            missing = false;
+        }
+    }
+
+    function showStop(event) {
+        if (stopModal === false) {
+            stopModal = true;
+        } else {
+            stopModal = false;
+        }
+    }
+
+    function closePop() {
+        showMaqPar = false;
+        if (stopModal === false) {
+            stopModal = true;
+        } else {
+            stopModal = false;
+        }
+    }
+
+    function closeConfirm() {
+        showMaqPar = false;
+        stopModal = false;
+        window.location.href = `/#/codigobarras`;
     }
 
     async function getRefugodata() {
@@ -258,6 +315,7 @@
         showRoundedApont = false;
         showErrorMessage = false;
         showAddress = false;
+        stopModal = false;
         modalMessage = "";
     }
 
@@ -266,6 +324,26 @@
         showAddress = false;
         window.location.href = `/#/rip`;
     }
+
+    async function callMotivo() {
+        const res = await fetch(apiMotivoParada);
+        dados = await res.json();
+    }
+
+    const confirm = async () => {
+        const headers = new Headers();
+        const res = await fetch(postParada, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                value: value,
+            }),
+        }).then((res) => res.json());
+        if (res.message === "maquina parada com sucesso") {
+            showMaqPar = true;
+            showmodal = false;
+        }
+    };
 </script>
 
 {#if loader === true}
@@ -284,12 +362,25 @@
     </div>
 {:then itens}
     {#if dadosOdf.length !== 0}
-        <main class="main">
-            <div class="fullForm">
-                <div class="form">
+        <div class="nav">
+            <ReworkButton on:message={showRework} />
+            <MissingButton on:message={showMissing} />
+            <HistoricButton />
+            <DrawingButton />
+            <StopButton on:message={showStop} />
+        </div>
+
+        <div class="content">
+            <div class="areaImagem">
+                <div><Status /></div>
+                <div><Cod /></div>
+            </div>
+
+            <div class="feed">
+                <div class="inputsFeed">
                     <div id="prod" class="write">
                         <p>PRODUZIR</p>
-                        <div>
+                        <div class="quantAvai">
                             {qtdPossivelProducao}
                         </div>
                     </div>
@@ -306,23 +397,24 @@
                         />
                     </div>
 
-                    <!-- <div class="write" id="ruins" name="ruins">
-                        <p>RUINS</p>
-                        <input
-                            tabindex="2"
-                            autofocus
-                            bind:value={badFeed}
-                            on:input={blockForbiddenChars}
-                            class="input"
-                            id="badFeed"
-                            name="badFeed"
-                        />
-                    </div> -->
+                    {#if bad === true}
+                        <Bad bind:value={badFeed} />
+                        <!-- <div class="write" id="ruins" name="ruins">
+                            <p>RUINS</p>
+                            <input
+                                tabindex="2"
+                                autofocus
+                                bind:value={badFeed}
+                                on:input={blockForbiddenChars}
+                                class="input"
+                                id="badFeed"
+                                name="badFeed"
+                            />
+                        </div> -->
+                    {/if}
 
-                    <!-- bind:value={reworkFeed} -->
-                    <!-- on:input={blockForbiddenChars} -->
                     {#if rework === true}
-                        <Rework on:message={call} />
+                        <Rework bind:value={reworkFeed} />
                         <!-- <div class="write" id="ruins" name="ruins">
                             <p>RETRABALHAR</p>
                             <input
@@ -351,288 +443,499 @@
                         />
                     </div> -->
 
-                    <div class="write" id="faltante">
-                        <p>FALTANTE</p>
+                    {#if missing === true}
+                        <Missing bind:value={missingFeed} />
+                        <!-- <div class="write" id="faltante">
+                            <p>FALTANTE</p>
+                            <input
+                                autofocus
+                                bind:value={missingFeed}
+                                on:input={blockForbiddenChars}
+                                class="input"
+                                id="missingFeed"
+                                type="text"
+                                name="missingFeed"
+                            />
+                        </div> -->
+                    {/if}
+                </div>
+                <div class="buttonApontar">
+                    <a
+                        tabindex="3"
+                        id="apontar"
+                        on:keypress={doCallPost}
+                        on:click={doCallPost}
+                        type="submit"
+                    >
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                        APONTAR
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {#await resultRefugo}
+            <div class="imageLoader">
+                <div class="loader">
+                    <img src={imageLoader} alt="" />
+                </div>
+            </div>
+        {:then item}
+            {#if showConfirm === true}
+                <div class="fundo">
+                    <div class="header">
+                        <div class="closed">
+                            <h2>Apontamento com refugo</h2>
+                        </div>
+                        <select bind:value name="id" id="id">
+                            {#each dados as item}
+                                <option>{item}</option>
+                            {/each}
+                        </select>
+                        <p>Supervisor</p>
                         <input
                             autofocus
-                            bind:value={missingFeed}
+                            on:keypress={checkForSuper}
+                            bind:value={supervisor}
+                            class="supervisor"
                             on:input={blockForbiddenChars}
-                            class="input"
-                            id="missingFeed"
                             type="text"
-                            name="missingFeed"
+                            name="supervisor"
+                            id="supervisor"
                         />
+                        <!-- <button
+                                on:keypress={checkForSuper}
+                                on:click={checkForSuper}>Confirmar</button
+                            > -->
+                        <button on:keypress={close} on:click={close}
+                            >Fechar</button
+                        >
                     </div>
                 </div>
-                <a
-                    tabindex="3"
-                    id="apontar"
-                    on:keypress={doCallPost}
-                    on:click={doCallPost}
-                    type="submit"
-                >
-                    <span />
-                    <span />
-                    <span />
-                    <span />
-                    APONTAR
-                </a>
-            </div>
+            {/if}
+        {/await}
 
-            {#await resultRefugo}
-                <div class="imageLoader">
-                    <div class="loader">
-                        <img src={imageLoader} alt="" />
+        {#if modalMessage === "Apontamento parcial"}
+            <div class="fundo">
+                <div class="header">
+                    <div class="closed">
+                        <h2>{modalMessage}</h2>
                     </div>
+                    <p>Supervisor</p>
+                    <input
+                        autofocus
+                        bind:value={supervisor}
+                        on:keypress={checkForSuper}
+                        on:input={blockForbiddenChars}
+                        class="supervisor"
+                        type="text"
+                        name="supervisor"
+                        id="supervisor"
+                    />
+                    <!-- <button on:keypress={doPost} on:click={doPost}
+                            >Confirmar</button
+                        > -->
+                    <button on:keypress={close} on:click={close}>Fechar</button>
                 </div>
-            {:then item}
-                {#if showConfirm === true}
-                    <div class="fundo">
-                        <div class="header">
-                            <div class="closed">
-                                <h2>Apontamento com refugo</h2>
-                            </div>
-                            <select bind:value nam e="id" id="id">
+            </div>
+        {/if}
+
+        {#if showMaqPar === true}
+            <ModalConfirmation title={modalTitle} on:message={closeConfirm} />
+        {/if}
+
+        {#if stopModal === true}
+            <div class="modalBackground">
+                <div class="itensInsideModal">
+                    <div class="closePopDiv">
+                        <button
+                            class="btnPop"
+                            on:keypress={closePop}
+                            on:click={closePop}>FECHAR</button
+                        >
+                    </div>
+
+                    <div class="modalContent">
+                        <h2 class="modalTitle">Motivo da Parada</h2>
+                        <div class="optionsBar">
+                            <select autofocus tabindex="10" bind:value>
                                 {#each dados as item}
                                     <option>{item}</option>
                                 {/each}
                             </select>
-                            <p>Supervisor</p>
-                            <input
-                                autofocus
-                                on:keypress={checkForSuper}
-                                bind:value={supervisor}
-                                class="supervisor"
-                                on:input={blockForbiddenChars}
-                                type="text"
-                                name="supervisor"
-                                id="supervisor"
-                            />
-                            <!-- <button
-                                on:keypress={checkForSuper}
-                                on:click={checkForSuper}>Confirmar</button
-                            > -->
-                            <button on:keypress={close} on:click={close}
-                                >Fechar</button
+                        </div>
+
+                        <div class="confirmPopDiv">
+                            <button
+                                class="btnPopConfirm"
+                                id="confirmPop"
+                                tabindex="11"
+                                on:keypress={confirm}
+                                on:click={confirm}
                             >
+                                CONFIRMAR
+                            </button>
                         </div>
-                    </div>
-                {/if}
-            {/await}
-
-            {#if modalMessage === "Apontamento parcial"}
-                <div class="fundo">
-                    <div class="header">
-                        <div class="closed">
-                            <h2>{modalMessage}</h2>
-                        </div>
-                        <p>Supervisor</p>
-                        <input
-                            autofocus
-                            bind:value={supervisor}
-                            on:keypress={checkForSuper}
-                            on:input={blockForbiddenChars}
-                            class="supervisor"
-                            type="text"
-                            name="supervisor"
-                            id="supervisor"
-                        />
-                        <!-- <button on:keypress={doPost} on:click={doPost}
-                            >Confirmar</button
-                        > -->
-                        <button on:keypress={close} on:click={close}
-                            >Fechar</button
-                        >
                     </div>
                 </div>
-            {/if}
+            </div>
+        {/if}
 
-            <!-- {#if showParcialAndRef === true}
-                <div class="fundo">
-                    <div class="header">
-                        <div class="closed">
-                            <h2>Este lançamento é uma Parcial e há Refugo</h2>
-                        </div>
-                        <p>Supervisor</p>
-                        <input
-                            autofocus
-                            bind:value={supervisor}
-                            on:input={blockForbiddenChars}
-                            class="supervisor"
-                            type="text"
-                            name="supervisor"
-                            id="supervisor"
-                        />
-                        <button on:keypress={doPost} on:click={doPost}
-                            >Confirmar</button
-                        >
+        {#if modalMessage === "Quantidade excedida"}
+            <div class="fundo">
+                <div class="header">
+                    <div class="closed">
+                        <h2>{modalMessage}</h2>
                     </div>
+                    <button on:keypress={close} on:click={close}>fechar</button>
                 </div>
-            {/if} -->
+            </div>
+        {/if}
 
-            <!-- {#if showParcialSuper === true}
-                <div class="fundo">
-                    <div class="header">
-                        <div class="closed">
-                            <h2>Envio Parcial</h2>
-                        </div>
-                        <p>Supervisor</p>
-                        <input
-                            autofocus
-                            bind:value={supervisor}
-                            on:input={blockForbiddenChars}
-                            class="supervisor"
-                            type="text"
-                            name="supervisor"
-                            id="supervisor"
-                        />
-                        <button on:click={doPost} on:keypress={doPost}
-                            >Confirmar</button
-                        >
-                        <button on:click={close} on:keypress={close}
-                            >Fechar</button
-                        >
+        {#if modalMessage === "Funcionário Inválido"}
+            <div class="fundo">
+                <div class="header">
+                    <div class="closed">
+                        <h2>{modalMessage}</h2>
                     </div>
+                    <button on:keypress={close} on:click={close}>fechar</button>
                 </div>
-            {/if} -->
+            </div>
+        {/if}
 
-            {#if modalMessage === "Quantidade excedida"}
-                <div class="fundo">
-                    <div class="header">
-                        <div class="closed">
-                            <h2>{modalMessage}</h2>
-                        </div>
-                        <button on:keypress={close} on:click={close}
-                            >fechar</button
-                        >
+        {#if modalMessage === "Número ODF inválido"}
+            <div class="fundo">
+                <div class="header">
+                    <div class="closed">
+                        <h2>{modalMessage}</h2>
                     </div>
+                    <button on:keypress={close} on:click={close}>fechar</button>
                 </div>
-            {/if}
+            </div>
+        {/if}
 
-            {#if modalMessage === "Funcionário Inválido"}
-                <div class="fundo">
-                    <div class="header">
-                        <div class="closed">
-                            <h2>{modalMessage}</h2>
-                        </div>
-                        <button on:keypress={close} on:click={close}
-                            >fechar</button
-                        >
+        {#if modalMessage === "Crachá inválido"}
+            <div class="fundo">
+                <div class="header">
+                    <div class="closed">
+                        <h2>{modalMessage}</h2>
                     </div>
+                    <button on:keypress={close} on:click={close}>fechar</button>
                 </div>
-            {/if}
+            </div>
+        {/if}
 
-            {#if modalMessage === "Número ODF inválido"}
-                <div class="fundo">
-                    <div class="header">
-                        <div class="closed">
-                            <h2>{modalMessage}</h2>
-                        </div>
-                        <button on:keypress={close} on:click={close}
-                            >fechar</button
-                        >
+        {#if modalMessage === "Erro ao apontar"}
+            <div class="fundo">
+                <div class="header">
+                    <div class="closed">
+                        <h2>{modalMessage}</h2>
                     </div>
+                    <button on:keypress={close} on:click={close}>fechar</button>
                 </div>
-            {/if}
+            </div>
+        {/if}
 
-            {#if modalMessage === "Crachá inválido"}
-                <div class="fundo">
-                    <div class="header">
-                        <div class="closed">
-                            <h2>{modalMessage}</h2>
-                        </div>
-                        <button on:keypress={close} on:click={close}
-                            >fechar</button
-                        >
+        {#if modalMessage === "Supervisor inválido"}
+            <div class="fundo">
+                <div class="header">
+                    <div class="closed">
+                        <h2>{modalMessage}</h2>
                     </div>
+                    <button on:keypress={close} on:click={close}>fechar</button>
                 </div>
-            {/if}
+            </div>
+        {/if}
 
-            {#if modalMessage === "Erro ao apontar"}
-                <div class="fundo">
-                    <div class="header">
-                        <div class="closed">
-                            <h2>{modalMessage}</h2>
-                        </div>
-                        <button on:keypress={close} on:click={close}
-                            >fechar</button
-                        >
+        {#if modalMessage === "Número operação inválido"}
+            <div class="fundo">
+                <div class="header">
+                    <div class="closed">
+                        <h2>{modalMessage}</h2>
                     </div>
+                    <button on:keypress={close} on:click={close}>fechar</button>
                 </div>
-            {/if}
+            </div>
+        {/if}
 
-            {#if modalMessage === "Supervisor inválido"}
-                <div class="fundo">
-                    <div class="header">
-                        <div class="closed">
-                            <h2>{modalMessage}</h2>
-                        </div>
-                        <button on:keypress={close} on:click={close}
-                            >fechar</button
-                        >
+        {#if modalMessage === "Apontamento vazio"}
+            <div class="fundo">
+                <div class="header">
+                    <div class="closed">
+                        <h2>{modalMessage}</h2>
                     </div>
+                    <button on:keypress={close} on:click={close}>fechar</button>
                 </div>
-            {/if}
+            </div>
+        {/if}
 
-            {#if modalMessage === "Número operação inválido"}
-                <div class="fundo">
-                    <div class="header">
-                        <div class="closed">
-                            <h2>{modalMessage}</h2>
-                        </div>
-                        <button on:keypress={close} on:click={close}
-                            >fechar</button
-                        >
+        {#if modalMessage === "Supervisor não encontrado"}
+            <div class="fundo">
+                <div class="header">
+                    <div class="closed">
+                        <h2>{modalMessage}</h2>
                     </div>
+                    <button tabindex="7" on:keypress={close} on:click={close}
+                        >fechar</button
+                    >
                 </div>
-            {/if}
+            </div>
+        {/if}
 
-            {#if modalMessage === "Apontamento vazio"}
-                <div class="fundo">
-                    <div class="header">
-                        <div class="closed">
-                            <h2>{modalMessage}</h2>
-                        </div>
-                        <button on:keypress={close} on:click={close}
-                            >fechar</button
-                        >
+        {#if showAddress === true}
+            <div class="fundo">
+                <div class="header">
+                    <div class="closed">
+                        <h2>{getSpace.address}</h2>
                     </div>
+                    <button on:keypress={closeRedirect} on:click={closeRedirect}
+                        >fechar</button
+                    >
                 </div>
-            {/if}
-
-            {#if modalMessage === "Supervisor não encontrado"}
-                <div class="fundo">
-                    <div class="header">
-                        <div class="closed">
-                            <h2>{modalMessage}</h2>
-                        </div>
-                        <button
-                            tabindex="7"
-                            on:keypress={close}
-                            on:click={close}>fechar</button
-                        >
-                    </div>
-                </div>
-            {/if}
-
-            {#if showAddress === true}
-                <div class="fundo">
-                    <div class="header">
-                        <div class="closed">
-                            <h2>{getSpace.address}</h2>
-                        </div>
-                        <button
-                            on:keypress={closeRedirect}
-                            on:click={closeRedirect}>fechar</button
-                        >
-                    </div>
-                </div>
-            {/if}
-        </main>
+            </div>
+        {/if}
     {/if}
 {/await}
 
 <style>
+    .modalContent {
+        margin-left: 25px;
+        margin-top: 0%;
+        margin-bottom: 0%;
+        margin-right: 0%;
+    }
+    button {
+        letter-spacing: 0.5px;
+        width: 100%;
+        height: 28px;
+    }
+    .optionsBar {
+        margin-bottom: 10px;
+        padding: 0%;
+        justify-content: left;
+        align-items: left;
+        text-align: left;
+    }
+    .modalTitle {
+        margin-left: 0px;
+        margin-bottom: 25px;
+        margin-right: 0px;
+        margin-top: 0px;
+        padding: 0%;
+        justify-content: left;
+        align-items: left;
+        text-align: left;
+    }
+    .closePopDiv {
+        font-size: 12px;
+        flex-direction: row;
+        margin-right: 2%;
+        margin-top: 0%;
+        padding: 0%;
+    }
+    .confirmPopDiv {
+        font-size: 16px;
+        margin: 0%;
+        padding: 0%;
+        flex-direction: row;
+        justify-content: left;
+        align-items: left;
+        text-align: left;
+    }
+    .loader {
+        margin: 0%;
+        position: relative;
+        width: 10vw;
+        height: 5vw;
+        padding: 1.5vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .imageLoader {
+        margin: 0%;
+        padding: 0%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: black;
+        height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .btnPop {
+        margin: 1%;
+        padding: 0%;
+        background-color: transparent;
+        flex-direction: row;
+        border-radius: 5px;
+        opacity: 0.5;
+        color: white;
+        border: none;
+    }
+
+    .btnPopConfirm {
+        margin: 1%;
+        padding: 0%;
+        background-color: transparent;
+        flex-direction: row;
+        align-items: left;
+        text-align: left;
+        justify-content: left;
+        border-radius: 5px;
+        opacity: 0.5;
+        color: white;
+        border: none;
+    }
+
+
+    .btnPopConfirm:hover {
+        transition: 1s;
+        opacity: 1;
+    }
+
+    .btnPop:hover {
+        transition: 1s;
+        opacity: 1;
+    }
+
+    h2 {
+        font-size: 55px;
+        margin: 0px, 0px, 0px, 0px;
+        padding: 0px;
+        width: 450px;
+        align-items: left;
+        text-align: left;
+        justify-content: left;
+        display: flex;
+    }
+    select {
+        width: 350px;
+        height: 25px;
+        background-color: #252525;
+        border-radius: 5px;
+        color: #fff;
+    }
+    option {
+        font-size: 18px;
+        background-color: #252525;
+    }
+
+    .modalBackground {
+        transition: 1s;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: rgba(17, 17, 17, 0.618);
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        z-index: 999999999999999999999999999999;
+    }
+    .itensInsideModal {
+        transition: all 1s;
+        animation: ease-in;
+        margin: 0%;
+        padding: 0%;
+        color: white;
+        background-color: #252525;
+        top: 0;
+        left: 0;
+        width: 625px;
+        height: 300px;
+        display: block;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        border-radius: 8px;
+    }
+    .quantAvai{
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+    .buttonApontar{
+        margin-top: 20px;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+    #apontar {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        z-index: 1;
+        height: 45px;
+        margin: 0%;
+        padding: 0%;
+    }
+    .feed {
+        display: flex;
+        flex-direction: column;
+        margin-top: 0%;
+        margin-left:8%;
+        padding: 0%;
+        justify-content: center;
+    }
+
+    .inputsFeed {
+        margin: 0%;
+        padding: 0%;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+    }
+    .areaImagem {
+        margin: 0%;
+        padding: 0%;
+        height: 100%;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+    .content {
+        width: 100%;
+        margin: 0%;
+        padding: 0%;
+        display: flex;
+        flex-direction: row;
+        justify-content: left;
+        align-items: left;
+        text-align: left;
+        border-color: grey;
+        box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
+        border-radius: 5px;
+    }
+    .nav {
+        margin: 0px;
+        padding: 0%;
+        width: 100%vh;
+        height: 50px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: center;
+        background-color: transparent;
+        border: none;
+        /* border-color: grey;
+        box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4); */
+    }
     button {
         display: flex;
         justify-content: right;
@@ -642,9 +945,7 @@
         background-color: transparent;
         color: white;
     }
-    #apontar {
-        z-index: 1;
-    }
+
     .loader {
         margin: 0%;
         position: relative;
@@ -672,10 +973,6 @@
     }
     .supervisor {
         height: 25px;
-    }
-    .fullForm {
-        margin: 0%;
-        padding: 0%;
     }
     h2 {
         width: 460px;
@@ -710,6 +1007,7 @@
         border-radius: 5px;
         background-color: black;
         z-index: 1;
+        width: 140px;
     }
     a:hover {
         background: black;
@@ -794,28 +1092,24 @@
         }
     }
 
-    .main {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        margin-left: 10%;
-    }
     .write {
         margin: 0%;
         /* padding: 0px 30px; */
-        font-size: 44px;
+        font-size: 52px;
+        padding: 0%;
+        height: fit-content;
+        width: fit-content;
     }
     #prod,
     #feed {
         padding: 0px 60px 0px 0px;
     }
 
-    input {
+    /* input {
         border-color: grey;
         border-radius: 8px;
         width: 100%;
-    }
+    } */
     .header {
         margin: 0%;
         padding: 0%;
@@ -847,15 +1141,7 @@
         justify-content: center;
         z-index: 8;
     }
-    /* #parcialDiv {
-        display: none;
-    } */
-    main {
-        justify-content: center;
-        display: flex;
-        font-weight: bold;
-        letter-spacing: 1px;
-    }
+
     p {
         margin: 0%;
         padding: 0%;
@@ -866,21 +1152,10 @@
         height: 50px;
         margin: 0%;
         padding: 0%;
-    }
-
-    form {
-        display: flex;
-    }
-
-    #retrabalhar {
-        display: none;
-    }
-
-    #faltante {
-        display: none;
+        border-radius: 8px;
     }
     div {
-        margin-left: 8%;
+        margin-left: 0%;
         padding: 0%;
     }
     /* 
