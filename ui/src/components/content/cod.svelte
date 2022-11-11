@@ -110,11 +110,12 @@
     }
     .bold {
         font-weight: bold;
+        font-size: 28px;
     }
     .areaCodigos {
         margin-left: 5px;
         padding: 0%;
-        justify-content: flex-start;
+        justify-content: left;
         align-items: left;
         text-align: left;
     }
@@ -126,6 +127,7 @@
         margin: 0%;
         padding: 0%;
         display: flex;
+        font-size: 26px;
         justify-content: flex-start;
         align-items: flex-start;
         text-align: flex-start;

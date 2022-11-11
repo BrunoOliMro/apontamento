@@ -80,23 +80,34 @@
     z-index: 999999999999;
   }
   main {
+    font-size: 25px;
+    margin-top: 20px;
     font-weight: bold;
-    margin: 1% 0%;
     justify-content: space-around;
+    align-items: right;
+    text-align: right;
+    width: 100%;
+    padding: 0%;
     flex-direction: row;
     display: flex;
     letter-spacing: 1px;
-    border-color: grey;
+
+    /* border-color: grey;
     box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
-    border-radius: 5px;
+    border-radius: 5px; */
   }
   div {
-    margin: 1%;
+    margin: 0%;
     justify-content: center;
     align-items: center;
     text-align: center;
   }
+
+  /* .div2 {
+    margin-left: 41%;
+  } */
   .title {
+    font-size: 21;
     font-weight: normal;
   }
 

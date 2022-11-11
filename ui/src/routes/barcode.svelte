@@ -1,6 +1,5 @@
 <script>
   // @ts-nocheck
-  // @ts-nocheck
   import ModalConfirmation from "../../src/components/modal/modalConfirmation.svelte";
   import Title from "../components/title/title.svelte";
   let imageLoader = "/images/axonLoader.gif";
@@ -266,6 +265,7 @@
     modalMessage = "";
   }
   let back = "/images/icons8-go-back-24.png";
+  export let title = "APONTAMENTO";
 </script>
 
 <main>
@@ -281,7 +281,10 @@
 
   <div>
     <div>
-      <Title />
+      <!-- <Title /> -->
+      <div class="titleDiv">
+        <h1 class="title">{title}</h1>
+      </div>
 
       {#if loader === true}
         <div class="imageLoader">

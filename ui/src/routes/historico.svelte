@@ -8,78 +8,14 @@
   let message = "";
   let resultado = getHistorico();
   let back = "/images/icons8-go-back-24.png";
-  let showDetail = false;
-  let showNormalTable = true;
-  let l = {};
-  let y;
-  let w = {};
+  let showDetail = true;
+  let showNormalTable = false;
+  let messageOnBtn = "Detalhado";
 
   async function getHistorico() {
     const res = await fetch(urlString);
     historicData = await res.json();
-    // console.log("linha 18", historicData);
-
-    let z = historicData.resource.reduce((acc, iterator, i) => {
-      // console.log("acc", acc);
-      // console.log("ite", iterator);
-      //console.log("linha 24", historicData.resource[0].BOAS);
-    });
-    //   if (iterator.MAQUINA === "SER01") {
-    //     w = iterator;
-    //     //w.keys = acc + iterator.BOAS + iterator.REFUGO
-    //   }
-    //   return acc;
-    // }, 0);
-
-    
-
-    // console.log("w", w);
-    //console.log("z", z);
-    console.log("linha 36", Object.entries(historicData.resource));
-
-    Object.entries(historicData.resource).reduce((acc, ite, i)=>{
-      
-      console.log("linha acc", acc);
-      console.log("linha ite", ite);
-      //console.log("linha i", i);
-    })
-
-    const total = Object.entries(historicData.resource).reduce(function (acc,iterator,i) {
-      const [key, value] = iterator;
-
-
-
-      console.log("linha 40", key);
-      console.log("linha 41", acc[i]);
-
-      if (iterator.MAQUINA === "SER01") {
-        y = iterator[i].BOAS + value.BOAS;
-      }
-    },
-    0);
-
-
-
-
-    //console.log("total ", total);
-    //console.log("y", y);
-
-    for (const iterator of historicData.resource) {
-      if (iterator.MAQUINA === "SER01") {
-        iterator.BOAS;
-      }
-      // console.log("linha 32", iterator);
-      // if (iterator.MAQUINA === "SER01") {
-      //   y.push(iterator);
-      // }
-
-      // if(iterator.MAQUINA === 'SER01'){
-      //   w = iterator.BOAS + iterator.REFUGO
-      //   y.push(w)
-      // }
-    }
-    //console.log("linha 34", w);
-    //console.log("linha 35", y);
+    console.log("his", historicData);
 
     if (historicData.message === "Não há histórico a exibir") {
       message = "Não há histórico a exibir";
@@ -92,25 +28,15 @@
     if (historicData.message === "Error ao localizar o histórico") {
       message = "Error ao localizar o histórico";
     }
-
-    // if (historicData === undefined || historicData === null) {
-    //   return (message = "Error ao localizar o histórico");
-    // } else if (historicData !== "Não há histórico a exibir") {
-    //   console.log("erubvuerb");
-    //   resultSum = historicData.resource.reduce((acc, iterator) => {
-    //     return acc + iterator.BOAS + iterator.REFUGO;
-    //   }, 0);
-    //   if (resultSum <= 0) {
-    //     return (message = "Não há histórico a exibir");
-    //   }
-    // }
   }
 
   function detail() {
     if (showNormalTable === true) {
+      messageOnBtn = "Detalhado";
       showNormalTable = false;
       showDetail = true;
     } else {
+      messageOnBtn = "Geral";
       showDetail = false;
       showNormalTable = true;
     }
@@ -129,8 +55,8 @@
   </nav>
   <div class="subtitle">{subtitle}</div>
   <div class="sideBtn">
-    <button on:click={detail} on:keypress={detail} class="sideBtn"
-      >Detalhado</button
+    <button on:click={detail} on:keypress={detail} class="btnMessage"
+      >{messageOnBtn}</button
     >
   </div>
   {#await resultado}
@@ -151,20 +77,27 @@
               <th scope="col">REFUGO</th>
               <th scope="col">FALTANTE</th>
               <th scope="col">ODF</th>
-              <th scope="col">DATA</th>
-              <th scope="col">HORA</th>
+              {#if showNormalTable === true}
+                <th scope="col">DATA</th>
+                <th scope="col">HORA</th>
+              {/if}
             </tr>
           </thead>
+
           {#if showDetail === true}
             <tbody id="corpoTabela">
-              {#each historicData.resource as column}
+              {#each historicData.resourceDetail as column}
                 <TableHistorico dados={column} />
               {/each}
             </tbody>
           {/if}
 
           {#if showNormalTable === true}
-            <h3>uorewbuvrb Normmal e ecoiasera</h3>
+            <tbody id="corpoTabela">
+              {#each historicData.resource as column}
+                <TableHistorico dados={column} />
+              {/each}
+            </tbody>
           {/if}
         </table>
       </div>
@@ -185,29 +118,62 @@
 </main>
 
 <style>
+  .btnMessage {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 100px;
+    height: 30px;
+    border: none;
+    background-color: #999999;
+    border-color: grey;
+    box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
+    letter-spacing: 1px;
+    border-radius: 6px;
+    color: black;
+  }
   table {
-    width: 98%;
+    /* width: 98%; */
     margin: 0%;
     padding: 0%;
   }
+  /* button{
+    width: 100px;
+    height: 30px;
+    border: gray;
+    border-radius: 6px;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    letter-spacing: 1px;
+  } */
+  /* .sideBtn {
+    width: 100px;
+    margin: 1%;
+    padding: 0%;
+    border: grey;
+    flex-direction: row; 
+    justify-content: right;
+    align-items: center;
+    text-align: center;
+    border-radius: 5px;
+  } */
+
   .sideBtn {
     margin: 1%;
     padding: 0%;
-    border: none;
-    background-color: transparent;
-    color: black;
+    display: grid;
     flex-direction: row;
     justify-content: right;
-    align-items: right;
     text-align: right;
+    align-items: right;
   }
 
-  button:hover {
-    opacity: 0.5;
+  .btnMessage:hover {
+    opacity: 0.8;
     transition: all 1s;
-    background-color: black;
-    border-radius: 4px;
     color: white;
+    background-color: black;
   }
   .message {
     height: 200px;
@@ -239,7 +205,7 @@
 
   a:hover {
     transition: all 1s;
-    opacity: 0.5;
+    opacity: 0.8;
   }
 
   .subtitle {

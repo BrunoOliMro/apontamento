@@ -2,6 +2,7 @@
     // @ts-nocheck
     import ModalConfirmation from "../modal/modalConfirmation.svelte";
     // @ts-nocheck
+    let searchIcon = `/images/search.png`;
     let imageLoader = `/images/axonLoader.gif`;
     let tempoDecorrido = 0;
     let prodTime = [];
@@ -145,6 +146,10 @@
     function close() {
         modalMessage = "";
     }
+
+    function dispatchDrawing(){
+        console.log("jurbweuwrburb");
+    }
 </script>
 
 {#if shwowSuper === true}
@@ -183,22 +188,51 @@
         </div>
     </div>
 {:then itens}
-<div class="conj">
-    {#if showGreen === true}
-        <div class="green" id="tempoDecorrido"/>
-    {/if}
-    {#if showBlue === true}
-        <div class="blue" id="tempoDecorrido" />
-    {/if}
-    {#if showRed === true}
-        <div class="red" id="tempoDecorrido" />
-    {/if}
-    <img class="img" src={String(imagem)} alt="" />
-</div>
+    <div class="conj">
+        {#if showGreen === true}
+            <div class="green" id="tempoDecorrido" />
+        {/if}
+        {#if showBlue === true}
+            <div class="blue" id="tempoDecorrido" />
+        {/if}
+        {#if showRed === true}
+            <div class="red" id="tempoDecorrido" />
+        {/if}
+        <div class="containerIcon">
+            <a class="out" href="/#/desenho/">
+                <img on:click={dispatchDrawing} class="iconSearch" src={searchIcon} alt="" />
+            </a>
+            <img class="img" src={String(imagem)} alt="" />
+        </div>
+    </div>
 {/await}
 
 <style>
-    .conj{
+    .containerIcon{
+        position: relative;
+        margin: 0%;
+        padding: 0%;
+    }
+    .iconSearch{
+        width: 20px;
+        height: 20px;
+        display: block;
+        top: 275px;
+        left: 265px;
+        /* bottom: 400px; */
+        position: absolute;
+        z-index: 999999999999;
+    }
+    .img{
+        height: 400px;
+        width: 425px;
+        z-index: 1;
+    }
+    /* img{
+        margin: 0%;
+        padding: 0%;
+    } */
+    .conj {
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -206,6 +240,7 @@
         justify-content: left;
         margin: 0%;
         padding: 0%;
+        height: 400px
     }
 
     .green {
@@ -328,8 +363,10 @@
         border-radius: 4px 0px 0px 4px;
         border-color: grey;
         box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
-        width: 45px;
-        height: 300px;
+        display: flex;
+        justify-content: flex-end;
+        width: 55px;
+        height: 400px;
     }
     div {
         margin: 5%;

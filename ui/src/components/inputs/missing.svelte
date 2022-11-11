@@ -1,7 +1,10 @@
-<div class="write" id="faltante">
-    <p>FALTANTE</p>
+<div class="write">
+    <div class="title">
+        <p>FALTANTE: </p>
+    </div>
     <input
         autofocus
+        tabindex="3"
         class="input"
         id="missingFeed"
         type="text"
@@ -10,20 +13,31 @@
 </div>
 
 <style>
+    .title{
+        margin: 2%;
+        padding: 0%
+    }
     p{
         margin: 0%;
         padding: 0%;
     }
     .write {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        /* height: 10px; */
+        width: fit-content;
+        padding: 0%;
         margin: 0%;
-        /* padding: 0px 30px; */
-        font-size: 52px;
+        font-size: 30px;
     }
 
     input {
-        width: 130px;
-        height: 50px;
-        margin: 0%;
+        width: 115px;
+        height: 45px;
+        margin-left: 0%;
         padding: 0%;
         border-radius: 8px;
     }

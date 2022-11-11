@@ -15,6 +15,14 @@ const historic = async (req, res) => {
         const resource = await connection.query(`
         SELECT
         *
+        FROM VW_APP_APONTAMENTO_HISTORICO_DETALHADO
+        WHERE 1 = 1
+        AND ODF = '${NUMERO_ODF}'
+        ORDER BY OP, DATAHORA ASC
+        `.trim()).then(result => result.recordset);
+        const resourceDetail = await connection.query(`
+        SELECT
+        *
         FROM VW_APP_APONTAMENTO_HISTORICO
         WHERE 1 = 1
         AND ODF = '${NUMERO_ODF}'
@@ -32,8 +40,10 @@ const historic = async (req, res) => {
         resultPeçasBoas = resource.reduce((acc, iterator) => {
             return acc + iterator.BOAS + iterator.REFUGO;
         }, 0);
+        console.log("linha 35", obj);
         if (resultPeçasBoas > 0) {
             let objRes = {
+                resourceDetail: resourceDetail,
                 resource: obj,
                 message: 'Exibir histórico'
             };

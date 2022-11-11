@@ -208,6 +208,7 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
     //         ).then(result => result.recordset)
     //         console.log('RESOURCE: ', selectKnowHasP);
 
+
     //         if (selectKnowHasP.length > 0) {
     //             res.cookie('CONDIC', selectKnowHasP[0].CONDIC)
     //             let codigoNumite = selectKnowHasP.map(e => e.NUMITE)

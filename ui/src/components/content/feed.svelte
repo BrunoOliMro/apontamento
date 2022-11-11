@@ -10,6 +10,7 @@
     import Rework from "../inputs/rework.svelte";
     import ModalConfirmation from "../modal/modalConfirmation.svelte";
     import Cod from "./cod.svelte";
+    import Footer from "./footer.svelte";
     import Status from "./status.svelte";
 
     let supervisorApi = `/api/v1/supervisor`;
@@ -362,60 +363,103 @@
     </div>
 {:then itens}
     {#if dadosOdf.length !== 0}
-        <div class="nav">
-            <ReworkButton on:message={showRework} />
-            <MissingButton on:message={showMissing} />
-            <HistoricButton />
-            <DrawingButton />
-            <StopButton on:message={showStop} />
-        </div>
-
-        <div class="content">
-            <div class="areaImagem">
-                <div><Status /></div>
-                <div><Cod /></div>
-            </div>
-
-            <div class="feed">
-                <div class="inputsFeed">
-                    <div id="prod" class="write">
-                        <p>PRODUZIR</p>
-                        <div class="quantAvai">
-                            {qtdPossivelProducao}
+        <!-- <div class="nav"> -->
+        <!-- <ReworkButton on:message={showRework} />
+            <MissingButton on:message={showMissing} /> -->
+        <!-- <HistoricButton /> -->
+        <!-- <DrawingButton /> -->
+        <!-- <StopButton on:message={showStop} /> -->
+        <!-- </div> -->
+        <div class="aboveContent">
+            <div class="content">
+                <div class="areaImagem">
+                    <div><Status /></div>
+                    <div><Cod /></div>
+                </div>
+                <div class="feed">
+                    <div class="inputsFeed">
+                        <div class="inputsBtn">
+                            <div class="inputFixed">
+                                <div id="prod" class="write">
+                                    <p>PRODUZIR</p>
+                                    <div class="quantAvai">
+                                        {qtdPossivelProducao}
+                                    </div>
+                                </div>
+                                <div class="write" id="feed">
+                                    <p>BOAS</p>
+                                    <input
+                                        tabindex="1"
+                                        autofocus
+                                        class="input"
+                                        id="valorFeed"
+                                        bind:value={valorFeed}
+                                        on:input={blockForbiddenChars}
+                                        name="valorFeed"
+                                    />
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="write" id="feed">
-                        <p>BOAS</p>
-                        <input
-                            tabindex="1"
-                            autofocus
-                            class="input"
-                            id="valorFeed"
-                            bind:value={valorFeed}
-                            on:input={blockForbiddenChars}
-                            name="valorFeed"
-                        />
-                    </div>
 
-                    {#if bad === true}
-                        <Bad bind:value={badFeed} />
-                        <!-- <div class="write" id="ruins" name="ruins">
+                        <div class="changeInput">
+                            <div class="inputChange">
+                                {#if (bad = true)}
+                                    <Bad tabindex="2" bind:value={badFeed} />
+                                    <!-- <div class="write" id="ruins" name="ruins">
                             <p>RUINS</p>
                             <input
-                                tabindex="2"
-                                autofocus
-                                bind:value={badFeed}
+                            tabindex="2"
+                            autofocus
+                            bind:value={badFeed}
                                 on:input={blockForbiddenChars}
                                 class="input"
                                 id="badFeed"
                                 name="badFeed"
+                                />
+                            </div> -->
+                                {/if}
+                            </div>
+
+                            <!-- <div class="write" id="retrabalhar">
+                        <p>RETRABALHAR</p>
+                        <input
+                            autofocus
+                            bind:value={reworkFeed}
+                            on:input={blockForbiddenChars}
+                            class="input"
+                            id="reworkFeed"
+                            type="text"
+                            name="reworkFeed"
+                        />
+                    </div> -->
+                            <div class="inputChange">
+                                {#if (missing = true)}
+                                    <Missing
+                                        tabindex="3"
+                                        bind:value={missingFeed}
+                                    />
+                                    <!-- <div class="write" id="faltante">
+                            <p>FALTANTE</p>
+                            <input
+                                autofocus
+                                bind:value={missingFeed}
+                                on:input={blockForbiddenChars}
+                                class="input"
+                                id="missingFeed"
+                                type="text"
+                                name="missingFeed"
                             />
                         </div> -->
-                    {/if}
+                                {/if}
+                            </div>
 
-                    {#if rework === true}
-                        <Rework bind:value={reworkFeed} />
-                        <!-- <div class="write" id="ruins" name="ruins">
+                            <div class="inputChange">
+                                {#if (rework = true)}
+                                    <Rework
+                                        tabindex="4"
+                                        bind:value={reworkFeed}
+                                    />
+                                    <!-- <div class="write" id="ruins" name="ruins">
                             <p>RETRABALHAR</p>
                             <input
                                 tabindex="2"
@@ -428,52 +472,32 @@
                                 name="reworkFeed"
                             />
                         </div> -->
-                    {/if}
+                                {/if}
+                            </div>
+                        </div>
 
-                    <!-- <div class="write" id="retrabalhar">
-                        <p>RETRABALHAR</p>
-                        <input
-                            autofocus
-                            bind:value={reworkFeed}
-                            on:input={blockForbiddenChars}
-                            class="input"
-                            id="reworkFeed"
-                            type="text"
-                            name="reworkFeed"
-                        />
-                    </div> -->
-
-                    {#if missing === true}
-                        <Missing bind:value={missingFeed} />
-                        <!-- <div class="write" id="faltante">
-                            <p>FALTANTE</p>
-                            <input
-                                autofocus
-                                bind:value={missingFeed}
-                                on:input={blockForbiddenChars}
-                                class="input"
-                                id="missingFeed"
-                                type="text"
-                                name="missingFeed"
-                            />
-                        </div> -->
-                    {/if}
+                        <!-- <ReworkButton on:message={showRework} />
+                    <MissingButton on:message={showMissing} /> -->
+                    </div>
+                    <div class="buttonApontar">
+                        <a
+                            tabindex="5"
+                            id="apontar"
+                            on:keypress={doCallPost}
+                            on:click={doCallPost}
+                            type="submit"
+                        >
+                            <span />
+                            <span />
+                            <span />
+                            <span />
+                            APONTAR
+                        </a>
+                    </div>
                 </div>
-                <div class="buttonApontar">
-                    <a
-                        tabindex="3"
-                        id="apontar"
-                        on:keypress={doCallPost}
-                        on:click={doCallPost}
-                        type="submit"
-                    >
-                        <span />
-                        <span />
-                        <span />
-                        <span />
-                        APONTAR
-                    </a>
-                </div>
+            </div>
+            <div class="footer">
+                <Footer />
             </div>
         </div>
 
@@ -701,6 +725,48 @@
 {/await}
 
 <style>
+    .inputsBtn{
+        display: flex;
+        justify-content: left;
+    }
+    .footer{
+        z-index: 0;
+    }
+    /* .aboveContent {
+        border-color: grey;
+        box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
+        border-radius: 8px;
+    } */
+    .inputsFeed {
+        /* width: 100%; */
+        display: flex;
+        justify-content: left;
+        align-items: left;
+        text-align: left;
+        /* grid-template-columns: auto; */
+        flex-direction: column;
+    }
+    .inputFixed {
+        display: flex;
+        flex-direction: row;
+        justify-content: left;
+    }
+    .inputChange {
+        display: grid;
+        justify-content: right;
+        margin: 1%;
+        padding: 0%;
+    }
+    .changeInput {
+        display: grid;
+        flex-direction: column;
+        justify-content: right;
+        align-items: left;
+        text-align: left;
+        /* width: 50%; */
+        height: 100%;
+
+    }
     .modalContent {
         margin-left: 25px;
         margin-top: 0%;
@@ -793,7 +859,6 @@
         border: none;
     }
 
-
     .btnPopConfirm:hover {
         transition: 1s;
         opacity: 1;
@@ -858,20 +923,26 @@
         text-align: center;
         border-radius: 8px;
     }
-    .quantAvai{
+    .quantAvai {
         display: flex;
         flex-direction: row;
         justify-content: center;
         align-items: center;
         text-align: center;
     }
-    .buttonApontar{
-        margin-top: 20px;
+    .buttonApontar {
+        /* margin-top: 20px;
+        margin-left: 50px;
+        margin-right: 0px; */
+        margin-top:60px;
+        margin-bottom: 20px;
+        padding: 0%;
         display: flex;
         flex-direction: row;
         justify-content: center;
         align-items: center;
         text-align: center;
+        z-index: 1;
     }
     #apontar {
         display: flex;
@@ -879,17 +950,23 @@
         align-items: center;
         text-align: center;
         z-index: 1;
-        height: 45px;
+        height: 60px;
+        width: 600px;
         margin: 0%;
         padding: 0%;
     }
     .feed {
         display: flex;
         flex-direction: column;
-        margin-top: 0%;
-        margin-left:8%;
+        margin-top: 5px;
+        margin-bottom: 0%;
+        margin-left: 0%;
         padding: 0%;
         justify-content: center;
+        align-items: right;
+        text-align: right;
+        width: 50%;
+        margin-right: 0%;
     }
 
     .inputsFeed {
@@ -903,6 +980,7 @@
         margin: 0%;
         padding: 0%;
         height: 100%;
+        width: 50%;
         display: flex;
         flex-direction: row;
         justify-content: center;
@@ -915,12 +993,12 @@
         padding: 0%;
         display: flex;
         flex-direction: row;
-        justify-content: left;
-        align-items: left;
-        text-align: left;
-        border-color: grey;
+        justify-content: flex-start;
+        align-items: flex-start;
+        text-align: center;
+        /* border-color: grey;
         box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
-        border-radius: 5px;
+        border-radius: 5px; */
     }
     .nav {
         margin: 0px;
@@ -1004,7 +1082,7 @@
         transition: 0.5s;
         margin-top: 40px;
         letter-spacing: 4px;
-        border-radius: 5px;
+        border-radius: 8px;
         background-color: black;
         z-index: 1;
         width: 140px;
@@ -1102,6 +1180,9 @@
     }
     #prod,
     #feed {
+        width: fit-content;
+        height: fit-content;
+        margin: 0%;
         padding: 0px 60px 0px 0px;
     }
 
@@ -1143,6 +1224,9 @@
     }
 
     p {
+        font-size:65px;
+        width: fit-content;
+        height: fit-content;
         margin: 0%;
         padding: 0%;
     }

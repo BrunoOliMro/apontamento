@@ -10,8 +10,8 @@
    <Title/>
    <!-- <Nav  /> -->
    <Feed/>
-   <Container />
-   <Footer/>
+   <!-- <Container /> -->
+   <!-- <Footer/> -->
 </main>
 
 <style>
