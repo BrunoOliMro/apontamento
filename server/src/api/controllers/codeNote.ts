@@ -20,11 +20,7 @@ export const codeNote: RequestHandler = async (req, res, next) => {
             ORDER BY DATAHORA DESC
             `)
             .then(result => result.recordset);
-        // console.log("linha 23, numOdf", dados.numOdf);
-        // console.log("linha 23, numOper", dados.numOper);
-        // console.log("linha 23, codMaq", dados.codMaq);
-        console.log('linha 23 codeNote', codIdApontamento);
-
+            
         if (codIdApontamento.length > 0) {
             if (codIdApontamento[0]?.CODAPONTA === 1) {
                 req.body.message = 'codeApont 1 setup iniciado'
@@ -42,13 +38,15 @@ export const codeNote: RequestHandler = async (req, res, next) => {
                 //return res.json({ message: `codeApont 3 prod iniciado` })
             }
             if (codIdApontamento[0]?.CODAPONTA === 4) {
-                req.body.message = 'codeApont 4 prod finalzado'
-                next()
+                //req.body.message = 'codeApont 4 prod finalzado'
+                return res.json({message : 'codeApont 4 prod finalzado'})
+                //next()
                 //return res.json({ message: `codeApont 4 prod finalzado` })
             }
             if (codIdApontamento[0]?.CODAPONTA === 5) {
-                req.body.message = 'codeApont 5 maquina parada'
-                next()
+                //req.body.message = 'codeApont 5 maquina parada'
+                //next()
+                return res.json({message : 'codeApont 5 maquina parada'})
                 //return res.json({ message: `codeApont 5 maquina parada` })
             }
             if (codIdApontamento[0]?.CODAPONTA === 6) {

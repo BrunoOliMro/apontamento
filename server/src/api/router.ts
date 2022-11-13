@@ -317,13 +317,14 @@ apiRouter.route("/apontamentoCracha")
 // );
 
 apiRouter.route("/odf")
-    .get(getBefore)
+    .get(codeNote)
+    //.get(getBefore)
     .get(odfData)
 
 
 
 apiRouter.route("/odfQtd")
-    .get(getBefore)
+    //.get(getBefore)
     .get(odfDataQtd)
 //     async (req, res) => {
 //     let numeroOdf: string = String(req.cookies["NUMERO_ODF"])
@@ -389,7 +390,7 @@ apiRouter.route("/odfQtd")
 // )
 
 apiRouter.route("/imagem")
-    .get(getBefore)
+    //.get(getBefore)
     .get(statusImage)
 //     async (req, res) => {
 //     const numpec: string = req.cookies["CODIGO_PECA"]
@@ -431,7 +432,8 @@ apiRouter.route("/imagem")
 // );
 
 apiRouter.route("/status")
-    .get(getBefore)
+    .get(codeNote)
+    //.get(getBefore)
     .get(status)
 //     async (req, res) => {
 //     let numpec = req.cookies['CODIGO_PECA']
@@ -634,7 +636,8 @@ apiRouter.route("/ferselecionadas")
 // )
 
 apiRouter.route("/apontar")
-    .get(getBefore)
+    //.get(codeNote)
+    //.get(getBefore)
     .get(getPoint)
     .post(point)
 //     async (req, res) => {

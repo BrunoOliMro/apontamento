@@ -1,15 +1,22 @@
-<div class="write">
-    <div class="title">
-        <p>FALTANTE: </p>
+<script>
+    let title = 'FALTANTE:';
+</script>
+
+
+<div class='input-area'>
+    <div class='title'>
+        <p>{title}</p>
     </div>
-    <input
-        autofocus
-        tabindex="3"
-        class="input"
-        id="missingFeed"
-        type="text"
-        name="missingFeed"
-    />
+    <div class='input-field'>
+        <input
+            autofocus
+            tabindex='3'
+            class='input'
+            id='missingFeed'
+            type='text'
+            name='missingFeed'
+        />
+    </div>
 </div>
 
 <style>
@@ -21,7 +28,7 @@
         margin: 0%;
         padding: 0%;
     }
-    .write {
+    .input-area {
         display: flex;
         flex-direction: row;
         justify-content: center;

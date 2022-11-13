@@ -1,9 +1,14 @@
 <script>
     // @ts-nocheck
+    import Footer from "./footer.svelte";
+    import ModalConfirmation from '../modal/modalConfirmation.svelte'
     let imageLoader = "/images/axonLoader.gif";
     let urlString = `/api/v1/odf`;
-    let dadosOdf = [];
-    let employeName = document.cookie
+    let odfData;
+    let employeName;
+    let resultOdf = getOdfData();
+    let message = "";
+    employeName = document.cookie
         .split(";")
         .map((cookie) => cookie.split("="))
         .reduce(
@@ -16,15 +21,21 @@
 
     async function getOdfData() {
         const res = await fetch(urlString);
-        dadosOdf = await res.json();
-        if (dadosOdf === null || dadosOdf === undefined) {
-            dadosOdf = 0;
+        odfData = await res.json();
+        console.log("linha 23 odfData/cod.svelte/", odfData);
+        if (odfData.message === "codeApont 4 prod finalizado") {
+            message = "codeApont 4 prod finalizado";
         }
     }
-    let resultado = getOdfData();
+
+    function redirect() {
+        message = "";
+        window.location.href = "/#/rip";
+        location.reload();
+    }
 </script>
 
-{#await resultado}
+{#await resultOdf}
     <div class="imageLoader">
         <div class="loader">
             <img src={imageLoader} alt="" />
@@ -35,24 +46,24 @@
         <div class="areaCodigos">
             <p class="odf">ODF:</p>
             <p class="bold">
-                {dadosOdf.odfSelecionada.NUMERO_ODF === null ||
-                !dadosOdf.odfSelecionada.NUMERO_ODF
+                {odfData.odfSelecionada.NUMERO_ODF === null ||
+                !odfData.odfSelecionada.NUMERO_ODF
                     ? "S/I"
-                    : dadosOdf.odfSelecionada.NUMERO_ODF}
+                    : odfData.odfSelecionada.NUMERO_ODF}
             </p>
             <p class="odf">Cód. Interno:</p>
             <p class="bold">
-                {dadosOdf.odfSelecionada.CODIGO_PECA === null ||
-                !dadosOdf.odfSelecionada.CODIGO_PECA
+                {odfData.odfSelecionada.CODIGO_PECA === null ||
+                !odfData.odfSelecionada.CODIGO_PECA
                     ? "S/I"
-                    : dadosOdf.odfSelecionada.CODIGO_PECA}
+                    : odfData.odfSelecionada.CODIGO_PECA}
             </p>
             <p class="odf">Cód. do Cliente:</p>
             <p class="bold">
-                {dadosOdf.odfSelecionada.CODIGO_CLIENTE === null ||
-                !dadosOdf.odfSelecionada.CODIGO_CLIENTE
+                {odfData.odfSelecionada.CODIGO_CLIENTE === null ||
+                !odfData.odfSelecionada.CODIGO_CLIENTE
                     ? "S/I"
-                    : dadosOdf.odfSelecionada.CODIGO_CLIENTE}
+                    : odfData.odfSelecionada.CODIGO_CLIENTE}
             </p>
             <p class="odf">Operador:</p>
             <p class="bold">
@@ -62,22 +73,29 @@
             </p>
             <p class="odf">OP:</p>
             <p class="bold">
-                {dadosOdf.odfSelecionada.NUMERO_OPERACAO === null ||
-                !dadosOdf.odfSelecionada.NUMERO_OPERACAO
+                {odfData.odfSelecionada.NUMERO_OPERACAO === null ||
+                !odfData.odfSelecionada.NUMERO_OPERACAO
                     ? "S/I"
-                    : dadosOdf.odfSelecionada.NUMERO_OPERACAO} -
-                {dadosOdf.odfSelecionada.CODIGO_MAQUINA === null ||
-                !dadosOdf.odfSelecionada.CODIGO_MAQUINA
+                    : odfData.odfSelecionada.NUMERO_OPERACAO} -
+                {odfData.odfSelecionada.CODIGO_MAQUINA === null ||
+                !odfData.odfSelecionada.CODIGO_MAQUINA
                     ? "S/I"
-                    : dadosOdf.odfSelecionada.CODIGO_MAQUINA} -
-                {dadosOdf.odfSelecionada.QTDE_ODF === null ||
-                !dadosOdf.odfSelecionada.QTDE_ODF
+                    : odfData.odfSelecionada.CODIGO_MAQUINA} -
+                {odfData.odfSelecionada.QTDE_ODF === null ||
+                !odfData.odfSelecionada.QTDE_ODF
                     ? "S/I"
-                    : dadosOdf.odfSelecionada.QTDE_ODF}
+                    : odfData.odfSelecionada.QTDE_ODF}
             </p>
+        </div>
+        <div>
+            <Footer />
         </div>
     </main>
 {/await}
+
+{#if message === "codeApont 4 prod finalizado"}
+    <ModalConfirmation on:message={redirect} />
+{/if}
 
 <style>
     .loader {

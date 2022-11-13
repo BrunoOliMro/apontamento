@@ -1,38 +1,26 @@
 <script>
     // @ts-nocheck
-    import blockForbiddenChars from "../../routes/functions.svelte";
+    import Sanitize from '../../routes/sanitize.svelte';
+    let title = 'RUINS:';
 </script>
 
-<div class="write">
-    <div class="title">
-        <p>RUINS: </p>
+<div class='input-area'>
+    <div class='title'>
+        <p>{title}</p>
     </div>
-    <div>
-        <input
-            tabindex="2"
-            autofocus
-            on:input={blockForbiddenChars}
-            class="input"
-        />
+    <div class='input-field'>
+        <input tabindex='2' autofocus on:input={Sanitize} type='text' />
     </div>
 </div>
 
 <style>
-    p{
-        margin: 0%;
-        padding: 0%;
-    }
-
-    .title{
-        margin: 2%;
-    }
-    .write {
+    .input-area {
         display: flex;
         flex-direction: row;
         justify-content: center;
         align-items: center;
         text-align: center;
-        /* height: 10px; */
+        height: fit-content;
         width: fit-content;
         padding: 0%;
         margin: 0%;

@@ -1,16 +1,17 @@
 <script>
     // @ts-nocheck
-    import DrawingButton from "../buttons/drawingButton.svelte";
-    import HistoricButton from "../buttons/historicButton.svelte";
-    import MissingButton from "../buttons/missingButton.svelte";
-    import ReworkButton from "../buttons/reworkButton.svelte";
-    import StopButton from "../buttons/stopButton.svelte";
+    import Sanitize from "src/routes/sanitize.svelte";
+    // import DrawingButton from "../buttons/drawingButton.svelte";
+    // import HistoricButton from "../buttons/historicButton.svelte";
+    // import MissingButton from "../buttons/missingButton.svelte";
+    // import ReworkButton from "../buttons/reworkButton.svelte";
+    // import StopButton from "../buttons/stopButton.svelte";
     import Bad from "../inputs/bad.svelte";
+    import GoodFeed from "../inputs/goodFeed.svelte";
     import Missing from "../inputs/missing.svelte";
     import Rework from "../inputs/rework.svelte";
     import ModalConfirmation from "../modal/modalConfirmation.svelte";
     import Cod from "./cod.svelte";
-    import Footer from "./footer.svelte";
     import Status from "./status.svelte";
 
     let supervisorApi = `/api/v1/supervisor`;
@@ -19,7 +20,6 @@
     let missingFeed;
     let reworkFeed;
     let urlS = `/api/v1/apontar`;
-    let urlString = `/api/v1/odfQtd`;
     let motivoUrl = `/api/v1/motivorefugo`;
     let dadosOdf = [];
     let dados = [];
@@ -30,7 +30,6 @@
     let qtdPossivelProducao;
     let showError = false;
     let resultRefugo;
-    let resultado = getOdfData();
     let showParcialSuper = false;
     let showSuperNotFound = false;
     let showErrorMessage = false;
@@ -46,38 +45,6 @@
     let bad = true;
     let showMaqPar = false;
     let modalTitle = "Máquina Parada ";
-    let apiMotivoParada = "api/v1/motivoParada";
-    callMotivo();
-
-    function showRework(event) {
-        if (rework === false) {
-            rework = true;
-            bad = false;
-            missing = false;
-        } else {
-            rework = false;
-            bad = true;
-        }
-    }
-
-    function showMissing(event) {
-        if (missing === false) {
-            missing = true;
-            bad = false;
-            rework = false;
-        } else {
-            bad = true;
-            missing = false;
-        }
-    }
-
-    function showStop(event) {
-        if (stopModal === false) {
-            stopModal = true;
-        } else {
-            stopModal = false;
-        }
-    }
 
     function closePop() {
         showMaqPar = false;
@@ -97,36 +64,6 @@
     async function getRefugodata() {
         const res = await fetch(motivoUrl);
         dados = await res.json();
-    }
-
-    async function getOdfData() {
-        const res = await fetch(urlString);
-        dadosOdf = await res.json();
-        //console.log('linha 41', dadosOdf);
-        qtdPossivelProducao = dadosOdf.valorMaxdeProducao;
-        if (qtdPossivelProducao <= 0) {
-            qtdPossivelProducao = 0;
-        }
-    }
-
-    /**
-     * @param {{ target: { value: any; }; }} e
-     */
-    function blockForbiddenChars(e) {
-        let value = e.target.value;
-        e.target.value = preSanitize(value);
-    }
-
-    /**
-     * @param {string} input
-     */
-    function preSanitize(input) {
-        const allowedChars = /[0-9]/;
-        const sanitizedOutput = input
-            .split("")
-            .map((char) => (allowedChars.test(char) ? char : ""))
-            .join("");
-        return sanitizedOutput;
     }
 
     async function checkForSuper(event) {
@@ -228,13 +165,9 @@
     async function doCallPost() {
         let numberBadFeed = Number(badFeed || 0);
         let numberGoodFeed = Number(valorFeed || 0);
-        let numberQtdAllowed = Number(qtdPossivelProducao);
+        //let numberQtdAllowed = Number(qtdPossivelProducao);
         let numberMissing = Number(missingFeed || 0);
         let numberReworkFeed = Number(reworkFeed || 0);
-        // console.log("linha 122", numberBadFeed );
-        // console.log("ba 117", numberGoodFeed);
-        // console.log("mi 117", numberMissing);
-        // console.log("re 118", numberReworkFeed);
 
         let total =
             numberBadFeed + numberGoodFeed + numberMissing + numberReworkFeed;
@@ -267,45 +200,6 @@
         if (total > numberQtdAllowed) {
             showError = true;
         }
-
-        // if (numberBadFeed > 0 && numberBadFeed <= numberQtdAllowed) {
-        //     showConfirm = true;
-        // }
-        // if (badFeed === undefined) {
-        //     badFeed = '';
-        // }
-        // if (typeof valorFeed) {
-        //     console.log('valor feed post', typeof valorFeed);
-        //     valorFeed = 0;
-        // }
-        // if(numberGoodFeed > numberQtdAllowed || numberBadFeed > numberQtdAllowed || missingFeed > numberQtdAllowed || reworkFeed > numberQtdAllowed){
-        //     showError = true
-        // }
-
-        // if(numberBadFeed + numberGoodFeed + missingFeed + reworkFeed> numberQtdAllowed){
-        //     showError = true
-        // }
-
-        // if (numberGoodFeed + numberBadFeed + missingFeed + reworkFeed <= numberQtdAllowed) {
-        //     showConfirm = true
-        // }
-        // // doPost();
-
-        // if (numberGoodFeed > 0 && numberGoodFeed + missingFeed + reworkFeed + badFeed <= numberQtdAllowed && numberBadFeed === 0) {
-        //     showParcialSuper = true;
-        // }
-
-        // if (numberBadFeed > 0 && numberGoodFeed === 0) {
-        //     showConfirm = true;
-        // }
-
-        // if (numberBadFeed > 0 && numberGoodFeed > 0) {
-        //     showParcialAndRef = true;
-        // }
-
-        // if ((numberGoodFeed === 0 && numberBadFeed === 0) || numberGoodFeed + numberBadFeed === 0) {
-        //     showRoundedApont = true;
-        // }
     }
 
     function close() {
@@ -326,11 +220,6 @@
         window.location.href = `/#/rip`;
     }
 
-    async function callMotivo() {
-        const res = await fetch(apiMotivoParada);
-        dados = await res.json();
-    }
-
     const confirm = async () => {
         const headers = new Headers();
         const res = await fetch(postParada, {
@@ -345,6 +234,7 @@
             showmodal = false;
         }
     };
+    //import sanitize from '.'
 </script>
 
 {#if loader === true}
@@ -355,7 +245,7 @@
     </div>
 {/if}
 
-{#await resultado}
+{#await resultRefugo}
     <div class="imageLoader">
         <div class="loader">
             <img src={imageLoader} alt="" />
@@ -363,141 +253,31 @@
     </div>
 {:then itens}
     {#if dadosOdf.length !== 0}
-        <!-- <div class="nav"> -->
-        <!-- <ReworkButton on:message={showRework} />
-            <MissingButton on:message={showMissing} /> -->
-        <!-- <HistoricButton /> -->
-        <!-- <DrawingButton /> -->
-        <!-- <StopButton on:message={showStop} /> -->
-        <!-- </div> -->
-        <div class="aboveContent">
-            <div class="content">
-                <div class="areaImagem">
-                    <div><Status /></div>
-                    <div><Cod /></div>
-                </div>
-                <div class="feed">
-                    <div class="inputsFeed">
-                        <div class="inputsBtn">
-                            <div class="inputFixed">
-                                <div id="prod" class="write">
-                                    <p>PRODUZIR</p>
-                                    <div class="quantAvai">
-                                        {qtdPossivelProducao}
-                                    </div>
-                                </div>
-                                <div class="write" id="feed">
-                                    <p>BOAS</p>
-                                    <input
-                                        tabindex="1"
-                                        autofocus
-                                        class="input"
-                                        id="valorFeed"
-                                        bind:value={valorFeed}
-                                        on:input={blockForbiddenChars}
-                                        name="valorFeed"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="changeInput">
-                            <div class="inputChange">
-                                {#if (bad = true)}
-                                    <Bad tabindex="2" bind:value={badFeed} />
-                                    <!-- <div class="write" id="ruins" name="ruins">
-                            <p>RUINS</p>
-                            <input
-                            tabindex="2"
-                            autofocus
-                            bind:value={badFeed}
-                                on:input={blockForbiddenChars}
-                                class="input"
-                                id="badFeed"
-                                name="badFeed"
-                                />
-                            </div> -->
-                                {/if}
-                            </div>
-
-                            <!-- <div class="write" id="retrabalhar">
-                        <p>RETRABALHAR</p>
-                        <input
-                            autofocus
-                            bind:value={reworkFeed}
-                            on:input={blockForbiddenChars}
-                            class="input"
-                            id="reworkFeed"
-                            type="text"
-                            name="reworkFeed"
-                        />
-                    </div> -->
-                            <div class="inputChange">
-                                {#if (missing = true)}
-                                    <Missing
-                                        tabindex="3"
-                                        bind:value={missingFeed}
-                                    />
-                                    <!-- <div class="write" id="faltante">
-                            <p>FALTANTE</p>
-                            <input
-                                autofocus
-                                bind:value={missingFeed}
-                                on:input={blockForbiddenChars}
-                                class="input"
-                                id="missingFeed"
-                                type="text"
-                                name="missingFeed"
-                            />
-                        </div> -->
-                                {/if}
-                            </div>
-
-                            <div class="inputChange">
-                                {#if (rework = true)}
-                                    <Rework
-                                        tabindex="4"
-                                        bind:value={reworkFeed}
-                                    />
-                                    <!-- <div class="write" id="ruins" name="ruins">
-                            <p>RETRABALHAR</p>
-                            <input
-                                tabindex="2"
-                                autofocus
-                                bind:value={reworkFeed}
-                                on:input={blockForbiddenChars}
-                                class="input"
-                                id="reworkFeed"
-                                type="text"
-                                name="reworkFeed"
-                            />
-                        </div> -->
-                                {/if}
-                            </div>
-                        </div>
-
-                        <!-- <ReworkButton on:message={showRework} />
-                    <MissingButton on:message={showMissing} /> -->
-                    </div>
-                    <div class="buttonApontar">
-                        <a
-                            tabindex="5"
-                            id="apontar"
-                            on:keypress={doCallPost}
-                            on:click={doCallPost}
-                            type="submit"
-                        >
-                            <span />
-                            <span />
-                            <span />
-                            <span />
-                            APONTAR
-                        </a>
-                    </div>
-                </div>
+        <div class="content">
+            <div class="status-area">
+                <div><Status /></div>
+                <div><Cod /></div>
             </div>
-            <div class="footer">
-                <Footer />
+            <div class="feed-area">
+                <GoodFeed bind:value={valorFeed} />
+                <Bad tabindex="2" bind:value={badFeed} />
+                <Missing tabindex="3" bind:value={missingFeed} />
+                <Rework tabindex="4" bind:value={reworkFeed} />
+            </div>
+            <div class="buttonApontar">
+                <a
+                    tabindex="5"
+                    id="apontar"
+                    on:keypress={doCallPost}
+                    on:click={doCallPost}
+                    type="submit"
+                >
+                    <span />
+                    <span />
+                    <span />
+                    <span />
+                    APONTAR
+                </a>
             </div>
         </div>
 
@@ -525,7 +305,7 @@
                             on:keypress={checkForSuper}
                             bind:value={supervisor}
                             class="supervisor"
-                            on:input={blockForbiddenChars}
+                            on:input={Sanitize}
                             type="text"
                             name="supervisor"
                             id="supervisor"
@@ -553,7 +333,7 @@
                         autofocus
                         bind:value={supervisor}
                         on:keypress={checkForSuper}
-                        on:input={blockForbiddenChars}
+                        on:input={Sanitize}
                         class="supervisor"
                         type="text"
                         name="supervisor"
@@ -725,48 +505,33 @@
 {/await}
 
 <style>
-    .inputsBtn{
+    /* .inputsBtn {
         display: flex;
         justify-content: left;
-    }
-    .footer{
-        z-index: 0;
-    }
-    /* .aboveContent {
-        border-color: grey;
-        box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
-        border-radius: 8px;
     } */
     .inputsFeed {
         /* width: 100%; */
-        display: flex;
-        justify-content: left;
-        align-items: left;
-        text-align: left;
-        /* grid-template-columns: auto; */
+        display: grid;
         flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        /* grid-template-columns: auto; */
     }
-    .inputFixed {
-        display: flex;
-        flex-direction: row;
-        justify-content: left;
-    }
-    .inputChange {
+    /* .inputChange {
         display: grid;
         justify-content: right;
         margin: 1%;
         padding: 0%;
-    }
-    .changeInput {
+    } */
+    /* .changeInput {
         display: grid;
         flex-direction: column;
         justify-content: right;
         align-items: left;
         text-align: left;
-        /* width: 50%; */
         height: 100%;
-
-    }
+    }  */
     .modalContent {
         margin-left: 25px;
         margin-top: 0%;
@@ -923,18 +688,11 @@
         text-align: center;
         border-radius: 8px;
     }
-    .quantAvai {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-    }
     .buttonApontar {
         /* margin-top: 20px;
         margin-left: 50px;
         margin-right: 0px; */
-        margin-top:60px;
+        margin-top: 60px;
         margin-bottom: 20px;
         padding: 0%;
         display: flex;
@@ -955,18 +713,18 @@
         margin: 0%;
         padding: 0%;
     }
-    .feed {
-        display: flex;
+    .feed-area {
+        display: grid;
         flex-direction: column;
-        margin-top: 5px;
+        /* margin-top: 5px;
         margin-bottom: 0%;
         margin-left: 0%;
-        padding: 0%;
+        padding: 0%; */
         justify-content: center;
-        align-items: right;
-        text-align: right;
+        align-items: center;
+        text-align: center;
         width: 50%;
-        margin-right: 0%;
+        /* margin-right: 0%; */
     }
 
     .inputsFeed {
@@ -976,7 +734,7 @@
         flex-direction: row;
         justify-content: center;
     }
-    .areaImagem {
+    .status-area {
         margin: 0%;
         padding: 0%;
         height: 100%;
@@ -999,20 +757,6 @@
         /* border-color: grey;
         box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
         border-radius: 5px; */
-    }
-    .nav {
-        margin: 0px;
-        padding: 0%;
-        width: 100%vh;
-        height: 50px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        text-align: center;
-        background-color: transparent;
-        border: none;
-        /* border-color: grey;
-        box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4); */
     }
     button {
         display: flex;
@@ -1170,21 +914,19 @@
         }
     }
 
-    .write {
+    /* .write {
         margin: 0%;
-        /* padding: 0px 30px; */
         font-size: 52px;
         padding: 0%;
         height: fit-content;
         width: fit-content;
     }
-    #prod,
-    #feed {
+    #feed-area {
         width: fit-content;
         height: fit-content;
         margin: 0%;
         padding: 0px 60px 0px 0px;
-    }
+    } */
 
     /* input {
         border-color: grey;
@@ -1224,7 +966,7 @@
     }
 
     p {
-        font-size:65px;
+        font-size: 65px;
         width: fit-content;
         height: fit-content;
         margin: 0%;

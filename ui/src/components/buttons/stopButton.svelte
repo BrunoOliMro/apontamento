@@ -2,7 +2,6 @@
     import { createEventDispatcher } from "svelte";
     const dispatch = createEventDispatcher();
     function messageDispatch() {
-        console.log("linha 5 /rework Btn /");
         dispatch("message", {
             text: "Hello!",
         });

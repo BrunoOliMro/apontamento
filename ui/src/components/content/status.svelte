@@ -1,7 +1,7 @@
 <script>
     // @ts-nocheck
+    import Sanitize from "src/routes/sanitize.svelte";
     import ModalConfirmation from "../modal/modalConfirmation.svelte";
-    // @ts-nocheck
     let searchIcon = `/images/search.png`;
     let imageLoader = `/images/axonLoader.gif`;
     let tempoDecorrido = 0;
@@ -20,26 +20,6 @@
 
     getTempo();
     getImagem();
-
-    /**
-     * @param {{ target: { value: any; }; }} e
-     */
-    function blockForbiddenChars(e) {
-        let value = e.target.value;
-        e.target.value = preSanitize(value);
-    }
-
-    /**
-     * @param {string} input
-     */
-    function preSanitize(input) {
-        const allowedChars = /[0-9]/;
-        const sanitizedOutput = input
-            .split("")
-            .map((char) => (allowedChars.test(char) ? char : ""))
-            .join("");
-        return sanitizedOutput;
-    }
 
     async function getTempo() {
         const res = await fetch(urlString);
@@ -147,9 +127,6 @@
         modalMessage = "";
     }
 
-    function dispatchDrawing(){
-        console.log("jurbweuwrburb");
-    }
 </script>
 
 {#if shwowSuper === true}
@@ -167,7 +144,7 @@
                     tabindex="8"
                     bind:value={supervisor}
                     on:keypress={checkForSuper}
-                    on:input={blockForbiddenChars}
+                    on:input={Sanitize}
                     name="supervisor"
                     id="supervisor"
                     type="text"
@@ -200,7 +177,7 @@
         {/if}
         <div class="containerIcon">
             <a class="out" href="/#/desenho/">
-                <img on:click={dispatchDrawing} class="iconSearch" src={searchIcon} alt="" />
+                <img class="iconSearch" src={searchIcon} alt="" />
             </a>
             <img class="img" src={String(imagem)} alt="" />
         </div>
@@ -217,21 +194,17 @@
         width: 20px;
         height: 20px;
         display: block;
-        top: 275px;
-        left: 265px;
+        top: 450px;
+        left: 425px;
         /* bottom: 400px; */
         position: absolute;
         z-index: 999999999999;
     }
     .img{
-        height: 400px;
+        height: 425px;
         width: 425px;
         z-index: 1;
     }
-    /* img{
-        margin: 0%;
-        padding: 0%;
-    } */
     .conj {
         display: flex;
         flex-direction: row;
@@ -380,8 +353,8 @@
 
     img {
         width: 18rem;
-        height: 300px;
-        border-radius: 3px;
+        height: 400px;
+        border-radius: 4px;
     }
 
     /* @media (max-width: 574px) {

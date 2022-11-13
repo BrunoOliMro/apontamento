@@ -15,7 +15,7 @@
 <!-- </main> -->
 
 <style>
-    main {
+    /* main {
         display: flex;
         flex-direction: row;
         justify-content: flex-start;
@@ -23,7 +23,7 @@
         border-color: grey;
         box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
         border-radius: 5px;
-    }
+    } */
     /* .areaImagem {
         margin-right: 1%;
         padding: 0%;

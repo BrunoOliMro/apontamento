@@ -1,5 +1,6 @@
 <script>
-	import HistoricButton from "../buttons/historicButton.svelte";
+	import QuantityAvai from "src/routes/quantityAvai.svelte";
+import HistoricButton from "../buttons/historicButton.svelte";
 	import StopButton from "../buttons/stopButton.svelte";
 	let apiMotivoParada = "api/v1/motivoParada";
 	export let title = "APONTAMENTO";
@@ -10,7 +11,7 @@
 	let dados = []
 	callMotivo()
 
-	function showStop(event) {
+	function showStop() {
 		if (stopModal === false) {
 			stopModal = true;
 		} else {
@@ -60,6 +61,9 @@
 			<div class="btn">
 				<StopButton on:message={showStop} />
 			</div>
+            <div>
+                <QuantityAvai/>
+            </div>
 		</div>
 	</div>
 

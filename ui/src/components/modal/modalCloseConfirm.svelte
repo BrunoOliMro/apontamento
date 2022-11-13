@@ -1,8 +1,6 @@
 <script>
     import { createEventDispatcher } from "svelte";
-
     const dispatch = createEventDispatcher();
-
     function confirma() {
         dispatch("message", {
             text: "teste basso cabaço",

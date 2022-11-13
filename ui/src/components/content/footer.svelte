@@ -83,12 +83,12 @@
     font-size: 25px;
     margin-top: 20px;
     font-weight: bold;
-    justify-content: space-around;
-    align-items: right;
-    text-align: right;
+    /* justify-content: space-around; */
+    /* align-items: right; */
+    /* text-align: right; */
     width: 100%;
     padding: 0%;
-    flex-direction: row;
+    flex-direction: column;
     display: flex;
     letter-spacing: 1px;
 

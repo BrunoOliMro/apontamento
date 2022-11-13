@@ -14,13 +14,13 @@ export const getBefore: RequestHandler = async (req, res, next) => {
         const checkForOdf = await connection.query(`
         SELECT
         TOP 1
-        * 
+        CODAPONTA
         FROM 
-        VW_APP_APTO_PROGRAMACAO_PRODUCAO 
+        HISAPONTA
         WHERE 1 = 1 
-        AND NUMERO_ODF = ${numerOdf}
-        AND NUMERO_OPERACAO = ${numerOper}
-        AND CODIGO_MAQUINA = '${codMaq}'
+        AND ODF = ${numerOdf}
+        AND NUMOPE = ${numerOper}
+        AND ITEM = '${codMaq}'
         ORDER BY NUMERO_OPERACAO ASC
         `).then(res => res.recordset)
 
