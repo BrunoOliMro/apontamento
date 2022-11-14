@@ -1,15 +1,15 @@
 <script>
     let imageLoader = "/images/axonLoader.gif";
+    let title = "Quantidade a produzir: ";
     let quantityAvailableProd;
-    let urlString = `/api/v1/odfQtd`;
     let dadosOdf = [];
-    let title = "Produzir";
-    let result = getOdfData;
+    let urlString = `/api/v1/odfQtd`;
+    let result = getOdfData();
 
     async function getOdfData() {
         const res = await fetch(urlString);
         dadosOdf = await res.json();
-        //console.log('linha 41', dadosOdf);
+        console.log('linha 41', dadosOdf);
         quantityAvailableProd = dadosOdf.valorMaxdeProducao;
         if (quantityAvailableProd <= 0) {
             quantityAvailableProd = 0;
@@ -25,23 +25,35 @@
     </div>
 {:then item}
     <div>
-        <div class="write">
-            <p>{title}</p>
-            <div class="quantAvai">
-                {quantityAvailableProd}
-            </div>
+        <div class="prod-area">
+                {title}
+                <p>{quantityAvailableProd}</p>
         </div>
     </div>
 {/await}
 
 <style>
-    .write {
+    p{
+        width: 50px;
+        font-size: 30px;
+        font-weight: bold;
         margin: 0%;
-        /* padding: 0px 30px; */
-        font-size: 52px;
+        padding: 0%;
+    }
+    .prod-area {
+        border-radius: 6px;
+        margin: 0%;
         padding: 0%;
         height: fit-content;
-        width: fit-content;
+        width: 250px;
+        display: flex;
+        flex-direction: row;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+        border-color: #999999;
+        box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
+        letter-spacing: 1px;
     }
     .loader {
         margin: 0%;

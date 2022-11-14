@@ -1,25 +1,24 @@
 <script>
     // @ts-nocheck
     let imageLoader = "/images/axonLoader.gif";
-    import Breadcrumb from "../breadcrumb/breadcrumb.svelte";
     import breadFer from "../breadcrumb/breadcrumb.svelte";
     import ModalConfirmation from "../modal/modalConfirmation.svelte";
-    import badFeed from "../content/feed.svelte";
-    import reworkFeed from "../content/feed.svelte";
-    import missingFeed from "../content/feed.svelte";
-    import ruins from "../content/feed.svelte";
-    import retrabalhar from "../content/feed.svelte";
-    import faltante from "../content/feed.svelte";
-    import Title from "../title/title.svelte";
+    // import badFeed from "../content/feed.svelte";
+    // import reworkFeed from "../content/feed.svelte";
+    // import missingFeed from "../content/feed.svelte";
+    // import ruins from "../content/feed.svelte";
+    // import retrabalhar from "../content/feed.svelte";
+    // import faltante from "../content/feed.svelte";
+    // import Title from "../title/title.svelte";
     let apiMotivoParada = "api/v1/motivoParada";
     let postParada = `/api/v1/postParada`;
-    let dadosOdf = [];
+    //let dadosOdf = [];
     let dados = [];
     let value = "";
     let showmodal = false;
     let resultCall = callMotivo();
     let showMaqPar = false;
-    let rework = false;
+    //let rework = false;
 
     //let ferr = localStorage.getItem("breadFer");
     //import breadFer from "/src/routes/ferramenta.svelte";

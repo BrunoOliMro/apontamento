@@ -1,25 +1,28 @@
 <script>
-	import QuantityAvai from "src/routes/quantityAvai.svelte";
-import HistoricButton from "../buttons/historicButton.svelte";
-	import StopButton from "../buttons/stopButton.svelte";
-	let apiMotivoParada = "api/v1/motivoParada";
-	export let title = "APONTAMENTO";
-	let postParada = `api/v1/postParada`
-	let stopModal = false;
-	let showMaqPar = false;
-	let value;
-	let dados = []
-	callMotivo()
+    import QuantityAvai from "../../routes/quantityAvai.svelte";
+    import HistoricButton from "../buttons/historicButton.svelte";
+    import StopButton from "../buttons/stopButton.svelte";
+    import ModalCloseConfirm from "../modal/modalCloseConfirm.svelte";
+    import ModalConfirmation from "../modal/modalConfirmation.svelte";
+    let apiMotivoParada = "api/v1/motivoParada";
+    let title = "APONTAMENTO";
+    let postParada = `api/v1/postParada`;
+    let stopModal = false;
+    let showMaqPar = false;
+    let value;
+    let dados = [];
+    let result = callMotivo();
+    let modalTitle = 'Máquina parada com sucesso'
 
-	function showStop() {
-		if (stopModal === false) {
-			stopModal = true;
-		} else {
-			stopModal = false;
-		}
-	}
+    function showStop() {
+        if (stopModal === false) {
+            stopModal = true;
+        } else {
+            stopModal = false;
+        }
+    }
 
-	function closePop() {
+    function closePop() {
         showMaqPar = false;
         if (stopModal === false) {
             stopModal = true;
@@ -28,7 +31,7 @@ import HistoricButton from "../buttons/historicButton.svelte";
         }
     }
 
-	const confirm = async () => {
+    const confirm = async () => {
         const headers = new Headers();
         const res = await fetch(postParada, {
             method: "POST",
@@ -37,102 +40,138 @@ import HistoricButton from "../buttons/historicButton.svelte";
                 value: value,
             }),
         }).then((res) => res.json());
+        console.log("res", res);
         if (res.message === "maquina parada com sucesso") {
+            stopModal = false
             showMaqPar = true;
-            //showmodal = false;
         }
     };
 
-	async function callMotivo() {
+    async function callMotivo() {
         const res = await fetch(apiMotivoParada);
         dados = await res.json();
     }
+
+    function closeConfirm(){
+        showMaqPar = false;
+        stopModal = false;
+        window.location.href = `/#/codigobarras`;
+    }
 </script>
 
-<main>
-	<div class="fullTitle">
-		<div class="titleDiv">
-			<h1 class="title">{title}</h1>
-		</div>
-		<div class="buttonNav">
-			<div class="btn">
-				<HistoricButton />
-			</div>
-			<div class="btn">
-				<StopButton on:message={showStop} />
-			</div>
-            <div>
-                <QuantityAvai/>
+{#await result}
+    <div>...</div>
+{:then item}
+    <div class="nav-area">
+        <ul>
+            <li class="fist-item-nav">
+                <h1>
+                    {title}
+                </h1>
+            </li>
+        </ul>
+        <ul class="quatityAvai">
+            <li>
+                <HistoricButton />
+            </li>
+            <li>
+                <StopButton on:message={showStop} />
+            </li>
+            <li>
+                <QuantityAvai />
+            </li>
+        </ul>
+    </div>
+{/await}
+
+{#if stopModal === true}
+    <div class="modalBackground">
+        <div class="itensInsideModal">
+            <div class="closePopDiv">
+                <button
+                    class="btnPop"
+                    on:keypress={closePop}
+                    on:click={closePop}>FECHAR</button
+                >
             </div>
-		</div>
-	</div>
 
-	{#if stopModal === true}
-            <div class="modalBackground">
-                <div class="itensInsideModal">
-                    <div class="closePopDiv">
-                        <button
-                            class="btnPop"
-                            on:keypress={closePop}
-                            on:click={closePop}>FECHAR</button
-                        >
-                    </div>
+            <div class="modalContent">
+                <h2 class="modalTitle">Motivo da Parada</h2>
+                <div class="optionsBar">
+                    <select autofocus tabindex="10" bind:value>
+                        {#each dados as item}
+                            <option class="optionsBar">{item}</option>
+                        {/each}
+                    </select>
+                </div>
 
-                    <div class="modalContent">
-                        <h2 class="modalTitle">Motivo da Parada</h2>
-                        <div class="optionsBar">
-                            <select autofocus tabindex="10" bind:value>
-                                {#each dados as item}
-                                    <option class="optionsBar">{item}</option>
-                                {/each}
-                            </select>
-                        </div>
-
-                        <div class="confirmPopDiv">
-                            <button
-                                class="btnPopConfirm"
-                                id="confirmPop"
-                                tabindex="11"
-                                on:keypress={confirm}
-                                on:click={confirm}
-                            >
-                                CONFIRMAR
-                            </button>
-                        </div>
-                    </div>
+                <div class="confirmPopDiv">
+                    <button
+                        class="btnPopConfirm"
+                        id="confirmPop"
+                        tabindex="11"
+                        on:keypress={confirm}
+                        on:click={confirm}
+                    >
+                        CONFIRMAR
+                    </button>
                 </div>
             </div>
-        {/if}
-</main>
+        </div>
+    </div>
+{/if}
+
+{#if showMaqPar === true}
+    <ModalConfirmation title={modalTitle} on:message={closeConfirm}/>
+{/if}
 
 <style>
-	button:hover{
-		transition:all 1s;
-		opacity: 0.5;
-	}
-	/* button {
+    .fist-item-nav{
+        margin: 0%;
+        padding: 0%;
+    }
+    .quatityAvai{
         display: flex;
+        flex-direction: row;
         justify-content: right;
-        text-align: right;
-        align-items: right;
-        border: none;
-        background-color: transparent;
-        color: white;
-    } */
-	.btnPop {
+        align-items: center;
+        text-align: center;
+        list-style-type: none;
+        margin-top: 10px;
+        padding: 0%;
+    }
+    ul{
+        height: fit-content;
+        display: flex;
+        justify-content: left;
+        text-align: center;
+        align-items: center;
+        margin: 0%;
+        padding: 0%;
+    }
+    li{
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        margin-left: 2%;
+        list-style-type: none;
+        display: inline;
+        float: left;
+        padding: 0%;
+    }
+    .btnPop {
         margin: 0%;
         padding: 0%;
         background-color: transparent;
         flex-direction: row;
-		justify-content: right;
-		align-items: right;
-		text-align: right;
+        justify-content: right;
+        align-items: right;
+        text-align: right;
         border-radius: 5px;
-        /* opacity: 0.5; */
         color: white;
         border: none;
     }
-	.modalBackground {
+    .modalBackground {
         transition: 1s;
         position: fixed;
         top: 0;
@@ -155,7 +194,7 @@ import HistoricButton from "../buttons/historicButton.svelte";
         background-color: #252525;
         top: 0;
         left: 0;
-        width: 625px;
+        width: 650px;
         height: 300px;
         display: block;
         flex-direction: column;
@@ -164,7 +203,7 @@ import HistoricButton from "../buttons/historicButton.svelte";
         text-align: center;
         border-radius: 8px;
     }
-	.btnPopConfirm {
+    .btnPopConfirm {
         margin: 0%;
         padding: 0%;
         background-color: transparent;
@@ -187,24 +226,24 @@ import HistoricButton from "../buttons/historicButton.svelte";
         transition: all 1s;
         opacity: 0.8;
     }
-	.closePopDiv {
+    .closePopDiv {
         font-size: 12px;
         flex-direction: row;
-		justify-content: right;
-		align-items: right;
-		text-align: right;
+        justify-content: right;
+        align-items: right;
+        text-align: right;
         margin-right: 2%;
         margin-top: 1%;
         padding: 0%;
     }
-	select {
+    select {
         width: 350px;
         height: 25px;
         background-color: #252525;
         border-radius: 6px;
         color: #fff;
     }
-	option {
+    option {
         font-size: 18px;
         background-color: #252525;
     }
@@ -217,7 +256,7 @@ import HistoricButton from "../buttons/historicButton.svelte";
         align-items: left;
         text-align: left;
     }
-	.optionsBar {
+    .optionsBar {
         margin-bottom: 10px;
         padding: 0%;
         justify-content: left;
@@ -234,53 +273,29 @@ import HistoricButton from "../buttons/historicButton.svelte";
         align-items: left;
         text-align: left;
     }
-	.modalContent {
+    .modalContent {
         margin-left: 25px;
         margin-top: 0%;
         margin-bottom: 0%;
         margin-right: 0%;
     }
-	.btn{
-		margin-left: 25px;
-		border: grey;
-		padding: 0%;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		text-align: center;
-	}
-	.buttonNav {
-		display: flex;
-		flex-direction: row;
-		justify-content: center;
-		align-items: center;
-		text-align: center;
-	}
-	.fullTitle {
-		display: flex;
-		flex-direction: row;
-		justify-content: left;
-		align-items: center;
-		text-align: center;
-		margin-bottom: 1%;
-		margin-left: 1%;
-		padding: 0%;
-	}
-	.title {
-		display: flex;
-		justify-content: left;
-		align-items: left;
-		text-align: left;
-	}
-
-	main {
-		margin-top: 5px;
-	}
-	h1 {
-		margin: 0%;
-		padding: 0%;
-	}
-	/* @media screen and (max-width: 500px) {
+    .nav-area {
+        height: fit-content;
+        width: 100%;
+        margin-top: 20px;
+        margin-left:0px;
+        margin-right: 0px;
+        margin-bottom: 10px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 0px;
+    }
+    h1 {
+        margin: 0%;
+        padding: 0%;
+    }
+    /* @media screen and (max-width: 500px) {
 		#title {
 		font-size: 25px;
 		margin-top: 1%;

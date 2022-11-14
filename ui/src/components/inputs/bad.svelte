@@ -1,22 +1,32 @@
 <script>
     // @ts-nocheck
-    import Sanitize from '../../routes/sanitize.svelte';
-    let title = 'RUINS:';
+    import Sanitize from '../../routes/sanitize.svelte'
+    let title = 'RUINS';
 </script>
 
-<div class='input-area'>
-    <div class='title'>
-        <p>{title}</p>
+<main>
+    <div class='input-area'>
+        <div class='title'>
+            <p>{title}</p>
+        </div>
+        <div class='input-field'>
+            <!-- on:input={Sanitize}  -->
+            <input tabindex='2' autofocus 
+            type='text' />
+        </div>
     </div>
-    <div class='input-field'>
-        <input tabindex='2' autofocus on:input={Sanitize} type='text' />
-    </div>
-</div>
+
+</main>
 
 <style>
+    p{
+        margin: 0%;
+        padding: 0%;
+        font-size: 37px;
+    }
     .input-area {
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         text-align: center;
@@ -24,7 +34,6 @@
         width: fit-content;
         padding: 0%;
         margin: 0%;
-        font-size: 30px;
     }
 
     input {

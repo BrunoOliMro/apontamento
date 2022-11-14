@@ -18,7 +18,7 @@
         outline: none;
         margin: 0%;
         padding: 0%;
-        font-size: 14px;
+        font-size: 20px;
         width: 120px;
         height: 30px;
         display: flex;
@@ -26,10 +26,10 @@
         text-align: center;
         align-items: center;
         border-radius: 6px;
-        background-color: #999999; 
+        background-color: white; 
         border: none;
         color: black;
-        border-color: grey;
+        border-color: #999999;
         box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
         letter-spacing: 1px;
     }
@@ -37,7 +37,6 @@
     .sideButton:hover {
         outline: none;
         cursor: pointer;
-        background-color: black;
         color: red;
         transition: all 1s;
     }

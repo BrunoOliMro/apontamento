@@ -1,6 +1,6 @@
 <script>
     // @ts-nocheck
-    import Sanitize from "src/routes/sanitize.svelte";
+    import Sanitize from '../../routes/sanitize.svelte'
     import ModalConfirmation from "../modal/modalConfirmation.svelte";
     let searchIcon = `/images/search.png`;
     let imageLoader = `/images/axonLoader.gif`;
@@ -138,13 +138,13 @@
                     Insira um supervisor para continuar
                 </h3>
 
+                <!-- on:input={Sanitize} -->
+                <!-- autofocus -->
+                <!-- tabindex="8" -->
                 <input
-                    autofocus
                     autocomplete="off"
-                    tabindex="8"
                     bind:value={supervisor}
                     on:keypress={checkForSuper}
-                    on:input={Sanitize}
                     name="supervisor"
                     id="supervisor"
                     type="text"
@@ -187,29 +187,33 @@
 <style>
     .containerIcon{
         position: relative;
+        display: flex;
+        justify-content: left;
+        align-self: left;
+        text-align: left;
         margin: 0%;
         padding: 0%;
     }
     .iconSearch{
-        width: 20px;
-        height: 20px;
+        width: 25px;
+        height: 25px;
         display: block;
         top: 450px;
-        left: 425px;
+        left: 430px;
         /* bottom: 400px; */
         position: absolute;
         z-index: 999999999999;
     }
     .img{
-        height: 425px;
-        width: 425px;
+        height: 474px;
+        width: 460px;
         z-index: 1;
     }
     .conj {
         display: flex;
         flex-direction: row;
-        align-items: center;
-        text-align: center;
+        align-items: left;
+        text-align: left;
         justify-content: left;
         margin: 0%;
         padding: 0%;
@@ -247,7 +251,7 @@
     input {
         border-radius: 12px;
         height: 40px;
-        width: 375px;
+        width: 378px;
     }
     .modalSubtitle {
         display: flex;
@@ -333,13 +337,15 @@
     #tempoDecorrido {
         margin: 0%;
         padding: 0%;
-        border-radius: 4px 0px 0px 4px;
+        border-radius: 6px 0px 0px 6px;
         border-color: grey;
         box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
         display: flex;
-        justify-content: flex-end;
-        width: 55px;
-        height: 400px;
+        justify-content: left;
+        align-items: left;
+        text-align: left;
+        width: 70px;
+        height: 478px;
     }
     div {
         margin: 5%;

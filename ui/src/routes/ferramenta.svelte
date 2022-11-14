@@ -3,13 +3,14 @@
   let imageLoader = "/images/axonLoader.gif";
   let urlString = `/api/v1/ferramenta`;
   let urlFer = `/api/v1/ferselecionadas`;
-  let fetchItem = [];
+  let tools = [];
   let loader = true
-  getfetchItem();
+  getTools();
   let fer = [];
   let adicionados = 0;
   let arrayComp = [];
   export let breadFer;
+  let message = ''
 
   async function ferSelected() {
     const res = await fetch(urlFer);
@@ -21,17 +22,40 @@
     }
   }
 
-  async function getfetchItem() {
+  async function getTools() {
     const res = await fetch(urlString);
-    fetchItem = await res.json();
-    console.log("fetch item", fetchItem);
-    if (fetchItem.message === "/images/sem_imagem.gif") {
+    tools = await res.json();
+    console.log("tools linha 28", tools);
+
+    if(tools.message === `codeApont 2 setup finalizado`){
+      message = `codeApont 2 setup finalizado`
+      ferSelected()
+    }
+
+    if(tools.message === `codeApont 3 prod iniciado`){
+      message = `codeApont 3 prod iniciado`
+      window.location.href = "/#/codigobarras/apontamento";
+    }
+
+    if(tools.message === 'codeApont 5 maquina parada'){
+      message = 'codeApont 5 maquina parada'
+      window.location.href = "/#/codigobarras";
+      location.reload()
+    }
+
+    if(tools.message === `codeApont 6 processo finalizado`){
+      message = `codeApont 6 processo finalizado`
+      window.location.href = "/#/codigobarras";
+      location.reload()
+    }
+
+
+    if (tools.message === "/images/sem_imagem.gif") {
       ferSelected();
     }
-    if (fetchItem.length > 0) {
+
+    if (tools.length > 0) {
       loader = false
-      //localStorage.setItem('breadFer', 'true')
-      //breadFer = true
     }
   }
 
@@ -42,13 +66,13 @@
       document.getElementById(imgId).style.border = "2px solid green";
       document.getElementById(imgId).style.transition = "1px";
     }
-    if (fetchItem.length === arrayComp.length) {
+    if (tools.length === arrayComp.length) {
       loader = true
       ferSelected();
     }
   }
 
-  //let resultPromises = getfetchItem();
+  //let resultPromises = getTools();
 </script>
 
 {#if breadFer === true}
@@ -67,7 +91,7 @@
   </div>
 </div>
 {/if}
-{#await fetchItem}
+{#await tools}
   <div class="imageLoader">
     <div class="loader">
       <img src={imageLoader} alt="" />

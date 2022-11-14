@@ -1,7 +1,7 @@
 <script>
   // @ts-nocheck
-  let imageLoader = "/images/axonLoader.gif";
   import TableHistorico from "../components/Tables/TableHistorico.svelte";
+  let imageLoader = "/images/axonLoader.gif";
   let subtitle = "Histórico de Apontamento";
   let historicData = [];
   let urlString = `/api/v1/historic`;
@@ -125,8 +125,8 @@
     width: 100px;
     height: 30px;
     border: none;
-    background-color: #999999;
-    border-color: grey;
+    background-color: white;
+    border-color: #999999;
     box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
     letter-spacing: 1px;
     border-radius: 6px;
@@ -136,6 +136,7 @@
     /* width: 98%; */
     margin: 0%;
     padding: 0%;
+    font-size: 25px;
   }
   /* button{
     width: 100px;
@@ -172,8 +173,8 @@
   .btnMessage:hover {
     opacity: 0.8;
     transition: all 1s;
-    color: white;
-    background-color: black;
+    background-color: white;
+    color: black;
   }
   .message {
     height: 200px;

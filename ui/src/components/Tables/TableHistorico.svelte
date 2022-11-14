@@ -58,6 +58,10 @@
         padding: 0%;
     } */
 
+    .tabelahistorico{
+        font-size: 25px;
+    }
+
     tr {
         background-color: white;
         text-align: center;

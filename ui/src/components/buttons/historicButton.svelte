@@ -1,5 +1,7 @@
 <a class="out" href="/#/historico/"
-    ><button type="button" class="sideButton"> Histórico </button>
+    ><button type="button" class="sideButton">
+        <p>Histórico</p>
+    </button>
 </a>
 
 <style>
@@ -8,11 +10,16 @@
         /* color: black; */
     }
 
+    p{
+        font-size: 20px;
+        margin: 0%;
+        padding: 0%;
+    }
+
     .sideButton {
         outline: none;
         margin: 0%;
         padding: 0%;
-        font-size: 14px;
         width: 120px;
         height: 30px;
         display: flex;
@@ -20,22 +27,22 @@
         text-align: center;
         align-items: center;
         border-radius: 6px;
-        background-color: #999999;
+        background-color: white;
         border: none;
         color: black;
-        border-color: grey;
+        border-color: #999999;
         box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
         letter-spacing: 1px;
     }
 
     .sideButton:hover {
         cursor: pointer;
-        background-color: black;
-        color: white;
+        background-color: white;
+        color: blue;
         transition: all 1s;
     }
 
-    a:hover{
+    a:hover {
         text-decoration: none;
     }
 </style>

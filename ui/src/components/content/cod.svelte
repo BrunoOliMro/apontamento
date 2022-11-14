@@ -1,6 +1,6 @@
 <script>
     // @ts-nocheck
-    import Footer from "./footer.svelte";
+    import Footer from './footer.svelte'
     import ModalConfirmation from '../modal/modalConfirmation.svelte'
     let imageLoader = "/images/axonLoader.gif";
     let urlString = `/api/v1/odf`;
@@ -26,6 +26,17 @@
         if (odfData.message === "codeApont 4 prod finalizado") {
             message = "codeApont 4 prod finalizado";
         }
+
+        if (odfData.message === 'usuario diferente') {
+            message = 'usuario diferente';
+
+        }
+
+        if (odfData.message === "codeApont 3 prod ini") {
+            message = "codeApont 3 prod ini";
+        }
+
+
     }
 
     function redirect() {
@@ -44,51 +55,65 @@
 {:then itens}
     <main>
         <div class="areaCodigos">
-            <p class="odf">ODF:</p>
-            <p class="bold">
-                {odfData.odfSelecionada.NUMERO_ODF === null ||
-                !odfData.odfSelecionada.NUMERO_ODF
-                    ? "S/I"
-                    : odfData.odfSelecionada.NUMERO_ODF}
-            </p>
-            <p class="odf">Cód. Interno:</p>
-            <p class="bold">
-                {odfData.odfSelecionada.CODIGO_PECA === null ||
-                !odfData.odfSelecionada.CODIGO_PECA
-                    ? "S/I"
-                    : odfData.odfSelecionada.CODIGO_PECA}
-            </p>
-            <p class="odf">Cód. do Cliente:</p>
-            <p class="bold">
-                {odfData.odfSelecionada.CODIGO_CLIENTE === null ||
-                !odfData.odfSelecionada.CODIGO_CLIENTE
-                    ? "S/I"
-                    : odfData.odfSelecionada.CODIGO_CLIENTE}
-            </p>
-            <p class="odf">Operador:</p>
-            <p class="bold">
-                {employeName.FUNCIONARIO === null || !employeName.FUNCIONARIO
-                    ? "S/I"
-                    : employeName.FUNCIONARIO}
-            </p>
-            <p class="odf">OP:</p>
-            <p class="bold">
-                {odfData.odfSelecionada.NUMERO_OPERACAO === null ||
-                !odfData.odfSelecionada.NUMERO_OPERACAO
-                    ? "S/I"
-                    : odfData.odfSelecionada.NUMERO_OPERACAO} -
-                {odfData.odfSelecionada.CODIGO_MAQUINA === null ||
-                !odfData.odfSelecionada.CODIGO_MAQUINA
-                    ? "S/I"
-                    : odfData.odfSelecionada.CODIGO_MAQUINA} -
-                {odfData.odfSelecionada.QTDE_ODF === null ||
-                !odfData.odfSelecionada.QTDE_ODF
-                    ? "S/I"
-                    : odfData.odfSelecionada.QTDE_ODF}
-            </p>
-        </div>
-        <div>
-            <Footer />
+            <div class="odf-area">
+                <p class="odf">ODF:</p>
+                <p class="bold">
+                    {odfData.odfSelecionada.NUMERO_ODF === null ||
+                    !odfData.odfSelecionada.NUMERO_ODF
+                        ? "S/I"
+                        : odfData.odfSelecionada.NUMERO_ODF}
+                </p>
+            </div>
+
+            <hr>
+
+            <div class="odf-area">
+                <p class="odf">Cód. Interno:</p>
+                <p class="bold">
+                    {odfData.odfSelecionada.CODIGO_PECA === null ||
+                    !odfData.odfSelecionada.CODIGO_PECA
+                        ? "S/I"
+                        : odfData.odfSelecionada.CODIGO_PECA}
+                </p>
+            </div>
+
+            <hr>
+            <div class="odf-area">
+                <p class="odf">Cód. do Cliente:</p>
+                <p class="bold">
+                    {odfData.odfSelecionada.CODIGO_CLIENTE === null ||
+                    !odfData.odfSelecionada.CODIGO_CLIENTE
+                        ? "S/I"
+                        : odfData.odfSelecionada.CODIGO_CLIENTE}
+                </p>
+            </div>
+            <hr>
+            <div class='odf-area'>
+                <p class="odf">OP:</p>
+                <p class="bold">
+                    {odfData.odfSelecionada.NUMERO_OPERACAO === null ||
+                    !odfData.odfSelecionada.NUMERO_OPERACAO
+                        ? "S/I"
+                        : odfData.odfSelecionada.NUMERO_OPERACAO} -
+                    {odfData.odfSelecionada.CODIGO_MAQUINA === null ||
+                    !odfData.odfSelecionada.CODIGO_MAQUINA
+                        ? "S/I"
+                        : odfData.odfSelecionada.CODIGO_MAQUINA} -
+                    {odfData.odfSelecionada.QTDE_ODF === null ||
+                    !odfData.odfSelecionada.QTDE_ODF
+                        ? "S/I"
+                        : odfData.odfSelecionada.QTDE_ODF}
+                </p>
+            </div>
+            <hr>
+            <div class="odf-area">
+                <p class="odf">Operador:</p>
+                <p class="bold">
+                    {employeName.FUNCIONARIO === null || !employeName.FUNCIONARIO
+                        ? "S/I"
+                        : employeName.FUNCIONARIO}
+                </p>
+            </div>
         </div>
     </main>
 {/await}
@@ -128,7 +153,7 @@
     }
     .bold {
         font-weight: bold;
-        font-size: 28px;
+        font-size: 24px;
     }
     .areaCodigos {
         margin-left: 5px;
@@ -145,7 +170,7 @@
         margin: 0%;
         padding: 0%;
         display: flex;
-        font-size: 26px;
+        font-size: 22px;
         justify-content: flex-start;
         align-items: flex-start;
         text-align: flex-start;

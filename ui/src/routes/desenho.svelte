@@ -1,5 +1,5 @@
 <script>
-    import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
+    // import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
     const imageLoader = "/images/axonLoader.gif";
     let back = "/images/icons8-go-back-24.png";
 

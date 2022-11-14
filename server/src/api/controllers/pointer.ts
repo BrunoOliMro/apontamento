@@ -156,7 +156,7 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
     } catch (error) {
         console.log('linha 141', error);
     }
-    console.log("linha 139");
+    console.log("linha 139", message);
 
     if (message === 'codeApont 4 prod finalzado') {
         return res.json({ message: 'codeApont 4 prod finalzado' })
@@ -172,6 +172,8 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
     }
 
     let data: any = await selectToKnowIfHasP(dados)
+
+    console.log('data', data);
     if (data! === 'não foi necessario reservar') {
         return res.json({ message: 'não foi necessario reservar' })
     }

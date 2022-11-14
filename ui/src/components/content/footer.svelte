@@ -27,7 +27,6 @@
     anoFim = dadosOdf.odfSelecionada.DT_FIM_OP.slice(0, 4);
     horaFinal = dadosOdf.odfSelecionada.HORA_FIM.slice(11, 19);
   }
-
   let resultado = getOdfData();
 </script>
 
@@ -39,21 +38,39 @@
   </div>
 {:then itens}
   <main class="main">
-    <div class="div1">
+    <div class="text-area">
       <div class="title">INICIO</div>
-      {dataInicio} / {meioInicio} / {anoInicio} - {(horaInicio =
-        horaInicio === null ? "S/I" : horaInicio)}
+      <div class="data-time">
+        {dataInicio} / {meioInicio} / {anoInicio} - {(horaInicio =
+          horaInicio === null ? "S/I" : horaInicio)}
+      </div>
     </div>
 
-    <div class="div2">
+    <div class="text-area">
       <div class="title">FINAL</div>
-      {dataFim} / {meioFim} / {anoFim} - {(horaFinal =
-        horaFinal === null ? "S/I" : horaFinal)}
+      <div class="data-time">
+        {dataFim} / {meioFim} / {anoFim} - {(horaFinal =
+          horaFinal === null ? "S/I" : horaFinal)}
+      </div>
     </div>
   </main>
 {/await}
 
 <style>
+  .data-time {
+    display: flex;
+    margin-left: 0px;
+    padding: 0%;
+  }
+  .text-area {
+    display: flex;
+    flex-direction: column;
+    margin: 0%;
+    padding: 0%;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
   .loader {
     margin: 0%;
     position: relative;
@@ -80,28 +97,25 @@
     z-index: 999999999999;
   }
   main {
-    font-size: 25px;
-    margin-top: 20px;
+    font-size: 24px;
     font-weight: bold;
-    /* justify-content: space-around; */
-    /* align-items: right; */
-    /* text-align: right; */
     width: 100%;
     padding: 0%;
-    flex-direction: column;
+    flex-direction: row;
     display: flex;
+    justify-content: space-around;
     letter-spacing: 1px;
-
+    margin: 0%;
     /* border-color: grey;
     box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
     border-radius: 5px; */
   }
-  div {
+  /* div {
     margin: 0%;
     justify-content: center;
     align-items: center;
     text-align: center;
-  }
+  } */
 
   /* .div2 {
     margin-left: 41%;
@@ -109,6 +123,7 @@
   .title {
     font-size: 21;
     font-weight: normal;
+    margin: 0%;
   }
 
   /* @media screen and (max-width: 574px) {

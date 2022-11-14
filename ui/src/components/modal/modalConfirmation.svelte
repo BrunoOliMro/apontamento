@@ -37,7 +37,7 @@
         background-color: #252525;
         top: 0;
         left: 0;
-        width: 550px;
+        width: 600px;
         height: 250px;
         display: block;
         flex-direction: column;

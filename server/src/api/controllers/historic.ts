@@ -14,7 +14,7 @@ export const historic: RequestHandler = async (req, res) => {
         FROM VW_APP_APONTAMENTO_HISTORICO_DETALHADO
         WHERE 1 = 1
         AND ODF = '${NUMERO_ODF}'
-        ORDER BY OP, DATAHORA ASC
+        ORDER BY DATAHORA DESC
         `.trim()).then(result => result.recordset)
 
         const resourceDetail = await connection.query(`

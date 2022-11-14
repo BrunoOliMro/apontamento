@@ -1,7 +1,7 @@
 <script>
     // @ts-nocheck
-    import Sanitize from 'src/routes/sanitize.svelte';
-    let title = 'RETRABALHAR:';
+    import Sanitize from '../../routes/sanitize.svelte'
+    let title = 'RETRABALHAR';
 </script>
 
 <div class='input-area'>
@@ -9,14 +9,21 @@
         <p>{title}</p>
     </div>
     <div class='input-field'>
-        <input on:input={Sanitize} tabindex='4' autofocus type='text' />
+        <!-- on:input={Sanitize}  -->
+        <input 
+        tabindex='4' autofocus type='text' />
     </div>
 </div>
 
 <style>
+    p{
+        margin: 0%;
+        padding: 0%;
+        font-size: 37px;
+    }
     .input-area {
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         text-align: center;
@@ -24,7 +31,6 @@
         height: fit-content;
         padding: 0%;
         margin: 0%;
-        font-size: 30px;
     }
 
     input {

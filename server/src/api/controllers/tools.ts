@@ -74,14 +74,6 @@ export const selectedTools: RequestHandler = async (req, res) => {
     const revisao = Number(sanitize(req.cookies['REVISAO'])) || 0
     const qtdLibMax = Number(sanitize(req.cookies['qtdLibMax'])) || 0
 
-    // console.log("linha 78", numero_odf);
-    // console.log("linha 78", numeroOperacao);
-    // console.log("linha 78", codigoMaq);
-    // console.log("linha 78", codigoPeca);
-    // console.log("linha 78", funcionario);
-    // console.log("linha 78", revisao);
-    // console.log("linha 78", qtdLibMax);
-
     //Encerra o primeiro tempo de setup
     const end = Number(new Date().getTime()) || 0;
     const start = Number(req.cookies['starterBarcode']) || 0

@@ -1,7 +1,7 @@
 <script>
   // @ts-nocheck
   import ModalConfirmation from "../../src/components/modal/modalConfirmation.svelte";
-  import Title from "../components/title/title.svelte";
+    import Sanitize from '../routes/sanitize.svelte'
   let imageLoader = "/images/axonLoader.gif";
   let codigoBarrasReturn = "";
   let codigoBarras = "";
@@ -33,7 +33,17 @@
     badgeMsg = window.location.href.split("?")[1].split("=")[1];
   }
 
+  const checkPostSuper = async (event) =>{
+    if (superSuperMaqPar.length >= 6 && event.key === "Enter") {
+      if (superSuperMaqPar === "000000") {
+        modalMessage = "Crachá inválido";
+      }
+      doPostSuper();
+    }
+  }
+  
   const doPostSuper = async () => {
+    console.log("linha 37", superSuperMaqPar);
     loader = true;
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
@@ -65,19 +75,28 @@
     }
   };
 
-  function blockForbiddenChars(e) {
-    let value = e.target.value;
-    e.target.value = preSanitize(value);
-  }
-  function preSanitize(input) {
-    const allowedChars = /[A-Za-z0-9]/;
-    const sanitizedOutput = input
-      .split("")
-      .map((char) => (allowedChars.test(char) ? char : ""))
-      .join("");
-    return sanitizedOutput;
-  }
+  // function Sanitize(e) {
+  //   let value = e.target.value;
+  //   e.target.value = preSanitize(value);
+  // }
+  // function preSanitize(input) {
+  //   const allowedChars = /[A-Za-z0-9]/;
+  //   const sanitizedOutput = input
+  //     .split("")
+  //     .map((char) => (allowedChars.test(char) ? char : ""))
+  //     .join("");
+  //   return sanitizedOutput;
+  // }
 
+  // async function getBer(){
+  //   const res = await fetch(urlS).then(res => res.json())
+  //   console.log("linha res linha 93", res);
+  //   if(res.message === 'usuario diferente'){
+  //     console.log("linha 110/barcode /" , res.message);
+  //   }
+  // }
+
+  // getBer()
   const doPost = async () => {
     loader = true;
     const headers = new Headers();
@@ -90,43 +109,44 @@
       }),
     }).then((res) => res.json());
     console.log("res", res);
-    if (
-      res.message === "codeApont 1 setup iniciado" ||
-      res.message === "insira cod 1" ||
-      res.message === "não foi necessario reservar" ||
-      res.message === "valores reservados"
-    ) {
-      loader = false;
-      window.location.href = "/#/ferramenta";
-    }
 
-    if (res.message === "codeApont 3 prod iniciado") {
-      //console.log("linha 118 barcode");
-      loader = false;
-      window.location.href = "/#/codigobarras/apontamento";
+    if(res.message === 'usuario diferente'){
+      console.log("linha 110/barcode /" , res.message);
     }
-    if (res.message === "codeApont 4 prod finalzado") {
-      window.location.href = "/#/rip";
-    }
-    if (res.message === "codeApont 5 maquina parada") {
-      //console.log("linha 128");
-      loader = false;
-      superParada = true;
-    }
-    if (res.message === "codigo de barras vazio") {
-      modalMessage = "Código de barras vazio";
-      //barcodeMsg = "codigo de barras vazio";
-    }
-    if (res.message === "odf não encontrada") {
-      modalMessage = "ODF não encontrada";
-      loader = false;
-      //barcodeMsg = "odf não encontrada";
-    }
-    if (res.message === "não há limite na odf") {
-      modalMessage = "Não há limite na ODF";
-      loader = false;
-      //barcodeMsg = "não há limite na odf";
-    }
+    // if (
+    //   res.message === "codeApont 1 setup iniciado" ||
+    //   res.message === "insira cod 1" ||
+    //   res.message === "não foi necessario reservar" ||
+    //   res.message === "valores reservados"
+    // ) {
+    //   loader = false;
+    //   window.location.href = "/#/ferramenta";
+    // }
+
+    // if (res.message === "codeApont 3 prod iniciado") {
+    //   loader = false;
+    //   window.location.href = "/#/codigobarras/apontamento";
+    // }
+    // if (res.message === "codeApont 4 prod finalzado") {
+    //   window.location.href = "/#/rip";
+    // }
+    // if (res.message === "codeApont 5 maquina parada") {
+    //   loader = false;
+    //   superParada = true;
+    // }
+    // if (res.message === "codigo de barras vazio") {
+    //   modalMessage = "Código de barras vazio";
+    //   //barcodeMsg = "codigo de barras vazio";
+    // }
+    // if (res.message === "odf não encontrada") {
+    //   modalMessage = "ODF não encontrada";
+    //   loader = false;
+    //   //barcodeMsg = "odf não encontrada";
+    // }
+    // if (res.message === "não há limite na odf") {
+    //   modalMessage = "Não há limite na ODF";
+    //   loader = false;
+    // }
   };
 
   function writeOnHand(event) {
@@ -317,13 +337,14 @@
             id="supervisor"
             name="supervisor"
             type="text"
-            on:input={blockForbiddenChars}
+            on:input={Sanitize}
+            on:keypress={checkPostSuper}
             onkeyup="this.value = this.value.toUpperCase()"
             bind:value={superSuperMaqPar}
           />
-          <p tabindex="13" on:keypress={doPostSuper} on:click={doPostSuper}>
+          <!-- <p tabindex="13" on:keypress={checkPostSuper} >
             Confirmar
-          </p>
+          </p> -->
         </div>
       </div>
     {/if}
@@ -528,7 +549,7 @@
               autofocus
               tabindex="26"
               on:keypress={closePopCor}
-              on:input={blockForbiddenChars}
+              on:input={Sanitize}
               class="btnPop"
               type="text">FECHAR</button
             >
@@ -545,7 +566,7 @@
             autocomplete="off"
             autofocus
             on:keypress={writeOnHand}
-            on:input|preventDefault={blockForbiddenChars}
+            on:input|preventDefault={Sanitize}
             bind:value={codigoBarras}
             onkeyup="this.value = this.value.toUpperCase()"
             name="MATRIC"
@@ -564,7 +585,7 @@
             autocomplete="off"
             autofocus
             on:keypress={checkBeforeBadge}
-            on:input|preventDefault={blockForbiddenChars}
+            on:input|preventDefault={Sanitize}
             bind:value={cracha}
             onkeyup="this.value = this.value.toUpperCase()"
             name="MATRIC"
@@ -587,7 +608,7 @@
           tabindex="14"
           bind:value={supervisor}
           class="returnInput"
-          on:input={blockForbiddenChars}
+          on:input={Sanitize}
           onkeyup="this.value = this.value.toUpperCase()"
           type="text"
           name="supervisor"
@@ -610,7 +631,7 @@
         <h4>Insira a quantidade que deseja estornar</h4>
         <input
           tabindex="15"
-          on:input={blockForbiddenChars}
+          on:input={Sanitize}
           autocomplete="off"
           class="returnInput"
           onkeyup="this.value = this.value.toUpperCase()"
@@ -622,7 +643,7 @@
         <h4>CÓDIGO DE BARRAS DA ODF</h4>
         <input
           tabindex="16"
-          on:input={blockForbiddenChars}
+          on:input={Sanitize}
           autocomplete="off"
           class="returnInput"
           onkeyup="this.value = this.value.toUpperCase()"
@@ -867,7 +888,7 @@
     background-color: #252525;
     top: 0;
     left: 0;
-    width: 550px;
+    width: 600px;
     height: 250px;
     display: block;
     flex-direction: column;

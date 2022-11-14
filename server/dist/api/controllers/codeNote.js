@@ -10,45 +10,61 @@ const unravelBarcode_1 = require("../utils/unravelBarcode");
 const codeNote = async (req, res, next) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let dados = (0, unravelBarcode_1.unravelBarcode)(req.body.codigoBarras);
+    console.log("linha 7 code note", dados);
+    const numeroOdf = Number(req.cookies['NUMERO_ODF']) || 0;
+    const codigoOper = req.cookies['NUMERO_OPERACAO'];
+    const codigoMaq = req.cookies['CODIGO_MAQUINA'];
+    const funcionario = req.cookies['FUNCIONARIO'];
     try {
         const codIdApontamento = await connection.query(`
             SELECT 
-            TOP 1 
+            TOP 1
+            USUARIO,
+            ODF,
+            NUMOPE, 
+            ITEM,
             CODAPONTA 
             FROM 
             HISAPONTA 
             WHERE 1 = 1 
-            AND ODF = '${dados.numOdf}'
+            AND ODF = ${dados.numOdf}
             AND NUMOPE = '${dados.numOper}'
             AND ITEM = '${dados.codMaq}'
             ORDER BY DATAHORA DESC
             `)
             .then(result => result.recordset);
-        console.log('linha 23 codeNote', codIdApontamento);
+        let lastEmployee = codIdApontamento[0]?.USUARIO;
+        console.log('linha 44', funcionario);
+        console.log("linha 45", lastEmployee);
+        let numeroOdfDB = codIdApontamento[0]?.ODF;
+        let codigoOperDB = codIdApontamento[0]?.NUMOPE;
+        let codigoMaqDB = codIdApontamento[0]?.ITEM;
+        if (lastEmployee !== funcionario
+            && numeroOdf === numeroOdfDB
+            && codigoOper === codigoOperDB
+            && codigoMaq === codigoMaqDB) {
+            console.log("usuario diferente");
+            return res.json({ message: 'usuario diferente' });
+        }
         if (codIdApontamento.length > 0) {
             if (codIdApontamento[0]?.CODAPONTA === 1) {
                 req.body.message = 'codeApont 1 setup iniciado';
                 next();
             }
             if (codIdApontamento[0]?.CODAPONTA === 2) {
-                req.body.message = 'codeApont 2 setup finalizado';
-                next();
             }
             if (codIdApontamento[0]?.CODAPONTA === 3) {
-                req.body.message = 'codeApont 3 prod iniciado';
-                next();
+                return res.json({ message: `codeApont 3 prod iniciado` });
             }
             if (codIdApontamento[0]?.CODAPONTA === 4) {
-                req.body.message = 'codeApont 4 prod finalzado';
-                next();
             }
             if (codIdApontamento[0]?.CODAPONTA === 5) {
                 req.body.message = 'codeApont 5 maquina parada';
+                console.log('52', req.body.message);
                 next();
             }
             if (codIdApontamento[0]?.CODAPONTA === 6) {
-                req.body.message = 'codeApont 6 processo finalizado';
-                next();
+                return res.json({ message: `codeApont 6 processo finalizado` });
             }
             if (codIdApontamento[0]?.CODAPONTA === 7) {
                 req.body.message = 'codeApont 7 estorno realizado';

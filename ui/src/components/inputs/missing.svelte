@@ -1,5 +1,5 @@
 <script>
-    let title = 'FALTANTE:';
+    let title = 'FALTANTE';
 </script>
 
 
@@ -11,26 +11,20 @@
         <input
             autofocus
             tabindex='3'
-            class='input'
-            id='missingFeed'
             type='text'
-            name='missingFeed'
         />
     </div>
 </div>
 
 <style>
-    .title{
-        margin: 2%;
-        padding: 0%
-    }
     p{
         margin: 0%;
         padding: 0%;
+        font-size: 37px;
     }
     .input-area {
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         text-align: center;
@@ -38,12 +32,11 @@
         width: fit-content;
         padding: 0%;
         margin: 0%;
-        font-size: 30px;
     }
 
     input {
         width: 115px;
-        height: 45px;
+        height: 40px;
         margin-left: 0%;
         padding: 0%;
         border-radius: 8px;

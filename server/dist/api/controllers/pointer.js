@@ -119,7 +119,7 @@ const pointerPost = async (req, res, next) => {
     catch (error) {
         console.log('linha 141', error);
     }
-    console.log("linha 139");
+    console.log("linha 139", message);
     if (message === 'codeApont 4 prod finalzado') {
         return res.json({ message: 'codeApont 4 prod finalzado' });
     }
@@ -130,6 +130,7 @@ const pointerPost = async (req, res, next) => {
         return res.json({ message: 'qualquer outro codigo' });
     }
     let data = await (0, selectIfHasP_1.selectToKnowIfHasP)(dados);
+    console.log('data', data);
     if (data === 'não foi necessario reservar') {
         return res.json({ message: 'não foi necessario reservar' });
     }
