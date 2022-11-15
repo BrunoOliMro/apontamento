@@ -1,12 +1,41 @@
 import { RequestHandler } from 'express';
 import mssql from 'mssql';
 import { sqlConfig } from '../../global.config';
+//import { token } from '../utils/token';
 import { unravelBarcode } from '../utils/unravelBarcode';
 
 export const codeNote: RequestHandler = async (req, res, next) => {
     const connection = await mssql.connect(sqlConfig);
     let dados: any = unravelBarcode(req.body.codigoBarras)
-    console.log("linha 7 code note", dados);
+    console.log("linha 10 code note", dados);
+
+    console.log('linha 12', req.cookies);
+
+    const jwt = require('jsonwebtoken')
+    const token = req.cookies['token']
+    
+    //const authHeaders = req.headers["authorization"]
+    //const token = authHeaders && authHeaders.split(' ')
+
+    if(!token){
+        return res.json({message : 'Acesso negado'})
+    }
+
+    try{
+        let verifyToken = jwt.verify(token, process.env['JWT_SECRET_KEY'])
+
+        if(verifyToken === true){
+            next()
+        }
+    } catch(error){
+        return res.json({message : 'Token inválido'})
+    }
+
+    //const net = req.params
+
+    const {numOdf, numOper, codMaq} = dados
+
+    console.log("linha 45", numOdf);
 
  
     const numeroOdf: number = Number(req.cookies['NUMERO_ODF']) || 0
@@ -17,6 +46,10 @@ export const codeNote: RequestHandler = async (req, res, next) => {
     // console.log('linha 16', numeroOdf);
     // console.log('linha 17', codigoOper);
     // console.log('linha 18', codigoMaq);
+
+    // if(!numeroOdf){
+
+    // }
 
     try {
         const codIdApontamento = await connection.query(`
@@ -47,7 +80,7 @@ export const codeNote: RequestHandler = async (req, res, next) => {
             let codigoOperDB = codIdApontamento[0]?.NUMOPE
             let codigoMaqDB = codIdApontamento[0]?.ITEM
 
-
+            // If the user is diferent than the last user
             if(lastEmployee !== funcionario 
                 && numeroOdf === numeroOdfDB 
                 && codigoOper === codigoOperDB 

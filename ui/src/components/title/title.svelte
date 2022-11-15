@@ -12,7 +12,7 @@
     let value;
     let dados = [];
     let result = callMotivo();
-    let modalTitle = 'Máquina parada com sucesso'
+    let modalTitle = "Máquina parada com sucesso";
 
     function showStop() {
         if (stopModal === false) {
@@ -42,7 +42,7 @@
         }).then((res) => res.json());
         console.log("res", res);
         if (res.message === "maquina parada com sucesso") {
-            stopModal = false
+            stopModal = false;
             showMaqPar = true;
         }
     };
@@ -52,16 +52,36 @@
         dados = await res.json();
     }
 
-    function closeConfirm(){
+    function closeConfirm() {
         showMaqPar = false;
         stopModal = false;
         window.location.href = `/#/codigobarras`;
     }
+
+    let toolsBreadcrumb = document.cookie
+        .split(";")
+        .map((cookie) => cookie.split("="))
+        .reduce(
+            (accumulator, [key, value]) => ({
+                ...accumulator,
+                [key.trim()]: decodeURIComponent(value),
+            }),
+            {}
+        );
 </script>
 
 {#await result}
     <div>...</div>
 {:then item}
+    {#if toolsBreadcrumb === "true"}
+        <nav class="breadcrumb" aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/#/ferramenta">Ferramentas</a>
+                </li>
+            </ol>
+        </nav>
+    {/if}
     <div class="nav-area">
         <ul>
             <li class="fist-item-nav">
@@ -122,15 +142,15 @@
 {/if}
 
 {#if showMaqPar === true}
-    <ModalConfirmation title={modalTitle} on:message={closeConfirm}/>
+    <ModalConfirmation title={modalTitle} on:message={closeConfirm} />
 {/if}
 
 <style>
-    .fist-item-nav{
+    .fist-item-nav {
         margin: 0%;
         padding: 0%;
     }
-    .quatityAvai{
+    .quatityAvai {
         display: flex;
         flex-direction: row;
         justify-content: right;
@@ -140,7 +160,7 @@
         margin-top: 10px;
         padding: 0%;
     }
-    ul{
+    ul {
         height: fit-content;
         display: flex;
         justify-content: left;
@@ -149,7 +169,7 @@
         margin: 0%;
         padding: 0%;
     }
-    li{
+    li {
         justify-content: center;
         align-items: center;
         text-align: center;
@@ -283,7 +303,7 @@
         height: fit-content;
         width: 100%;
         margin-top: 20px;
-        margin-left:0px;
+        margin-left: 0px;
         margin-right: 0px;
         margin-bottom: 10px;
         display: flex;

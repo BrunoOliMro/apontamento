@@ -2,15 +2,15 @@
     // @ts-nocheck
     import Footer from './footer.svelte'
     import ModalConfirmation from '../modal/modalConfirmation.svelte'
-    let imageLoader = "/images/axonLoader.gif";
+    let imageLoader = '/images/axonLoader.gif';
     let urlString = `/api/v1/odf`;
     let odfData;
     let employeName;
     let resultOdf = getOdfData();
-    let message = "";
+    let message = '';
     employeName = document.cookie
-        .split(";")
-        .map((cookie) => cookie.split("="))
+        .split(';')
+        .map((cookie) => cookie.split('='))
         .reduce(
             (accumulator, [key, value]) => ({
                 ...accumulator,
@@ -22,9 +22,9 @@
     async function getOdfData() {
         const res = await fetch(urlString);
         odfData = await res.json();
-        console.log("linha 23 odfData/cod.svelte/", odfData);
-        if (odfData.message === "codeApont 4 prod finalizado") {
-            message = "codeApont 4 prod finalizado";
+        console.log('linha 23 odfData/cod.svelte/', odfData);
+        if (odfData.message === 'codeApont 4 prod finalizado') {
+            message = 'codeApont 4 prod finalizado';
         }
 
         if (odfData.message === 'usuario diferente') {
@@ -32,85 +32,94 @@
 
         }
 
-        if (odfData.message === "codeApont 3 prod ini") {
-            message = "codeApont 3 prod ini";
+        if (odfData.message === 'codeApont 3 prod ini') {
+            message = 'codeApont 3 prod ini';
         }
 
+        if(odfData.message === 'Acesso negado'){
+            message = 'Acesso Negado'
+        }
 
     }
 
     function redirect() {
-        message = "";
-        window.location.href = "/#/rip";
+        message = '';
+        window.location.href = '/#/rip';
         location.reload();
+    }
+
+    function redirectWithouPermissions(){
+        message = ''
+        window.location.href = '/#/codigobarras';
+        location.reload()
     }
 </script>
 
 {#await resultOdf}
-    <div class="imageLoader">
-        <div class="loader">
-            <img src={imageLoader} alt="" />
+    <div class='imageLoader'>
+        <div class='loader'>
+            <img src={imageLoader} alt='' />
         </div>
     </div>
 {:then itens}
     <main>
-        <div class="areaCodigos">
-            <div class="odf-area">
-                <p class="odf">ODF:</p>
-                <p class="bold">
+        <div class='areaCodigos'>
+            <div class='odf-area'>
+                <p class='odf'>ODF:</p>
+                <p class='bold'>
                     {odfData.odfSelecionada.NUMERO_ODF === null ||
                     !odfData.odfSelecionada.NUMERO_ODF
-                        ? "S/I"
+                        ? 'S/I'
                         : odfData.odfSelecionada.NUMERO_ODF}
                 </p>
             </div>
 
             <hr>
 
-            <div class="odf-area">
-                <p class="odf">Cód. Interno:</p>
-                <p class="bold">
+            <div class='odf-area'>
+                <p class='odf'>Cód. Interno:</p>
+                <p class='bold'>
                     {odfData.odfSelecionada.CODIGO_PECA === null ||
                     !odfData.odfSelecionada.CODIGO_PECA
-                        ? "S/I"
+                        ? 'S/I'
                         : odfData.odfSelecionada.CODIGO_PECA}
                 </p>
             </div>
 
             <hr>
-            <div class="odf-area">
-                <p class="odf">Cód. do Cliente:</p>
-                <p class="bold">
+            <div class='odf-area'>
+                <p class='odf'>Cód. do Cliente:</p>
+                <p class='bold'>
                     {odfData.odfSelecionada.CODIGO_CLIENTE === null ||
                     !odfData.odfSelecionada.CODIGO_CLIENTE
-                        ? "S/I"
+                        ? 'S/I'
                         : odfData.odfSelecionada.CODIGO_CLIENTE}
                 </p>
             </div>
             <hr>
             <div class='odf-area'>
-                <p class="odf">OP:</p>
-                <p class="bold">
+                <p class='odf'>OP:</p>
+                <p class='bold'>
                     {odfData.odfSelecionada.NUMERO_OPERACAO === null ||
                     !odfData.odfSelecionada.NUMERO_OPERACAO
-                        ? "S/I"
+                        ? 'S/I'
                         : odfData.odfSelecionada.NUMERO_OPERACAO} -
                     {odfData.odfSelecionada.CODIGO_MAQUINA === null ||
                     !odfData.odfSelecionada.CODIGO_MAQUINA
-                        ? "S/I"
+                        ? 'S/I'
                         : odfData.odfSelecionada.CODIGO_MAQUINA} -
                     {odfData.odfSelecionada.QTDE_ODF === null ||
                     !odfData.odfSelecionada.QTDE_ODF
-                        ? "S/I"
+                        ? 'S/I'
                         : odfData.odfSelecionada.QTDE_ODF}
                 </p>
             </div>
             <hr>
-            <div class="odf-area">
-                <p class="odf">Operador:</p>
-                <p class="bold">
+            <div class='odf-area'>
+                <p class='odf'>Operador:</p>
+                <p class='bold'>
                     {employeName.FUNCIONARIO === null || !employeName.FUNCIONARIO
-                        ? "S/I"
+                        ? 'S/I'
                         : employeName.FUNCIONARIO}
                 </p>
             </div>
@@ -118,9 +127,14 @@
     </main>
 {/await}
 
-{#if message === "codeApont 4 prod finalizado"}
+{#if message === 'codeApont 4 prod finalizado'}
     <ModalConfirmation on:message={redirect} />
 {/if}
+
+{#if message === 'Acesso negado'}
+    <ModalConfirmation on:message={redirectWithouPermissions} />
+{/if}
+
 
 <style>
     .loader {

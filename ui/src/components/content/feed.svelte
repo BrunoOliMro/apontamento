@@ -235,7 +235,7 @@
             showmodal = false;
         }
     };
-    //let results = Promise.all
+
 </script>
 
 {#if loader === true}
@@ -517,7 +517,7 @@
 {/await}
 
 <style>
-    .footer-area{
+    .footer-area {
         display: flex;
         width: 100%;
     }
@@ -536,7 +536,7 @@
         padding: 0%;
         width: 100%; */
     }
-    .feed-area-div{
+    .feed-area-div {
         margin: 4%;
     }
     .feed-content {

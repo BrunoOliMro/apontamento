@@ -54,6 +54,7 @@ export const tools: RequestHandler = async (req, res) => {
         }
 
         if (toolsImg.length > 0) {
+            res.cookie('tools', 'true')
             return res.json(result)
         }
 

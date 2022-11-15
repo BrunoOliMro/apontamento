@@ -11,10 +11,37 @@ const codeNote = async (req, res, next) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let dados = (0, unravelBarcode_1.unravelBarcode)(req.body.codigoBarras);
     console.log("linha 7 code note", dados);
+    const bcrypt = require('bcrypt');
+    const jwt = require('jsonwebtoker');
+    const secret = process.env['JWT_SECRET_KEY'];
+    const key = jwt.sign({
+        dados
+    }, secret);
+    console.log('linha 20', secret);
+    console.log("linha 22", key);
+    const authHeaders = req.headers["authorization"];
+    const token = authHeaders && authHeaders.split(' ');
+    console.log("linha 28 token", token);
+    if (!token) {
+        return res.json({ message: 'Acesso negado' });
+    }
+    try {
+        let x = jwt.verify(token, secret);
+        if (x === true) {
+            next();
+        }
+    }
+    catch (error) {
+        return res.json({ message: 'Token inválido' });
+    }
+    const { numOdf, numOper, codMaq } = dados;
+    console.log("linha 45", numOdf);
     const numeroOdf = Number(req.cookies['NUMERO_ODF']) || 0;
     const codigoOper = req.cookies['NUMERO_OPERACAO'];
     const codigoMaq = req.cookies['CODIGO_MAQUINA'];
     const funcionario = req.cookies['FUNCIONARIO'];
+    if (!numeroOdf) {
+    }
     try {
         const codIdApontamento = await connection.query(`
             SELECT 
