@@ -1,56 +1,35 @@
 import { RequestHandler } from 'express';
 import mssql from 'mssql';
 import { sqlConfig } from '../../global.config';
-//import { token } from '../utils/token';
+import { decodedBuffer } from '../utils/decodeOdf';
+import { decryptedOdf } from '../utils/decryptedOdf';
 import { unravelBarcode } from '../utils/unravelBarcode';
 
 export const codeNote: RequestHandler = async (req, res, next) => {
     const connection = await mssql.connect(sqlConfig);
     let dados: any = unravelBarcode(req.body.codigoBarras)
-    console.log("linha 10 code note", dados);
 
-    console.log('linha 12', req.cookies);
+    const numeroOdfCookies = req.cookies['odfCryptografada']
+    const encodedOdfString = req.cookies['encodedOdfString']
 
-    const jwt = require('jsonwebtoken')
-    const token = req.cookies['token']
-    
-    //const authHeaders = req.headers["authorization"]
-    //const token = authHeaders && authHeaders.split(' ')
+    //Descriptografar numero da ODF
+    let decrypted = decryptedOdf(numeroOdfCookies)
 
-    if(!token){
+    //Decodifica numero da odf
+    let decodedBufferValue = decodedBuffer(encodedOdfString)
+
+    //Compara o Codigo Descodificado e o descriptografado
+    if(decodedBufferValue === decrypted){
+        next()
+    } else {
+        console.log("sera que cai aqui");
         return res.json({message : 'Acesso negado'})
     }
 
-    try{
-        let verifyToken = jwt.verify(token, process.env['JWT_SECRET_KEY'])
-
-        if(verifyToken === true){
-            next()
-        }
-    } catch(error){
-        return res.json({message : 'Token inválido'})
-    }
-
-    //const net = req.params
-
-    const {numOdf, numOper, codMaq} = dados
-
-    console.log("linha 45", numOdf);
-
- 
     const numeroOdf: number = Number(req.cookies['NUMERO_ODF']) || 0
     const codigoOper = req.cookies['NUMERO_OPERACAO']
     const codigoMaq = req.cookies['CODIGO_MAQUINA']
     const funcionario = req.cookies['FUNCIONARIO']
-
-    // console.log('linha 16', numeroOdf);
-    // console.log('linha 17', codigoOper);
-    // console.log('linha 18', codigoMaq);
-
-    // if(!numeroOdf){
-
-    // }
-
     try {
         const codIdApontamento = await connection.query(`
             SELECT 
@@ -70,12 +49,7 @@ export const codeNote: RequestHandler = async (req, res, next) => {
             `)
             .then(result => result.recordset);
 
-            //console.log("linha 25 / codeNote /", codIdApontamento);
-            //console.log('linha 37', codIdApontamento[0]?.ODF);
-
             let lastEmployee = codIdApontamento[0]?.USUARIO
-            console.log('linha 44', funcionario);
-            console.log("linha 45", lastEmployee );
             let numeroOdfDB = codIdApontamento[0]?.ODF
             let codigoOperDB = codIdApontamento[0]?.NUMOPE
             let codigoMaqDB = codIdApontamento[0]?.ITEM
@@ -87,62 +61,44 @@ export const codeNote: RequestHandler = async (req, res, next) => {
                 && codigoMaq === codigoMaqDB
                 ){
                 console.log("usuario diferente");
-                //codIdApontamento[0].CODAPONTA = 1
+                //Finalizar  a odf E iniciar uma nova
                 return res.json({message : 'usuario diferente'})
             }
 
         if (codIdApontamento.length > 0) {
             if (codIdApontamento[0]?.CODAPONTA === 1) {
-                req.body.message = 'codeApont 1 setup iniciado'
-                next()
-                //return res.json({ message: `codeApont 1 setup iniciado` })
+                return res.json({ message: `codeApont 1 setup iniciado` })
             }
             if (codIdApontamento[0]?.CODAPONTA === 2) {
-                //req.body.message = 'codeApont 2 setup finalizado'
-               // next()
-                //return res.json({ message: `codeApont 2 setup finalizado` })
+                return res.json({ message: `codeApont 2 setup finalizado` })
             }
             if (codIdApontamento[0]?.CODAPONTA === 3) {
-                //req.body.message = 'codeApont 3 prod iniciado'
-                //next()
                 return res.json({ message: `codeApont 3 prod iniciado` })
             }
             if (codIdApontamento[0]?.CODAPONTA === 4) {
-                //req.body.message = 'codeApont 4 prod finalzado'
-                //return res.json({message : 'codeApont 4 prod finalzado'})
-                //next()
-                //return res.json({ message: `codeApont 4 prod finalzado` })
+                return res.json({ message: `codeApont 4 prod finalzado` })
             }
             if (codIdApontamento[0]?.CODAPONTA === 5) {
-                req.body.message = 'codeApont 5 maquina parada'
-                console.log('52', req.body.message);
-                next()
-                //return res.json({message : 'codeApont 5 maquina parada'})
-                //return res.json({ message: `codeApont 5 maquina parada` })
+                return res.json({ message: `codeApont 5 maquina parada` })
             }
             if (codIdApontamento[0]?.CODAPONTA === 6) {
-                //req.body.message = 'codeApont 6 processo finalizado'
-                //next()
                 return res.json({ message: `codeApont 6 processo finalizado` })
             }
-
             if (codIdApontamento[0]?.CODAPONTA === 7) {
-                req.body.message = 'codeApont 7 estorno realizado'
-                next()
-                //return res.json({ message: `codeApont 6 processo finalizado` })
+                return res.json({message : 'codeApont 7 estorno realizado'})
             }
             if (!codIdApontamento[0]?.CODAPONTA) {
-                req.body.message = `qualquer outro codigo`
-                next()
+                return res.json({message: 'qualquer outro codigo'})
             }
         }
-        if (codIdApontamento.length <= 0) {
-            req.body.message = 'insira cod 1'
-            next()
+        if (!codIdApontamento) {
+            return res.json({message : 'codeApont 1 setup iniciado'})
+        }else{
+            return res.json({message: 'Algo deu errado'})
         }
     } catch (error) {
-        return res.json({ message: 'algo deu errado ao buscar pelo codigo de apontamento' })
+        return res.json({ message: 'Algo deu errado ao buscar pelo codigo de apontamento' })
     } finally {
-        //await connection.close()
+        await connection.close()
     }
 }

@@ -6,42 +6,27 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.codeNote = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
+const decodeOdf_1 = require("../utils/decodeOdf");
+const decryptedOdf_1 = require("../utils/decryptedOdf");
 const unravelBarcode_1 = require("../utils/unravelBarcode");
 const codeNote = async (req, res, next) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let dados = (0, unravelBarcode_1.unravelBarcode)(req.body.codigoBarras);
-    console.log("linha 7 code note", dados);
-    const bcrypt = require('bcrypt');
-    const jwt = require('jsonwebtoker');
-    const secret = process.env['JWT_SECRET_KEY'];
-    const key = jwt.sign({
-        dados
-    }, secret);
-    console.log('linha 20', secret);
-    console.log("linha 22", key);
-    const authHeaders = req.headers["authorization"];
-    const token = authHeaders && authHeaders.split(' ');
-    console.log("linha 28 token", token);
-    if (!token) {
+    const numeroOdfCookies = req.cookies['odfCryptografada'];
+    const encodedOdfString = req.cookies['encodedOdfString'];
+    let decrypted = (0, decryptedOdf_1.decryptedOdf)(numeroOdfCookies);
+    let decodedBufferValue = (0, decodeOdf_1.decodedBuffer)(encodedOdfString);
+    if (decodedBufferValue === decrypted) {
+        next();
+    }
+    else {
+        console.log("sera que cai aqui");
         return res.json({ message: 'Acesso negado' });
     }
-    try {
-        let x = jwt.verify(token, secret);
-        if (x === true) {
-            next();
-        }
-    }
-    catch (error) {
-        return res.json({ message: 'Token inválido' });
-    }
-    const { numOdf, numOper, codMaq } = dados;
-    console.log("linha 45", numOdf);
     const numeroOdf = Number(req.cookies['NUMERO_ODF']) || 0;
     const codigoOper = req.cookies['NUMERO_OPERACAO'];
     const codigoMaq = req.cookies['CODIGO_MAQUINA'];
     const funcionario = req.cookies['FUNCIONARIO'];
-    if (!numeroOdf) {
-    }
     try {
         const codIdApontamento = await connection.query(`
             SELECT 
@@ -61,8 +46,6 @@ const codeNote = async (req, res, next) => {
             `)
             .then(result => result.recordset);
         let lastEmployee = codIdApontamento[0]?.USUARIO;
-        console.log('linha 44', funcionario);
-        console.log("linha 45", lastEmployee);
         let numeroOdfDB = codIdApontamento[0]?.ODF;
         let codigoOperDB = codIdApontamento[0]?.NUMOPE;
         let codigoMaqDB = codIdApontamento[0]?.ITEM;
@@ -75,42 +58,42 @@ const codeNote = async (req, res, next) => {
         }
         if (codIdApontamento.length > 0) {
             if (codIdApontamento[0]?.CODAPONTA === 1) {
-                req.body.message = 'codeApont 1 setup iniciado';
-                next();
+                return res.json({ message: `codeApont 1 setup iniciado` });
             }
             if (codIdApontamento[0]?.CODAPONTA === 2) {
+                return res.json({ message: `codeApont 2 setup finalizado` });
             }
             if (codIdApontamento[0]?.CODAPONTA === 3) {
                 return res.json({ message: `codeApont 3 prod iniciado` });
             }
             if (codIdApontamento[0]?.CODAPONTA === 4) {
+                return res.json({ message: `codeApont 4 prod finalzado` });
             }
             if (codIdApontamento[0]?.CODAPONTA === 5) {
-                req.body.message = 'codeApont 5 maquina parada';
-                console.log('52', req.body.message);
-                next();
+                return res.json({ message: `codeApont 5 maquina parada` });
             }
             if (codIdApontamento[0]?.CODAPONTA === 6) {
                 return res.json({ message: `codeApont 6 processo finalizado` });
             }
             if (codIdApontamento[0]?.CODAPONTA === 7) {
-                req.body.message = 'codeApont 7 estorno realizado';
-                next();
+                return res.json({ message: 'codeApont 7 estorno realizado' });
             }
             if (!codIdApontamento[0]?.CODAPONTA) {
-                req.body.message = `qualquer outro codigo`;
-                next();
+                return res.json({ message: 'qualquer outro codigo' });
             }
         }
-        if (codIdApontamento.length <= 0) {
-            req.body.message = 'insira cod 1';
-            next();
+        if (!codIdApontamento) {
+            return res.json({ message: 'codeApont 1 setup iniciado' });
+        }
+        else {
+            return res.json({ message: 'Algo deu errado' });
         }
     }
     catch (error) {
-        return res.json({ message: 'algo deu errado ao buscar pelo codigo de apontamento' });
+        return res.json({ message: 'Algo deu errado ao buscar pelo codigo de apontamento' });
     }
     finally {
+        await connection.close();
     }
 };
 exports.codeNote = codeNote;

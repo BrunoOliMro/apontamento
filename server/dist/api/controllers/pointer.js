@@ -8,6 +8,8 @@ const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
 const select_1 = require("../services/select");
 const selectIfHasP_1 = require("../services/selectIfHasP");
+const encodedOdf_1 = require("../utils/encodedOdf");
+const encryptOdf_1 = require("../utils/encryptOdf");
 const unravelBarcode_1 = require("../utils/unravelBarcode");
 const pointerPost = async (req, res, next) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
@@ -79,6 +81,11 @@ const pointerPost = async (req, res, next) => {
     let codigoPeca = String(req.cookies['CODIGO_PECA']) || null;
     let revisao = String(req.cookies['REVISAO']) || null;
     let startTime = Number(req.cookies['starterBarcode']) || 0;
+    let numeroOdf = String(objOdfSelecionada['NUMERO_ODF']);
+    let cryptoOdfString = (0, encryptOdf_1.encryptedOdf)(numeroOdf);
+    const encodedOdf = (0, encodedOdf_1.encodedOdfString)(numeroOdf);
+    res.cookie('odfCryptografada', cryptoOdfString);
+    res.cookie('encodedOdfString', encodedOdf);
     res.cookie('qtdLibMax', qtdLibMax);
     res.cookie('starterBarcode', startTime);
     res.cookie('MAQUINA_PROXIMA', codigoMaquinaProxOdf);
@@ -130,7 +137,6 @@ const pointerPost = async (req, res, next) => {
         return res.json({ message: 'qualquer outro codigo' });
     }
     let data = await (0, selectIfHasP_1.selectToKnowIfHasP)(dados);
-    console.log('data', data);
     if (data === 'não foi necessario reservar') {
         return res.json({ message: 'não foi necessario reservar' });
     }

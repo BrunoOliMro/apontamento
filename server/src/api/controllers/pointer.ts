@@ -3,6 +3,8 @@ import mssql from 'mssql';
 import { sqlConfig } from '../../global.config';
 import { selectOdfFromPcp } from '../services/select';
 import { selectToKnowIfHasP } from '../services/selectIfHasP';
+import { encodedOdfString } from '../utils/encodedOdf';
+import { encryptedOdf } from '../utils/encryptOdf';
 import { unravelBarcode } from '../utils/unravelBarcode'
 
 export const pointerPost: RequestHandler = async (req, res, next) => {
@@ -16,7 +18,7 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
     let codigoMaquinaProxOdf;
     let codMaqProxOdf;
 
-    
+
     //Seleciona todos os itens da Odf
     const queryGrupoOdf: any = await selectOdfFromPcp(dados)
 
@@ -102,8 +104,16 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
     let codigoPeca = String(req.cookies['CODIGO_PECA']) || null
     let revisao = String(req.cookies['REVISAO']) || null
     let startTime = Number(req.cookies['starterBarcode']) || 0
+    let numeroOdf: string = String(objOdfSelecionada['NUMERO_ODF'])
 
-    //console.log('codigoMaq linha 108', message);
+    //Criptografa o numero da ODF
+    let cryptoOdfString = encryptedOdf(numeroOdf)
+
+    //Codifica numero da ODF
+    const encodedOdf = encodedOdfString(numeroOdf)
+
+    res.cookie('odfCryptografada', cryptoOdfString)
+    res.cookie('encodedOdfString', encodedOdf)
     res.cookie('qtdLibMax', qtdLibMax)
     res.cookie('starterBarcode', startTime)
     res.cookie('MAQUINA_PROXIMA', codigoMaquinaProxOdf)
@@ -115,7 +125,7 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
     res.cookie('REVISAO', objOdfSelecionada['REVISAO'])
 
     //revisao = null
-    if(revisao === null){
+    if (revisao === null) {
         revisao = '0'
     }
 
@@ -173,7 +183,7 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
 
     let data: any = await selectToKnowIfHasP(dados)
 
-    console.log('data', data);
+    //console.log('data', data);
     if (data! === 'não foi necessario reservar') {
         return res.json({ message: 'não foi necessario reservar' })
     }

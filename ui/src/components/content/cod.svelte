@@ -23,6 +23,12 @@
         const res = await fetch(urlString);
         odfData = await res.json();
         console.log('linha 23 odfData/cod.svelte/', odfData);
+
+        if (odfData.message === 'codeApont 5 maquina parada') {
+            message = 'codeApont 5 maquina parada';
+            window.location.href = '/#/codigobarras';
+        }
+
         if (odfData.message === 'codeApont 4 prod finalizado') {
             message = 'codeApont 4 prod finalizado';
         }
@@ -38,6 +44,14 @@
 
         if(odfData.message === 'Acesso negado'){
             message = 'Acesso Negado'
+            window.location.href = '/#/codigobarras';
+            location.reload()
+        }
+
+        if(odfData.message === 'Algo deu errado ao buscar pelo codigo de apontamento'){
+            window.location.href = '/#/codigobarras';
+            message = 'Acesso Negado'
+            location.reload
         }
 
     }

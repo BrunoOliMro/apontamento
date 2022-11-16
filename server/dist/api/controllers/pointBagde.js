@@ -20,7 +20,6 @@ const pointBagde = async (req, res) => {
             `.trim()).then(result => result.recordset);
         if (selecionarMatricula.length > 0) {
             res.cookie("starterBarcode", start);
-            res.cookie("MATRIC", selecionarMatricula[0].MATRIC);
             res.cookie("FUNCIONARIO", selecionarMatricula[0].FUNCIONARIO);
             res.cookie("CRACHA", selecionarMatricula[0].CRACHA);
             return res.json({ message: 'cracha encontrado' });

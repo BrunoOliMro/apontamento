@@ -113,40 +113,40 @@
     if(res.message === 'usuario diferente'){
       console.log("linha 110/barcode /" , res.message);
     }
-    // if (
-    //   res.message === "codeApont 1 setup iniciado" ||
-    //   res.message === "insira cod 1" ||
-    //   res.message === "não foi necessario reservar" ||
-    //   res.message === "valores reservados"
-    // ) {
-    //   loader = false;
-    //   window.location.href = "/#/ferramenta";
-    // }
+    if (
+      res.message === "codeApont 1 setup iniciado" ||
+      res.message === "insira cod 1" ||
+      res.message === "não foi necessario reservar" ||
+      res.message === "valores reservados"
+    ) {
+      loader = false;
+      window.location.href = "/#/ferramenta";
+    }
 
-    // if (res.message === "codeApont 3 prod iniciado") {
-    //   loader = false;
-    //   window.location.href = "/#/codigobarras/apontamento";
-    // }
-    // if (res.message === "codeApont 4 prod finalzado") {
-    //   window.location.href = "/#/rip";
-    // }
-    // if (res.message === "codeApont 5 maquina parada") {
-    //   loader = false;
-    //   superParada = true;
-    // }
-    // if (res.message === "codigo de barras vazio") {
-    //   modalMessage = "Código de barras vazio";
-    //   //barcodeMsg = "codigo de barras vazio";
-    // }
-    // if (res.message === "odf não encontrada") {
-    //   modalMessage = "ODF não encontrada";
-    //   loader = false;
-    //   //barcodeMsg = "odf não encontrada";
-    // }
-    // if (res.message === "não há limite na odf") {
-    //   modalMessage = "Não há limite na ODF";
-    //   loader = false;
-    // }
+    if (res.message === "codeApont 3 prod iniciado") {
+      loader = false;
+      window.location.href = "/#/codigobarras/apontamento";
+    }
+    if (res.message === "codeApont 4 prod finalzado") {
+      window.location.href = "/#/rip";
+    }
+    if (res.message === "codeApont 5 maquina parada") {
+      loader = false;
+      superParada = true;
+    }
+    if (res.message === "codigo de barras vazio") {
+      modalMessage = "Código de barras vazio";
+      //barcodeMsg = "codigo de barras vazio";
+    }
+    if (res.message === "odf não encontrada") {
+      modalMessage = "ODF não encontrada";
+      loader = false;
+      //barcodeMsg = "odf não encontrada";
+    }
+    if (res.message === "não há limite na odf") {
+      modalMessage = "Não há limite na ODF";
+      loader = false;
+    }
   };
 
   function writeOnHand(event) {

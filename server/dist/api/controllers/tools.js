@@ -52,6 +52,7 @@ const tools = async (req, res) => {
             return res.json({ message: "/images/sem_imagem.gif" });
         }
         if (toolsImg.length > 0) {
+            res.cookie('tools', 'true');
             return res.json(result);
         }
     }
