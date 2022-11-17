@@ -23,10 +23,10 @@ const codeNote_1 = require("./controllers/codeNote");
 const getBefSel_1 = require("./controllers/getBefSel");
 const odfDataQtd_1 = require("./controllers/odfDataQtd");
 const apiRouter = (0, express_1.Router)();
-apiRouter.route("/apontamento")
-    .post(pointer_1.pointerPost);
 apiRouter.route("/apontamentoCracha")
     .post(pointBagde_1.pointBagde);
+apiRouter.route("/apontamento")
+    .post(pointer_1.pointerPost);
 apiRouter.route("/odf")
     .get(codeNote_1.codeNote)
     .get(odfData_1.odfData);

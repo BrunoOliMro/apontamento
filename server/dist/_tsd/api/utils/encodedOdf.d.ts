@@ -1,2 +1,2 @@
-export declare const encodedOdfString: (numeroOdf: string) => string;
+export declare const encoded: (numeroOdf: string) => string;
 //# sourceMappingURL=encodedOdf.d.ts.map

@@ -3,8 +3,8 @@ import mssql from 'mssql';
 import { sqlConfig } from '../../global.config';
 import { selectOdfFromPcp } from '../services/select';
 import { selectToKnowIfHasP } from '../services/selectIfHasP';
-import { encodedOdfString } from '../utils/encodedOdf';
-import { encryptedOdf } from '../utils/encryptOdf';
+import { encoded } from '../utils/encodedOdf';
+import { encrypted } from '../utils/encryptOdf';
 import { unravelBarcode } from '../utils/unravelBarcode'
 
 export const pointerPost: RequestHandler = async (req, res, next) => {
@@ -17,7 +17,6 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
     let qtdLibMax: number = 0
     let codigoMaquinaProxOdf;
     let codMaqProxOdf;
-
 
     //Seleciona todos os itens da Odf
     const queryGrupoOdf: any = await selectOdfFromPcp(dados)
@@ -35,16 +34,12 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
     //Caso indice do array seja o primeiro
     if (indiceDoArrayDeOdfs <= 0) {
         indiceDoArrayDeOdfs = 0
-
     }
+
     let objOdfSelecionada = queryGrupoOdf![indiceDoArrayDeOdfs]
     let objOdfSelecProximo = queryGrupoOdf![indiceDoArrayDeOdfs + 1]
     let objOdfSelecAnterior = queryGrupoOdf![indiceDoArrayDeOdfs - 1]
     //console.log('linha 57 /pointer/', objOdfSelecAnterior);
-
-    // if (objOdfSelecAnterior === undefined) {
-    //     console.log('objOdfSelecAnterior linha 54 /pointer/ ', objOdfSelecAnterior);
-    // }
 
     //Verifica caso o indice seja o primeiro e caso seja seta a quantidade liberada para a quantidade da odf seleciona
     if (indiceDoArrayDeOdfs === 0) {
@@ -100,95 +95,53 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
     if (objOdfSelecionada['CODIGO_MAQUINA'] === 'RET001') {
         objOdfSelecionada['CODIGO_MAQUINA'] = 'RET001'
     }
+
+
     let funcionario = String(req.cookies['FUNCIONARIO'])
     let codigoPeca = String(req.cookies['CODIGO_PECA']) || null
     let revisao = String(req.cookies['REVISAO']) || null
-    let startTime = Number(req.cookies['starterBarcode']) || 0
+    //let startTime = Number(req.cookies['starterBarcode']) || 0
+    // let startTimeString = String(startTime)
     let numeroOdf: string = String(objOdfSelecionada['NUMERO_ODF'])
+    let qtdLibString: string = String(qtdLibMax)
 
-    //Criptografa o numero da ODF
-    let cryptoOdfString = encryptedOdf(numeroOdf)
+    //Criptografa os dados da ODF
+    let encryptedOdfNumber = encrypted(objOdfSelecionada['NUMERO_ODF'])
+    const qtdLibCript = encrypted(qtdLibString)
+    //const startEncrypted = encrypted(startTimeString)
+    const encryptedNextMachine = encrypted(codigoMaquinaProxOdf)
+    const encryptedNextOperation = encrypted(codMaqProxOdf)
+    const encryptedCodePart = encrypted(objOdfSelecionada['CODIGO_PECA'])
+    const encryptedMachineCode = encrypted(objOdfSelecionada['CODIGO_MAQUINA'])
+    const operationNumber = encrypted(numeroOper)
+    const encryptedRevision = encrypted(objOdfSelecionada['REVISAO'])
 
-    //Codifica numero da ODF
-    const encodedOdf = encodedOdfString(numeroOdf)
+    //Codifica os dados da ODF
+    const encodedOdfNumber = encoded(numeroOdf)
+    const encodedOperationNumber = encoded(numeroOper)
+    const encodedMachineCode = encoded(objOdfSelecionada['CODIGO_MAQUINA'])
 
-    res.cookie('odfCryptografada', cryptoOdfString)
-    res.cookie('encodedOdfString', encodedOdf)
-    res.cookie('qtdLibMax', qtdLibMax)
-    res.cookie('starterBarcode', startTime)
-    res.cookie('MAQUINA_PROXIMA', codigoMaquinaProxOdf)
-    res.cookie('OPERACAO_PROXIMA', codMaqProxOdf)
-    res.cookie('NUMERO_ODF', objOdfSelecionada['NUMERO_ODF'])
-    res.cookie('CODIGO_PECA', objOdfSelecionada['CODIGO_PECA'])
-    res.cookie('CODIGO_MAQUINA', objOdfSelecionada['CODIGO_MAQUINA'])
-    res.cookie('NUMERO_OPERACAO', numeroOper)
-    res.cookie('REVISAO', objOdfSelecionada['REVISAO'])
+
+    res.cookie('numero_odf', encryptedOdfNumber)
+    res.cookie('encodedOdfNumber', encodedOdfNumber)
+    res.cookie('encodedOperationNumber', encodedOperationNumber)
+    res.cookie('encodedMachineCode', encodedMachineCode)
+    res.cookie('qtdLibMax', qtdLibCript)
+    //res.cookie('starterBarcode', startEncrypted)
+    res.cookie('MAQUINA_PROXIMA', encryptedNextMachine)
+    res.cookie('OPERACAO_PROXIMA', encryptedNextOperation)
+    //res.cookie('NUMERO_ODF', objOdfSelecionada['NUMERO_ODF'])
+    res.cookie('CODIGO_PECA', encryptedCodePart)
+    res.cookie('CODIGO_MAQUINA', encryptedMachineCode)
+    res.cookie('NUMERO_OPERACAO', operationNumber)
+    res.cookie('REVISAO', encryptedRevision)
 
     //revisao = null
-    if (revisao === null) {
+    if (revisao) {
         revisao = '0'
     }
 
-    console.log("linha revisao", revisao);
-
-    console.log("linha revisao", dados.numOper);
-
-    console.log("linha revisao", dados.numOdf);
-
-    console.log("linha revisao", dados.codMaq);
-
-    console.log("fuync", funcionario);
-
-
-    if (message === 'insira cod 1' || message === 'codeApont 6 processo finalizado') {
-        await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
-        VALUES (GETDATE(), '${funcionario}', ${dados.numOdf}, '${codigoPeca}', ${queryGrupoOdf[0].REVISAO},'${dados.numOper}', '${dados.numOper}', 'D', '${dados.codMaq}',0, 0, 0, '${funcionario}', '0', 1, '1', 'Ini Set.', 0, 0, '1', 0, 0 )
-        `)
-        //.then(record => record.rowsAffected)
-    }
-
-    console.log("linha 127");
-
-    if (message === 'codeApont 1 setup iniciado') {
-        console.log("linha 128", message);
-        return res.json({ message: 'codeApont 1 setup iniciado' })
-    }
-
-    if (message === 'codeApont 2 setup finalizado') {
-        return res.json({ message: 'codeApont 2 setup finalizado' })
-    }
-    console.log("linha 135");
-    try {
-        if (message === 'codeApont 3 prod iniciado') {
-            console.log("message", message);
-            return res.json({ message: 'codeApont 3 prod iniciado' })
-        }
-    } catch (error) {
-        console.log('linha 141', error);
-    }
-    console.log("linha 139", message);
-
-    if (message === 'codeApont 4 prod finalzado') {
-        return res.json({ message: 'codeApont 4 prod finalzado' })
-    }
-    if (message === 'codeApont 5 maquina parada') {
-        return res.json({ message: 'codeApont 5 maquina parada' })
-    }
-    // if (message === 'codeApont 6 prod iniciado') {
-    //     return res.json({ message: 'codeApont 6 prod iniciado' })
-    // }
-    if (message === 'qualquer outro codigo') {
-        return res.json({ message: 'qualquer outro codigo' })
-    }
-
     let data: any = await selectToKnowIfHasP(dados)
-
-    //console.log('data', data);
-    if (data! === 'não foi necessario reservar') {
-        return res.json({ message: 'não foi necessario reservar' })
-    }
-
-    // console.log("linha 80 hasP", response);
 
     if (data === 'valores reservados') {
         res.cookie('reservedItens', data!.reservedItens)
@@ -197,6 +150,55 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
         res.cookie('NUMITE', data!.codigoNumite)
         res.cookie('resultadoFinalProducao', data!.resultadoFinalProducao)
     }
+
+    if (message !== 'codeApont 1 setup iniciado') {
+        await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
+        VALUES (GETDATE(), '${funcionario}', ${dados.numOdf}, '${codigoPeca}', ${queryGrupoOdf[0].REVISAO},'${dados.numOper}', '${dados.numOper}', 'D', '${dados.codMaq}',0, 0, 0, '${funcionario}', '0', 1, '1', 'Ini Set.', 0, 0, '1', 0, 0 )`)
+            .then(record => record.rowsAffected)
+        return res.status(200).json({ message: 'valores reservados' })
+    }
+
+    // if (message === 'insira cod 1' || message === 'codeApont 6 processo finalizado') {
+    // }
+
+    // if (message === 'codeApont 1 setup iniciado') {
+    //     console.log("linha 128", message);
+    //     return res.json({ message: 'codeApont 1 setup iniciado' })
+    // }
+
+    // if (message === 'codeApont 2 setup finalizado') {
+    //     return res.json({ message: 'codeApont 2 setup finalizado' })
+    // }
+    // // console.log("linha 135");
+    // try {
+    //     if (message === 'codeApont 3 prod iniciado') {
+    //         console.log("message", message);
+    //         return res.json({ message: 'codeApont 3 prod iniciado' })
+    //     }
+    // } catch (error) {
+    //     console.log('linha 141', error);
+    // }
+    // // console.log("linha 139", message);
+
+    // if (message === 'codeApont 4 prod finalzado') {
+    //     return res.json({ message: 'codeApont 4 prod finalzado' })
+    // }
+    // if (message === 'codeApont 5 maquina parada') {
+    //     return res.json({ message: 'codeApont 5 maquina parada' })
+    // }
+    // // if (message === 'codeApont 6 prod iniciado') {
+    // //     return res.json({ message: 'codeApont 6 prod iniciado' })
+    // // }
+    // if (message === 'qualquer outro codigo') {
+    //     return res.json({ message: 'qualquer outro codigo' })
+    // }
+
+    //console.log('data', data);
+    // if (data! === 'não foi necessario reservar') {
+    //     return res.json({ message: 'não foi necessario reservar' })
+    // }
+
+    // console.log("linha 80 hasP", response);
     //     try {
     //         //Seleciona as peças filhas, a quantidade para execução e o estoque dos itens
     //         const selectKnowHasP = await connection.query(`

@@ -25,12 +25,12 @@ import { odfDataQtd } from "./controllers/odfDataQtd";
 // /api/v1/
 const apiRouter = Router();
 
+apiRouter.route("/apontamentoCracha")
+    .post(pointBagde)
+
 apiRouter.route("/apontamento")
     //.post(codeNote)
     .post(pointerPost)
-
-apiRouter.route("/apontamentoCracha")
-    .post(pointBagde)
 
 apiRouter.route("/odf")
     .get(codeNote)

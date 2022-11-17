@@ -24,6 +24,9 @@ const selectOdfFromPcp = async (dados) => {
     if (data.length >= 0) {
         return response.data = data;
     }
+    else {
+        return response.message = 'Algo deu errado';
+    }
 };
 exports.selectOdfFromPcp = selectOdfFromPcp;
 //# sourceMappingURL=select.js.map

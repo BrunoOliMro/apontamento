@@ -67,7 +67,8 @@ export const codeNote: RequestHandler = async (req, res, next) => {
 
         if (codIdApontamento.length > 0) {
             if (codIdApontamento[0]?.CODAPONTA === 1) {
-                return res.json({ message: `codeApont 1 setup iniciado` })
+                req.body.message = `codeApont 1 setup iniciado`
+                //return res.json({ message: `codeApont 1 setup iniciado` })
             }
             if (codIdApontamento[0]?.CODAPONTA === 2) {
                 return res.json({ message: `codeApont 2 setup finalizado` })

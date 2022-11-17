@@ -80,72 +80,46 @@ const pointerPost = async (req, res, next) => {
     let funcionario = String(req.cookies['FUNCIONARIO']);
     let codigoPeca = String(req.cookies['CODIGO_PECA']) || null;
     let revisao = String(req.cookies['REVISAO']) || null;
-    let startTime = Number(req.cookies['starterBarcode']) || 0;
     let numeroOdf = String(objOdfSelecionada['NUMERO_ODF']);
-    let cryptoOdfString = (0, encryptOdf_1.encryptedOdf)(numeroOdf);
-    const encodedOdf = (0, encodedOdf_1.encodedOdfString)(numeroOdf);
-    res.cookie('odfCryptografada', cryptoOdfString);
-    res.cookie('encodedOdfString', encodedOdf);
-    res.cookie('qtdLibMax', qtdLibMax);
-    res.cookie('starterBarcode', startTime);
-    res.cookie('MAQUINA_PROXIMA', codigoMaquinaProxOdf);
-    res.cookie('OPERACAO_PROXIMA', codMaqProxOdf);
-    res.cookie('NUMERO_ODF', objOdfSelecionada['NUMERO_ODF']);
-    res.cookie('CODIGO_PECA', objOdfSelecionada['CODIGO_PECA']);
-    res.cookie('CODIGO_MAQUINA', objOdfSelecionada['CODIGO_MAQUINA']);
-    res.cookie('NUMERO_OPERACAO', numeroOper);
-    res.cookie('REVISAO', objOdfSelecionada['REVISAO']);
-    if (revisao === null) {
+    let qtdLibString = String(qtdLibMax);
+    let encryptedOdfNumber = (0, encryptOdf_1.encrypted)(objOdfSelecionada['NUMERO_ODF']);
+    const qtdLibCript = (0, encryptOdf_1.encrypted)(qtdLibString);
+    const encryptedNextMachine = (0, encryptOdf_1.encrypted)(codigoMaquinaProxOdf);
+    const encryptedNextOperation = (0, encryptOdf_1.encrypted)(codMaqProxOdf);
+    const encryptedCodePart = (0, encryptOdf_1.encrypted)(objOdfSelecionada['CODIGO_PECA']);
+    const encryptedMachineCode = (0, encryptOdf_1.encrypted)(objOdfSelecionada['CODIGO_MAQUINA']);
+    const operationNumber = (0, encryptOdf_1.encrypted)(numeroOper);
+    const encryptedRevision = (0, encryptOdf_1.encrypted)(objOdfSelecionada['REVISAO']);
+    const encodedOdfNumber = (0, encodedOdf_1.encoded)(numeroOdf);
+    const encodedOperationNumber = (0, encodedOdf_1.encoded)(numeroOper);
+    const encodedMachineCode = (0, encodedOdf_1.encoded)(objOdfSelecionada['CODIGO_MAQUINA']);
+    res.cookie('numero_odf', encryptedOdfNumber);
+    res.cookie('encodedOdfNumber', encodedOdfNumber);
+    res.cookie('encodedOperationNumber', encodedOperationNumber);
+    res.cookie('encodedMachineCode', encodedMachineCode);
+    res.cookie('qtdLibMax', qtdLibCript);
+    res.cookie('MAQUINA_PROXIMA', encryptedNextMachine);
+    res.cookie('OPERACAO_PROXIMA', encryptedNextOperation);
+    res.cookie('CODIGO_PECA', encryptedCodePart);
+    res.cookie('CODIGO_MAQUINA', encryptedMachineCode);
+    res.cookie('NUMERO_OPERACAO', operationNumber);
+    res.cookie('REVISAO', encryptedRevision);
+    if (revisao) {
         revisao = '0';
     }
-    console.log("linha revisao", revisao);
-    console.log("linha revisao", dados.numOper);
-    console.log("linha revisao", dados.numOdf);
-    console.log("linha revisao", dados.codMaq);
-    console.log("fuync", funcionario);
-    if (message === 'insira cod 1' || message === 'codeApont 6 processo finalizado') {
-        await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
-        VALUES (GETDATE(), '${funcionario}', ${dados.numOdf}, '${codigoPeca}', ${queryGrupoOdf[0].REVISAO},'${dados.numOper}', '${dados.numOper}', 'D', '${dados.codMaq}',0, 0, 0, '${funcionario}', '0', 1, '1', 'Ini Set.', 0, 0, '1', 0, 0 )
-        `);
-    }
-    console.log("linha 127");
-    if (message === 'codeApont 1 setup iniciado') {
-        console.log("linha 128", message);
-        return res.json({ message: 'codeApont 1 setup iniciado' });
-    }
-    if (message === 'codeApont 2 setup finalizado') {
-        return res.json({ message: 'codeApont 2 setup finalizado' });
-    }
-    console.log("linha 135");
-    try {
-        if (message === 'codeApont 3 prod iniciado') {
-            console.log("message", message);
-            return res.json({ message: 'codeApont 3 prod iniciado' });
-        }
-    }
-    catch (error) {
-        console.log('linha 141', error);
-    }
-    console.log("linha 139", message);
-    if (message === 'codeApont 4 prod finalzado') {
-        return res.json({ message: 'codeApont 4 prod finalzado' });
-    }
-    if (message === 'codeApont 5 maquina parada') {
-        return res.json({ message: 'codeApont 5 maquina parada' });
-    }
-    if (message === 'qualquer outro codigo') {
-        return res.json({ message: 'qualquer outro codigo' });
-    }
     let data = await (0, selectIfHasP_1.selectToKnowIfHasP)(dados);
-    if (data === 'não foi necessario reservar') {
-        return res.json({ message: 'não foi necessario reservar' });
-    }
     if (data === 'valores reservados') {
         res.cookie('reservedItens', data.reservedItens);
         res.cookie('codigoFilho', data.codigoFilho);
         res.cookie('CONDIC', data.selectKnowHasP[0].CONDIC);
         res.cookie('NUMITE', data.codigoNumite);
         res.cookie('resultadoFinalProducao', data.resultadoFinalProducao);
+    }
+    if (message !== 'codeApont 1 setup iniciado') {
+        await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
+        VALUES (GETDATE(), '${funcionario}', ${dados.numOdf}, '${codigoPeca}', ${queryGrupoOdf[0].REVISAO},'${dados.numOper}', '${dados.numOper}', 'D', '${dados.codMaq}',0, 0, 0, '${funcionario}', '0', 1, '1', 'Ini Set.', 0, 0, '1', 0, 0 )`)
+            .then(record => record.rowsAffected);
+        return res.status(200).json({ message: 'valores reservados' });
     }
 };
 exports.pointerPost = pointerPost;

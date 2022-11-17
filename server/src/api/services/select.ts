@@ -22,5 +22,7 @@ export const selectOdfFromPcp = async (dados: any) => {
 
     if(data.length >= 0){
         return response.data = data
+    } else {
+        return response.message = 'Algo deu errado'
     }
 }

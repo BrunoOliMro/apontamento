@@ -1,14 +1,14 @@
 import { RequestHandler } from "express";
 import mssql from "mssql";
 import { sqlConfig } from "../../global.config";
+import { encrypted } from "../utils/encryptOdf";
 import { sanitize } from "../utils/sanitize";
 
 export const pointBagde: RequestHandler = async (req, res) => {
     let matricula = String(sanitize(req.body["cracha"])) || null
     let start = new Date() || 0;
 
-
-    if (matricula === null) {
+    if (!matricula) {
         return res.json({ message: "codigo de matricula vazia" })
     }
 
@@ -20,10 +20,13 @@ export const pointBagde: RequestHandler = async (req, res) => {
         ).then(result => result.recordset)
 
         if (selecionarMatricula.length > 0) {
-            res.cookie("starterBarcode", start)
+            const strStartTime = encrypted(String(start))
+            const encryptedEmployee = selecionarMatricula[0].FUNCIONARIO
+            const encryptedBadge = encrypted(selecionarMatricula[0].CRACHA)
+            res.cookie("starterBarcode", strStartTime)
             //res.cookie("MATRIC", selecionarMatricula[0].MATRIC)
-            res.cookie("FUNCIONARIO", selecionarMatricula[0].FUNCIONARIO)
-            res.cookie("CRACHA", selecionarMatricula[0].CRACHA)
+            res.cookie("FUNCIONARIO", encryptedEmployee)
+            res.cookie("CRACHA", encryptedBadge)
             return res.json({ message: 'cracha encontrado' })
         } else {
             return res.json({ message: 'cracha não encontrado' })

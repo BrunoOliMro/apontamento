@@ -6,11 +6,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.pointBagde = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
+const encryptOdf_1 = require("../utils/encryptOdf");
 const sanitize_1 = require("../utils/sanitize");
 const pointBagde = async (req, res) => {
     let matricula = String((0, sanitize_1.sanitize)(req.body["cracha"])) || null;
     let start = new Date() || 0;
-    if (matricula === null) {
+    if (!matricula) {
         return res.json({ message: "codigo de matricula vazia" });
     }
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
@@ -19,9 +20,12 @@ const pointBagde = async (req, res) => {
         SELECT TOP 1 [MATRIC], [FUNCIONARIO], [CRACHA] FROM FUNCIONARIOS WHERE 1 = 1 AND [CRACHA] = '${matricula}' ORDER BY FUNCIONARIO
             `.trim()).then(result => result.recordset);
         if (selecionarMatricula.length > 0) {
-            res.cookie("starterBarcode", start);
-            res.cookie("FUNCIONARIO", selecionarMatricula[0].FUNCIONARIO);
-            res.cookie("CRACHA", selecionarMatricula[0].CRACHA);
+            const strStartTime = (0, encryptOdf_1.encrypted)(String(start));
+            const encryptedEmployee = selecionarMatricula[0].FUNCIONARIO;
+            const encryptedBadge = (0, encryptOdf_1.encrypted)(selecionarMatricula[0].CRACHA);
+            res.cookie("starterBarcode", strStartTime);
+            res.cookie("FUNCIONARIO", encryptedEmployee);
+            res.cookie("CRACHA", encryptedBadge);
             return res.json({ message: 'cracha encontrado' });
         }
         else {
