@@ -1,6 +1,6 @@
 <a class="out" href="/#/historico/"
     ><button type="button" class="sideButton">
-        <p>Histórico</p>
+        <p>Histórico de apontamento</p>
     </button>
 </a>
 
@@ -20,7 +20,7 @@
         outline: none;
         margin: 0%;
         padding: 0%;
-        width: 120px;
+        width:300px;
         height: 30px;
         display: flex;
         justify-content: center;

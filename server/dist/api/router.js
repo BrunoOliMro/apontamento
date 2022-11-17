@@ -19,8 +19,6 @@ const point_1 = require("./controllers/point");
 const pointBagde_1 = require("./controllers/pointBagde");
 const getPoint_1 = require("./controllers/getPoint");
 const supervisor_1 = require("./controllers/supervisor");
-const codeNote_1 = require("./controllers/codeNote");
-const getBefSel_1 = require("./controllers/getBefSel");
 const odfDataQtd_1 = require("./controllers/odfDataQtd");
 const apiRouter = (0, express_1.Router)();
 apiRouter.route("/apontamentoCracha")
@@ -28,7 +26,6 @@ apiRouter.route("/apontamentoCracha")
 apiRouter.route("/apontamento")
     .post(pointer_1.pointerPost);
 apiRouter.route("/odf")
-    .get(codeNote_1.codeNote)
     .get(odfData_1.odfData);
 apiRouter.route("/odfQtd")
     .get(odfDataQtd_1.odfDataQtd);
@@ -50,7 +47,6 @@ apiRouter.route("/lancamentoRip")
 apiRouter.route("/returnedValue")
     .post(returnedValue_1.returnedValue);
 apiRouter.route("/supervisor")
-    .get(getBefSel_1.getBefore)
     .post(supervisor_1.supervisor);
 apiRouter.route("/supervisorParada")
     .post(stopSupervisor_1.stopSupervisor);

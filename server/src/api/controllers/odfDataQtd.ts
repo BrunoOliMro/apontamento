@@ -2,10 +2,11 @@ import { RequestHandler } from "express";
 import mssql from "mssql";
 import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";
+import { decrypted } from "../utils/decryptedOdf";
 
 export const odfDataQtd: RequestHandler = async (req, res) => {
-    let numeroOdf = String(sanitize(req.cookies["NUMERO_ODF"])) || null
-    let numOper = String(sanitize(req.cookies["NUMERO_OPERACAO"])) || null
+    let numeroOdf = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
+    let numOper = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
     let numOpeNew = String(numOper!.toString().replaceAll(' ', "0")) || null
     const connection = await mssql.connect(sqlConfig);
 

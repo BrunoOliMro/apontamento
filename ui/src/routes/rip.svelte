@@ -231,7 +231,7 @@
                             {#each ripTable as row, i}
                                 <TableRipRow
                                     bind:setup
-                                    bind:values={row.values}
+                                    bind:value={row.values}
                                     dados={row}
                                     indice={i + 1}
                                     {extraColumns}

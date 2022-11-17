@@ -2,7 +2,7 @@ import { RequestHandler } from 'express';
 import mssql from 'mssql';
 import { sqlConfig } from '../../global.config';
 import { decodedBuffer } from '../utils/decodeOdf';
-import { decryptedOdf } from '../utils/decryptedOdf';
+import { decrypted } from '../utils/decryptedOdf';
 import { unravelBarcode } from '../utils/unravelBarcode';
 
 export const codeNote: RequestHandler = async (req, res, next) => {
@@ -13,13 +13,13 @@ export const codeNote: RequestHandler = async (req, res, next) => {
     const encodedOdfString = req.cookies['encodedOdfString']
 
     //Descriptografar numero da ODF
-    let decrypted = decryptedOdf(numeroOdfCookies)
+    let decryptedValue = decrypted(numeroOdfCookies)
 
     //Decodifica numero da odf
     let decodedBufferValue = decodedBuffer(encodedOdfString)
 
     //Compara o Codigo Descodificado e o descriptografado
-    if(decodedBufferValue === decrypted){
+    if(decodedBufferValue === decryptedValue){
         next()
     } else {
         console.log("sera que cai aqui");

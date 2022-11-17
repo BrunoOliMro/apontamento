@@ -2,11 +2,14 @@ import { RequestHandler } from "express";
 import mssql from "mssql";
 import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";
+import { decrypted } from "../utils/decryptedOdf";
+import { encrypted } from "../utils/encryptOdf";
 
 export const odfData: RequestHandler = async (req, res) => {
-    let numeroOdf = String(sanitize(req.cookies["NUMERO_ODF"])) || null
-    let numOper = String(sanitize(req.cookies["NUMERO_OPERACAO"])) || null
-    let numOpeNew = String(numOper!.toString().replaceAll(' ', "0")) || null
+    const numeroOdf: string = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
+    const numOper: string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
+    const numOpeNew = String(numOper!.toString().replaceAll(' ', "0")) || null
+    const funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
     const connection = await mssql.connect(sqlConfig);
 
     try {
@@ -19,8 +22,9 @@ export const odfData: RequestHandler = async (req, res) => {
         AND [NUMERO_ODF] = ${numeroOdf}
         AND [CODIGO_PECA] IS NOT NULL
         ORDER BY NUMERO_OPERACAO ASC`.trim()).then(record => record.recordset);
-        res.cookie("qtdProduzir", resource[0].QTDE_ODF)
-        res.cookie("QTD_REFUGO", resource[0].QTD_REFUGO)
+
+        res.cookie("qtdProduzir", encrypted(String(resource[0].QTDE_ODF)))
+        res.cookie("QTD_REFUGO", encrypted(String(resource[0].QTD_REFUGO)))
         let codigoOperArray = resource.map(e => e.NUMERO_OPERACAO)
         let arrayAfterMap = codigoOperArray.map(e => "00" + e).toString().replaceAll(' ', "0").split(",")
         let indiceDoArrayDeOdfs: number = arrayAfterMap.findIndex((e: string) => e === numOpeNew)
@@ -48,6 +52,7 @@ export const odfData: RequestHandler = async (req, res) => {
 
         //Obj que retorna ao front
         const obj = {
+            funcionario,
             odfSelecionada,
             valorMaxdeProducao,
         }

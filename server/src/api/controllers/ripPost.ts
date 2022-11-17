@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import mssql from "mssql";
 import { sqlConfig } from "../../global.config";
+import { decrypted } from "../utils/decryptedOdf";
 import { sanitize } from "../utils/sanitize";
 
 export const ripPost: RequestHandler = async (req, res) => {
@@ -9,13 +10,13 @@ export const ripPost: RequestHandler = async (req, res) => {
     let valueSan;
 
     const connection = await mssql.connect(sqlConfig);
-    let NUMERO_ODF = Number((req.cookies['NUMERO_ODF'])) || 0
-    let NUMERO_OPERACAO = String(req.cookies['NUMERO_OPERACAO']) || null
-    let CODIGO_MAQUINA = String((req.cookies['CODIGO_MAQUINA'])) || null
-    let codigoPeca = String((req.cookies['CODIGO_PECA'])) || null
-    let funcionario = String((req.cookies['FUNCIONARIO'])) || null
-    let revisao = Number((req.cookies['REVISAO'])) || 0
-    let qtdLibMax = Number((req.cookies['qtdLibMax'])) || 0
+    let NUMERO_ODF : string= decrypted(String((req.cookies['NUMERO_ODF']))) || null
+    let NUMERO_OPERACAO : string= decrypted(String(req.cookies['NUMERO_OPERACAO'])) || null
+    let CODIGO_MAQUINA : string= decrypted(String((req.cookies['CODIGO_MAQUINA']))) || null
+    let codigoPeca : string= decrypted(String((req.cookies['CODIGO_PECA']))) || null
+    let funcionario : string= decrypted(String((req.cookies['FUNCIONARIO']))) || null
+    let revisao : string= decrypted(String((req.cookies['REVISAO']))) || null
+    let qtdLibMax : string= decrypted(String((req.cookies['qtdLibMax']))) || null
     const updateQtyQuery: string[] = [];
     let especif: string[] = (req.cookies['especif']) || null
     let numCar: string[] = (req.cookies['numCar']) || null

@@ -1,22 +1,40 @@
 <script>
-    // @ts-nocheck
-    import Sanitize from '../../routes/sanitize.svelte'
-    let title = 'RETRABALHAR';
+    import blockForbiddenChars from "../../routes/presanitize";
+    let title = "RETRABALHAR";
+    let reworkFeed;
+
+    import { createEventDispatcher } from "svelte";
+
+    const dispatch = createEventDispatcher();
+
+    async function disa() {
+        dispatch("message", {
+            text: "reworkFeed!",
+            reworkFeed,
+        });
+    }
 </script>
 
-<div class='input-area'>
-    <div class='title'>
+<div class="input-area">
+    <div class="title">
         <p>{title}</p>
     </div>
-    <div class='input-field'>
-        <!-- on:input={Sanitize}  -->
-        <input 
-        tabindex='4' autofocus type='text' />
+    <div class="input-field">
+        <!-- svelte-ignore a11y-positive-tabindex -->
+        <!-- svelte-ignore a11y-autofocus -->
+        <input
+            bind:value={reworkFeed}
+            on:input={disa}
+            on:input={blockForbiddenChars}
+            tabindex="4"
+            autofocus
+            type="text"
+        />
     </div>
 </div>
 
 <style>
-    p{
+    p {
         margin: 0%;
         padding: 0%;
         font-size: 37px;

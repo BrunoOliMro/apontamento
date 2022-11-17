@@ -7,19 +7,21 @@ exports.selectedTools = exports.tools = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
 const pictures_1 = require("../pictures");
+const decryptedOdf_1 = require("../utils/decryptedOdf");
 const sanitize_1 = require("../utils/sanitize");
 const tools = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let codigoPeca = String((0, sanitize_1.sanitize)(req.cookies["CODIGO_PECA"])) || null;
-    let numeroOdf = Number((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"])) || 0;
-    let numeroOperacao = String((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"])) || null;
-    let codigoMaq = String((0, sanitize_1.sanitize)(req.cookies["CODIGO_MAQUINA"])) || null;
-    let funcionario = String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])) || null;
-    let revisao = Number((0, sanitize_1.sanitize)(req.cookies['REVISAO'])) || 0;
+    let codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_PECA"]))) || null;
+    let numeroOdf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))) || null;
+    let numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"]))) || null;
+    let codigoMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_MAQUINA"]))) || null;
+    let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
+    let revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
+    let start = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["starterBarcode"]))) || null;
+    let qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['qtdLibMax']))) || null;
+    let startTime;
+    startTime = Number(start);
     let ferramenta = String("_ferr");
-    let start = Number((0, sanitize_1.sanitize)(req.cookies["starterBarcode"])) || 0;
-    let qtdLibMax = Number((0, sanitize_1.sanitize)(req.cookies['qtdLibMax'])) || 0;
-    let startTime = Number(new Date(start).getTime()) || 0;
     try {
         const toolsImg = await connection.query(`
             SELECT
@@ -55,6 +57,9 @@ const tools = async (req, res) => {
             res.cookie('tools', 'true');
             return res.json(result);
         }
+        else {
+            return res.json({ message: 'Erro ao tentar acessar as fotos de ferramentas' });
+        }
     }
     catch (error) {
         return res.json({ error: true, message: "Erro ao tentar acessar as fotos de ferramentas" });
@@ -64,16 +69,17 @@ const tools = async (req, res) => {
 };
 exports.tools = tools;
 const selectedTools = async (req, res) => {
-    const numero_odf = String((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'])) || null;
-    const numeroOperacao = String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])) || null;
-    const codigoMaq = String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA'])) || null;
-    const codigoPeca = String((0, sanitize_1.sanitize)(req.cookies["CODIGO_PECA"])) || null;
-    const funcionario = String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])) || null;
-    const revisao = Number((0, sanitize_1.sanitize)(req.cookies['REVISAO'])) || 0;
-    const qtdLibMax = Number((0, sanitize_1.sanitize)(req.cookies['qtdLibMax'])) || 0;
+    const numero_odf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF']))) || null;
+    const numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO']))) || null;
+    const codigoMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
+    const codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_PECA"]))) || null;
+    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
+    const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
+    const qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['qtdLibMax']))) || null;
+    const start = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['starterBarcode']))) || null;
     const end = Number(new Date().getTime()) || 0;
-    const start = Number(req.cookies['starterBarcode']) || 0;
-    const startTime = Number(new Date(start).getTime()) || 0;
+    let startTime;
+    startTime = Number(start);
     const tempoDecorrido = Number(end - startTime) || 0;
     const startProd = Number(new Date().getTime()) || 0;
     res.cookie("startProd", startProd);
@@ -86,7 +92,7 @@ const selectedTools = async (req, res) => {
         return res.json({ message: 'ferramentas selecionadas com successo' });
     }
     catch (error) {
-        console.log('linha 104: ', error);
+        console.log('linha 104 /selected Tools/: ', error);
         return res.redirect("/#/ferramenta");
     }
     finally {

@@ -35,7 +35,7 @@
 <style>
     p{
         width: 50px;
-        font-size: 30px;
+        font-size: 20px;
         font-weight: bold;
         margin: 0%;
         padding: 0%;

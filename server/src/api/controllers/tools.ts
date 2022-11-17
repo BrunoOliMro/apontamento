@@ -2,21 +2,23 @@ import { RequestHandler } from "express";
 import mssql from "mssql";
 import { sqlConfig } from "../../global.config";
 import { pictures } from "../pictures";
+import { decrypted } from "../utils/decryptedOdf";
 import { sanitize } from "../utils/sanitize";
 
 //Ferramenta
 export const tools: RequestHandler = async (req, res) => {
     const connection = await mssql.connect(sqlConfig);
-    let codigoPeca = String(sanitize(req.cookies["CODIGO_PECA"])) || null
-    let numeroOdf = Number(sanitize(req.cookies["NUMERO_ODF"])) || 0
-    let numeroOperacao = String(sanitize(req.cookies["NUMERO_OPERACAO"])) || null
-    let codigoMaq = String(sanitize(req.cookies["CODIGO_MAQUINA"])) || null
-    let funcionario = String(sanitize(req.cookies['FUNCIONARIO'])) || null
-    let revisao = Number(sanitize(req.cookies['REVISAO'])) || 0
-    let ferramenta = String("_ferr")
-    let start = Number(sanitize(req.cookies["starterBarcode"])) || 0
-    let qtdLibMax = Number(sanitize(req.cookies['qtdLibMax'])) || 0
-    let startTime = Number(new Date(start).getTime()) || 0
+    let codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
+    let numeroOdf: string = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
+    let numeroOperacao: string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
+    let codigoMaq: string = decrypted(String(sanitize(req.cookies["CODIGO_MAQUINA"]))) || null
+    let funcionario: string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+    let revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
+    let start: string = decrypted(String(sanitize(req.cookies["starterBarcode"]))) || null
+    let qtdLibMax: string = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
+    let startTime: number
+    startTime = Number(start)
+    let ferramenta: string = String("_ferr")
 
     try {
         const toolsImg = await connection.query(`
@@ -56,6 +58,8 @@ export const tools: RequestHandler = async (req, res) => {
         if (toolsImg.length > 0) {
             res.cookie('tools', 'true')
             return res.json(result)
+        } else {
+            return res.json({ message: 'Erro ao tentar acessar as fotos de ferramentas' })
         }
 
     } catch (error) {
@@ -67,24 +71,26 @@ export const tools: RequestHandler = async (req, res) => {
 
 //Ferramentas Selecionadas
 export const selectedTools: RequestHandler = async (req, res) => {
-    const numero_odf = String(sanitize(req.cookies['NUMERO_ODF'])) || null
-    const numeroOperacao = String(sanitize(req.cookies['NUMERO_OPERACAO'])) || null
-    const codigoMaq = String(sanitize(req.cookies['CODIGO_MAQUINA'])) || null
-    const codigoPeca = String(sanitize(req.cookies["CODIGO_PECA"])) || null
-    const funcionario = String(sanitize(req.cookies['FUNCIONARIO'])) || null
-    const revisao = Number(sanitize(req.cookies['REVISAO'])) || 0
-    const qtdLibMax = Number(sanitize(req.cookies['qtdLibMax'])) || 0
+    const numero_odf: string = decrypted(String(sanitize(req.cookies['NUMERO_ODF']))) || null
+    const numeroOperacao: string = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
+    const codigoMaq: string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
+    const codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
+    const funcionario: string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+    const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
+    const qtdLibMax: string = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
+    const start: string = decrypted(String(sanitize(req.cookies['starterBarcode']))) || null
 
     //Encerra o primeiro tempo de setup
     const end = Number(new Date().getTime()) || 0;
-    const start = Number(req.cookies['starterBarcode']) || 0
-    const startTime = Number(new Date(start).getTime()) || 0;
+    let startTime: number
+    startTime = Number(start)
     const tempoDecorrido = Number(end - startTime) || 0
 
     //Inicia a produção
     const startProd = Number(new Date().getTime()) || 0;
     res.cookie("startProd", startProd)
     const connection = await mssql.connect(sqlConfig);
+
     try {
         //INSERE EM CODAPONTA 2
         await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
@@ -96,7 +102,7 @@ export const selectedTools: RequestHandler = async (req, res) => {
 
         return res.json({ message: 'ferramentas selecionadas com successo' })
     } catch (error) {
-        console.log('linha 104: ', error)
+        console.log('linha 104 /selected Tools/: ', error)
         return res.redirect("/#/ferramenta")
     } finally {
         // await connection.close()

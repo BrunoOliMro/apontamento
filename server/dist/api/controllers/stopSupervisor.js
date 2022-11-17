@@ -7,17 +7,17 @@ exports.stopSupervisor = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const global_config_1 = require("../../global.config");
+const decryptedOdf_1 = require("../utils/decryptedOdf");
 const stopSupervisor = async (req, res) => {
-    let supervisor = String((0, sanitize_html_1.default)(req.body['superSuperMaqPar'])) || null;
-    let numeroOdf = String((0, sanitize_html_1.default)(req.cookies['NUMERO_ODF'])) || null;
-    let NUMERO_OPERACAO = String((0, sanitize_html_1.default)(req.cookies['NUMERO_OPERACAO'])) || null;
-    let CODIGO_MAQUINA = String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA'])) || null;
-    let qtdLibMax = String((0, sanitize_html_1.default)(req.cookies['qtdLibMax'])) || null;
-    let funcionario = String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO'])) || null;
-    let revisao = Number((0, sanitize_html_1.default)(req.cookies['REVISAO'])) || 0;
-    let codigoPeca = String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA'])) || null;
+    let supervisor = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.body['superSuperMaqPar']))) || null;
+    let numeroOdf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_ODF']))) || null;
+    let NUMERO_OPERACAO = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_OPERACAO']))) || null;
+    let CODIGO_MAQUINA = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
+    let qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['qtdLibMax']))) || null;
+    let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO']))) || null;
+    let revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
+    let codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA']))) || null;
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    console.log("super", supervisor);
     try {
         const resource = await connection.query(`
         SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`)

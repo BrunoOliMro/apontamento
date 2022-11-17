@@ -1,7 +1,7 @@
 <script>
   // @ts-nocheck
   import ModalConfirmation from "../../src/components/modal/modalConfirmation.svelte";
-    import Sanitize from '../routes/sanitize.svelte'
+  import blockForbiddenChars from '../routes/presanitize'
   let imageLoader = "/images/axonLoader.gif";
   let codigoBarrasReturn = "";
   let codigoBarras = "";
@@ -337,7 +337,7 @@
             id="supervisor"
             name="supervisor"
             type="text"
-            on:input={Sanitize}
+            on:input={blockForbiddenChars}
             on:keypress={checkPostSuper}
             onkeyup="this.value = this.value.toUpperCase()"
             bind:value={superSuperMaqPar}
@@ -585,7 +585,7 @@
             autocomplete="off"
             autofocus
             on:keypress={checkBeforeBadge}
-            on:input|preventDefault={Sanitize}
+            on:input|preventDefault={blockForbiddenChars}
             bind:value={cracha}
             onkeyup="this.value = this.value.toUpperCase()"
             name="MATRIC"
@@ -608,7 +608,7 @@
           tabindex="14"
           bind:value={supervisor}
           class="returnInput"
-          on:input={Sanitize}
+          on:input={blockForbiddenChars}
           onkeyup="this.value = this.value.toUpperCase()"
           type="text"
           name="supervisor"
@@ -631,7 +631,7 @@
         <h4>Insira a quantidade que deseja estornar</h4>
         <input
           tabindex="15"
-          on:input={Sanitize}
+          on:input={blockForbiddenChars}
           autocomplete="off"
           class="returnInput"
           onkeyup="this.value = this.value.toUpperCase()"
@@ -643,7 +643,7 @@
         <h4>CÓDIGO DE BARRAS DA ODF</h4>
         <input
           tabindex="16"
-          on:input={Sanitize}
+          on:input={blockForbiddenChars}
           autocomplete="off"
           class="returnInput"
           onkeyup="this.value = this.value.toUpperCase()"

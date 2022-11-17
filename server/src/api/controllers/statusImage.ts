@@ -3,11 +3,12 @@ import mssql from "mssql";
 import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";
 import { pictures } from "../pictures";
+import { decrypted } from "../utils/decryptedOdf";
 
 export const statusImage: RequestHandler = async (req, res) => {
-    const numpec = String(sanitize(req.cookies["CODIGO_PECA"])) || null
-    const revisao = String(sanitize(req.cookies['REVISAO'])) || null
-    const statusImg = String("_status")
+    const numpec: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
+    const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
+    const statusImg: string = String("_status")
     const connection = await mssql.connect(sqlConfig);
     try {
         const resource = await connection.query(`

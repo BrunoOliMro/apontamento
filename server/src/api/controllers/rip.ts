@@ -2,19 +2,20 @@ import { RequestHandler } from "express";
 import mssql from "mssql";
 import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";
+import { decrypted } from "../utils/decryptedOdf";
 
 export const rip: RequestHandler = async (req, res) => {
     const connection = await mssql.connect(sqlConfig);
-    let numpec = String(sanitize(req.cookies["CODIGO_PECA"])) || null
-    let revisao = String(sanitize(req.cookies['REVISAO'])) || null
-    let codMaq = String(sanitize(req.cookies['CODIGO_MAQUINA'])) || null
-    let codigoPeca = String(sanitize(req.cookies["CODIGO_PECA"])) || null
-    let numeroOdf = Number(sanitize(req.cookies["NUMERO_ODF"])) || 0
-    let numeroOperacao = String(sanitize(req.cookies["NUMERO_OPERACAO"])) || null
-    let funcionario = String(sanitize(req.cookies['FUNCIONARIO'])) || null
-    let start = Number(sanitize(req.cookies["starterBarcode"])) || 0
-    let qtdLibMax = Number(sanitize(req.cookies['qtdLibMax'])) || 0
-    let startTime = Number(new Date(start).getTime()) || 0
+    let numpec:string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
+    let revisao:string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
+    let codMaq:string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
+    let codigoPeca:string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
+    let numeroOdf:string = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
+    let numeroOperacao :string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
+    let funcionario:string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+    let start:string = decrypted(String(sanitize(req.cookies["starterBarcode"]))) || null
+    let qtdLibMax:string = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
+    let startTime:number = Number(new Date(start).getTime()) || 0
     try {
         const ripDetails = await connection.query(`
         SELECT  DISTINCT

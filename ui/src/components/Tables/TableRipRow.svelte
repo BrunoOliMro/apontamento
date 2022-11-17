@@ -1,5 +1,6 @@
 <script>
     // @ts-nocheck
+    import blockForbiddenChars from "../../routes/presanitize";
     export let dados;
     export let indice;
     export let extraColumns;
@@ -74,18 +75,6 @@
         id = event.target.id;
         values = event.target.value;
         setup[id] = values;
-    }
-
-    function blockForbiddenChars(event) {
-        event.target.value = preSanitize(event.target.value);
-    }
-
-    function preSanitize(input) {
-        const sanitizedOutput = input
-            .split('')
-            .map((char) => (allowedChars.test(char) ? char : ''))
-            .join('');
-        return sanitizedOutput;
     }
 
     function close() {

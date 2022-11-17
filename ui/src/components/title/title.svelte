@@ -92,10 +92,10 @@
         </ul>
         <ul class="quatityAvai">
             <li>
-                <HistoricButton />
+                <StopButton on:message={showStop} />
             </li>
             <li>
-                <StopButton on:message={showStop} />
+                <HistoricButton />
             </li>
             <li>
                 <QuantityAvai />

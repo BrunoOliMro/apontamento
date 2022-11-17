@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import mssql from "mssql";
 import { sqlConfig } from "../../global.config";
+import { decrypted } from "../utils/decryptedOdf";
 import { encrypted } from "../utils/encryptOdf";
 import { sanitize } from "../utils/sanitize";
 
@@ -20,8 +21,9 @@ export const pointBagde: RequestHandler = async (req, res) => {
         ).then(result => result.recordset)
 
         if (selecionarMatricula.length > 0) {
-            const strStartTime = encrypted(String(start))
-            const encryptedEmployee = selecionarMatricula[0].FUNCIONARIO
+            const strStartTime = encrypted(String(start.getTime()))
+
+            const encryptedEmployee = encrypted(selecionarMatricula[0].FUNCIONARIO)
             const encryptedBadge = encrypted(selecionarMatricula[0].CRACHA)
             res.cookie("starterBarcode", strStartTime)
             //res.cookie("MATRIC", selecionarMatricula[0].MATRIC)

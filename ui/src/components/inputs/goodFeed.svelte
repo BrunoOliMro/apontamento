@@ -1,7 +1,19 @@
 <script>
     // @ts-nocheck
-    import Sanitize from '../../routes/sanitize.svelte'
+    import blockForbiddenChars from "../../routes/presanitize";
     let title = "BOAS";
+    let goodFeed;
+
+    import { createEventDispatcher } from "svelte";
+
+    const dispatch = createEventDispatcher();
+
+    async function disa() {
+        dispatch("message", {
+            text: "goodFeed!",
+            goodFeed,
+        });
+    }
 </script>
 
 <div class="input-area">
@@ -9,14 +21,21 @@
         <p>{title}</p>
     </div>
     <div class="input-field">
-        <!-- on:input={Sanitize}  -->
-        <input tabindex="1" autofocus 
-        type="text" />
+        <!-- svelte-ignore a11y-positive-tabindex -->
+        <!-- svelte-ignore a11y-autofocus -->
+        <input
+            bind:value={goodFeed}
+            on:input={disa}
+            on:input={blockForbiddenChars}
+            tabindex="1"
+            autofocus
+            type="text"
+        />
     </div>
 </div>
 
 <style>
-    p{
+    p {
         margin: 0%;
         padding: 0%;
         font-size: 37px;

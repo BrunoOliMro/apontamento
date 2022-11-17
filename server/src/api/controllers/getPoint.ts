@@ -2,19 +2,20 @@ import { RequestHandler } from "express";
 import mssql from "mssql";
 import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";
+import { decrypted } from "../utils/decryptedOdf";
 
 export const getPoint: RequestHandler = async (req, res) => {
     const connection = await mssql.connect(sqlConfig);
-    let NUMERO_ODF = Number(sanitize(req.cookies["NUMERO_ODF"])) || 0
-    let qtdBoas = Number((req.cookies["qtdBoas"])) || 0;
-    const NUMERO_OPERACAO = req.cookies['NUMERO_OPERACAO']
-    const CODIGO_MAQUINA = req.cookies['CODIGO_MAQUINA']
-    let codigoPeca = String(sanitize(req.cookies['CODIGO_PECA'])) || null
-    let funcionario = String(sanitize(req.cookies['FUNCIONARIO'])) || null
+    let NUMERO_ODF = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
+    let qtdBoas = decrypted(String(sanitize(req.cookies["qtdBoas"]))) || null;
+    const NUMERO_OPERACAO = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO'])))
+    const CODIGO_MAQUINA = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA'])))
+    let codigoPeca = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
+    let funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
     var address;
     const hostname = req.get("host")
-   // console.log("host", hostname);
-   // console.log("qtdBoas", qtdBoas);
+    // console.log("host", hostname);
+    // console.log("qtdBoas", qtdBoas);
     const { networkInterfaces } = require('os');
     const nets = networkInterfaces();
     const results: any = {}; // Or just '{}', an empty object

@@ -3,6 +3,7 @@ import mssql from 'mssql';
 import { sqlConfig } from '../../global.config';
 import { selectOdfFromPcp } from '../services/select';
 import { selectToKnowIfHasP } from '../services/selectIfHasP';
+import { decrypted } from '../utils/decryptedOdf';
 import { encoded } from '../utils/encodedOdf';
 import { encrypted } from '../utils/encryptOdf';
 import { unravelBarcode } from '../utils/unravelBarcode'
@@ -96,37 +97,34 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
         objOdfSelecionada['CODIGO_MAQUINA'] = 'RET001'
     }
 
+    // Descriptografa o funcionario dos cookies
+    let funcionario = decrypted(String(req.cookies['FUNCIONARIO']))
 
-    let funcionario = String(req.cookies['FUNCIONARIO'])
-    let codigoPeca = String(req.cookies['CODIGO_PECA']) || null
-    let revisao = String(req.cookies['REVISAO']) || null
-    //let startTime = Number(req.cookies['starterBarcode']) || 0
-    // let startTimeString = String(startTime)
-    let numeroOdf: string = String(objOdfSelecionada['NUMERO_ODF'])
-    let qtdLibString: string = String(qtdLibMax)
+    let codigoPeca = objOdfSelecionada['CODIGO_PECA'] || null
 
+    let revisao = objOdfSelecionada['REVISAO']  || null
+    
     //Criptografa os dados da ODF
-    let encryptedOdfNumber = encrypted(objOdfSelecionada['NUMERO_ODF'])
-    const qtdLibCript = encrypted(qtdLibString)
-    //const startEncrypted = encrypted(startTimeString)
-    const encryptedNextMachine = encrypted(codigoMaquinaProxOdf)
-    const encryptedNextOperation = encrypted(codMaqProxOdf)
-    const encryptedCodePart = encrypted(objOdfSelecionada['CODIGO_PECA'])
-    const encryptedMachineCode = encrypted(objOdfSelecionada['CODIGO_MAQUINA'])
-    const operationNumber = encrypted(numeroOper)
-    const encryptedRevision = encrypted(objOdfSelecionada['REVISAO'])
+    let qtdLibString: string = encrypted(String(qtdLibMax))
+    let encryptedOdfNumber = encrypted(String(objOdfSelecionada['NUMERO_ODF']))
+    const encryptedNextMachine = encrypted(String(codigoMaquinaProxOdf))
+    const encryptedNextOperation = encrypted(String(codMaqProxOdf))
+    const encryptedCodePart = encrypted(String(objOdfSelecionada['CODIGO_PECA']))
+    const encryptedMachineCode = encrypted(String(objOdfSelecionada['CODIGO_MAQUINA']))
+    const operationNumber = encrypted(String(numeroOper))
+    const encryptedRevision = encrypted(String(objOdfSelecionada['REVISAO']))
 
     //Codifica os dados da ODF
-    const encodedOdfNumber = encoded(numeroOdf)
-    const encodedOperationNumber = encoded(numeroOper)
-    const encodedMachineCode = encoded(objOdfSelecionada['CODIGO_MAQUINA'])
+    const encodedOdfNumber = encoded(String(objOdfSelecionada['NUMERO_ODF']))
+    const encodedOperationNumber = encoded(String(numeroOper))
+    const encodedMachineCode = encoded(String(objOdfSelecionada['CODIGO_MAQUINA']))
 
 
-    res.cookie('numero_odf', encryptedOdfNumber)
+    res.cookie('NUMERO_ODF', encryptedOdfNumber)
     res.cookie('encodedOdfNumber', encodedOdfNumber)
     res.cookie('encodedOperationNumber', encodedOperationNumber)
     res.cookie('encodedMachineCode', encodedMachineCode)
-    res.cookie('qtdLibMax', qtdLibCript)
+    res.cookie('qtdLibMax', qtdLibString)
     //res.cookie('starterBarcode', startEncrypted)
     res.cookie('MAQUINA_PROXIMA', encryptedNextMachine)
     res.cookie('OPERACAO_PROXIMA', encryptedNextOperation)

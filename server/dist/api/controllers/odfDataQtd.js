@@ -7,9 +7,10 @@ exports.odfDataQtd = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const global_config_1 = require("../../global.config");
+const decryptedOdf_1 = require("../utils/decryptedOdf");
 const odfDataQtd = async (req, res) => {
-    let numeroOdf = String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"])) || null;
-    let numOper = String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"])) || null;
+    let numeroOdf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"]))) || null;
+    let numOper = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))) || null;
     let numOpeNew = String(numOper.toString().replaceAll(' ', "0")) || null;
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {

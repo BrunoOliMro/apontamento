@@ -1,28 +1,15 @@
 <script>
     // @ts-nocheck
-    import Footer from './footer.svelte'
     import ModalConfirmation from '../modal/modalConfirmation.svelte'
     let imageLoader = '/images/axonLoader.gif';
     let urlString = `/api/v1/odf`;
     let odfData;
-    let employeName;
-    let resultOdf = getOdfData();
     let message = '';
-    employeName = document.cookie
-        .split(';')
-        .map((cookie) => cookie.split('='))
-        .reduce(
-            (accumulator, [key, value]) => ({
-                ...accumulator,
-                [key.trim()]: decodeURIComponent(value),
-            }),
-            {}
-        );
+    let resultOdf = getOdfData();
 
     async function getOdfData() {
         const res = await fetch(urlString);
         odfData = await res.json();
-        console.log('linha 23 odfData/cod.svelte/', odfData);
 
         if (odfData.message === 'codeApont 5 maquina parada') {
             message = 'codeApont 5 maquina parada';
@@ -132,9 +119,9 @@
             <div class='odf-area'>
                 <p class='odf'>Operador:</p>
                 <p class='bold'>
-                    {employeName.FUNCIONARIO === null || !employeName.FUNCIONARIO
+                    {odfData.funcionario === null || !odfData.funcionario
                         ? 'S/I'
-                        : employeName.FUNCIONARIO}
+                        : odfData.funcionario}
                 </p>
             </div>
         </div>

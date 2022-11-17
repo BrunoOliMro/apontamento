@@ -14,9 +14,9 @@ const codeNote = async (req, res, next) => {
     let dados = (0, unravelBarcode_1.unravelBarcode)(req.body.codigoBarras);
     const numeroOdfCookies = req.cookies['odfCryptografada'];
     const encodedOdfString = req.cookies['encodedOdfString'];
-    let decrypted = (0, decryptedOdf_1.decryptedOdf)(numeroOdfCookies);
+    let decryptedValue = (0, decryptedOdf_1.decrypted)(numeroOdfCookies);
     let decodedBufferValue = (0, decodeOdf_1.decodedBuffer)(encodedOdfString);
-    if (decodedBufferValue === decrypted) {
+    if (decodedBufferValue === decryptedValue) {
         next();
     }
     else {

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.decryptedOdf = void 0;
-const decryptedOdf = (numeroOdfCookies) => {
+exports.decrypted = void 0;
+const decrypted = (numeroOdfCookies) => {
     const crypto = require('crypto');
     const algorithm = process.env['ALGORITH_ENCRYPTED'];
     const key = process.env['SECRET_ODF_KEY'];
@@ -11,5 +11,5 @@ const decryptedOdf = (numeroOdfCookies) => {
     decrypted += decypher.final('utf-8');
     return decrypted;
 };
-exports.decryptedOdf = decryptedOdf;
+exports.decrypted = decrypted;
 //# sourceMappingURL=decryptedOdf.js.map

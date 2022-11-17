@@ -7,10 +7,13 @@ exports.odfData = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const global_config_1 = require("../../global.config");
+const decryptedOdf_1 = require("../utils/decryptedOdf");
+const encryptOdf_1 = require("../utils/encryptOdf");
 const odfData = async (req, res) => {
-    let numeroOdf = String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"])) || null;
-    let numOper = String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"])) || null;
-    let numOpeNew = String(numOper.toString().replaceAll(' ', "0")) || null;
+    const numeroOdf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"]))) || null;
+    const numOper = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))) || null;
+    const numOpeNew = String(numOper.toString().replaceAll(' ', "0")) || null;
+    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO']))) || null;
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const resource = await connection.query(`
@@ -22,8 +25,8 @@ const odfData = async (req, res) => {
         AND [NUMERO_ODF] = ${numeroOdf}
         AND [CODIGO_PECA] IS NOT NULL
         ORDER BY NUMERO_OPERACAO ASC`.trim()).then(record => record.recordset);
-        res.cookie("qtdProduzir", resource[0].QTDE_ODF);
-        res.cookie("QTD_REFUGO", resource[0].QTD_REFUGO);
+        res.cookie("qtdProduzir", (0, encryptOdf_1.encrypted)(String(resource[0].QTDE_ODF)));
+        res.cookie("QTD_REFUGO", (0, encryptOdf_1.encrypted)(String(resource[0].QTD_REFUGO)));
         let codigoOperArray = resource.map(e => e.NUMERO_OPERACAO);
         let arrayAfterMap = codigoOperArray.map(e => "00" + e).toString().replaceAll(' ', "0").split(",");
         let indiceDoArrayDeOdfs = arrayAfterMap.findIndex((e) => e === numOpeNew);
@@ -45,6 +48,7 @@ const odfData = async (req, res) => {
             valorMaxdeProducao = x - valorQtdeApontAnterior || 0;
         }
         const obj = {
+            funcionario,
             odfSelecionada,
             valorMaxdeProducao,
         };

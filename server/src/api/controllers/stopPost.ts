@@ -2,21 +2,23 @@ import { RequestHandler } from "express";
 import mssql from "mssql";
 import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";
+import { decrypted } from "../utils/decryptedOdf";
 
 export const stopPost: RequestHandler = async (req, res) => {
     const connection = await mssql.connect(sqlConfig);
-    let numeroOdf = String(sanitize(req.cookies["NUMERO_ODF"])) || null
-    let funcionario = String(sanitize(req.cookies['FUNCIONARIO'])) || null
-    let codigoPeca = String(sanitize(req.cookies['CODIGO_PECA'])) || null
-    let revisao = Number(sanitize(req.cookies['REVISAO'])) || 0
-    let numeroOperacao = String(req.cookies['NUMERO_OPERACAO']) || null
-    let codigoMaq = String(sanitize(req.cookies['CODIGO_MAQUINA'])) || null
-    let qtdLibMax = Number(sanitize(req.cookies['qtdLibMax'])) || 0
+    let numeroOdf = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
+    let funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+    let codigoPeca = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
+    let revisao = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
+    let numeroOperacao = decrypted(String(req.cookies['NUMERO_OPERACAO'])) || null
+    let codigoMaq = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
+    let qtdLibMax = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
 
     //Encerra o processo todo
     let end = new Date().getTime() || 0;
-    let start = Number(req.cookies["starterBarcode"]) || 0
-    let newStart = Number(new Date(start).getTime()) || 0
+    let start = decrypted(String(sanitize(req.cookies["starterBarcode"]))) || 0
+    let newStart: number
+    newStart = Number(start)
     let final = Number(end - newStart) || 0
 
     try {

@@ -2,13 +2,15 @@ import { RequestHandler } from "express";
 import mssql from "mssql";
 import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";
+import { decrypted } from "../utils/decryptedOdf";
 
 export const status: RequestHandler = async (req, res) => {
-    let numpec = String(sanitize(req.cookies['CODIGO_PECA'])) || null
-    let maquina = String(sanitize(req.cookies['CODIGO_MAQUINA'])) || null
+    let numpec = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
+    let maquina = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
     let tempoAgora = new Date().getTime() || 0
-    let startTime = Number(sanitize(req.cookies['starterBarcode'])) || 0;
-    let startTimeNow = Number(new Date(startTime).getTime()) || 0;
+    let startTime = decrypted(String(sanitize(req.cookies['starterBarcode']))) || null;
+    let startTimeNow: number;
+    startTimeNow = Number(startTime) || 0;
     let tempoDecorrido = Number(tempoAgora - startTimeNow) || 0;
     const connection = await mssql.connect(sqlConfig);
 
@@ -23,7 +25,6 @@ export const status: RequestHandler = async (req, res) => {
         AND MAQUIN = '${maquina}' 
         ORDER BY REVISAO DESC
         `).then(record => record.recordset)
-        console.log("rfeo", resource);
 
         //res.cookie("Tempo Execucao", resource[0].EXECUT) 
         let qtdProd = Number(req.cookies["qtdProduzir"][0])

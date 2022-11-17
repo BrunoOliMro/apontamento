@@ -7,17 +7,18 @@ exports.rip = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const global_config_1 = require("../../global.config");
+const decryptedOdf_1 = require("../utils/decryptedOdf");
 const rip = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let numpec = String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"])) || null;
-    let revisao = String((0, sanitize_html_1.default)(req.cookies['REVISAO'])) || null;
-    let codMaq = String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA'])) || null;
-    let codigoPeca = String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"])) || null;
-    let numeroOdf = Number((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"])) || 0;
-    let numeroOperacao = String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"])) || null;
-    let funcionario = String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO'])) || null;
-    let start = Number((0, sanitize_html_1.default)(req.cookies["starterBarcode"])) || 0;
-    let qtdLibMax = Number((0, sanitize_html_1.default)(req.cookies['qtdLibMax'])) || 0;
+    let numpec = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
+    let revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
+    let codMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
+    let codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
+    let numeroOdf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"]))) || null;
+    let numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))) || null;
+    let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO']))) || null;
+    let start = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["starterBarcode"]))) || null;
+    let qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['qtdLibMax']))) || null;
     let startTime = Number(new Date(start).getTime()) || 0;
     try {
         const ripDetails = await connection.query(`

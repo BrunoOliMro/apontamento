@@ -33,7 +33,7 @@ apiRouter.route("/apontamento")
     .post(pointerPost)
 
 apiRouter.route("/odf")
-    .get(codeNote)
+    //.get(codeNote)
     .get(odfData)
 
 apiRouter.route("/odfQtd")
@@ -81,7 +81,7 @@ apiRouter.route("/returnedValue")
     .post(returnedValue)
 
 apiRouter.route("/supervisor")
-    .get(getBefore)
+    //.get(getBefore)
     .post(supervisor)
 
 apiRouter.route("/supervisorParada")

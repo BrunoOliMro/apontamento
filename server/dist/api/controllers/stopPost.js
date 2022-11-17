@@ -7,18 +7,20 @@ exports.stopPost = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const global_config_1 = require("../../global.config");
+const decryptedOdf_1 = require("../utils/decryptedOdf");
 const stopPost = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let numeroOdf = String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"])) || null;
-    let funcionario = String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO'])) || null;
-    let codigoPeca = String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA'])) || null;
-    let revisao = Number((0, sanitize_html_1.default)(req.cookies['REVISAO'])) || 0;
-    let numeroOperacao = String(req.cookies['NUMERO_OPERACAO']) || null;
-    let codigoMaq = String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA'])) || null;
-    let qtdLibMax = Number((0, sanitize_html_1.default)(req.cookies['qtdLibMax'])) || 0;
+    let numeroOdf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"]))) || null;
+    let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO']))) || null;
+    let codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA']))) || null;
+    let revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
+    let numeroOperacao = (0, decryptedOdf_1.decrypted)(String(req.cookies['NUMERO_OPERACAO'])) || null;
+    let codigoMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
+    let qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['qtdLibMax']))) || null;
     let end = new Date().getTime() || 0;
-    let start = Number(req.cookies["starterBarcode"]) || 0;
-    let newStart = Number(new Date(start).getTime()) || 0;
+    let start = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["starterBarcode"]))) || 0;
+    let newStart;
+    newStart = Number(start);
     let final = Number(end - newStart) || 0;
     try {
         const resour = await connection.query(`

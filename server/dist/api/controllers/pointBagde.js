@@ -20,8 +20,8 @@ const pointBagde = async (req, res) => {
         SELECT TOP 1 [MATRIC], [FUNCIONARIO], [CRACHA] FROM FUNCIONARIOS WHERE 1 = 1 AND [CRACHA] = '${matricula}' ORDER BY FUNCIONARIO
             `.trim()).then(result => result.recordset);
         if (selecionarMatricula.length > 0) {
-            const strStartTime = (0, encryptOdf_1.encrypted)(String(start));
-            const encryptedEmployee = selecionarMatricula[0].FUNCIONARIO;
+            const strStartTime = (0, encryptOdf_1.encrypted)(String(start.getTime()));
+            const encryptedEmployee = (0, encryptOdf_1.encrypted)(selecionarMatricula[0].FUNCIONARIO);
             const encryptedBadge = (0, encryptOdf_1.encrypted)(selecionarMatricula[0].CRACHA);
             res.cookie("starterBarcode", strStartTime);
             res.cookie("FUNCIONARIO", encryptedEmployee);

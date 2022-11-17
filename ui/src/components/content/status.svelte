@@ -1,6 +1,6 @@
 <script>
     // @ts-nocheck
-    import Sanitize from '../../routes/sanitize.svelte'
+    // import Sanitize from '../../routes/sanitize.JS'
     import ModalConfirmation from "../modal/modalConfirmation.svelte";
     let searchIcon = `/images/search.png`;
     let imageLoader = `/images/axonLoader.gif`;

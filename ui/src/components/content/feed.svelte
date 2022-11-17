@@ -1,20 +1,15 @@
 <script>
     // @ts-nocheck
-    import Sanitize from "../../routes/sanitize.svelte";
-    // import DrawingButton from "../buttons/drawingButton.svelte";
-    // import HistoricButton from "../buttons/historicButton.svelte";
-    // import MissingButton from "../buttons/missingButton.svelte";
-    // import ReworkButton from "../buttons/reworkButton.svelte";
-    // import StopButton from "../buttons/stopButton.svelte";
+    import blockForbiddenChars from "../../routes/presanitize";
     import Bad from "../inputs/bad.svelte";
     import GoodFeed from "../inputs/goodFeed.svelte";
     import Missing from "../inputs/missing.svelte";
     import Rework from "../inputs/rework.svelte";
     import ModalConfirmation from "../modal/modalConfirmation.svelte";
     import Cod from "./cod.svelte";
+    import Container from "./container.svelte";
     import Footer from "./footer.svelte";
     import Status from "./status.svelte";
-
     let supervisorApi = `/api/v1/supervisor`;
     let imageLoader = "/images/axonLoader.gif";
     let badFeed;
@@ -28,7 +23,7 @@
     let valorFeed;
     let value;
     let supervisor;
-    //let qtdPossivelProducao;
+    let qtdPossivelProducao;
     let showError = false;
     let showParcialSuper = false;
     let showSuperNotFound = false;
@@ -39,12 +34,21 @@
     var showAddress = false;
     let loader = false;
     let modalMessage = "";
-    // let rework = false;
-    // let missing = false;
     let stopModal = false;
-    // let bad = true;
     let showMaqPar = false;
     let modalTitle = "Máquina Parada ";
+    let urlString = `/api/v1/odfQtd`;
+    getOdfData();
+
+    async function getOdfData() {
+        const res = await fetch(urlString);
+        dadosOdf = await res.json();
+        console.log("linha 41", dadosOdf);
+        qtdPossivelProducao = dadosOdf.valorMaxdeProducao;
+        if (qtdPossivelProducao <= 0) {
+            qtdPossivelProducao = 0;
+        }
+    }
 
     function closePop() {
         showMaqPar = false;
@@ -166,9 +170,15 @@
     async function doCallPost() {
         let numberBadFeed = Number(badFeed || 0);
         let numberGoodFeed = Number(valorFeed || 0);
-        //let numberQtdAllowed = Number(qtdPossivelProducao);
+        let numberQtdAllowed = Number(qtdPossivelProducao || 0);
         let numberMissing = Number(missingFeed || 0);
         let numberReworkFeed = Number(reworkFeed || 0);
+
+        console.log("linha 185", numberBadFeed);
+        console.log("linha 185", numberGoodFeed);
+        console.log("linha 185", numberQtdAllowed);
+        console.log("linha 185", numberMissing);
+        console.log("linha 185", numberReworkFeed);
 
         let total =
             numberBadFeed + numberGoodFeed + numberMissing + numberReworkFeed;
@@ -236,6 +246,26 @@
         }
     };
 
+    function handleSS(event) {
+        console.log("linha 250", event.detail.goodFeed);
+        valorFeed = event.detail.goodFeed;
+        console.log("linha 250", valorFeed);
+    }
+
+    function handll(event){
+        badFeed = event.detail.badFeed
+        console.log("linha 250", badFeed);
+    }
+
+    function hand(event){
+        missingFeed = event.detail.missingFeed
+        console.log("linha 250", missingFeed);
+    }
+
+    function handllaa(event){
+        reworkFeed = event.detail.reworkFeed
+        console.log("linha 250", reworkFeed);
+    }
 </script>
 
 {#if loader === true}
@@ -265,16 +295,17 @@
             </div>
             <div class="feed-area">
                 <div class="feed-area-div">
-                    <GoodFeed bind:value={valorFeed} />
+                    <!-- bind:value={goodFeed} -->
+                    <GoodFeed tabindex="1" autofocus on:message={handleSS} />
                 </div>
                 <div class="feed-area-div">
-                    <Bad tabindex="2" bind:value={badFeed} />
+                    <Bad tabindex="2" on:message={handll} />
                 </div>
                 <div class="feed-area-div">
-                    <Missing tabindex="3" bind:value={missingFeed} />
+                    <Missing tabindex="3" on:message={hand} />
                 </div>
                 <div class="feed-area-div">
-                    <Rework tabindex="4" bind:value={reworkFeed} />
+                    <Rework tabindex="4" on:message={handllaa} />
                 </div>
             </div>
             <div class="buttonApontar">
@@ -317,6 +348,7 @@
                     <!-- on:input={Sanitize} -->
                     <input
                         autofocus
+                        on:input={blockForbiddenChars}
                         on:keypress={checkForSuper}
                         bind:value={supervisor}
                         class="supervisor"
@@ -342,10 +374,10 @@
                 </div>
                 <p>Supervisor</p>
                 <input
+                    on:input={blockForbiddenChars}
                     autofocus
                     bind:value={supervisor}
                     on:keypress={checkForSuper}
-                    on:input={Sanitize}
                     class="supervisor"
                     type="text"
                     name="supervisor"
