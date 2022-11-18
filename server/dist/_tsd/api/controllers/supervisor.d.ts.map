@@ -1,1 +1,1 @@
-{"version":3,"file":"supervisor.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/supervisor.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAKzC,eAAO,MAAM,UAAU,EAAE,cAgCxB,CAAA"}
+{"version":3,"file":"supervisor.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/supervisor.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAMzC,eAAO,MAAM,UAAU,EAAE,cAyCxB,CAAA"}

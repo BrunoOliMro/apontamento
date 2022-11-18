@@ -7,6 +7,7 @@ exports.rip = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const global_config_1 = require("../../global.config");
+const insert_1 = require("../services/insert");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const rip = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
@@ -57,9 +58,15 @@ const rip = async (req, res) => {
         res.cookie('instrumento', numopeFilter.map(acc => acc.INSTRUMENTO));
         res.cookie('lie', numopeFilter.map(acc => acc.LIE));
         res.cookie('lse', numopeFilter.map(acc => acc.LSE));
+        let descricaoCodAponta = `Rip Ini`;
+        let boas = 0;
+        let ruins = 0;
+        let faltante = 0;
+        let retrabalhada = 0;
+        let codAponta = 6;
+        let motivo = ``;
         if (numopeFilter.length <= 0) {
-            await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
-            VALUES (GETDATE(), '${funcionario}', ${numeroOdf}, '${codigoPeca}', '${revisao}', '${numeroOperacao}', '${numeroOperacao}', 'D', '${codMaq}', ${qtdLibMax}, 0, 0, '${funcionario}', '0', '6', '6', 'ODF Fin.', ${startTime}, ${startTime}, '1', 0, 0 )`).then(record => record.rowsAffected);
+            await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime);
         }
         return res.json(numopeFilter);
     }

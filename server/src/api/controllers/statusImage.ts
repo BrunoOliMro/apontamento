@@ -1,7 +1,5 @@
 import { RequestHandler } from "express";
-import mssql, { columns } from "mssql";
 import sanitize from "sanitize-html";
-import { sqlConfig } from "../../global.config";
 import { pictures } from "../pictures";
 import { select } from "../services/select";
 import { decrypted } from "../utils/decryptedOdf";

@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.supervisor = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
+const select_1 = require("../services/select");
 const sanitize_1 = require("../utils/sanitize");
 const supervisor = async (req, res) => {
     let supervisor = String((0, sanitize_1.sanitize)(req.body['supervisor']));
@@ -23,8 +24,12 @@ const supervisor = async (req, res) => {
         return res.json({ message: 'supervisor não encontrado' });
     }
     try {
-        const resource = await connection.query(`
-        SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`).then(result => result.recordset);
+        let table = `VIEW_GRUPO_APT`;
+        let top = `TOP 1`;
+        let column = `CRACHA`;
+        let where = `AND CRACHA = '${supervisor}'`;
+        let orderBy = ``;
+        const resource = await (0, select_1.select)(table, top, column, where, orderBy);
         if (resource.length > 0) {
             return res.json({ message: 'Supervisor encontrado' });
         }

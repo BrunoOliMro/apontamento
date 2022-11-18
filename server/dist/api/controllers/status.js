@@ -4,9 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.status = void 0;
-const mssql_1 = __importDefault(require("mssql"));
 const sanitize_html_1 = __importDefault(require("sanitize-html"));
-const global_config_1 = require("../../global.config");
+const select_1 = require("../services/select");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const status = async (req, res) => {
     let numpec = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA']))) || null;
@@ -16,18 +15,13 @@ const status = async (req, res) => {
     let startTimeNow;
     startTimeNow = Number(startTime) || 0;
     let tempoDecorrido = Number(tempoAgora - startTimeNow) || 0;
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    let table = `OPERACAO`;
+    let top = `TOP 1`;
+    let column = `EXECUT`;
+    let where = `AND NUMPEC = '${numpec}' AND MAQUIN = '${maquina}'`;
+    let orberBy = `ORDER BY REVISAO DESC`;
     try {
-        const resource = await connection.query(`
-        SELECT 
-        TOP 1 
-        EXECUT 
-        FROM 
-        OPERACAO 
-        WHERE NUMPEC = '${numpec}' 
-        AND MAQUIN = '${maquina}' 
-        ORDER BY REVISAO DESC
-        `).then(record => record.recordset);
+        const resource = await (0, select_1.select)(table, top, column, where, orberBy);
         let qtdProd = Number(req.cookies["qtdProduzir"][0]);
         let tempoExecut = Number(resource[0].EXECUT);
         let tempoTotalExecução = Number(tempoExecut * qtdProd) * 1000;

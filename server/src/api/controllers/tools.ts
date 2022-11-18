@@ -1,8 +1,7 @@
 import { RequestHandler } from "express";
-import mssql from "mssql";
-import { sqlConfig } from "../../global.config";
 import { pictures } from "../pictures";
 import { insertInto } from "../services/insert";
+import { select } from "../services/select";
 import { decrypted } from "../utils/decryptedOdf";
 import { encrypted } from "../utils/encryptOdf";
 import { sanitize } from "../utils/sanitize";
@@ -15,7 +14,6 @@ export const tools: RequestHandler = async (req, res) => {
         return res.json({ message: 'Algo deu errado' })
     }
 
-    const connection = await mssql.connect(sqlConfig);
     let numeroOdf: number = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
     let codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
     let numeroOperacao: string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
@@ -41,15 +39,23 @@ export const tools: RequestHandler = async (req, res) => {
     qtdLibMax = Number(qtdLibMax)
 
     try {
-        const toolsImg = await connection.query(`
-            SELECT
-                [CODIGO],
-                [IMAGEM]
-            FROM VIEW_APTO_FERRAMENTAL 
-            WHERE 1 = 1 
-                AND IMAGEM IS NOT NULL
-                AND CODIGO = '${codigoPeca}'
-        `).then(res => res.recordset);
+        // const toolsImg = await connection.query(`
+        //     SELECT
+        //         [CODIGO],
+        //         [IMAGEM]
+        //     FROM VIEW_APTO_FERRAMENTAL 
+        //     WHERE 1 = 1 
+        //         AND IMAGEM IS NOT NULL
+        //         AND CODIGO = '${codigoPeca}'
+        // `).then(res => res.recordset);
+        
+        let top = ``
+        let tableFer = `VIEW_APTO_FERRAMENTAL`
+        let columnFer = `[CODIGO], [IMAGEM]`
+        let whereFer = `AND IMAGEM IS NOT NULL AND CODIGO = '${codigoPeca}'`
+        let orderByFer = ``
+        let toolsImg: any = select(tableFer, top, columnFer, whereFer, orderByFer)
+
         let result = [];
         for await (let [i, record] of toolsImg.entries()) {
             const rec = await record;
@@ -57,8 +63,14 @@ export const tools: RequestHandler = async (req, res) => {
             result.push(path);
         }
 
-        const verifyInsert = await connection.query(`SELECT * FROM HISAPONTA (NOLOCK) WHERE 1 = 1 AND ODF = '${numeroOdf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}' ORDER BY CODAPONTA DESC
-        `).then(record => record.rowsAffected)
+        // const verifyInsert = await connection.query(`SELECT * FROM HISAPONTA (NOLOCK) WHERE 1 = 1 AND ODF = '${numeroOdf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}' ORDER BY CODAPONTA DESC
+        // `).then(record => record.rowsAffected)
+
+        let table = `HISAPONTA (NOLOCK)`
+        let column = `*`
+        let where = `AND ODF = '${numeroOdf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}'`
+        let orderBy = `ORDER BY CODAPONTA DESC`
+        const verifyInsert = await select(table, top, column, where, orderBy)
 
         //Cria o primeiro registro em Hisaponta e insere o CODAPONTA 1 e o primeiro tempo em APT_TEMPO_OPERACAO
         if (verifyInsert.length <= 0) {

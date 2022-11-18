@@ -1,7 +1,6 @@
 import { RequestHandler } from "express";
-import mssql from "mssql";
 import sanitize from "sanitize-html";
-import { sqlConfig } from "../../global.config";
+import { select } from "../services/select";
 import { decrypted } from "../utils/decryptedOdf";
 
 export const status: RequestHandler = async (req, res) => {
@@ -12,19 +11,25 @@ export const status: RequestHandler = async (req, res) => {
     let startTimeNow: number;
     startTimeNow = Number(startTime) || 0;
     let tempoDecorrido = Number(tempoAgora - startTimeNow) || 0;
-    const connection = await mssql.connect(sqlConfig);
+    let table = `OPERACAO`
+    let top = `TOP 1`
+    let column = `EXECUT`
+    let where = `AND NUMPEC = '${numpec}' AND MAQUIN = '${maquina}'`
+    let orberBy = `ORDER BY REVISAO DESC`
 
     try {
-        const resource = await connection.query(`
-        SELECT 
-        TOP 1 
-        EXECUT 
-        FROM 
-        OPERACAO 
-        WHERE NUMPEC = '${numpec}' 
-        AND MAQUIN = '${maquina}' 
-        ORDER BY REVISAO DESC
-        `).then(record => record.recordset)
+        const resource: any = await select(table, top, column, where, orberBy)
+        // const resource = await connection.query(`
+        // SELECT 
+        // TOP 1 
+        // EXECUT 
+        // FROM 
+        // OPERACAO 
+        // WHERE 1 = 1
+        // AND NUMPEC = '${numpec}' 
+        // AND MAQUIN = '${maquina}' 
+        // ORDER BY REVISAO DESC
+        // `).then(record => record.recordset)
 
         //res.cookie("Tempo Execucao", resource[0].EXECUT) 
         let qtdProd = Number(req.cookies["qtdProduzir"][0])

@@ -1,13 +1,9 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.selectedTools = exports.tools = void 0;
-const mssql_1 = __importDefault(require("mssql"));
-const global_config_1 = require("../../global.config");
 const pictures_1 = require("../pictures");
 const insert_1 = require("../services/insert");
+const select_1 = require("../services/select");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const encryptOdf_1 = require("../utils/encryptOdf");
 const sanitize_1 = require("../utils/sanitize");
@@ -16,7 +12,6 @@ const tools = async (req, res) => {
         console.log("algo deu errado linha 17 /tools/");
         return res.json({ message: 'Algo deu errado' });
     }
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let numeroOdf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))) || null;
     let codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_PECA"]))) || null;
     let numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"]))) || null;
@@ -38,23 +33,23 @@ const tools = async (req, res) => {
     numeroOdf = Number(numeroOdf);
     qtdLibMax = Number(qtdLibMax);
     try {
-        const toolsImg = await connection.query(`
-            SELECT
-                [CODIGO],
-                [IMAGEM]
-            FROM VIEW_APTO_FERRAMENTAL 
-            WHERE 1 = 1 
-                AND IMAGEM IS NOT NULL
-                AND CODIGO = '${codigoPeca}'
-        `).then(res => res.recordset);
+        let top = ``;
+        let tableFer = `VIEW_APTO_FERRAMENTAL`;
+        let columnFer = `[CODIGO], [IMAGEM]`;
+        let whereFer = `AND IMAGEM IS NOT NULL AND CODIGO = '${codigoPeca}'`;
+        let orderByFer = ``;
+        let toolsImg = (0, select_1.select)(tableFer, top, columnFer, whereFer, orderByFer);
         let result = [];
         for await (let [i, record] of toolsImg.entries()) {
             const rec = await record;
             const path = await pictures_1.pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], ferramenta, String(i));
             result.push(path);
         }
-        const verifyInsert = await connection.query(`SELECT * FROM HISAPONTA (NOLOCK) WHERE 1 = 1 AND ODF = '${numeroOdf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}' ORDER BY CODAPONTA DESC
-        `).then(record => record.rowsAffected);
+        let table = `HISAPONTA (NOLOCK)`;
+        let column = `*`;
+        let where = `AND ODF = '${numeroOdf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}'`;
+        let orderBy = `ORDER BY CODAPONTA DESC`;
+        const verifyInsert = await (0, select_1.select)(table, top, column, where, orderBy);
         if (verifyInsert.length <= 0) {
             try {
                 (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, startTime);

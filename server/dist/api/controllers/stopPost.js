@@ -7,6 +7,7 @@ exports.stopPost = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const global_config_1 = require("../../global.config");
+const insert_1 = require("../services/insert");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const stopPost = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
@@ -22,10 +23,15 @@ const stopPost = async (req, res) => {
     let newStart;
     newStart = Number(start);
     let final = Number(end - newStart) || 0;
+    let boas = 0;
+    let faltante = 0;
+    let retrabalhada = 0;
+    let codAponta = 5;
+    let ruins = 0;
+    let motivo = '';
+    let descricaoCodAponta = 'Parada';
     try {
-        const resour = await connection.query(`
-            INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-            VALUES(GETDATE(), '${funcionario}' , '${numeroOdf}' , '${codigoPeca}' , '${revisao}' , '${numeroOperacao}' ,'${numeroOperacao}', 'D', '${codigoMaq}' , '${qtdLibMax}' , '0' , '0' , '${funcionario}' , '0' , '5' , '5', 'Parada.' , '${final}' , '${final}' , '1' ,'0','0')`).then(record => record.rowsAffected);
+        const resour = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, final);
         console.log("resource", resour);
         if (resour.length <= 0) {
             return res.json({ message: 'erro ao parar a maquina' });

@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import mssql from "mssql";
 import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";
+import { insertInto } from "../services/insert";
 import { decrypted } from "../utils/decryptedOdf";
 
 export const rip: RequestHandler = async (req, res) => {
@@ -10,11 +11,11 @@ export const rip: RequestHandler = async (req, res) => {
     let revisao:string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
     let codMaq:string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
     let codigoPeca:string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
-    let numeroOdf:string = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
+    let numeroOdf:number = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
     let numeroOperacao :string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
     let funcionario:string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
     let start:string = decrypted(String(sanitize(req.cookies["starterBarcode"]))) || null
-    let qtdLibMax:string = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
+    let qtdLibMax:number = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
     let startTime:number = Number(new Date(start).getTime()) || 0
     try {
         const ripDetails = await connection.query(`
@@ -57,9 +58,19 @@ export const rip: RequestHandler = async (req, res) => {
         res.cookie('lie', numopeFilter.map(acc => acc.LIE))
         res.cookie('lse', numopeFilter.map(acc => acc.LSE))
 
+        let descricaoCodAponta = `Rip Ini`
+        let boas = 0
+        let ruins = 0
+        let faltante = 0
+        let retrabalhada = 0
+        let codAponta = 6
+        let motivo =  ``
+
         if (numopeFilter.length <= 0) {
-            await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
-            VALUES (GETDATE(), '${funcionario}', ${numeroOdf}, '${codigoPeca}', '${revisao}', '${numeroOperacao}', '${numeroOperacao}', 'D', '${codMaq}', ${qtdLibMax}, 0, 0, '${funcionario}', '0', '6', '6', 'ODF Fin.', ${startTime}, ${startTime}, '1', 0, 0 )`).then(record => record.rowsAffected)
+            // await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
+            // VALUES (GETDATE(), '${funcionario}', ${numeroOdf}, '${codigoPeca}', '${revisao}', '${numeroOperacao}', '${numeroOperacao}', 'D', '${codMaq}', ${qtdLibMax}, 0, 0, '${funcionario}', '0', '6', '6', 'ODF Fin.', ${startTime}, ${startTime}, '1', 0, 0 )`).then(record => record.rowsAffected)
+        
+            await insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime)
         }
         return res.json(numopeFilter)
     } catch (error) {

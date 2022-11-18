@@ -1,6 +1,5 @@
 import { RequestHandler } from "express";
-import mssql from "mssql";
-import { sqlConfig } from "../../global.config";
+import { select } from "../services/select";
 import { encrypted } from "../utils/encryptOdf";
 import { sanitize } from "../utils/sanitize";
 
@@ -12,12 +11,19 @@ export const pointBagde: RequestHandler = async (req, res) => {
         return res.json({ message: "codigo de matricula vazia" })
     }
 
-    const connection = await mssql.connect(sqlConfig);
     try {
-        const selecionarMatricula = await connection.query(` 
-        SELECT TOP 1 [MATRIC], [FUNCIONARIO], [CRACHA] FROM FUNCIONARIOS WHERE 1 = 1 AND [CRACHA] = '${matricula}' ORDER BY FUNCIONARIO
-            `.trim()
-        ).then(result => result.recordset)
+        // const selecionarMatricula = await connection.query(` 
+        // SELECT TOP 1 [MATRIC], [FUNCIONARIO], [CRACHA] FROM FUNCIONARIOS WHERE 1 = 1 AND [CRACHA] = '${matricula}' ORDER BY FUNCIONARIO
+        //     `.trim()
+        // ).then(result => result.recordset)
+
+        let table = `FUNCIONARIOS`
+        let top = `TOP 1`
+        let column = `[MATRIC], [FUNCIONARIO], [CRACHA]`
+        let where = `AND [CRACHA] = '${matricula}'`
+        let orderBy = `ORDER BY FUNCIONARIO`
+
+        const selecionarMatricula = await select(table, top, column, where, orderBy)
 
         if (selecionarMatricula.length > 0) {
             const strStartTime = encrypted(String(start.getTime()))
