@@ -27,6 +27,11 @@
     tools = await res.json();
     console.log("tools linha 28", tools);
 
+    if(tools.message === 'Algo deu errado'){
+      window.location.href = "/#/codigobarras";
+      location.reload()
+    }
+
     if(tools.message === `codeApont 2 setup finalizado`){
       message = `codeApont 2 setup finalizado`
       ferSelected()

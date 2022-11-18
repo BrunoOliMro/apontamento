@@ -1,36 +1,51 @@
 import { RequestHandler } from 'express';
 import mssql from 'mssql';
+import sanitize from 'sanitize-html';
 import { sqlConfig } from '../../global.config';
+import { insertInto } from '../services/insert';
 import { decodedBuffer } from '../utils/decodeOdf';
 import { decrypted } from '../utils/decryptedOdf';
 import { unravelBarcode } from '../utils/unravelBarcode';
 
 export const codeNote: RequestHandler = async (req, res, next) => {
     const connection = await mssql.connect(sqlConfig);
-    let dados: any = unravelBarcode(req.body.codigoBarras)
+    let dados = unravelBarcode(req.body.codigoBarras)
+    const funcionario: string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+    let codigoPeca = String('' || null)
 
-    const numeroOdfCookies = req.cookies['odfCryptografada']
-    const encodedOdfString = req.cookies['encodedOdfString']
-
-    //Descriptografar numero da ODF
-    let decryptedValue = decrypted(numeroOdfCookies)
-
-    //Decodifica numero da odf
-    let decodedBufferValue = decodedBuffer(encodedOdfString)
-
-    //Compara o Codigo Descodificado e o descriptografado
-    if(decodedBufferValue === decryptedValue){
-        next()
-    } else {
-        console.log("sera que cai aqui");
-        return res.json({message : 'Acesso negado'})
+    if (!funcionario || funcionario === '') {
+        console.log("funcionarario /codenote/", funcionario);
+        return res.json({ message: 'Acesso negado' })
     }
 
-    const numeroOdf: number = Number(req.cookies['NUMERO_ODF']) || 0
-    const codigoOper = req.cookies['NUMERO_OPERACAO']
-    const codigoMaq = req.cookies['CODIGO_MAQUINA']
-    const funcionario = req.cookies['FUNCIONARIO']
+    if (!dados) {
+        console.log("linha 24");
+        //Descriptografar numero da ODF
+        const numeroOdfCookies = decrypted(String(sanitize(req.cookies['NUMERO_ODF']))) || null
+        const codigoOper: string = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
+        const codigoMaq: string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
+
+        dados.numOdf = numeroOdfCookies
+        dados.numOper = codigoOper
+        dados.codMaq = codigoMaq
+
+        //Decodifica numero da odf
+        const encodedOdfString: string = decodedBuffer(String(sanitize(req.cookies['encodedOdfString'])))
+
+        //Compara o Codigo Descodificado e o descriptografado
+        if (encodedOdfString === numeroOdfCookies) {
+            next()
+        } else {
+            return res.json({ message: 'Acesso negado' })
+        }
+    }
+
+    console.log('linha 44', dados.numOdf);
+    console.log('linha 44', dados.numOper);
+    console.log('linha 44', dados.codMaq);
+
     try {
+        console.log("linha 45 /codenote/");
         const codIdApontamento = await connection.query(`
             SELECT 
             TOP 1
@@ -39,8 +54,9 @@ export const codeNote: RequestHandler = async (req, res, next) => {
             NUMOPE, 
             ITEM,
             CODAPONTA 
-            FROM 
-            HISAPONTA 
+            FROM
+            HISAPONTA
+            (NOLOCK)
             WHERE 1 = 1 
             AND ODF = ${dados.numOdf}
             AND NUMOPE = '${dados.numOper}'
@@ -48,58 +64,98 @@ export const codeNote: RequestHandler = async (req, res, next) => {
             ORDER BY DATAHORA DESC
             `)
             .then(result => result.recordset);
+            console.log("linha 64 /codenote/");
 
-            let lastEmployee = codIdApontamento[0]?.USUARIO
-            let numeroOdfDB = codIdApontamento[0]?.ODF
-            let codigoOperDB = codIdApontamento[0]?.NUMOPE
-            let codigoMaqDB = codIdApontamento[0]?.ITEM
+        let lastEmployee = codIdApontamento[0]?.USUARIO
+        let numeroOdfDB = codIdApontamento[0]?.ODF
+        let codigoOperDB = codIdApontamento[0]?.NUMOPE
+        let codigoMaqDB = codIdApontamento[0]?.ITEM
 
-            // If the user is diferent than the last user
-            if(lastEmployee !== funcionario 
-                && numeroOdf === numeroOdfDB 
-                && codigoOper === codigoOperDB 
-                && codigoMaq === codigoMaqDB
-                ){
-                console.log("usuario diferente");
-                //Finalizar  a odf E iniciar uma nova
-                return res.json({message : 'usuario diferente'})
-            }
+        // If the user is diferent than the last user
+        if (lastEmployee !== funcionario
+            && dados.numOdf === numeroOdfDB
+            && dados.numOper === codigoOperDB
+            && dados.codMaq === codigoMaqDB
+        ) {
+            console.log("usuario diferente");
+            //Finalizar  a odf E iniciar uma nova
+            return res.json({ message: 'usuario diferente' })
+        }
+
+        let numeroOdf = Number(dados.numOdf)
+        let tempoDecorrido = 0
+        let revisao = String('' || null)
+        let qtdLibMax = 0
+        let boas = 0
+        let ruins = 0
+        let faltante: number = Number(0)
+        let retrabalhada = 0
+        let codAponta = 1
+        let descricaoCodAponta = 'Ini Setup.'
+        let motivo = String('')
+        var obj = {
+            message: ''
+        }
+
+        console.log("linha 95 /code note/");
 
         if (codIdApontamento.length > 0) {
             if (codIdApontamento[0]?.CODAPONTA === 1) {
                 req.body.message = `codeApont 1 setup iniciado`
-                //return res.json({ message: `codeApont 1 setup iniciado` })
+                next()
             }
+
             if (codIdApontamento[0]?.CODAPONTA === 2) {
-                return res.json({ message: `codeApont 2 setup finalizado` })
+                console.log("linha 100 /code note/");
+                obj.message = `codeApont 2 setup finalizado`
+                req.body.message = `codeApont 2 setup finalizado`
+                next()
             }
+
             if (codIdApontamento[0]?.CODAPONTA === 3) {
-                return res.json({ message: `codeApont 3 prod iniciado` })
+                req.body.message = `codeApont 3 prod iniciado`
+                next()
             }
+
             if (codIdApontamento[0]?.CODAPONTA === 4) {
-                return res.json({ message: `codeApont 4 prod finalzado` })
+                req.body.message = `codeApont 4 prod finalzado`
+                next()
             }
+
             if (codIdApontamento[0]?.CODAPONTA === 5) {
-                return res.json({ message: `codeApont 5 maquina parada` })
+                req.body.message = `codeApont 5 maquina parada`
+                next()
             }
+
             if (codIdApontamento[0]?.CODAPONTA === 6) {
-                return res.json({ message: `codeApont 6 processo finalizado` })
+                req.body.message = `codeApont 1 setup iniciado`
+                const insertResponse = await insertInto(funcionario, numeroOdf, codigoPeca, revisao, dados.numOper, dados.codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido)
+                if (insertResponse === 'Algo deu errado') {
+                    return res.json({ message: 'Algo deu errado' })
+                }
+                next()
             }
+
             if (codIdApontamento[0]?.CODAPONTA === 7) {
-                return res.json({message : 'codeApont 7 estorno realizado'})
+                req.body.message = `codeApont 1 setup iniciado`
+                next()
             }
-            if (!codIdApontamento[0]?.CODAPONTA) {
-                return res.json({message: 'qualquer outro codigo'})
+
+            if (lastEmployee !== funcionario && codIdApontamento[0]?.CODAPONTA === 6) {
+                console.log("chaamr outra função");
+                req.body.message = `codeApont 1 setup iniciado`
             }
         }
-        if (!codIdApontamento) {
-            return res.json({message : 'codeApont 1 setup iniciado'})
-        }else{
-            return res.json({message: 'Algo deu errado'})
-        }
+        if (codIdApontamento.length <= 0){
+            const resultInsert = await insertInto(funcionario,numeroOdf, codigoPeca, revisao, dados.numOper, dados.codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido)
+            if(resultInsert === 'Algo deu errado'){
+                return res.json({ message: 'Algo deu errado' })
+            }
+            next()
+        } 
     } catch (error) {
-        return res.json({ message: 'Algo deu errado ao buscar pelo codigo de apontamento' })
+        return res.json({ message: 'Algo deu errado' })
     } finally {
-        await connection.close()
+        //await connection.close()
     }
 }

@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.pointerPost = void 0;
 const mssql_1 = __importDefault(require("mssql"));
+const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const global_config_1 = require("../../global.config");
 const select_1 = require("../services/select");
 const selectIfHasP_1 = require("../services/selectIfHasP");
@@ -12,7 +13,7 @@ const decryptedOdf_1 = require("../utils/decryptedOdf");
 const encodedOdf_1 = require("../utils/encodedOdf");
 const encryptOdf_1 = require("../utils/encryptOdf");
 const unravelBarcode_1 = require("../utils/unravelBarcode");
-const pointerPost = async (req, res, next) => {
+const pointerPost = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     const dados = (0, unravelBarcode_1.unravelBarcode)(req.body.codigoBarras);
     let message = String(req.body.message) || null;
@@ -22,7 +23,17 @@ const pointerPost = async (req, res, next) => {
     let qtdLibMax = 0;
     let codigoMaquinaProxOdf;
     let codMaqProxOdf;
+    if (message === 'codeApont 1 setup iniciado') {
+        return res.json({ message: 'codeApont 1 setup iniciado' });
+    }
+    if (message === `codeApont 4 prod finalzado`) {
+        return res.json({ message: 'codeApont 4 prod finalzado' });
+    }
+    if (message === `codeApont 5 maquina parada`) {
+        return res.json({ message: 'codeApont 5 maquina parada' });
+    }
     const queryGrupoOdf = await (0, select_1.selectOdfFromPcp)(dados);
+    console.log("linha 38 /pointer/");
     if (queryGrupoOdf.message === 'odf não encontrada') {
         return res.json({ message: 'odf não encontrada' });
     }
@@ -75,12 +86,10 @@ const pointerPost = async (req, res, next) => {
         objOdfSelecAnterior = 0;
     }
     let numeroOper = '00' + objOdfSelecionada.NUMERO_OPERACAO.replaceAll(' ', '0');
-    if (objOdfSelecionada['CODIGO_MAQUINA'] === 'RET001') {
-        objOdfSelecionada['CODIGO_MAQUINA'] = 'RET001';
+    let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO'])));
+    if (!funcionario) {
+        return res.json({ message: 'Algo deu errado' });
     }
-    let funcionario = (0, decryptedOdf_1.decrypted)(String(req.cookies['FUNCIONARIO']));
-    let codigoPeca = objOdfSelecionada['CODIGO_PECA'] || null;
-    let revisao = objOdfSelecionada['REVISAO'] || null;
     let qtdLibString = (0, encryptOdf_1.encrypted)(String(qtdLibMax));
     let encryptedOdfNumber = (0, encryptOdf_1.encrypted)(String(objOdfSelecionada['NUMERO_ODF']));
     const encryptedNextMachine = (0, encryptOdf_1.encrypted)(String(codigoMaquinaProxOdf));
@@ -103,8 +112,12 @@ const pointerPost = async (req, res, next) => {
     res.cookie('CODIGO_MAQUINA', encryptedMachineCode);
     res.cookie('NUMERO_OPERACAO', operationNumber);
     res.cookie('REVISAO', encryptedRevision);
-    if (revisao) {
-        revisao = '0';
+    console.log("linha 146 /pointer/");
+    if (message === 'codeApont 2 setup finalizado') {
+        return res.json({ message: 'codeApont 1 setup iniciado' });
+    }
+    if (message === `codeApont 3 prod iniciado`) {
+        return res.json({ message: 'codeApont 3 prod iniciado' });
     }
     let data = await (0, selectIfHasP_1.selectToKnowIfHasP)(dados);
     if (data === 'valores reservados') {
@@ -114,12 +127,7 @@ const pointerPost = async (req, res, next) => {
         res.cookie('NUMITE', data.codigoNumite);
         res.cookie('resultadoFinalProducao', data.resultadoFinalProducao);
     }
-    if (message !== 'codeApont 1 setup iniciado') {
-        await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
-        VALUES (GETDATE(), '${funcionario}', ${dados.numOdf}, '${codigoPeca}', ${queryGrupoOdf[0].REVISAO},'${dados.numOper}', '${dados.numOper}', 'D', '${dados.codMaq}',0, 0, 0, '${funcionario}', '0', 1, '1', 'Ini Set.', 0, 0, '1', 0, 0 )`)
-            .then(record => record.rowsAffected);
-        return res.status(200).json({ message: 'valores reservados' });
-    }
+    return res.json({ message: 'codeApont 1 setup iniciado' });
 };
 exports.pointerPost = pointerPost;
 //# sourceMappingURL=pointer.js.map

@@ -2,23 +2,43 @@ import { RequestHandler } from "express";
 import mssql from "mssql";
 import { sqlConfig } from "../../global.config";
 import { pictures } from "../pictures";
+import { insertInto } from "../services/insert";
 import { decrypted } from "../utils/decryptedOdf";
+import { encrypted } from "../utils/encryptOdf";
 import { sanitize } from "../utils/sanitize";
 
 //Ferramenta
 export const tools: RequestHandler = async (req, res) => {
+
+    if (req.cookies['NUMERO_ODF'] === undefined) {
+        console.log("algo deu errado linha 17 /tools/");
+        return res.json({ message: 'Algo deu errado' })
+    }
+
     const connection = await mssql.connect(sqlConfig);
+    let numeroOdf: number = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
     let codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
-    let numeroOdf: string = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
     let numeroOperacao: string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
     let codigoMaq: string = decrypted(String(sanitize(req.cookies["CODIGO_MAQUINA"]))) || null
     let funcionario: string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
     let revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
-    let start: string = decrypted(String(sanitize(req.cookies["starterBarcode"]))) || null
-    let qtdLibMax: string = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
+    let start: number = decrypted(String(sanitize(req.cookies["starterBarcode"]))) || null
+    let qtdLibMax: number = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
+
     let startTime: number
     startTime = Number(start)
     let ferramenta: string = String("_ferr")
+
+    const boas = 0
+    const ruins = 0
+    const codAponta = 1
+    const descricaoCodigoAponta = 'Ini Setup.'
+    const faltante = 0
+    let retrabalhada = 0
+    const motivo = ''
+
+    numeroOdf = Number(numeroOdf)
+    qtdLibMax = Number(qtdLibMax)
 
     try {
         const toolsImg = await connection.query(`
@@ -37,14 +57,13 @@ export const tools: RequestHandler = async (req, res) => {
             result.push(path);
         }
 
-        const verifyInsert = await connection.query(`SELECT * FROM HISAPONTA WHERE 1 = 1 AND ODF = '${numeroOdf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}' ORDER BY CODAPONTA DESC
+        const verifyInsert = await connection.query(`SELECT * FROM HISAPONTA (NOLOCK) WHERE 1 = 1 AND ODF = '${numeroOdf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}' ORDER BY CODAPONTA DESC
         `).then(record => record.rowsAffected)
 
         //Cria o primeiro registro em Hisaponta e insere o CODAPONTA 1 e o primeiro tempo em APT_TEMPO_OPERACAO
         if (verifyInsert.length <= 0) {
             try {
-                await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
-                VALUES (GETDATE(), '${funcionario}', ${numeroOdf}, '${codigoPeca}', '${revisao}', '${numeroOperacao}', '${numeroOperacao}', 'D', '${codigoMaq}', ${qtdLibMax}, 0, 0, '${funcionario}', '0', '1', '1', 'Ini Set.', ${startTime}, ${startTime}, '1', 0, 0 )`).then(record => record.rowsAffected)
+                insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, startTime)
             } catch (error) {
                 console.log(error);
                 return res.json({ message: "Erro ao inserir codapontamento 1" })
@@ -71,34 +90,44 @@ export const tools: RequestHandler = async (req, res) => {
 
 //Ferramentas Selecionadas
 export const selectedTools: RequestHandler = async (req, res) => {
-    const numero_odf: string = decrypted(String(sanitize(req.cookies['NUMERO_ODF']))) || null
+    let numeroOdf: number = decrypted(String(sanitize(req.cookies['NUMERO_ODF']))) || null
+    numeroOdf = Number(numeroOdf)
     const numeroOperacao: string = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
     const codigoMaq: string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
     const codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
     const funcionario: string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
     const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
-    const qtdLibMax: string = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
-    const start: string = decrypted(String(sanitize(req.cookies['starterBarcode']))) || null
+    let qtdLibMax: number = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
+    qtdLibMax = Number(qtdLibMax)
+    let start: string = decrypted(String(sanitize(req.cookies['starterBarcode']))) || null
+    const boas = 0
+    const ruins = 0
+    const codAponta = 2
+    const codAponta3 = 3
+    const descricaoCodigoAponta = 'Fin Setup.'
+    let descricaoCodigoAponta3 = 'Ini Prod.'
+    const faltante = 0
+    let retrabalhada = 0
+    const motivo = String('' || null)
 
     //Encerra o primeiro tempo de setup
     const end = Number(new Date().getTime()) || 0;
     let startTime: number
     startTime = Number(start)
-    const tempoDecorrido = Number(end - startTime) || 0
+    let tempoDecorrido = String(end - startTime || 0)
+    String(tempoDecorrido)
 
     //Inicia a produção
-    const startProd = Number(new Date().getTime()) || 0;
+    let startProd = Number(new Date().getTime() || 0)
+    start = encrypted(start)
     res.cookie("startProd", startProd)
-    const connection = await mssql.connect(sqlConfig);
 
     try {
         //INSERE EM CODAPONTA 2
-        await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
-        VALUES (GETDATE(), '${funcionario}', ${numero_odf}, '${codigoPeca}', '${revisao}', '${numeroOperacao}', '${numeroOperacao}', 'D', '${codigoMaq}', ${qtdLibMax}, '0', '0', '${funcionario}', '0', '2', '2', 'Fin Set.', ${tempoDecorrido}, ${tempoDecorrido}, '1', '0', '0' )`).then(record => record)
+        insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, startProd)
 
         //INSERE EM CODAPONTA 3
-        await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
-        VALUES (GETDATE(), '${funcionario}', ${numero_odf}, '${codigoPeca}', '${revisao}', '${numeroOperacao}', '${numeroOperacao}', 'D', '${codigoMaq}', ${qtdLibMax}, '0', '0', '${funcionario}', '0', '3', '3', 'Ini Prod.', ${tempoDecorrido}, ${tempoDecorrido}, '1', '0', '0' )`).then(record => record)
+        insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta3, descricaoCodigoAponta3, motivo, faltante, retrabalhada, startProd)
 
         return res.json({ message: 'ferramentas selecionadas com successo' })
     } catch (error) {

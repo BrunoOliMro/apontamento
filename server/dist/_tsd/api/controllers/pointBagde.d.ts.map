@@ -1,1 +1,1 @@
-{"version":3,"file":"pointBagde.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/pointBagde.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAOzC,eAAO,MAAM,UAAU,EAAE,cAkCxB,CAAA"}
+{"version":3,"file":"pointBagde.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/pointBagde.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAMzC,eAAO,MAAM,UAAU,EAAE,cAgCxB,CAAA"}

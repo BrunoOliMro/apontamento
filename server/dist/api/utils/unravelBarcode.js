@@ -4,6 +4,13 @@ exports.unravelBarcode = void 0;
 const sanitize_1 = require("./sanitize");
 function unravelBarcode(barcode) {
     barcode = String((0, sanitize_1.sanitize)(barcode));
+    let response = {
+        message: ''
+    };
+    console.log("barcode", barcode);
+    if (barcode === '' || barcode === undefined || barcode === null) {
+        return response.message = 'Algo deu errado';
+    }
     const dados = {
         numOdf: String(barcode.slice(10)),
         numOper: String(barcode.slice(0, 5)),

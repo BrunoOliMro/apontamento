@@ -21,8 +21,8 @@ const pointBagde = async (req, res) => {
             `.trim()).then(result => result.recordset);
         if (selecionarMatricula.length > 0) {
             const strStartTime = (0, encryptOdf_1.encrypted)(String(start.getTime()));
-            const encryptedEmployee = (0, encryptOdf_1.encrypted)(selecionarMatricula[0].FUNCIONARIO);
-            const encryptedBadge = (0, encryptOdf_1.encrypted)(selecionarMatricula[0].CRACHA);
+            const encryptedEmployee = (0, encryptOdf_1.encrypted)(String(selecionarMatricula[0].FUNCIONARIO));
+            const encryptedBadge = (0, encryptOdf_1.encrypted)(String(selecionarMatricula[0].CRACHA));
             res.cookie("starterBarcode", strStartTime);
             res.cookie("FUNCIONARIO", encryptedEmployee);
             res.cookie("CRACHA", encryptedBadge);

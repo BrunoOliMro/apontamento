@@ -57,13 +57,14 @@
             }),
         }).then((res) => res.json());
         loader = false;
-        if (res.message === "supervisor encontrado") {
+        console.log("linha 60 /do post Super/", res);
+        if (res.message === "Supervisor encontrado") {
             showSuper = false;
             doPost();
             odfFinish = true;
             window.location.href = "/#/codigobarras";
             location.reload();
-        } else if (res.message === "supervisor não encontrado") {
+        } else if (res.message === "Supervisor não encontrado") {
             showError = true;
         }
     };

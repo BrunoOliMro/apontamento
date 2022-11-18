@@ -1,5 +1,6 @@
 import type { RequestHandler } from 'express';
 import mssql from 'mssql';
+import sanitize from 'sanitize-html';
 import { sqlConfig } from '../../global.config';
 import { selectOdfFromPcp } from '../services/select';
 import { selectToKnowIfHasP } from '../services/selectIfHasP';
@@ -8,7 +9,7 @@ import { encoded } from '../utils/encodedOdf';
 import { encrypted } from '../utils/encryptOdf';
 import { unravelBarcode } from '../utils/unravelBarcode'
 
-export const pointerPost: RequestHandler = async (req, res, next) => {
+export const pointerPost: RequestHandler = async (req, res) => {
     const connection = await mssql.connect(sqlConfig);
     const dados: any = unravelBarcode(req.body.codigoBarras)
     let message = String(req.body.message) || null
@@ -19,13 +20,28 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
     let codigoMaquinaProxOdf;
     let codMaqProxOdf;
 
+    if(message === 'codeApont 1 setup iniciado'){
+        return res.json({message : 'codeApont 1 setup iniciado'})
+    }
+
+    if(message === `codeApont 4 prod finalzado`){
+        return res.json({message : 'codeApont 4 prod finalzado'})
+    }
+
+    if(message === `codeApont 5 maquina parada`){
+        return res.json({message : 'codeApont 5 maquina parada'})
+    }
+
     //Seleciona todos os itens da Odf
     const queryGrupoOdf: any = await selectOdfFromPcp(dados)
+
+    console.log("linha 38 /pointer/");
 
     // //Caso não encontre o numero da odf
     if (queryGrupoOdf!.message === 'odf não encontrada') {
         return res.json({ message: 'odf não encontrada' })
     }
+
 
     //Map pelo numero da operação e diz o indice de uma odf antes e uma depois
     let codigoOperArray = queryGrupoOdf!.map((e: any) => e.NUMERO_OPERACAO)
@@ -51,6 +67,7 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
         apontLib = objOdfSelecionada['APONTAMENTO_LIBERADO']
     }
 
+
     //Se for o ultimo indice do array
     if (indiceDoArrayDeOdfs === codigoOperArray.length - 1) {
         codigoMaquinaProxOdf = objOdfSelecionada['CODIGO_MAQUINA']
@@ -72,6 +89,7 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
     if (qtdLib - qntdeJaApontada === 0) {
         return res.status(400).json({ message: 'não há limite na odf' })
     }
+
     qtdLibMax = qtdLib - qntdeJaApontada
 
     // Caso seja a primeira Odf, objOdfSelecAnterior vai vir como undefined
@@ -93,17 +111,13 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
 
     let numeroOper = '00' + objOdfSelecionada.NUMERO_OPERACAO.replaceAll(' ', '0')
 
-    if (objOdfSelecionada['CODIGO_MAQUINA'] === 'RET001') {
-        objOdfSelecionada['CODIGO_MAQUINA'] = 'RET001'
+    // Descriptografa o funcionario dos cookies
+    let funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))
+
+    if(!funcionario){
+        return res.json({message : 'Algo deu errado'})
     }
 
-    // Descriptografa o funcionario dos cookies
-    let funcionario = decrypted(String(req.cookies['FUNCIONARIO']))
-
-    let codigoPeca = objOdfSelecionada['CODIGO_PECA'] || null
-
-    let revisao = objOdfSelecionada['REVISAO']  || null
-    
     //Criptografa os dados da ODF
     let qtdLibString: string = encrypted(String(qtdLibMax))
     let encryptedOdfNumber = encrypted(String(objOdfSelecionada['NUMERO_ODF']))
@@ -119,24 +133,26 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
     const encodedOperationNumber = encoded(String(numeroOper))
     const encodedMachineCode = encoded(String(objOdfSelecionada['CODIGO_MAQUINA']))
 
-
-    res.cookie('NUMERO_ODF', encryptedOdfNumber)
+    res.cookie('NUMERO_ODF', encryptedOdfNumber);
     res.cookie('encodedOdfNumber', encodedOdfNumber)
     res.cookie('encodedOperationNumber', encodedOperationNumber)
     res.cookie('encodedMachineCode', encodedMachineCode)
     res.cookie('qtdLibMax', qtdLibString)
-    //res.cookie('starterBarcode', startEncrypted)
     res.cookie('MAQUINA_PROXIMA', encryptedNextMachine)
     res.cookie('OPERACAO_PROXIMA', encryptedNextOperation)
-    //res.cookie('NUMERO_ODF', objOdfSelecionada['NUMERO_ODF'])
     res.cookie('CODIGO_PECA', encryptedCodePart)
     res.cookie('CODIGO_MAQUINA', encryptedMachineCode)
     res.cookie('NUMERO_OPERACAO', operationNumber)
     res.cookie('REVISAO', encryptedRevision)
 
-    //revisao = null
-    if (revisao) {
-        revisao = '0'
+    console.log("linha 146 /pointer/");
+
+    if(message === 'codeApont 2 setup finalizado'){
+        return res.json({message : 'codeApont 1 setup iniciado'})
+    }
+
+    if(message === `codeApont 3 prod iniciado`){
+        return res.json({message : 'codeApont 3 prod iniciado'})
     }
 
     let data: any = await selectToKnowIfHasP(dados)
@@ -148,13 +164,13 @@ export const pointerPost: RequestHandler = async (req, res, next) => {
         res.cookie('NUMITE', data!.codigoNumite)
         res.cookie('resultadoFinalProducao', data!.resultadoFinalProducao)
     }
-
-    if (message !== 'codeApont 1 setup iniciado') {
-        await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
-        VALUES (GETDATE(), '${funcionario}', ${dados.numOdf}, '${codigoPeca}', ${queryGrupoOdf[0].REVISAO},'${dados.numOper}', '${dados.numOper}', 'D', '${dados.codMaq}',0, 0, 0, '${funcionario}', '0', 1, '1', 'Ini Set.', 0, 0, '1', 0, 0 )`)
-            .then(record => record.rowsAffected)
-        return res.status(200).json({ message: 'valores reservados' })
-    }
+    return res.json({message : 'codeApont 1 setup iniciado'})
+    // if (message !== 'codeApont 1 setup iniciado') {
+    //     await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
+    //     VALUES (GETDATE(), '${funcionario}', ${dados.numOdf}, '${codigoPeca}', ${queryGrupoOdf[0].REVISAO},'${dados.numOper}', '${dados.numOper}', 'D', '${dados.codMaq}',0, 0, 0, '${funcionario}', '0', 1, '1', 'Ini Set.', 0, 0, '1', 0, 0 )`)
+    //         .then(record => record.rowsAffected)
+    //     return res.status(200).json({ message: 'valores reservados' })
+    // }
 
     // if (message === 'insira cod 1' || message === 'codeApont 6 processo finalizado') {
     // }

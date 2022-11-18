@@ -75,28 +75,6 @@
     }
   };
 
-  // function Sanitize(e) {
-  //   let value = e.target.value;
-  //   e.target.value = preSanitize(value);
-  // }
-  // function preSanitize(input) {
-  //   const allowedChars = /[A-Za-z0-9]/;
-  //   const sanitizedOutput = input
-  //     .split("")
-  //     .map((char) => (allowedChars.test(char) ? char : ""))
-  //     .join("");
-  //   return sanitizedOutput;
-  // }
-
-  // async function getBer(){
-  //   const res = await fetch(urlS).then(res => res.json())
-  //   console.log("linha res linha 93", res);
-  //   if(res.message === 'usuario diferente'){
-  //     console.log("linha 110/barcode /" , res.message);
-  //   }
-  // }
-
-  // getBer()
   const doPost = async () => {
     loader = true;
     const headers = new Headers();
@@ -110,15 +88,17 @@
     }).then((res) => res.json());
     console.log("res", res);
 
-    if(res.message === 'usuario diferente'){
-      console.log("linha 110/barcode /" , res.message);
+    if(res.message === 'Algo deu errado'){
+      window.location.href = "/#/codigobarras";
+      location.reload()
     }
-    if (
-      res.message === "codeApont 1 setup iniciado" ||
-      res.message === "insira cod 1" ||
-      res.message === "não foi necessario reservar" ||
-      res.message === "valores reservados"
-    ) {
+
+    if (res.message === 'codeApont 1 setup iniciado') {
+      loader = false;
+      window.location.href = "/#/ferramenta";
+    }
+
+    if(res.message ===  'codeApont 2 setup finalizado'){
       loader = false;
       window.location.href = "/#/ferramenta";
     }
@@ -127,22 +107,27 @@
       loader = false;
       window.location.href = "/#/codigobarras/apontamento";
     }
+
     if (res.message === "codeApont 4 prod finalzado") {
       window.location.href = "/#/rip";
     }
+
     if (res.message === "codeApont 5 maquina parada") {
       loader = false;
       superParada = true;
     }
+
     if (res.message === "codigo de barras vazio") {
       modalMessage = "Código de barras vazio";
       //barcodeMsg = "codigo de barras vazio";
     }
+
     if (res.message === "odf não encontrada") {
       modalMessage = "ODF não encontrada";
       loader = false;
       //barcodeMsg = "odf não encontrada";
     }
+
     if (res.message === "não há limite na odf") {
       modalMessage = "Não há limite na ODF";
       loader = false;
@@ -566,7 +551,7 @@
             autocomplete="off"
             autofocus
             on:keypress={writeOnHand}
-            on:input|preventDefault={Sanitize}
+            on:input|preventDefault={blockForbiddenChars}
             bind:value={codigoBarras}
             onkeyup="this.value = this.value.toUpperCase()"
             name="MATRIC"

@@ -21,11 +21,12 @@ export const supervisor: RequestHandler = async (req, res) => {
     if (supervisor === '' || supervisor === undefined || supervisor === null) {
         return res.json({ message: 'supervisor não encontrado' })
     }
+
     try {
         const resource = await connection.query(`
         SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`).then(result => result.recordset);
         if (resource.length > 0) {
-            return res.status(200).json({ message: 'Supervisor encontrado' })
+            return res.json({ message: 'Supervisor encontrado' })
         } else {
             return res.json({ message: 'Supervisor não encontrado' })
         }

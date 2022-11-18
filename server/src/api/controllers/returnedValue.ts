@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import mssql from "mssql";
 import { sqlConfig } from "../../global.config";
+import { decrypted } from "../utils/decryptedOdf";
 import { sanitize } from "../utils/sanitize";
 
 export const returnedValue: RequestHandler = async (req, res) => {
@@ -8,7 +9,7 @@ export const returnedValue: RequestHandler = async (req, res) => {
     let choosenOption = Number(sanitize(req.body["quantity"])) || 0
     let supervisor = String(sanitize(req.body["supervisor"])) || null
     let someC = String(sanitize(req.body['returnValueStorage'])) || null
-    let funcionario = String(sanitize(req.cookies['FUNCIONARIO'])) || null
+    let funcionario: string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
     let barcode = String(sanitize(req.body["codigoBarrasReturn"])) || null
     let boas;
     let ruins;
@@ -20,10 +21,11 @@ export const returnedValue: RequestHandler = async (req, res) => {
     let obj: any = {}
     let qtdApontOdf: number;
     let qtdOdf: number;
-    //barcode = sanitize(barcode)
-    // console.log("supervisor: ", supervisor);
-    // console.log("choosenOption: ", choosenOption);
-    // console.log("barcode: ", barcode);´
+
+    if (!funcionario) {
+        return res.json({ message: 'odf não encontrada' })
+    }
+
     if (barcode === null && choosenOption === 0 && supervisor === "undefined") {
         return res.json({ message: "odf não encontrada" })
     }
@@ -47,11 +49,11 @@ export const returnedValue: RequestHandler = async (req, res) => {
         ruins = choosenOption
     }
 
-    if (boas === undefined) {
+    if (!boas) {
         boas = 0
     }
 
-    if (ruins === undefined) {
+    if (!ruins) {
         ruins = 0
     }
 

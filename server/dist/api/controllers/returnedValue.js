@@ -6,13 +6,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.returnedValue = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
+const decryptedOdf_1 = require("../utils/decryptedOdf");
 const sanitize_1 = require("../utils/sanitize");
 const returnedValue = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let choosenOption = Number((0, sanitize_1.sanitize)(req.body["quantity"])) || 0;
     let supervisor = String((0, sanitize_1.sanitize)(req.body["supervisor"])) || null;
     let someC = String((0, sanitize_1.sanitize)(req.body['returnValueStorage'])) || null;
-    let funcionario = String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])) || null;
+    let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
     let barcode = String((0, sanitize_1.sanitize)(req.body["codigoBarrasReturn"])) || null;
     let boas;
     let ruins;
@@ -24,6 +25,9 @@ const returnedValue = async (req, res) => {
     let obj = {};
     let qtdApontOdf;
     let qtdOdf;
+    if (!funcionario) {
+        return res.json({ message: 'odf não encontrada' });
+    }
     if (barcode === null && choosenOption === 0 && supervisor === "undefined") {
         return res.json({ message: "odf não encontrada" });
     }
@@ -42,10 +46,10 @@ const returnedValue = async (req, res) => {
     if (someC === 'RUINS') {
         ruins = choosenOption;
     }
-    if (boas === undefined) {
+    if (!boas) {
         boas = 0;
     }
-    if (ruins === undefined) {
+    if (!ruins) {
         ruins = 0;
     }
     const dados = {

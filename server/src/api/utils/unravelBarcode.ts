@@ -1,17 +1,22 @@
 import { sanitize } from "./sanitize";
 
 export function unravelBarcode(barcode: string) {
-    barcode = String(sanitize(barcode)) //|| null;
+    barcode = String(sanitize(barcode))
+    let response = {
+        message: ''
+    }
+
+    console.log("barcode", barcode);
 
     //console.log("barcode", barcode );
 
-    // if (barcode === '' || barcode === undefined || barcode === null) {
-    //     return {}
-    // }
+    if (barcode === '' || barcode === undefined || barcode === null) {
+        return response.message = 'Algo deu errado'
+    }
     //console.log("linha 7 /unravel/", barcode);
 
     //Reatribuiu o codigo caso o cado de barras seja maior
-    const dados = {
+    const dados: any = {
         numOdf: String(barcode!.slice(10)),
         numOper: String(barcode!.slice(0, 5)),
         codMaq: String(barcode!.slice(5, 10)),

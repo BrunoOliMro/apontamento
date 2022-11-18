@@ -48,8 +48,6 @@ export const ripPost: RequestHandler = async (req, res) => {
         objectSanitized[keySan as string] = valueSan
     }
 
-    //console.log("linha 28", objectSanitized);
-
     //Insere O CODAPONTA 6 e Tempo da rip
     await connection.query(`
     INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)

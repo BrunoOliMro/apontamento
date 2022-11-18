@@ -1,6 +1,8 @@
 import { RequestHandler } from "express";
 import mssql from "mssql";
 import { sqlConfig } from "../../global.config";
+import { decrypted } from "../utils/decryptedOdf";
+import { encrypted } from "../utils/encryptOdf";
 import { sanitize } from "../utils/sanitize";
 
 export const point: RequestHandler = async (req, res) => {
@@ -12,18 +14,21 @@ export const point: RequestHandler = async (req, res) => {
     let missingFeed = Number(sanitize(req.body["missingFeed"])) || 0;
     let reworkFeed = Number(sanitize(req.body["reworkFeed"])) || 0;
     //let parcialFeed = Number(sanitize(req.body["parcialFeed"])) || 0;
-    var codigoFilho: string[] = ((req.cookies['codigoFilho'])) // VER DEPOIS !!!!!!!!!!!!!!
-    var reservedItens: number[] = (req.cookies['reservedItens'])// VER DEPOIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    let NUMERO_ODF = Number(sanitize(req.cookies["NUMERO_ODF"])) || 0
-    let NUMERO_OPERACAO = String(sanitize(req.cookies["NUMERO_OPERACAO"])) || null
-    let codigoPeca = String(sanitize(req.cookies['CODIGO_PECA'])) || null
-    let CODIGO_MAQUINA = String(sanitize(req.cookies["CODIGO_MAQUINA"])) || null
-    let qtdLibMax = Number(sanitize(req.cookies['qtdLibMax'])) || 0
+
+    var codigoFilho: string[] = ((req.cookies['codigoFilho']))  || null // VER DEPOIS !!!!!!!!!!!!!!
+    var reservedItens: number[] = (req.cookies['reservedItens']) || null // VER DEPOIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     let condic = String(sanitize(req.cookies['CONDIC'])) || null
-    let MAQUINA_PROXIMA = String(sanitize(req.cookies['MAQUINA_PROXIMA'])) || null
-    let OPERACAO_PROXIMA = String(sanitize(req.cookies['OPERACAO_PROXIMA'])) || null
-    let funcionario = String(sanitize(req.cookies['FUNCIONARIO'])) || null
-    let revisao = Number(sanitize(req.cookies['REVISAO'])) || 0
+    
+    let NUMERO_ODF = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
+    let NUMERO_OPERACAO = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
+    let codigoPeca = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
+    let CODIGO_MAQUINA = decrypted(String(sanitize(req.cookies["CODIGO_MAQUINA"]))) || null
+    let qtdLibMax = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
+    let MAQUINA_PROXIMA = decrypted(String(sanitize(req.cookies['MAQUINA_PROXIMA']))) || null
+    let OPERACAO_PROXIMA = decrypted(String(sanitize(req.cookies['OPERACAO_PROXIMA']))) || null
+    let funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+    let revisao = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
+    let retrabalhadas;
     //let qtdProd = Number(sanitize(req.cookies['qtdProduzir'])) || 0
     const updateQtyQuery = [];
     let startRip = Number(new Date()) || 0;
@@ -35,16 +40,21 @@ export const point: RequestHandler = async (req, res) => {
     let startProd = Number(req.cookies["startProd"] / 1000) || 0
     let finalProdTimer = Number(endProdTimer.getTime() - startProd / 1000) || 0
     let refugoQEstaNoSistema = Number(sanitize(req.cookies['QTD_REFUGO'])) || 0
-    let retrabalhadas;
 
     let valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed)) //+ Number(parcialFeed))
     let faltante = qtdLibMax - valorTotalApontado
 
-    if(supervisor === undefined || supervisor === null || supervisor === '' || supervisor === '000000' || supervisor === '0' || supervisor === '00' || supervisor === '000' || supervisor === '0000' || supervisor === '00000'){
+    qtdLibMax = Number(qtdLibMax)
+
+    if(supervisor === 'undefined' && valorTotalApontado === qtdLibMax){
+        supervisor = '004067'
+    }
+
+    if(!supervisor || supervisor === 'undefined' || supervisor === '' || supervisor === '000000' || supervisor === '0' || supervisor === '00' || supervisor === '000' || supervisor === '0000' || supervisor === '00000'){
         return res.json({message : 'Supervisor inválido'})
     }
 
-    if(qtdLibMax === undefined || qtdLibMax === null || qtdLibMax === 0){
+    if(!qtdLibMax || qtdLibMax === 0){
         return res.json({message : 'Quantidade inválida'  })
     }
 
@@ -72,6 +82,8 @@ export const point: RequestHandler = async (req, res) => {
         return res.json({ message: 'Quantidade excedida' })
     }
 
+    console.log("linha 56 /point/");
+
     if(qtdBoas === null || qtdBoas === undefined || missingFeed === null || missingFeed === undefined || valorTotalApontado === null || valorTotalApontado === undefined ){
         return res.json({ message : 'Quantidade inválida'})
     }
@@ -83,7 +95,6 @@ export const point: RequestHandler = async (req, res) => {
     if (reworkFeed > 0) {
         retrabalhadas = reworkFeed - refugoQEstaNoSistema
     }
-    //console.log("faltante: ", faltante);
 
     if (motivorefugo === undefined || motivorefugo === "undefined" || motivorefugo === null) {
         motivorefugo = null
@@ -151,7 +162,9 @@ export const point: RequestHandler = async (req, res) => {
         // Insere o CODAPONTA 4, O tempo de produção e as quantidades boas, ruins, retrabalhadas e faltantes(HISAPONTA) 
         await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ,  CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2,  TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, MOTIVO_REFUGO, CST_PC_FALTANTE)
         VALUES(GETDATE(),'${funcionario}',${NUMERO_ODF},'${codigoPeca}','${revisao}','${NUMERO_OPERACAO}','${NUMERO_OPERACAO}', 'D','${CODIGO_MAQUINA}','1',${qtdBoas},${badFeed},'${funcionario}','0','4', '4', 'Fin Prod.',${finalProdTimer},${finalProdTimer}, '1',  UPPER('${motivorefugo}') , ${faltante})`)
+    
 
+        qtdBoas = encrypted(String(qtdBoas))
         res.cookie('qtdBoas', qtdBoas)
 
         return res.json({ message: 'Sucesso ao apontar' })

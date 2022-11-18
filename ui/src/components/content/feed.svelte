@@ -72,6 +72,7 @@
     }
 
     async function checkForSuper(event) {
+        console.log("linha 75/feed/", supervisor);
         if (supervisor.length >= 5 && event.key === "Enter") {
             if (supervisor === "000000") {
                 modalMessage = "Crachá inválido";
@@ -103,6 +104,7 @@
                 missingFeed: missingFeed,
                 reworkFeed: reworkFeed,
                 value: value,
+                supervisor: supervisor,
             }),
         }).then((res) => res.json());
 
@@ -110,40 +112,50 @@
 
         if (res.message === "Supervisor inválido") {
             modalMessage = "Supervisor inválido";
+            loader = false
         }
         if (res.message === "supervisor não encontrado") {
             modalMessage = "Supervisor não encontrado";
+            loader = false
             //showSuperNotFound = true;
         }
         if (res.message === "Quantidade inválida") {
             modalMessage = "Quantidade inválida";
+            loader = false
         }
         if (res.message === "Código máquina inválido") {
             modalMessage = "Número operação inválido";
-            //showSuperNotFound = true;
+            loader = false
         }
         if (res.message === "Código de peça inválido") {
             modalMessage = "Código de peça inválido";
+            loader = false
         }
 
         if (res.message === "Número operação inválido") {
             modalMessage = "Número operação inválido";
+            loader = false
         }
 
         if (res.message === "Número odf inválido") {
             modalMessage = "Número ODF inválido";
+            loader = false
         }
         if (res.message === "Funcionário Inválido") {
             modalMessage = "Funcionário Inválido";
+            loader = false
         }
         if (res.message === "Quantidade excedida") {
             modalMessage = "Quantidade excedida";
+            loader = false
         }
         if (res.message === "Quantidade inválida") {
             modalMessage = "Quantidade inválida";
+            loader = false
         }
         if (res.message === "Erro ao apontar") {
             modalMessage = "Erro ao apontar";
+            loader = false
         }
         if (res.message === "Sucesso ao apontar") {
             loader = true;
@@ -182,7 +194,11 @@
 
         let total =
             numberBadFeed + numberGoodFeed + numberMissing + numberReworkFeed;
-        // console.log("re 118", total);
+        console.log("total 185", total);
+
+        if(total > numberQtdAllowed){
+            modalMessage = 'Quantidade excedida'
+        }
 
         if (numberBadFeed > 0 && total <= numberQtdAllowed) {
             showConfirm = true;
@@ -247,24 +263,19 @@
     };
 
     function handleSS(event) {
-        console.log("linha 250", event.detail.goodFeed);
         valorFeed = event.detail.goodFeed;
-        console.log("linha 250", valorFeed);
     }
 
     function handll(event){
         badFeed = event.detail.badFeed
-        console.log("linha 250", badFeed);
     }
 
     function hand(event){
         missingFeed = event.detail.missingFeed
-        console.log("linha 250", missingFeed);
     }
 
     function handllaa(event){
         reworkFeed = event.detail.reworkFeed
-        console.log("linha 250", reworkFeed);
     }
 </script>
 
