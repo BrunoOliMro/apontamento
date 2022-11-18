@@ -2,7 +2,7 @@ import type { RequestHandler } from 'express';
 import mssql from 'mssql';
 import sanitize from 'sanitize-html';
 import { sqlConfig } from '../../global.config';
-import { selectOdfFromPcp } from '../services/select';
+import { select } from '../services/select';
 import { selectToKnowIfHasP } from '../services/selectIfHasP';
 import { decrypted } from '../utils/decryptedOdf';
 import { encoded } from '../utils/encodedOdf';
@@ -32,16 +32,19 @@ export const pointerPost: RequestHandler = async (req, res) => {
         return res.json({message : 'codeApont 5 maquina parada'})
     }
 
-    //Seleciona todos os itens da Odf
-    const queryGrupoOdf: any = await selectOdfFromPcp(dados)
+    let table = `VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK)`
+    let column = `*`
+    let top = ``
+    let where = `AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL`
+    let orderBy = `ORDER BY NUMERO_OPERACAO ASC`
 
-    console.log("linha 38 /pointer/");
+    // Seleciona todos os itens da Odf
+    const queryGrupoOdf: any = await select(table, top, column, where, orderBy)
 
-    // //Caso não encontre o numero da odf
+    // Caso não encontre o numero da odf
     if (queryGrupoOdf!.message === 'odf não encontrada') {
         return res.json({ message: 'odf não encontrada' })
     }
-
 
     //Map pelo numero da operação e diz o indice de uma odf antes e uma depois
     let codigoOperArray = queryGrupoOdf!.map((e: any) => e.NUMERO_OPERACAO)

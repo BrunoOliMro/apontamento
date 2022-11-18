@@ -1,26 +1,20 @@
 import mssql from 'mssql';
 import { sqlConfig } from '../../global.config'
 
-export const select = async (table: string, top: string, column: string, where: string, orderBy: string) => {
+export const update = async (table: string, column: string, where: string) => {
     const connection = await mssql.connect(sqlConfig);
     let response: any = {}
     const data = await connection.query(`
-    SELECT
-    ${top}
-    ${column}
-    FROM 
-    ${table}
-    WHERE 1 = 1
-    ${where}
-    ${orderBy}
+    UPDATE ${table} SET ${column} WHERE 1 = 1 ${where}
     `).then((result) => result.recordset)
 
     if (data.length <= 0) {
-        return response.message = "odf nao encontrada"
+        return response.message = "Error on update"
     }
 
     if (data.length >= 0) {
-        return response.data = data
+        return response.message = "Update sucess"
+
     } else {
         return response.message = 'Algo deu errado'
     }

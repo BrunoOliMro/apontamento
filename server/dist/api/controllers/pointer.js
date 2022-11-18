@@ -32,8 +32,12 @@ const pointerPost = async (req, res) => {
     if (message === `codeApont 5 maquina parada`) {
         return res.json({ message: 'codeApont 5 maquina parada' });
     }
-    const queryGrupoOdf = await (0, select_1.selectOdfFromPcp)(dados);
-    console.log("linha 38 /pointer/");
+    let table = `VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK)`;
+    let column = `*`;
+    let top = ``;
+    let where = `AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL`;
+    let orderBy = `ORDER BY NUMERO_OPERACAO ASC`;
+    const queryGrupoOdf = await (0, select_1.select)(table, top, column, where, orderBy);
     if (queryGrupoOdf.message === 'odf não encontrada') {
         return res.json({ message: 'odf não encontrada' });
     }

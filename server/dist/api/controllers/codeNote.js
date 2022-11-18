@@ -4,15 +4,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.codeNote = void 0;
-const mssql_1 = __importDefault(require("mssql"));
 const sanitize_html_1 = __importDefault(require("sanitize-html"));
-const global_config_1 = require("../../global.config");
 const insert_1 = require("../services/insert");
+const select_1 = require("../services/select");
 const decodeOdf_1 = require("../utils/decodeOdf");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const unravelBarcode_1 = require("../utils/unravelBarcode");
 const codeNote = async (req, res, next) => {
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let dados = (0, unravelBarcode_1.unravelBarcode)(req.body.codigoBarras);
     const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO']))) || null;
     let codigoPeca = String('' || null);
@@ -36,30 +34,13 @@ const codeNote = async (req, res, next) => {
             return res.json({ message: 'Acesso negado' });
         }
     }
-    console.log('linha 44', dados.numOdf);
-    console.log('linha 44', dados.numOper);
-    console.log('linha 44', dados.codMaq);
     try {
-        console.log("linha 45 /codenote/");
-        const codIdApontamento = await connection.query(`
-            SELECT 
-            TOP 1
-            USUARIO,
-            ODF,
-            NUMOPE, 
-            ITEM,
-            CODAPONTA 
-            FROM
-            HISAPONTA
-            (NOLOCK)
-            WHERE 1 = 1 
-            AND ODF = ${dados.numOdf}
-            AND NUMOPE = '${dados.numOper}'
-            AND ITEM = '${dados.codMaq}'
-            ORDER BY DATAHORA DESC
-            `)
-            .then(result => result.recordset);
-        console.log("linha 64 /codenote/");
+        let table = `HISAPONTA`;
+        let top = `TOP 1`;
+        let column = `USUARIO, ODF, NUMOPE,  ITEM, CODAPONTA`;
+        let orderBy = `ORDER BY DATAHORA ASC`;
+        let where = `AND ODF = ${dados.numOdf} AND NUMOPE = '${dados.numOper}' AND ITEM = '${dados.codMaq}'`;
+        const codIdApontamento = await (0, select_1.select)(table, top, column, where, orderBy);
         let lastEmployee = codIdApontamento[0]?.USUARIO;
         let numeroOdfDB = codIdApontamento[0]?.ODF;
         let codigoOperDB = codIdApontamento[0]?.NUMOPE;

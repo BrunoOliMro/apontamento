@@ -29,15 +29,15 @@ apiRouter.route("/apontamentoCracha")
     .post(pointBagde)
 
 apiRouter.route("/apontamento")
-    .post(codeNote)
+    //.post(codeNote)
     .post(pointerPost)
 
 apiRouter.route("/odf")
     //.get(codeNote)
     .get(odfData)
 
-apiRouter.route("/odfQtd")
-    .get(odfDataQtd)
+// apiRouter.route("/odfQtd")
+//     .get(odfDataQtd)
 
 apiRouter.route("/imagem")
     //.get(getBefore)
@@ -56,7 +56,6 @@ apiRouter.route("/ferramenta")
     //GET das Fotos das desenhodiv
     //.get(getBefore)
     .get(tools)
-
 
 
 apiRouter.route("/ferselecionadas")
@@ -93,7 +92,6 @@ apiRouter.route("/supervisorParada")
 apiRouter.route("/motivoParada")
     //.get(getBefore)
     .get(stopMotives)
-
 
 apiRouter.route("/postParada")
    // .get(getBefore)

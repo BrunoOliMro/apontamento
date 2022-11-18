@@ -3,7 +3,7 @@
     let title = "Quantidade a produzir: ";
     let quantityAvailableProd;
     let dadosOdf = [];
-    let urlString = `/api/v1/odfQtd`;
+    let urlString = `/api/v1/odf`;
     let result = getOdfData();
 
     async function getOdfData() {

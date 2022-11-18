@@ -1,36 +1,24 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.historic = void 0;
-const mssql_1 = __importDefault(require("mssql"));
-const global_config_1 = require("../../global.config");
+const select_1 = require("../services/select");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const sanitize_1 = require("../utils/sanitize");
 const historic = async (req, res) => {
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let NUMERO_ODF = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"])));
     let resultPeçasBoas;
+    let table = `VW_APP_APONTAMENTO_HISTORICO_DETALHADO`;
+    let top = ``;
+    let column = `*`;
+    let where = `AND ODF = '${NUMERO_ODF}'`;
+    let orderBy = `ORDER BY DATAHORA DESC`;
+    let generalTable = `VW_APP_APONTAMENTO_HISTORICO`;
+    let generalOrderBy = ``;
     try {
-        const resource = await connection.query(`
-        SELECT
-        *
-        FROM VW_APP_APONTAMENTO_HISTORICO_DETALHADO
-        WHERE 1 = 1
-        AND ODF = '${NUMERO_ODF}'
-        ORDER BY DATAHORA DESC
-        `.trim()).then(result => result.recordset);
-        const resourceDetail = await connection.query(`
-        SELECT
-        *
-        FROM VW_APP_APONTAMENTO_HISTORICO
-        WHERE 1 = 1
-        AND ODF = '${NUMERO_ODF}'
-        ORDER BY OP ASC
-        `.trim()).then(result => result.recordset);
+        const detailHistoric = await (0, select_1.select)(table, top, column, where, orderBy);
+        const generalHistoric = await (0, select_1.select)(generalTable, top, column, where, generalOrderBy);
         let obj = [];
-        for (const iterator of resource) {
+        for (const iterator of detailHistoric) {
             if (iterator.BOAS > 0) {
                 obj.push(iterator);
             }
@@ -38,13 +26,12 @@ const historic = async (req, res) => {
                 obj.push(iterator);
             }
         }
-        resultPeçasBoas = resource.reduce((acc, iterator) => {
+        resultPeçasBoas = detailHistoric.reduce((acc, iterator) => {
             return acc + iterator.BOAS + iterator.REFUGO;
         }, 0);
-        console.log("linha 35", obj);
         if (resultPeçasBoas > 0) {
             let objRes = {
-                resourceDetail: resourceDetail,
+                resourceDetail: generalHistoric,
                 resource: obj,
                 message: 'Exibir histórico'
             };
@@ -52,6 +39,9 @@ const historic = async (req, res) => {
         }
         if (resultPeçasBoas <= 0) {
             return res.json({ message: 'Não há histórico a exibir' });
+        }
+        else {
+            return res.json({ message: 'Error ao localizar o histórico' });
         }
     }
     catch (error) {

@@ -19,18 +19,13 @@ const point_1 = require("./controllers/point");
 const pointBagde_1 = require("./controllers/pointBagde");
 const getPoint_1 = require("./controllers/getPoint");
 const supervisor_1 = require("./controllers/supervisor");
-const codeNote_1 = require("./controllers/codeNote");
-const odfDataQtd_1 = require("./controllers/odfDataQtd");
 const apiRouter = (0, express_1.Router)();
 apiRouter.route("/apontamentoCracha")
     .post(pointBagde_1.pointBagde);
 apiRouter.route("/apontamento")
-    .post(codeNote_1.codeNote)
     .post(pointer_1.pointerPost);
 apiRouter.route("/odf")
     .get(odfData_1.odfData);
-apiRouter.route("/odfQtd")
-    .get(odfDataQtd_1.odfDataQtd);
 apiRouter.route("/imagem")
     .get(statusImage_1.statusImage);
 apiRouter.route("/status")

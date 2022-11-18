@@ -1,60 +1,49 @@
 import { RequestHandler } from "express";
-import mssql from "mssql";
-import { sqlConfig } from "../../global.config";
+import { select } from "../services/select";
 import { decrypted } from "../utils/decryptedOdf";
 import { sanitize } from "../utils/sanitize";
 
 export const historic: RequestHandler = async (req, res) => {
-    const connection = await mssql.connect(sqlConfig);
     let NUMERO_ODF = decrypted(String(sanitize(req.cookies["NUMERO_ODF"])))
     let resultPeçasBoas;
+    let table = `VW_APP_APONTAMENTO_HISTORICO_DETALHADO`
+    let top = ``
+    let column = `*`
+    let where = `AND ODF = '${NUMERO_ODF}'`
+    let orderBy = `ORDER BY DATAHORA DESC`
+    let generalTable = `VW_APP_APONTAMENTO_HISTORICO`
+    let generalOrderBy = ``
     try {
-        const resource = await connection.query(`
-        SELECT
-        *
-        FROM VW_APP_APONTAMENTO_HISTORICO_DETALHADO
-        WHERE 1 = 1
-        AND ODF = '${NUMERO_ODF}'
-        ORDER BY DATAHORA DESC
-        `.trim()).then(result => result.recordset)
-
-        const resourceDetail = await connection.query(`
-        SELECT
-        *
-        FROM VW_APP_APONTAMENTO_HISTORICO
-        WHERE 1 = 1
-        AND ODF = '${NUMERO_ODF}'
-        ORDER BY OP ASC
-        `.trim()).then(result => result.recordset)
-
+        const detailHistoric: any = await select(table, top, column, where, orderBy)
+        const generalHistoric: any = await select(generalTable, top, column, where, generalOrderBy)
 
         let obj: any = []
 
-        for (const iterator of resource) {
-            if(iterator.BOAS > 0){
+        for (const iterator of detailHistoric) {
+            if (iterator.BOAS > 0) {
                 obj.push(iterator)
-            } 
-            if(iterator.REFUGO > 0){
+            }
+            if (iterator.REFUGO > 0) {
                 obj.push(iterator)
             }
         }
 
-        resultPeçasBoas = resource.reduce((acc: any, iterator: any) => {
+        resultPeçasBoas = detailHistoric.reduce((acc: any, iterator: any) => {
             return acc + iterator.BOAS + iterator.REFUGO
         }, 0)
 
-        console.log("linha 35", obj);
-
-        if(resultPeçasBoas > 0){
+        if (resultPeçasBoas > 0) {
             let objRes = {
-                resourceDetail : resourceDetail,
+                resourceDetail: generalHistoric,
                 resource: obj,
                 message: 'Exibir histórico'
             }
             return res.json(objRes)
-        } 
-        if(resultPeçasBoas <= 0){
-            return res.json({message: 'Não há histórico a exibir'})
+        }
+        if (resultPeçasBoas <= 0) {
+            return res.json({ message: 'Não há histórico a exibir' })
+        } else {
+            return res.json({ message: 'Error ao localizar o histórico' });
         }
     } catch (error) {
         console.log(error)

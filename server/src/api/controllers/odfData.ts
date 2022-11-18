@@ -1,36 +1,32 @@
 import { RequestHandler } from "express";
-import mssql from "mssql";
 import sanitize from "sanitize-html";
-import { sqlConfig } from "../../global.config";
+import { select } from "../services/select";
 import { decrypted } from "../utils/decryptedOdf";
 import { encrypted } from "../utils/encryptOdf";
 
 export const odfData: RequestHandler = async (req, res) => {
-    const numeroOdf: string = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
+    let numeroOdf: number = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
+    numeroOdf = Number(numeroOdf)
     const numOper: string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
     const numOpeNew = String(numOper!.toString().replaceAll(' ', "0")) || null
     const funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
-    const connection = await mssql.connect(sqlConfig);
+    
+    let table = `VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK)`
+    let column = `*`
+    let top = ``
+    let where = `AND NUMERO_ODF = ${numeroOdf} AND CODIGO_PECA IS NOT NULL`
+    let orderBy = `ORDER BY NUMERO_OPERACAO ASC`
 
     try {
-        const resource = await connection.query(`
-        SELECT 
-        * 
-        FROM
-        VW_APP_APTO_PROGRAMACAO_PRODUCAO
-        WHERE 1 = 1 
-        AND [NUMERO_ODF] = ${numeroOdf}
-        AND [CODIGO_PECA] IS NOT NULL
-        ORDER BY NUMERO_OPERACAO ASC`.trim()).then(record => record.recordset);
-
-        res.cookie("qtdProduzir", encrypted(String(resource[0].QTDE_ODF)))
-        res.cookie("QTD_REFUGO", encrypted(String(resource[0].QTD_REFUGO)))
-        let codigoOperArray = resource.map(e => e.NUMERO_OPERACAO)
-        let arrayAfterMap = codigoOperArray.map(e => "00" + e).toString().replaceAll(' ', "0").split(",")
+        const data: any = await select(table, top, column, where, orderBy)
+        res.cookie("qtdProduzir", encrypted(String(data[0].QTDE_ODF)))
+        res.cookie("QTD_REFUGO", encrypted(String(data[0].QTD_REFUGO)))
+        let codigoOperArray = data.map((e: any) => e.NUMERO_OPERACAO)
+        let arrayAfterMap = codigoOperArray.map((e: any) => "00" + e).toString().replaceAll(' ', "0").split(",")
         let indiceDoArrayDeOdfs: number = arrayAfterMap.findIndex((e: string) => e === numOpeNew)
-        let odfSelecionada = resource[indiceDoArrayDeOdfs]
-        let qtdeApontadaArray = resource.map(e => e.QTDE_APONTADA)
-        let qtdOdfArray = resource.map(e => e.QTDE_ODF)
+        let odfSelecionada = data[indiceDoArrayDeOdfs]
+        let qtdeApontadaArray = data.map((e: any) => e.QTDE_APONTADA)
+        let qtdOdfArray = data.map((e: any) => e.QTDE_ODF)
         let valorQtdOdf;
         let valorQtdeApontAnterior;
         let valorMaxdeProducao;
@@ -44,7 +40,7 @@ export const odfData: RequestHandler = async (req, res) => {
 
         //Para os demais do array
         if (indiceDoArrayDeOdfs > 0) {
-            qtdeApontadaArray = resource.map(e => e.QTDE_APONTADA)
+            qtdeApontadaArray = data.map((e: any) => e.QTDE_APONTADA)
             let x = qtdeApontadaArray[indiceDoArrayDeOdfs - 1]
             valorQtdeApontAnterior = qtdeApontadaArray[indiceDoArrayDeOdfs]
             valorMaxdeProducao = x - valorQtdeApontAnterior || 0

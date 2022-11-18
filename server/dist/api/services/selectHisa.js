@@ -15,6 +15,7 @@ const select = async (table, top, column, where, orderBy) => {
     ${column}
     FROM 
     ${table}
+    (NOLOCK)
     WHERE 1 = 1
     ${where}
     ${orderBy}
@@ -30,4 +31,4 @@ const select = async (table, top, column, where, orderBy) => {
     }
 };
 exports.select = select;
-//# sourceMappingURL=select.js.map
+//# sourceMappingURL=selectHisa.js.map

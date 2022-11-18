@@ -4,27 +4,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.statusImage = void 0;
-const mssql_1 = __importDefault(require("mssql"));
 const sanitize_html_1 = __importDefault(require("sanitize-html"));
-const global_config_1 = require("../../global.config");
 const pictures_1 = require("../pictures");
+const select_1 = require("../services/select");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const statusImage = async (req, res) => {
     const numpec = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
     const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
     const statusImg = String("_status");
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    const table = `PROCESSO (NOLOCK)`;
+    const top = `TOP 1`;
+    const column = `[NUMPEC], [IMAGEM]`;
+    const where = `AND NUMPEC = '${numpec}' AND REVISAO = '${revisao}' AND IMAGEM IS NOT NULL`;
+    const orderBy = ``;
     try {
-        const resource = await connection.query(`
-        SELECT TOP 1
-        [NUMPEC],
-        [IMAGEM]
-        FROM PROCESSO (NOLOCK)
-        WHERE 1 = 1
-        AND NUMPEC = '${numpec}'
-        AND REVISAO = '${revisao}'
-        AND IMAGEM IS NOT NULL
-        `).then(record => record.recordset);
+        const resource = await (0, select_1.select)(table, top, column, where, orderBy);
         let imgResult = [];
         for await (let [i, record] of resource.entries()) {
             const rec = await record;

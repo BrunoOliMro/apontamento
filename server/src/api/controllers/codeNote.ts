@@ -3,12 +3,13 @@ import mssql from 'mssql';
 import sanitize from 'sanitize-html';
 import { sqlConfig } from '../../global.config';
 import { insertInto } from '../services/insert';
+import { select} from '../services/select';
 import { decodedBuffer } from '../utils/decodeOdf';
 import { decrypted } from '../utils/decryptedOdf';
 import { unravelBarcode } from '../utils/unravelBarcode';
 
 export const codeNote: RequestHandler = async (req, res, next) => {
-    const connection = await mssql.connect(sqlConfig);
+    //const connection = await mssql.connect(sqlConfig);
     let dados = unravelBarcode(req.body.codigoBarras)
     const funcionario: string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
     let codigoPeca = String('' || null)
@@ -40,32 +41,17 @@ export const codeNote: RequestHandler = async (req, res, next) => {
         }
     }
 
-    console.log('linha 44', dados.numOdf);
-    console.log('linha 44', dados.numOper);
-    console.log('linha 44', dados.codMaq);
+    // console.log('linha 44', dados.numOdf);
+    // console.log('linha 44', dados.numOper);
+    // console.log('linha 44', dados.codMaq);
 
     try {
-        console.log("linha 45 /codenote/");
-        const codIdApontamento = await connection.query(`
-            SELECT 
-            TOP 1
-            USUARIO,
-            ODF,
-            NUMOPE, 
-            ITEM,
-            CODAPONTA 
-            FROM
-            HISAPONTA
-            (NOLOCK)
-            WHERE 1 = 1 
-            AND ODF = ${dados.numOdf}
-            AND NUMOPE = '${dados.numOper}'
-            AND ITEM = '${dados.codMaq}'
-            ORDER BY DATAHORA DESC
-            `)
-            .then(result => result.recordset);
-            console.log("linha 64 /codenote/");
-
+        let table = `HISAPONTA`
+        let top = `TOP 1`
+        let column = `USUARIO, ODF, NUMOPE,  ITEM, CODAPONTA`
+        let orderBy = `ORDER BY DATAHORA ASC`
+        let where = `AND ODF = ${dados.numOdf} AND NUMOPE = '${dados.numOper}' AND ITEM = '${dados.codMaq}'`
+        const codIdApontamento: any = await select(table, top, column, where, orderBy)
         let lastEmployee = codIdApontamento[0]?.USUARIO
         let numeroOdfDB = codIdApontamento[0]?.ODF
         let codigoOperDB = codIdApontamento[0]?.NUMOPE
@@ -146,13 +132,13 @@ export const codeNote: RequestHandler = async (req, res, next) => {
                 req.body.message = `codeApont 1 setup iniciado`
             }
         }
-        if (codIdApontamento.length <= 0){
-            const resultInsert = await insertInto(funcionario,numeroOdf, codigoPeca, revisao, dados.numOper, dados.codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido)
-            if(resultInsert === 'Algo deu errado'){
+        if (codIdApontamento.length <= 0) {
+            const resultInsert = await insertInto(funcionario, numeroOdf, codigoPeca, revisao, dados.numOper, dados.codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido)
+            if (resultInsert === 'Algo deu errado') {
                 return res.json({ message: 'Algo deu errado' })
             }
             next()
-        } 
+        }
     } catch (error) {
         return res.json({ message: 'Algo deu errado' })
     } finally {

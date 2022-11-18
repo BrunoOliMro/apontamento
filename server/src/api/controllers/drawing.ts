@@ -1,27 +1,21 @@
 import { RequestHandler } from "express";
-import mssql from "mssql";
 import sanitize from "sanitize-html";
-import { sqlConfig } from "../../global.config";
 import { pictures } from "../pictures";
+import { select } from "../services/select";
 import { decrypted } from "../utils/decryptedOdf";
 
 export const drawing: RequestHandler = async (req, res) => {
-    const connection = await mssql.connect(sqlConfig);
+    //const connection = await mssql.connect(sqlConfig);
     const revisao = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
     const numpec = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
+    let top = `DISTINCT`
+    let column = `[NUMPEC], [IMAGEM], [REVISAO]`
+    let table = `QA_LAYOUT (NOLOCK)`
+    let where = `AND NUMPEC = '${numpec}' AND REVISAO = ${revisao} AND IMAGEM IS NOT NULL`
+    let orderBy = ``
     let desenho = String("_desenho")
     try {
-        const resource = await connection.query(`
-        SELECT
-        DISTINCT
-            [NUMPEC],
-            [IMAGEM],
-            [REVISAO]
-        FROM  QA_LAYOUT(NOLOCK) 
-        WHERE 1 = 1 
-            AND NUMPEC = '${numpec}'
-            AND REVISAO = ${revisao}
-            AND IMAGEM IS NOT NULL`).then(res => res.recordset)
+        const resource: any = await select(table, top, column, where, orderBy)
         let imgResult = [];
         for await (let [i, record] of resource.entries()) {
             const rec = await record;
