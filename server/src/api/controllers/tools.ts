@@ -2,19 +2,21 @@ import { RequestHandler } from "express";
 import { pictures } from "../pictures";
 import { insertInto } from "../services/insert";
 import { select } from "../services/select";
+import { decodedBuffer } from "../utils/decodeOdf";
 import { decrypted } from "../utils/decryptedOdf";
 import { encrypted } from "../utils/encryptOdf";
 import { sanitize } from "../utils/sanitize";
 
 //Ferramenta
-export const tools: RequestHandler = async (req, res) => {
+export const tools: RequestHandler = async (req, res, next) => {
 
     if (req.cookies['NUMERO_ODF'] === undefined) {
         console.log("algo deu errado linha 17 /tools/");
         return res.json({ message: 'Algo deu errado' })
     }
 
-    let numeroOdf: number = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
+    let decodedOdfNumber = decodedBuffer(String(sanitize(req.cookies['encodedOdfNumber']))) || null
+    let numeroOdf = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
     let codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
     let numeroOperacao: string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
     let codigoMaq: string = decrypted(String(sanitize(req.cookies["CODIGO_MAQUINA"]))) || null
@@ -36,8 +38,16 @@ export const tools: RequestHandler = async (req, res) => {
     const motivo = ''
     let lookForTools = `SELECT [CODIGO], [IMAGEM] FROM VIEW_APTO_FERRAMENTAL WHERE 1 = 1 AND IMAGEM IS NOT NULL AND CODIGO = '${codigoPeca}'`
 
+    console.log("linha 41", decodedOdfNumber);
+
+    console.log("linha 43", numeroOdf );
+
+    if(numeroOdf !== decodedOdfNumber) {
+        return res.json({message : 'Erro na ODF'})
+    }
     numeroOdf = Number(numeroOdf)
     qtdLibMax = Number(qtdLibMax)
+
 
     try {
         // const toolsImg = await connection.query(`
@@ -95,7 +105,7 @@ export const tools: RequestHandler = async (req, res) => {
             res.cookie('tools', 'true')
             return res.json(result)
         } else {
-            return res.json({ message: 'Erro ao tentar acessar as fotos de ferramentas' })
+            next()
         }
 
     } catch (error) {

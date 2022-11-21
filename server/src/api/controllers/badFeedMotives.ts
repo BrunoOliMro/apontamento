@@ -8,7 +8,6 @@ export const badFeedMotives: RequestHandler = async (_req, res) => {
         const resource = await connection.query(`
         SELECT R_E_C_N_O_, DESCRICAO FROM CST_MOTIVO_REFUGO (NOLOCK) ORDER BY DESCRICAO ASC`).then(record => record.recordset);
         let resoc = resource.map(e => e.DESCRICAO)
-        //console.log('resourc: linha 1145 ', resource);
         if (resource.length > 0) {
             return res.status(200).json(resoc)
         } else {

@@ -113,23 +113,23 @@ const pointerPost = async (req, res) => {
     res.cookie('NUMERO_OPERACAO', operationNumber);
     res.cookie('REVISAO', encryptedRevision);
     console.log("linha 146 /pointer/");
-    if (message === 'codeApont 2 setup finalizado') {
-        return res.json({ message: 'codeApont 1 setup iniciado' });
-    }
-    if (message === `codeApont 3 prod iniciado`) {
-        return res.json({ message: 'codeApont 3 prod iniciado' });
-    }
     let lookForChildComponents = await (0, selectIfHasP_1.selectToKnowIfHasP)(dados);
+    console.log("linha 158 /pointer/", lookForChildComponents);
     if (lookForChildComponents === 'Algo deu errado') {
         return res.json({ message: 'Algo deu errado' });
     }
-    if (lookForChildComponents === 'valores reservados') {
-        res.cookie('reservedItens', lookForChildComponents.reservedItens);
-        res.cookie('codigoFilho', lookForChildComponents.codigoFilho);
-        res.cookie('CONDIC', lookForChildComponents.selectKnowHasP[0].CONDIC);
-        res.cookie('NUMITE', lookForChildComponents.codigoNumite);
-        res.cookie('resultadoFinalProducao', lookForChildComponents.resultadoFinalProducao);
+    if (lookForChildComponents === 'Quantidade para reserva inválida') {
+        return res.json({ message: 'Quantidade para reserva inválida' });
     }
+    if (lookForChildComponents === 'Não há item para reservar') {
+        return res.json({ message: 'Não há item para reservar' });
+    }
+    res.cookie('reservedItens', lookForChildComponents.reservedItens);
+    res.cookie('codigoFilho', lookForChildComponents.codigoFilho);
+    res.cookie('CONDIC', lookForChildComponents.selectKnowHasP[0].CONDIC);
+    res.cookie('NUMITE', lookForChildComponents.codigoNumite);
+    res.cookie('resultadoFinalProducao', lookForChildComponents.resultadoFinalProducao);
+    return res.redirect('/#/ferramenta');
     return res.json({ message: 'codeApont 1 setup iniciado' });
 };
 exports.pointerPost = pointerPost;

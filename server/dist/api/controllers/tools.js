@@ -4,14 +4,16 @@ exports.selectedTools = exports.tools = void 0;
 const pictures_1 = require("../pictures");
 const insert_1 = require("../services/insert");
 const select_1 = require("../services/select");
+const decodeOdf_1 = require("../utils/decodeOdf");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const encryptOdf_1 = require("../utils/encryptOdf");
 const sanitize_1 = require("../utils/sanitize");
-const tools = async (req, res) => {
+const tools = async (req, res, next) => {
     if (req.cookies['NUMERO_ODF'] === undefined) {
         console.log("algo deu errado linha 17 /tools/");
         return res.json({ message: 'Algo deu errado' });
     }
+    let decodedOdfNumber = (0, decodeOdf_1.decodedBuffer)(String((0, sanitize_1.sanitize)(req.cookies['encodedOdfNumber']))) || null;
     let numeroOdf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))) || null;
     let codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_PECA"]))) || null;
     let numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"]))) || null;
@@ -31,6 +33,11 @@ const tools = async (req, res) => {
     let retrabalhada = 0;
     const motivo = '';
     let lookForTools = `SELECT [CODIGO], [IMAGEM] FROM VIEW_APTO_FERRAMENTAL WHERE 1 = 1 AND IMAGEM IS NOT NULL AND CODIGO = '${codigoPeca}'`;
+    console.log("linha 41", decodedOdfNumber);
+    console.log("linha 43", numeroOdf);
+    if (numeroOdf !== decodedOdfNumber) {
+        return res.json({ message: 'Erro na ODF' });
+    }
     numeroOdf = Number(numeroOdf);
     qtdLibMax = Number(qtdLibMax);
     try {
@@ -65,7 +72,7 @@ const tools = async (req, res) => {
             return res.json(result);
         }
         else {
-            return res.json({ message: 'Erro ao tentar acessar as fotos de ferramentas' });
+            next();
         }
     }
     catch (error) {

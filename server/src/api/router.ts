@@ -56,12 +56,13 @@ apiRouter.route("/ferramenta")
     //GET das Fotos das desenhodiv
     //.get(getBefore)
     .get(tools)
-
-
-apiRouter.route("/ferselecionadas")
-    //.get(codeNote)
-   // .get(getBefore)
     .get(selectedTools)
+
+
+// apiRouter.route("/ferselecionadas")
+//     //.get(codeNote)
+//    // .get(getBefore)
+//     .get(selectedTools)
 
 
 apiRouter.route("/apontar")
@@ -69,7 +70,6 @@ apiRouter.route("/apontar")
     //.get(getBefore)
     .get(getPoint)
     .post(point)
-
 
 apiRouter.route("/lancamentoRip")
     //.get(getBefore)
@@ -81,13 +81,13 @@ apiRouter.route("/returnedValue")
     //.get(codeNote)
     .post(returnedValue)
 
-apiRouter.route("/supervisor")
-    //.get(getBefore)
-    .post(supervisor)
+// apiRouter.route("/supervisor")
+//     //.get(getBefore)
+//     .post(supervisor)
 
-apiRouter.route("/supervisorParada")
-    //.get(getBefore)
-    .post(stopSupervisor)
+// apiRouter.route("/supervisorParada")
+//     //.get(getBefore)
+//     .post(stopSupervisor)
 
 apiRouter.route("/motivoParada")
     //.get(getBefore)

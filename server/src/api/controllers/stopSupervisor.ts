@@ -28,6 +28,7 @@ export const stopSupervisor: RequestHandler = async (req, res) => {
 
         let lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`
         const resource = await select(lookForSupervisor)
+        console.log("linha 31 /stopSupervisor/", resource);
 
         if (resource.length > 0) {
             // await connection.query(`

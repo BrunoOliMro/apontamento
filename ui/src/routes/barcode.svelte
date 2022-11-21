@@ -1,7 +1,7 @@
 <script>
   // @ts-nocheck
   import ModalConfirmation from "../../src/components/modal/modalConfirmation.svelte";
-  import blockForbiddenChars from '../routes/presanitize'
+  import blockForbiddenChars from "../routes/presanitize";
   let imageLoader = "/images/axonLoader.gif";
   let codigoBarrasReturn = "";
   let codigoBarras = "";
@@ -33,15 +33,15 @@
     badgeMsg = window.location.href.split("?")[1].split("=")[1];
   }
 
-  const checkPostSuper = async (event) =>{
+  const checkPostSuper = async (event) => {
     if (superSuperMaqPar.length >= 6 && event.key === "Enter") {
       if (superSuperMaqPar === "000000") {
         modalMessage = "Crachá inválido";
       }
       doPostSuper();
     }
-  }
-  
+  };
+
   const doPostSuper = async () => {
     console.log("linha 37", superSuperMaqPar);
     loader = true;
@@ -86,19 +86,30 @@
         codigoBarras,
       }),
     }).then((res) => res.json());
-    console.log("res", res);
+    console.log("linha 89 res /barcode/", res);
 
-    if(res.message === 'Algo deu errado'){
-      window.location.href = "/#/codigobarras";
-      location.reload()
+    if (res.message === "Quantidade para reserva inválida") {
+      modalMessage = "Quantidade para reserva inválida";
+      loader = false;
     }
 
-    if (res.message === 'codeApont 1 setup iniciado') {
+    if (res.message === "Não há item para reservar") {
+      modalMessage = "Não há item para reservar";
+      window.location.href = "/#/codigobarras/apontamento";
+      location.reload();
+    }
+
+    if (res.message === "Algo deu errado") {
+      loader = false;
+      modalMessage = "Algo deu errado";
+    }
+
+    if (res.message === "codeApont 1 setup iniciado") {
       loader = false;
       window.location.href = "/#/ferramenta";
     }
 
-    if(res.message ===  'codeApont 2 setup finalizado'){
+    if (res.message === "codeApont 2 setup finalizado") {
       loader = false;
       window.location.href = "/#/ferramenta";
     }
@@ -278,7 +289,9 @@
     <nav class="breadcrumb" aria-label="breadcrumb">
       <ol class="breadcrumb">
         <li class="breadcrumb-item">
-          <a href="/#/codigobarras" on:click={goBack}> <img src={back} alt="">Colaborador</a>
+          <a href="/#/codigobarras" on:click={goBack}>
+            <img src={back} alt="" />Colaborador</a
+          >
         </li>
       </ol>
     </nav>
@@ -327,220 +340,70 @@
             onkeyup="this.value = this.value.toUpperCase()"
             bind:value={superSuperMaqPar}
           />
-          <!-- <p tabindex="13" on:keypress={checkPostSuper} >
-            Confirmar
-          </p> -->
         </div>
       </div>
     {/if}
 
     {#if modalMessage === "Estorno realizado"}
       <ModalConfirmation title={modalMessage} on:message={closePopCor} />
-      <!-- <div class="fundo">
-        <div class="invalidBarcode" id="s">
-          <h5>Estorno Feito</h5>
-          <p
-            autofocus
-            tabindex="30"
-            on:keypress={closePopCor}
-            on:click={closePopCor}
-          >
-            Fechar
-          </p>
-        </div>
-      </div> -->
+    {/if}
+
+    {#if modalMessage === "Quantidade para reserva inválida"}
+      <ModalConfirmation on:message={closePopCor} title={modalMessage} />
     {/if}
 
     {#if modalMessage === "Erro ao fazer estorno"}
       <ModalConfirmation on:message={closePopCor} title={modalMessage} />
-      <!-- <div class="fundo">
-        <div class="invalidBarcode" id="s">
-          <h5>Erro ao fazer estorno</h5>
-          <p
-            autofocus
-            tabindex="31"
-            on:keypress={closePopCor}
-            on:click={closePopCor}
-          >
-            Fechar
-          </p>
-        </div>
-      </div> -->
     {/if}
 
     {#if modalMessage === "Não há valor a ser devolvido"}
       <ModalConfirmation on:message={closePopCor} title={modalMessage} />
-      <!-- <div class="fundo">
-        <div class="invalidBarcode" id="s">
-          <h5>Não há limite para Estorno</h5>
-          <p
-            autofocus
-            tabindex="32"
-            on:keypress={closePopCor}
-            on:click={closePopCor}
-          >
-            Fechar
-          </p>
-        </div>
-      </div> -->
     {/if}
 
     {#if modalMessage === "Supervisor não encontrado"}
       <ModalConfirmation on:message={closePopCor} title={modalMessage} />
-      <!-- <div class="fundo">
-        <div class="invalidBarcode" id="s">
-          <h5>Supervisor não encontrado</h5>
-          <p
-            autofocus
-            tabindex="33"
-            on:keypress={closePopCor}
-            on:click={closePopCor}
-          >
-            Fechar
-          </p>
-        </div>
-      </div> -->
     {/if}
 
     {#if modalMessage === "Limite de estorno excedido"}
       <ModalConfirmation on:message={closePopCor} title={modalMessage} />
-      <!-- <div class="fundo">
-        <div class="invalidBarcode" id="s">
-          <h5>Limite de estorno menor que o apontado</h5>
-          <h3>Limite Disponivel: {returnValueAvailable}</h3>
-          <p
-            autofocus
-            tabindex="34"
-            on:keypress={closePopCor}
-            on:click={closePopCor}
-          >
-            Fechar
-          </p>
-        </div>
-      </div> -->
+
     {/if}
 
     {#if modalMessage === "Não há limite na ODF"}
       <ModalConfirmation on:message={closePop} title={modalMessage} />
-      <!-- <div class="fundo">
-        <div class="invalidBarcode" id="s">
-          <h5>ODF não pode ser apontada, aponte outra</h5>
-          <p autofocus tabindex="35" on:keypress={closePop} on:click={closePop}>
-            Fechar
-          </p>
-        </div>
-      </div> -->
     {/if}
 
     {#if modalMessage === "ODF não encontrada"}
       <ModalConfirmation on:message={closePop} title={modalMessage} />
-      <!-- <div class="fundo">
-        <div class="invalidBarcode" id="s">
-          <h5>ODF não encontrada</h5>
-          <p autofocus tabindex="23" on:keypress={closePop} on:click={closePop}>
-            Fechar
-          </p>
-        </div>
-      </div> -->
     {/if}
 
     {#if modalMessage === "Código de barras está vazio"}
       <ModalConfirmation on:message={closePop} title={modalMessage} />
-
-      <!-- <div class="fundo">
-        <div class="invalidBarcode" id="s">
-          <h5>Codigo de barras vazio</h5>
-          <p autofocus tabindex="24" on:keypress={closePop} on:click={closePop}>
-            Fechar
-          </p>
-        </div>
-      </div> -->
     {/if}
 
     {#if modalMessage === "Crachá não encontrado"}
       <ModalConfirmation on:message={closePop} title={modalMessage} />
-      <!-- <div class="fundo">
-        <div class="invalidBadge" id="s">
-          <h5>Crachá não encontrado</h5>
-          <p autofocus tabindex="25" on:keypress={closePop} on:click={closePop}>
-            Fechar
-          </p>
-        </div>
-      </div> -->
     {/if}
 
     {#if modalMessage === "Crachá vazio"}
       // bagdeEmpty === true
       <ModalConfirmation on:message={closePop} title={modalMessage} />
-      <!-- {#if showInvalidBagde === true} -->
-      <!-- <div class="fundo">
-        <div class="invalidBadge" id="s">
-          <h5>Crachá vazio</h5>
-          <p autofocus tabindex="26" on:keypress={closePop} on:click={closePop}>
-            Fechar
-          </p>
-        </div>
-      </div> -->
     {/if}
 
     {#if modalMessage === "Quantidade está vazia"}
       <ModalConfirmation on:message={closePop} title={modalMessage} />
-      <!-- <div class="fundo">
-        <div class="invalidBadge" id="s">
-          <h5>Quantidade indefinida</h5>
-          <p autofocus tabindex="26" on:keypress={closePop} on:click={closePop}>
-            Fechar
-          </p>
-        </div>
-      </div> -->
     {/if}
 
     {#if modalMessage === "Campo supervisor está vazio"}
-      <!-- {#if showInvalidBagde === true} -->
       <ModalConfirmation on:message={closePop} title={modalMessage} />
-
-      <!-- <div class="fundo">
-        <div class="invalidBadge" id="s">
-          <h5>Campo supervisor está vazio</h5>
-          <p autofocus tabindex="26" on:keypress={closePop} on:click={closePop}>
-            Fechar
-          </p>
-        </div>
-      </div> -->
     {/if}
 
     {#if modalMessage === "Crachá inválido"}
       <ModalConfirmation on:message={closePopCor} title={modalMessage} />
-      <!-- {#if showInvalidBagde === true} -->
-      <!-- <div class="fundo">
-        <div class="invalidBadge" id="s">
-          <h5>Cracha invalido</h5>
-          <p
-            autofocus
-            tabindex="26"
-            on:keypress={closePopCor}
-            on:click={closePopCor}
-          >
-            Fechar
-          </p>
-        </div>
-      </div> -->
+    {/if}
 
-      <!-- <div class="modalBackground">
-        <div class="confirmationModal">
-          <div class="onlyConfirmModalContent">
-            <h2 class="modalTitle">Cracha invalido</h2>
-            <button
-              autofocus
-              tabindex="26"
-              on:keypress={closePopCor}
-              on:input={Sanitize}
-              class="btnPop"
-              type="text">FECHAR</button
-            >
-          </div>
-        </div>
-      </div> -->
+    {#if modalMessage === "Algo deu errado"}
+      <ModalConfirmation on:message={closePopCor} title={modalMessage} />
     {/if}
 
     {#if showBarcode === true}
@@ -653,12 +516,12 @@
 </main>
 
 <style>
-  a{
+  a {
     color: #252525;
     font-size: 20px;
   }
 
-  a:hover{
+  a:hover {
     opacity: 0.5s;
     transition: all 1s;
   }

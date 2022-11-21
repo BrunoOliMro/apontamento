@@ -20,16 +20,16 @@ export const pointerPost: RequestHandler = async (req, res) => {
     let codigoMaquinaProxOdf;
     let codMaqProxOdf;
 
-    if(message === 'codeApont 1 setup iniciado'){
-        return res.json({message : 'codeApont 1 setup iniciado'})
+    if (message === 'codeApont 1 setup iniciado') {
+        return res.json({ message: 'codeApont 1 setup iniciado' })
     }
 
-    if(message === `codeApont 4 prod finalzado`){
-        return res.json({message : 'codeApont 4 prod finalzado'})
+    if (message === `codeApont 4 prod finalzado`) {
+        return res.json({ message: 'codeApont 4 prod finalzado' })
     }
 
-    if(message === `codeApont 5 maquina parada`){
-        return res.json({message : 'codeApont 5 maquina parada'})
+    if (message === `codeApont 5 maquina parada`) {
+        return res.json({ message: 'codeApont 5 maquina parada' })
     }
 
     // Seleciona todos os itens da Odf
@@ -112,8 +112,8 @@ export const pointerPost: RequestHandler = async (req, res) => {
     // Descriptografa o funcionario dos cookies
     let funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))
 
-    if(!funcionario){
-        return res.json({message : 'Algo deu errado'})
+    if (!funcionario) {
+        return res.json({ message: 'Algo deu errado' })
     }
 
     //Criptografa os dados da ODF
@@ -145,28 +145,37 @@ export const pointerPost: RequestHandler = async (req, res) => {
 
     console.log("linha 146 /pointer/");
 
-    if(message === 'codeApont 2 setup finalizado'){
-        return res.json({message : 'codeApont 1 setup iniciado'})
+    // if(message === 'codeApont 2 setup finalizado'){
+    //     return res.json({message : 'codeApont 1 setup iniciado'})
+    // }
+
+    // if(message === `codeApont 3 prod iniciado`){
+    //     return res.json({message : 'codeApont 3 prod iniciado'})
+    // }
+
+    let lookForChildComponents: any = await selectToKnowIfHasP(dados)
+
+    console.log("linha 158 /pointer/", lookForChildComponents);
+    if (lookForChildComponents === 'Algo deu errado') {
+        return res.json({ message: 'Algo deu errado' })
     }
 
-    if(message === `codeApont 3 prod iniciado`){
-        return res.json({message : 'codeApont 3 prod iniciado'})
+    if (lookForChildComponents === 'Quantidade para reserva inválida') {
+        return res.json({ message: 'Quantidade para reserva inválida' })
     }
 
-    let lookForChildComponents: any= await selectToKnowIfHasP(dados)
-
-    if(lookForChildComponents === 'Algo deu errado'){
-        return res.json({message : 'Algo deu errado'})
+    if (lookForChildComponents === 'Não há item para reservar') {
+        return res.json({ message: 'Não há item para reservar' })
     }
 
-    if (lookForChildComponents === 'valores reservados') {
-        res.cookie('reservedItens', lookForChildComponents!.reservedItens)
-        res.cookie('codigoFilho', lookForChildComponents!.codigoFilho)
-        res.cookie('CONDIC', lookForChildComponents!.selectKnowHasP[0].CONDIC)
-        res.cookie('NUMITE', lookForChildComponents!.codigoNumite)
-        res.cookie('resultadoFinalProducao', lookForChildComponents!.resultadoFinalProducao)
-    }
-    return res.json({message : 'codeApont 1 setup iniciado'})
+
+    res.cookie('reservedItens', lookForChildComponents!.reservedItens)
+    res.cookie('codigoFilho', lookForChildComponents!.codigoFilho)
+    res.cookie('CONDIC', lookForChildComponents!.selectKnowHasP[0].CONDIC)
+    res.cookie('NUMITE', lookForChildComponents!.codigoNumite)
+    res.cookie('resultadoFinalProducao', lookForChildComponents!.resultadoFinalProducao)
+    return res.redirect('/#/ferramenta')
+    return res.json({ message: 'codeApont 1 setup iniciado' })
     // if (message !== 'codeApont 1 setup iniciado') {
     //     await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
     //     VALUES (GETDATE(), '${funcionario}', ${dados.numOdf}, '${codigoPeca}', ${queryGrupoOdf[0].REVISAO},'${dados.numOper}', '${dados.numOper}', 'D', '${dados.codMaq}',0, 0, 0, '${funcionario}', '0', 1, '1', 'Ini Set.', 0, 0, '1', 0, 0 )`)

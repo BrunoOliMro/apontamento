@@ -28,6 +28,7 @@ const stopSupervisor = async (req, res) => {
         let tempoDecorrido = 0;
         let lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`;
         const resource = await (0, select_1.select)(lookForSupervisor);
+        console.log("linha 31 /stopSupervisor/", resource);
         if (resource.length > 0) {
             await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, NUMERO_OPERACAO, CODIGO_MAQUINA, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido);
             return res.status(200).json({ message: 'maquina' });
