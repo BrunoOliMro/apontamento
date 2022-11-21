@@ -22,7 +22,7 @@
     let showConfirm = false;
     let valorFeed;
     let value;
-    let supervisor;
+    let supervisor = '';
     let qtdPossivelProducao;
     let showError = false;
     let showParcialSuper = false;
@@ -37,14 +37,15 @@
     let stopModal = false;
     let showMaqPar = false;
     let modalTitle = "Máquina Parada ";
-    let urlString = `/api/v1/odfQtd`;
+    let urlString = `/api/v1/odf`;
     getOdfData();
 
     async function getOdfData() {
         const res = await fetch(urlString);
         dadosOdf = await res.json();
-        console.log("linha 41", dadosOdf);
+        console.log("linha 48", dadosOdf.valorMaxdeProducao);
         qtdPossivelProducao = dadosOdf.valorMaxdeProducao;
+        console.log("linha 50 /feed/", qtdPossivelProducao);
         if (qtdPossivelProducao <= 0) {
             qtdPossivelProducao = 0;
         }
@@ -73,21 +74,21 @@
 
     async function checkForSuper(event) {
         console.log("linha 75/feed/", supervisor);
-        if (supervisor.length >= 5 && event.key === "Enter") {
+        if (supervisor.length >= 6 && event.key === "Enter") {
             if (supervisor === "000000") {
                 modalMessage = "Crachá inválido";
             }
-        }
-        const headers = new Headers();
-        const res = await fetch(supervisorApi, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                supervisor: supervisor,
-            }),
-        }).then((res) => res.json());
-        if (res.message === "Supervisor encontrado") {
-            doPost();
+            const headers = new Headers();
+            const res = await fetch(supervisorApi, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    supervisor: supervisor,
+                }),
+            }).then((res) => res.json());
+            if (res.message === "Supervisor encontrado") {
+                doPost();
+            }
         }
     }
 
@@ -158,8 +159,9 @@
             loader = false
         }
         if (res.message === "Sucesso ao apontar") {
-            loader = true;
-            window.location.href = `/#/rip`;
+            //loader = true;
+            getSpaceFunc()
+            //window.location.href = `/#/rip`;
             modalMessage = "";
             showConfirm = false;
         }
@@ -168,13 +170,11 @@
     async function getSpaceFunc() {
         const res = await fetch(urlS);
         getSpace = await res.json();
-
-        if (
-            getSpace.message === "sem endereço" ||
-            getSpace.address === undefined
-        ) {
+        console.log("linha 173", getSpace);
+        if (getSpace.message === "sem endereço" || getSpace.address === undefined) {
             window.location.href = `/#/rip`;
         } else if (getSpace.String === "endereço com sucesso") {
+            loader = false
             showAddress = true;
         }
     }
@@ -182,19 +182,19 @@
     async function doCallPost() {
         let numberBadFeed = Number(badFeed || 0);
         let numberGoodFeed = Number(valorFeed || 0);
-        let numberQtdAllowed = Number(qtdPossivelProducao || 0);
+        let numberQtdAllowed = Number(qtdPossivelProducao);
         let numberMissing = Number(missingFeed || 0);
         let numberReworkFeed = Number(reworkFeed || 0);
 
-        console.log("linha 185", numberBadFeed);
-        console.log("linha 185", numberGoodFeed);
-        console.log("linha 185", numberQtdAllowed);
-        console.log("linha 185", numberMissing);
-        console.log("linha 185", numberReworkFeed);
+        // console.log("linha 185", numberBadFeed);
+        // console.log("linha 185", numberGoodFeed);
+        console.log("linha 192", numberQtdAllowed);
+        // console.log("linha 185", numberMissing);
+        // console.log("linha 185", numberReworkFeed);
 
         let total =
             numberBadFeed + numberGoodFeed + numberMissing + numberReworkFeed;
-        console.log("total 185", total);
+        console.log("total 198", total);
 
         if(total > numberQtdAllowed){
             modalMessage = 'Quantidade excedida'
@@ -548,7 +548,7 @@
         <div class="fundo">
             <div class="header">
                 <div class="closed">
-                    <h2>{getSpace.address}</h2>
+                    <h2>Insira a quantidade no local : {getSpace.address}</h2>
                 </div>
                 <button on:keypress={closeRedirect} on:click={closeRedirect}
                     >fechar</button

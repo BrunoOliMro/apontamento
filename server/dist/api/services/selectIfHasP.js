@@ -75,6 +75,9 @@ const selectToKnowIfHasP = async (dados) => {
         if (selectKnowHasP.length <= 0) {
             return response.message = "não foi necessario reservar";
         }
+        else {
+            return response.message = "Algo deu errado";
+        }
     }
     catch (error) {
         console.log('linha 214: ', error);

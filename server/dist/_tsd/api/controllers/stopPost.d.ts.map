@@ -1,1 +1,1 @@
-{"version":3,"file":"stopPost.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/stopPost.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAOzC,eAAO,MAAM,QAAQ,EAAE,cA6CtB,CAAA"}
+{"version":3,"file":"stopPost.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/stopPost.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAOzC,eAAO,MAAM,QAAQ,EAAE,cA+CtB,CAAA"}

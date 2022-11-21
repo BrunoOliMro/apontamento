@@ -12,7 +12,7 @@ const drawing = async (req, res) => {
     const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
     const numpec = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
     let desenho = String("_desenho");
-    const lookForImages = `SELECT DISTINC [NUMPEC], [IMAGEM], [REVISAO] FROM QA_LAYOUT (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${numpec}' AND REVISAO = ${revisao} AND IMAGEM IS NOT NULL`;
+    const lookForImages = `SELECT DISTINCT [NUMPEC], [IMAGEM], [REVISAO] FROM QA_LAYOUT (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${numpec}' AND REVISAO = ${revisao} AND IMAGEM IS NOT NULL`;
     try {
         const resource = await (0, select_1.select)(lookForImages);
         let imgResult = [];

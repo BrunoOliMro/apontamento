@@ -28,6 +28,8 @@ export const ripPost: RequestHandler = async (req, res) => {
     let descricao: string[] = (req.cookies['descricao']) || null
     var objectSanitized: { [k: string]: any; } = {}
 
+    console.log("linha 31 /rip Post/", setup);
+
     //let start = Number(req.cookies["starterBarcode"]) || 0
     //let end = Number(new Date().getTime()) || 0;
     // let tempoDecorrido = Number(new Date(start).getTime()) || 0
@@ -39,33 +41,32 @@ export const ripPost: RequestHandler = async (req, res) => {
     const tempoDecorridoRip = Number(new Date(startRip).getDate()) || 0
     const finalProdRip = Number(tempoDecorridoRip - endProdRip) || 0
 
-    //Insere os dados no banco
-    if (Object.keys(setup).length <= 0) {
-        return res.json({ message: "rip vazia" })
+    if(!setup){
+        if (Object.keys(setup).length <= 0) {
+            return res.json({ message: "rip vazia" })
+        }
+    
+        for (const [key, value] of Object.entries(setup)) {
+            keySan = sanitize(key as string)
+            valueSan = sanitize(value as string)
+            objectSanitized[keySan as string] = valueSan
+        }
     }
 
-    for (const [key, value] of Object.entries(setup)) {
-        keySan = sanitize(key as string)
-        valueSan = sanitize(value as string)
-        objectSanitized[keySan as string] = valueSan
-    }
 
     NUMERO_ODF = Number(NUMERO_ODF)
     qtdLibMax = Number(qtdLibMax)
 
-
+console.log("linha 58 /ripPost/");
     let boas = 0
     let ruins = 0
-    let codAponta = 8
-    let descricaoCodAponta = 'ODF Fin'
+    let codAponta = 6
+    let descricaoCodAponta = 'Rip Fin'
     let motivo = ''
     let faltante = 0
     let retrabalhada = 0
 
     //Insere O CODAPONTA 6 e Tempo da rip
-    // await connection.query(`
-    // INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA)
-    // VALUES(GETDATE(), '${funcionario}', ${NUMERO_ODF}, '${codigoPeca}', ${revisao}, '${NUMERO_OPERACAO}', '${NUMERO_OPERACAO}', 'D', '${CODIGO_MAQUINA}', ${qtdLibMax}, '0', '0', '${funcionario}', '0', '6', '6', 'ODF ENC.', ${finalProdRip}, ${finalProdRip}, '1', '0', '0')`)
     await insertInto(funcionario, NUMERO_ODF, codigoPeca, revisao, NUMERO_OPERACAO, CODIGO_MAQUINA, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorridoRip)
 
     //Atualiza o tempo total que a operação levou

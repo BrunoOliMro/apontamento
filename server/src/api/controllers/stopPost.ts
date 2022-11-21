@@ -22,10 +22,11 @@ export const stopPost: RequestHandler = async (req, res) => {
     newStart = Number(start)
     let final = Number(end - newStart) || 0
 
+    console.log("linha 25 /stop post/");
     let boas = 0
     let faltante = 0
     let retrabalhada = 0
-    let codAponta = 5
+    let codAponta = 7
     let ruins = 0
     let motivo = ''
     let descricaoCodAponta = 'Parada'
@@ -37,13 +38,14 @@ export const stopPost: RequestHandler = async (req, res) => {
         //     ).then(record => record.rowsAffected)
 
         const resour: any = await insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, final)
-        
-        console.log("resource", resour);
-        if (resour.length <= 0) {
-            return res.json({ message: 'erro ao parar a maquina' })
-        } else {
+        console.log("parada", resour);
+
+        if(resour){
             return res.status(200).json({ message: 'maquina parada com sucesso' })
+        } else {
+            return res.json({ message: 'erro ao parar a maquina' })
         }
+
     } catch (error) {
         console.log(error)
         return res.json({ message: "ocorre um erro ao tentar parar a maquina" })

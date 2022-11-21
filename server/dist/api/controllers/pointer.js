@@ -119,13 +119,16 @@ const pointerPost = async (req, res) => {
     if (message === `codeApont 3 prod iniciado`) {
         return res.json({ message: 'codeApont 3 prod iniciado' });
     }
-    let data = await (0, selectIfHasP_1.selectToKnowIfHasP)(dados);
-    if (data === 'valores reservados') {
-        res.cookie('reservedItens', data.reservedItens);
-        res.cookie('codigoFilho', data.codigoFilho);
-        res.cookie('CONDIC', data.selectKnowHasP[0].CONDIC);
-        res.cookie('NUMITE', data.codigoNumite);
-        res.cookie('resultadoFinalProducao', data.resultadoFinalProducao);
+    let lookForChildComponents = await (0, selectIfHasP_1.selectToKnowIfHasP)(dados);
+    if (lookForChildComponents === 'Algo deu errado') {
+        return res.json({ message: 'Algo deu errado' });
+    }
+    if (lookForChildComponents === 'valores reservados') {
+        res.cookie('reservedItens', lookForChildComponents.reservedItens);
+        res.cookie('codigoFilho', lookForChildComponents.codigoFilho);
+        res.cookie('CONDIC', lookForChildComponents.selectKnowHasP[0].CONDIC);
+        res.cookie('NUMITE', lookForChildComponents.codigoNumite);
+        res.cookie('resultadoFinalProducao', lookForChildComponents.resultadoFinalProducao);
     }
     return res.json({ message: 'codeApont 1 setup iniciado' });
 };

@@ -8,8 +8,10 @@ const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
 const update = async (query) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let response = {};
-    const data = await connection.query(`${query}`).then((result) => result.recordset);
+    let response = {
+        message: '',
+    };
+    const data = await connection.query(`${query}`).then((result) => result.rowsAffected);
     if (data.length <= 0) {
         return response.message = "Error on update";
     }

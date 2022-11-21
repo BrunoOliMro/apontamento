@@ -102,6 +102,8 @@ export const selectToKnowIfHasP = async (dados: any) => {
         if (selectKnowHasP.length <= 0) {
             return response.message = "não foi necessario reservar"
             //return res.json({ message: 'não foi necessario reservar' })
+        } else {
+            return response.message = "Algo deu errado"
         }
 
     } catch (error) {

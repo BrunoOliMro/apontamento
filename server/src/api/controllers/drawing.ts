@@ -9,7 +9,7 @@ export const drawing: RequestHandler = async (req, res) => {
     const revisao: string  = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
     const numpec: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
     let desenho = String("_desenho")
-    const lookForImages = `SELECT DISTINC [NUMPEC], [IMAGEM], [REVISAO] FROM QA_LAYOUT (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${numpec}' AND REVISAO = ${revisao} AND IMAGEM IS NOT NULL`
+    const lookForImages = `SELECT DISTINCT [NUMPEC], [IMAGEM], [REVISAO] FROM QA_LAYOUT (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${numpec}' AND REVISAO = ${revisao} AND IMAGEM IS NOT NULL`
     try {
         const resource: any = await select(lookForImages)
         let imgResult = [];

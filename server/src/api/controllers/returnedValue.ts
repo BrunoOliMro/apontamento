@@ -93,7 +93,7 @@ export const returnedValue: RequestHandler = async (req, res) => {
 
         const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`
         const selectSuper = await select(lookForSupervisor)
-        let codAponta = 7
+        let codAponta = 8
         let descricaoCodigoAponta = ""
         let motivo = ``
         let tempoDecorrido = 0

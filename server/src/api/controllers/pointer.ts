@@ -153,14 +153,18 @@ export const pointerPost: RequestHandler = async (req, res) => {
         return res.json({message : 'codeApont 3 prod iniciado'})
     }
 
-    let data: any = await selectToKnowIfHasP(dados)
+    let lookForChildComponents: any= await selectToKnowIfHasP(dados)
 
-    if (data === 'valores reservados') {
-        res.cookie('reservedItens', data!.reservedItens)
-        res.cookie('codigoFilho', data!.codigoFilho)
-        res.cookie('CONDIC', data!.selectKnowHasP[0].CONDIC)
-        res.cookie('NUMITE', data!.codigoNumite)
-        res.cookie('resultadoFinalProducao', data!.resultadoFinalProducao)
+    if(lookForChildComponents === 'Algo deu errado'){
+        return res.json({message : 'Algo deu errado'})
+    }
+
+    if (lookForChildComponents === 'valores reservados') {
+        res.cookie('reservedItens', lookForChildComponents!.reservedItens)
+        res.cookie('codigoFilho', lookForChildComponents!.codigoFilho)
+        res.cookie('CONDIC', lookForChildComponents!.selectKnowHasP[0].CONDIC)
+        res.cookie('NUMITE', lookForChildComponents!.codigoNumite)
+        res.cookie('resultadoFinalProducao', lookForChildComponents!.resultadoFinalProducao)
     }
     return res.json({message : 'codeApont 1 setup iniciado'})
     // if (message !== 'codeApont 1 setup iniciado') {
@@ -205,8 +209,8 @@ export const pointerPost: RequestHandler = async (req, res) => {
     //     return res.json({ message: 'qualquer outro codigo' })
     // }
 
-    //console.log('data', data);
-    // if (data! === 'não foi necessario reservar') {
+    //console.log('lookForChildComponents', lookForChildComponents);
+    // if (lookForChildComponents! === 'não foi necessario reservar') {
     //     return res.json({ message: 'não foi necessario reservar' })
     // }
 

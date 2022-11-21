@@ -1,2 +1,2 @@
-export declare const selectToKnowIfHasP: (dados: any) => Promise<Number | "valores reservados" | "não foi necessario reservar" | "catch erro no try" | undefined>;
+export declare const selectToKnowIfHasP: (dados: any) => Promise<Number | "valores reservados" | "não foi necessario reservar" | "Algo deu errado" | "catch erro no try">;
 //# sourceMappingURL=selectIfHasP.d.ts.map

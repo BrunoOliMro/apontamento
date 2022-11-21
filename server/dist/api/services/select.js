@@ -14,7 +14,7 @@ const select = async (query) => {
         data: {},
     };
     if (data.length <= 0) {
-        return response.message = "odf nao encontrada";
+        return response.message = "Data not found";
     }
     if (data.length >= 0) {
         return response.data = data;

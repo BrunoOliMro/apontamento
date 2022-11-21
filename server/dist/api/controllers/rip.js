@@ -50,6 +50,7 @@ const rip = async (req, res) => {
                 return acc;
             }
         });
+        console.log("linha 53 /rip/", arrayNumope);
         let numopeFilter = arrayNumope.filter(acc => acc);
         res.cookie('cstNumope', numopeFilter.map(acc => acc.CST_NUMOPE));
         res.cookie('numCar', numopeFilter.map(acc => acc.NUMCAR));
@@ -63,10 +64,15 @@ const rip = async (req, res) => {
         let ruins = 0;
         let faltante = 0;
         let retrabalhada = 0;
-        let codAponta = 6;
+        let codAponta = 5;
         let motivo = ``;
-        if (numopeFilter.length <= 0) {
+        try {
             await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime);
+        }
+        catch (error) {
+            return res.json({ message: 'Erro ao iniciar tempo da rip' });
+        }
+        if (numopeFilter.length <= 0) {
         }
         return res.json(numopeFilter);
     }

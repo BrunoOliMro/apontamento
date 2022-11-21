@@ -30,24 +30,28 @@ const ripPost = async (req, res) => {
     let instrumento = (req.cookies['instrumento']) || null;
     let descricao = (req.cookies['descricao']) || null;
     var objectSanitized = {};
+    console.log("linha 31 /rip Post/", setup);
     const startRip = Number(req.cookies["startRip"]) || 0;
     const endProdRip = Number(new Date().getDate()) || 0;
     const tempoDecorridoRip = Number(new Date(startRip).getDate()) || 0;
     const finalProdRip = Number(tempoDecorridoRip - endProdRip) || 0;
-    if (Object.keys(setup).length <= 0) {
-        return res.json({ message: "rip vazia" });
-    }
-    for (const [key, value] of Object.entries(setup)) {
-        keySan = (0, sanitize_1.sanitize)(key);
-        valueSan = (0, sanitize_1.sanitize)(value);
-        objectSanitized[keySan] = valueSan;
+    if (!setup) {
+        if (Object.keys(setup).length <= 0) {
+            return res.json({ message: "rip vazia" });
+        }
+        for (const [key, value] of Object.entries(setup)) {
+            keySan = (0, sanitize_1.sanitize)(key);
+            valueSan = (0, sanitize_1.sanitize)(value);
+            objectSanitized[keySan] = valueSan;
+        }
     }
     NUMERO_ODF = Number(NUMERO_ODF);
     qtdLibMax = Number(qtdLibMax);
+    console.log("linha 58 /ripPost/");
     let boas = 0;
     let ruins = 0;
-    let codAponta = 8;
-    let descricaoCodAponta = 'ODF Fin';
+    let codAponta = 6;
+    let descricaoCodAponta = 'Rip Fin';
     let motivo = '';
     let faltante = 0;
     let retrabalhada = 0;

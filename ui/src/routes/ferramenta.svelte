@@ -1,16 +1,17 @@
 <script>
   // @ts-nocheck
+  import ModalConfirmation from "../components/modal/modalConfirmation.svelte";
   let imageLoader = "/images/axonLoader.gif";
   let urlString = `/api/v1/ferramenta`;
   let urlFer = `/api/v1/ferselecionadas`;
   let tools = [];
-  let loader = true
+  let loader = true;
   getTools();
   let fer = [];
   let adicionados = 0;
   let arrayComp = [];
   export let breadFer;
-  let message = ''
+  let message = "";
 
   async function ferSelected() {
     const res = await fetch(urlFer);
@@ -18,7 +19,7 @@
     console.log("res", fer);
     if (fer.message === "ferramentas selecionadas com successo") {
       window.location.href = "/#/codigobarras/apontamento";
-      location.reload();
+      location.reload(); 
     }
   }
 
@@ -27,40 +28,51 @@
     tools = await res.json();
     console.log("tools linha 28", tools);
 
-    if(tools.message === 'Algo deu errado'){
+    if (tools.message === "Algo deu errado") {
       window.location.href = "/#/codigobarras";
-      location.reload()
+      location.reload();
     }
 
-    if(tools.message === `codeApont 2 setup finalizado`){
-      message = `codeApont 2 setup finalizado`
-      ferSelected()
+    if (tools.message === `codeApont 2 setup finalizado`) {
+      message = `codeApont 2 setup finalizado`;
+      ferSelected();
     }
 
-    if(tools.message === `codeApont 3 prod iniciado`){
-      message = `codeApont 3 prod iniciado`
+    if (tools.message === `codeApont 3 prod iniciado`) {
+      message = `codeApont 3 prod iniciado`;
       window.location.href = "/#/codigobarras/apontamento";
     }
 
-    if(tools.message === 'codeApont 5 maquina parada'){
-      message = 'codeApont 5 maquina parada'
+    if (tools.message === "codeApont 5 maquina parada") {
+      message = "codeApont 5 maquina parada";
       window.location.href = "/#/codigobarras";
-      location.reload()
+      location.reload();
     }
 
-    if(tools.message === `codeApont 6 processo finalizado`){
-      message = `codeApont 6 processo finalizado`
+    if (tools.message === `codeApont 6 processo finalizado`) {
+      message = `codeApont 6 processo finalizado`;
       window.location.href = "/#/codigobarras";
-      location.reload()
+      location.reload();
     }
 
+    if(tools.message === 'Data not found'){
+      window.location.href = "/#/codigobarras/apontamento";
+      location.reload();
+      ferSelected();
+    }
+
+    if (tools.message === "Erro ao tentar acessar as fotos de ferramentas") {
+      window.location.href = "/#/codigobarras/apontamento";
+      location.reload();
+      loader = false;
+    }
 
     if (tools.message === "/images/sem_imagem.gif") {
       ferSelected();
     }
 
     if (tools.length > 0) {
-      loader = false
+      loader = false;
     }
   }
 
@@ -72,11 +84,16 @@
       document.getElementById(imgId).style.transition = "1px";
     }
     if (tools.length === arrayComp.length) {
-      loader = true
+      loader = true;
       ferSelected();
     }
   }
 
+  function close() {
+    //loader = true
+    window.location.href = "/#/codigobarras";
+    location.reload();
+  }
   //let resultPromises = getTools();
 </script>
 
@@ -89,12 +106,12 @@
     </ol>
   </nav>
 {/if}
-{#if loader === true }
-<div class="imageLoader">
-  <div class="loader">
-    <img src={imageLoader} alt="" />
+{#if loader === true}
+  <div class="imageLoader">
+    <div class="loader">
+      <img src={imageLoader} alt="" />
+    </div>
   </div>
-</div>
 {/if}
 {#await tools}
   <div class="imageLoader">
@@ -120,6 +137,10 @@
     </div>
   </div>
 {/await}
+
+{#if message === "Erro ao tentar acessar as fotos de ferramentas"}
+  <ModalConfirmation on:message={close} />
+{/if}
 
 <style>
   .breadcrumb {

@@ -4,7 +4,7 @@ import { sqlConfig } from '../../global.config'
 export const select = async (query: string) => {
     const connection = await mssql.connect(sqlConfig);
     const data = await connection.query(`${query}`).then((result) => result.recordset)
-
+    //console.log("linha 7 /select.ts/", data);
     type Response = { message: string, data: {} }
 
     let response: Response = {
@@ -13,9 +13,8 @@ export const select = async (query: string) => {
     }
 
     if (data.length <= 0) {
-        return response.message = "odf nao encontrada"
+        return response.message = "Data not found"
     }
-
     if (data.length >= 0) {
         return response.data = data
     } else {

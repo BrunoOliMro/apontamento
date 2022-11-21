@@ -33,6 +33,7 @@
         if (ripTable.length <= 0) {
             loader = true;
             window.location.href = "/#/codigobarras";
+            doPost()
             location.reload();
         }
     }

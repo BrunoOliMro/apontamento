@@ -30,28 +30,33 @@ const tools = async (req, res) => {
     const faltante = 0;
     let retrabalhada = 0;
     const motivo = '';
+    let lookForTools = `SELECT [CODIGO], [IMAGEM] FROM VIEW_APTO_FERRAMENTAL WHERE 1 = 1 AND IMAGEM IS NOT NULL AND CODIGO = '${codigoPeca}'`;
     numeroOdf = Number(numeroOdf);
     qtdLibMax = Number(qtdLibMax);
     try {
-        let lookForTools = `SELECT [CODIGO], [IMAGEM] FROM VIEW_APTO_FERRAMENTAL WHERE 1 = 1 AND IMAGEM IS NOT NULL AND CODIGO = '${codigoPeca}'`;
-        let toolsImg = (0, select_1.select)(lookForTools);
+        let toolsImg;
+        try {
+            console.log("linha 55 /tools/");
+            toolsImg = await (0, select_1.select)(lookForTools);
+            await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, startTime);
+            console.log("linha 58 /tools/");
+        }
+        catch (error) {
+            console.log(error);
+            return res.json({ message: "Erro ao inserir codapontamento 1" });
+        }
+        if (toolsImg === 'Data not found') {
+            return res.json({ message: 'Data not found' });
+        }
+        console.log("linha 53 /tools/", toolsImg);
         let result = [];
         for await (let [i, record] of toolsImg.entries()) {
+            console.log("linha 57 /tools/ ");
             const rec = await record;
             const path = await pictures_1.pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], ferramenta, String(i));
             result.push(path);
         }
-        let lookForHisaponta = `SELECT * FROM HISAPONTA (NOLOCK) WHERE 1 = 1 AND ODF = '${numeroOdf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}' ORDER BY CODAPONTA DESC`;
-        const verifyInsert = await (0, select_1.select)(lookForHisaponta);
-        if (verifyInsert.length <= 0) {
-            try {
-                (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, startTime);
-            }
-            catch (error) {
-                console.log(error);
-                return res.json({ message: "Erro ao inserir codapontamento 1" });
-            }
-        }
+        console.log("linha 61 /tools/");
         if (toolsImg.length <= 0) {
             return res.json({ message: "/images/sem_imagem.gif" });
         }
@@ -99,8 +104,10 @@ const selectedTools = async (req, res) => {
     start = (0, encryptOdf_1.encrypted)(start);
     res.cookie("startProd", startProd);
     try {
+        console.log("linha 143 /selected tools/");
         (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, startProd);
         (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta3, descricaoCodigoAponta3, motivo, faltante, retrabalhada, startProd);
+        console.log("linha 149 /selected tools/");
         return res.json({ message: 'ferramentas selecionadas com successo' });
     }
     catch (error) {

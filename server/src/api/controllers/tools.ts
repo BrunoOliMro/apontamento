@@ -34,6 +34,7 @@ export const tools: RequestHandler = async (req, res) => {
     const faltante = 0
     let retrabalhada = 0
     const motivo = ''
+    let lookForTools = `SELECT [CODIGO], [IMAGEM] FROM VIEW_APTO_FERRAMENTAL WHERE 1 = 1 AND IMAGEM IS NOT NULL AND CODIGO = '${codigoPeca}'`
 
     numeroOdf = Number(numeroOdf)
     qtdLibMax = Number(qtdLibMax)
@@ -48,30 +49,43 @@ export const tools: RequestHandler = async (req, res) => {
         //         AND IMAGEM IS NOT NULL
         //         AND CODIGO = '${codigoPeca}'
         // `).then(res => res.recordset);
-        let lookForTools = `SELECT [CODIGO], [IMAGEM] FROM VIEW_APTO_FERRAMENTAL WHERE 1 = 1 AND IMAGEM IS NOT NULL AND CODIGO = '${codigoPeca}'`
-        let toolsImg: any = select(lookForTools)
+
+        let toolsImg: any;
+        try {
+            console.log("linha 55 /tools/");
+            toolsImg = await select(lookForTools)
+            await insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, startTime)
+            console.log("linha 58 /tools/");
+        } catch (error) {
+            console.log(error);
+            return res.json({ message: "Erro ao inserir codapontamento 1" })
+        }
+
+        if(toolsImg === 'Data not found'){
+            return res.json({message : 'Data not found'})
+        }
+        
+        console.log("linha 53 /tools/", toolsImg);
 
         let result = [];
         for await (let [i, record] of toolsImg.entries()) {
+            console.log("linha 57 /tools/ ");
             const rec = await record;
             const path = await pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], ferramenta, String(i));
             result.push(path);
         }
+        console.log("linha 61 /tools/");
 
         // const verifyInsert = await connection.query(`SELECT * FROM HISAPONTA (NOLOCK) WHERE 1 = 1 AND ODF = '${numeroOdf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}' ORDER BY CODAPONTA DESC
         // `).then(record => record.rowsAffected)
-        let lookForHisaponta = `SELECT * FROM HISAPONTA (NOLOCK) WHERE 1 = 1 AND ODF = '${numeroOdf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}' ORDER BY CODAPONTA DESC`
-        const verifyInsert = await select(lookForHisaponta)
+        // let lookForHisaponta = `SELECT * FROM HISAPONTA (NOLOCK) WHERE 1 = 1 AND ODF = '${numeroOdf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}' ORDER BY CODAPONTA DESC`
+        // const verifyInsert = await select(lookForHisaponta)
+
+        // console.log("linha 67", verifyInsert);
 
         //Cria o primeiro registro em Hisaponta e insere o CODAPONTA 1 e o primeiro tempo em APT_TEMPO_OPERACAO
-        if (verifyInsert.length <= 0) {
-            try {
-                insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, startTime)
-            } catch (error) {
-                console.log(error);
-                return res.json({ message: "Erro ao inserir codapontamento 1" })
-            }
-        }
+        // if (verifyInsert.length <= 0) {
+        // }
 
         if (toolsImg.length <= 0) {
             return res.json({ message: "/images/sem_imagem.gif" });
@@ -126,11 +140,14 @@ export const selectedTools: RequestHandler = async (req, res) => {
     res.cookie("startProd", startProd)
 
     try {
+        console.log("linha 143 /selected tools/");
         //INSERE EM CODAPONTA 2
         insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, startProd)
 
         //INSERE EM CODAPONTA 3
         insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta3, descricaoCodigoAponta3, motivo, faltante, retrabalhada, startProd)
+        
+        console.log("linha 149 /selected tools/");
 
         return res.json({ message: 'ferramentas selecionadas com successo' })
     } catch (error) {
