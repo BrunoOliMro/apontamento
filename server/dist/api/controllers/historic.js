@@ -7,16 +7,11 @@ const sanitize_1 = require("../utils/sanitize");
 const historic = async (req, res) => {
     let NUMERO_ODF = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"])));
     let resultPeçasBoas;
-    let table = `VW_APP_APONTAMENTO_HISTORICO_DETALHADO`;
-    let top = ``;
-    let column = `*`;
-    let where = `AND ODF = '${NUMERO_ODF}'`;
-    let orderBy = `ORDER BY DATAHORA DESC`;
-    let generalTable = `VW_APP_APONTAMENTO_HISTORICO`;
-    let generalOrderBy = ``;
+    const lookForDetail = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO_DETALHADO WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' ORDER BY DATAHORA DESC`;
+    const lookforGeneric = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO WHERE 1 = 1 AND ODF = '${NUMERO_ODF}'`;
     try {
-        const detailHistoric = await (0, select_1.select)(table, top, column, where, orderBy);
-        const generalHistoric = await (0, select_1.select)(generalTable, top, column, where, generalOrderBy);
+        const detailHistoric = await (0, select_1.select)(lookForDetail);
+        const generalHistoric = await (0, select_1.select)(lookforGeneric);
         let obj = [];
         for (const iterator of detailHistoric) {
             if (iterator.BOAS > 0) {

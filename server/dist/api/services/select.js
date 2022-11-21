@@ -6,19 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.select = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
-const select = async (table, top, column, where, orderBy) => {
+const select = async (query) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let response = {};
-    const data = await connection.query(`
-    SELECT
-    ${top}
-    ${column}
-    FROM 
-    ${table}
-    WHERE 1 = 1
-    ${where}
-    ${orderBy}
-    `).then((result) => result.recordset);
+    const data = await connection.query(`${query}`).then((result) => result.recordset);
+    let response = {
+        message: '',
+        data: {},
+    };
     if (data.length <= 0) {
         return response.message = "odf nao encontrada";
     }

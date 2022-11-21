@@ -6,16 +6,12 @@ import { decrypted } from "../utils/decryptedOdf";
 
 export const drawing: RequestHandler = async (req, res) => {
     //const connection = await mssql.connect(sqlConfig);
-    const revisao = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
-    const numpec = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
-    let top = `DISTINCT`
-    let column = `[NUMPEC], [IMAGEM], [REVISAO]`
-    let table = `QA_LAYOUT (NOLOCK)`
-    let where = `AND NUMPEC = '${numpec}' AND REVISAO = ${revisao} AND IMAGEM IS NOT NULL`
-    let orderBy = ``
+    const revisao: string  = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
+    const numpec: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
     let desenho = String("_desenho")
+    const lookForImages = `SELECT DISTINC [NUMPEC], [IMAGEM], [REVISAO] FROM QA_LAYOUT (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${numpec}' AND REVISAO = ${revisao} AND IMAGEM IS NOT NULL`
     try {
-        const resource: any = await select(table, top, column, where, orderBy)
+        const resource: any = await select(lookForImages)
         let imgResult = [];
         for await (let [i, record] of resource.entries()) {
             const rec = await record;

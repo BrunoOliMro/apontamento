@@ -7,16 +7,12 @@ const sanitize_1 = require("../utils/sanitize");
 const pointBagde = async (req, res) => {
     let matricula = String((0, sanitize_1.sanitize)(req.body["cracha"])) || null;
     let start = new Date() || 0;
-    if (!matricula) {
+    if (!matricula || matricula === '') {
         return res.json({ message: "codigo de matricula vazia" });
     }
     try {
-        let table = `FUNCIONARIOS`;
-        let top = `TOP 1`;
-        let column = `[MATRIC], [FUNCIONARIO], [CRACHA]`;
-        let where = `AND [CRACHA] = '${matricula}'`;
-        let orderBy = `ORDER BY FUNCIONARIO`;
-        const selecionarMatricula = await (0, select_1.select)(table, top, column, where, orderBy);
+        let lookForBadge = `SELECT TOP 1 [MATRIC], [FUNCIONARIO], [CRACHA] FROM FUNCIONARIOS WHERE 1 = 1 AND [CRACHA] = '${matricula}' ORDER BY FUNCIONARIO`;
+        const selecionarMatricula = await (0, select_1.select)(lookForBadge);
         if (selecionarMatricula.length > 0) {
             const strStartTime = (0, encryptOdf_1.encrypted)(String(start.getTime()));
             const encryptedEmployee = (0, encryptOdf_1.encrypted)(String(selecionarMatricula[0].FUNCIONARIO));

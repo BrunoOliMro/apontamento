@@ -13,16 +13,10 @@ const odfDataQtd = async (req, res) => {
     let numOper = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))) || null;
     let numOpeNew = String(numOper.toString().replaceAll(' ', "0")) || null;
     const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO']))) || null;
-    let table = `VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK)`;
-    let column = `*`;
-    let top = ``;
-    let where = `AND NUMERO_ODF = ${numeroOdf} AND CODIGO_PECA IS NOT NULL`;
-    let orderBy = `ORDER BY NUMERO_OPERACAO ASC`;
+    const lookForOdfData = `SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${numeroOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
     try {
-        console.log("linha 14 /odfData/");
-        const data = await (0, select_1.select)(table, top, column, where, orderBy);
+        const data = await (0, select_1.select)(lookForOdfData);
         res.cookie("qtdProduzir", data[0].QTDE_ODF);
-        console.log("linha 17 /odfData/");
         let codigoOperArray = data.map((e) => e.NUMERO_OPERACAO);
         let arrayAfterMap = codigoOperArray.map((e) => "00" + e).toString().replaceAll(' ', "0").split(",");
         let indiceDoArrayDeOdfs = arrayAfterMap.findIndex((e) => e === numOpeNew);

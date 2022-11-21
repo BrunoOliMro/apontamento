@@ -53,10 +53,8 @@ const ripPost = async (req, res) => {
     let retrabalhada = 0;
     await (0, insert_1.insertInto)(funcionario, NUMERO_ODF, codigoPeca, revisao, NUMERO_OPERACAO, CODIGO_MAQUINA, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorridoRip);
     try {
-        let table = `PCP_PROGRAMACAO_PRODUCAO`;
-        let column = `TEMPO_APTO_TOTAL = GETDATE()`;
-        let where = `AND NUMERO_ODF = ${NUMERO_ODF} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${NUMERO_OPERACAO} AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`;
-        await (0, update_1.update)(table, column, where);
+        const updatePcpProg = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${NUMERO_ODF} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${NUMERO_OPERACAO} AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`;
+        await (0, update_1.update)(updatePcpProg);
     }
     catch (error) {
         console.log(error);

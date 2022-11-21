@@ -72,10 +72,8 @@ export const ripPost: RequestHandler = async (req, res) => {
     try {
         // await connection.query(`
         //         UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${NUMERO_ODF} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${NUMERO_OPERACAO} AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
-                let table = `PCP_PROGRAMACAO_PRODUCAO`
-                let column = `TEMPO_APTO_TOTAL = GETDATE()`
-                let where = `AND NUMERO_ODF = ${NUMERO_ODF} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${NUMERO_OPERACAO} AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`
-                await update(table, column, where)
+                const updatePcpProg = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${NUMERO_ODF} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${NUMERO_OPERACAO} AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`
+                await update(updatePcpProg)
             } catch (error) {
         console.log(error)
         return res.json({ message: 'ocorreu um erro ao enviar os dados da rip' })

@@ -61,52 +61,10 @@ export const returnedValue: RequestHandler = async (req, res) => {
         ruins = 0
     }
 
-    // const dados = {
-    //     numOdf: String(barcode!.slice(10)),
-    //     numOper: String(barcode!.slice(0, 5)),
-    //     codMaq: String(barcode!.slice(5, 10)),
-    // }
-    // //Reatribuiu o codigo caso o cado de barras seja maior
-    // if (barcode!.length > 17) {
-    //     dados.numOdf = barcode!.slice(11)
-    //     dados.numOper = barcode!.slice(0, 5)
-    //     dados.codMaq = barcode!.slice(5, 11)
-    // }
-
-
     //Divide o Codigo de barras em 3 partes para a verificação na proxima etapa
     const dados = await unravelBarcode(req.body.codigoBarras)
-
-    // const resourceOdfData = await connection.query(`
-    // SELECT TOP 1
-    //         [NUMERO_ODF],
-    //         [NUMERO_OPERACAO],
-    //         [CODIGO_MAQUINA],
-    //         [CODIGO_CLIENTE],
-    //         [QTDE_ODF],
-    //         [CODIGO_PECA],
-    //         [DT_INICIO_OP],
-    //         [DT_FIM_OP],
-    //         [QTDE_ODF],
-    //         [QTDE_APONTADA],
-    //         [DT_ENTREGA_ODF],
-    //         [QTD_REFUGO],
-    //         [HORA_INICIO],
-    //         [HORA_FIM],
-    //         [REVISAO]
-    //         FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO
-    //         WHERE 1 = 1
-    //         AND [NUMERO_ODF] = ${dados.numOdf}
-    //         AND [CODIGO_MAQUINA] = '${dados.codMaq}'
-    //         AND [NUMERO_OPERACAO] = ${dados.numOper}
-    //         ORDER BY NUMERO_OPERACAO ASC`.trim()).then(result => result.recordset);
-    let table = `VW_APP_APTO_PROGRAMACAO_PRODUCAO`
-    let top = `TOP 1 `
-    let column = `[NUMERO_ODF], [NUMERO_OPERACAO], [CODIGO_MAQUINA], [CODIGO_CLIENTE], [QTDE_ODF], [CODIGO_PECA], [DT_INICIO_OP], [DT_FIM_OP], [QTDE_ODF], [QTDE_APONTADA], [DT_ENTREGA_ODF], [QTD_REFUGO], [HORA_INICIO], [HORA_FIM], [REVISAO]`
-    let where = `AND [NUMERO_ODF] = ${dados.numOdf} AND [CODIGO_MAQUINA] = '${dados.codMaq}' AND [NUMERO_OPERACAO] = ${dados.numOper}`
-    let orderBy = `ORDER BY NUMERO_OPERACAO ASC`
-
-    const resourceOdfData = await select(table, top, column, where, orderBy)
+    let lookForOdfData = `SELECT TOP 1 [NUMERO_ODF], [NUMERO_OPERACAO], [CODIGO_MAQUINA], [CODIGO_CLIENTE], [QTDE_ODF], [CODIGO_PECA], [DT_INICIO_OP], [DT_FIM_OP], [QTDE_ODF], [QTDE_APONTADA], [DT_ENTREGA_ODF], [QTD_REFUGO], [HORA_INICIO], [HORA_FIM], [REVISAO] FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND [NUMERO_ODF] = ${dados.numOdf} AND [CODIGO_MAQUINA] = '${dados.codMaq}' AND [NUMERO_OPERACAO] = ${dados.numOper} ORDER BY NUMERO_OPERACAO ASC`
+    const resourceOdfData = await select(lookForOdfData)
 
     if (resourceOdfData.length > 0) {
         codigoPeca = String(resourceOdfData[0].CODIGO_PECA)
@@ -115,9 +73,6 @@ export const returnedValue: RequestHandler = async (req, res) => {
         qtdApontOdf = Number(resourceOdfData[0].QTDE_APONTADA) || 0
         faltante = Number(0)
         retrabalhada = Number(0)
-
-        // console.log("qtdOdf, qtdOdf", resourceOdfData[0]);
-        // console.log("qtdApontOdf, qtdApontOdf", qtdApontOdf);
         qtdLibMax = qtdOdf - qtdApontOdf
 
         if (resourceOdfData[0].QTDE_APONTADA <= 0) {
@@ -129,20 +84,15 @@ export const returnedValue: RequestHandler = async (req, res) => {
         }
 
         if (boas > qtdLibMax) {
-            console.log("obj linha 113 /returned/: ", obj);
-            let objRes: any = {
+            const objRes = {
                 qtdLibMax: qtdLibMax,
                 String: 'valor devolvido maior que o permitido'
             }
             return res.json(objRes)
         }
 
-        let table = `VIEW_GRUPO_APT`
-        let top = `TOP 1`
-        let column = `CRACHA`
-        let where = `AND CRACHA = '${supervisor}'`
-        let orderBy = ``
-        const selectSuper = await select(table, top, column, where, orderBy)
+        const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`
+        const selectSuper = await select(lookForSupervisor)
         let codAponta = 7
         let descricaoCodigoAponta = ""
         let motivo = ``
@@ -170,10 +120,8 @@ export const returnedValue: RequestHandler = async (req, res) => {
                 // UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA - '${boas}', QTD_REFUGO = QTD_REFUGO - ${ruins} WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'`)
                 //     .then(record => record.rowsAffected)
 
-                let tableUpdate = `PCP_PROGRAMACAO_PRODUCAO`
-                let columnUpdate = `QTDE_APONTADA = QTDE_APONTADA - '${boas}', QTD_REFUGO = QTD_REFUGO - ${ruins}`
-                let whereUpdate = `AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'`
-                const updateValuesOnPcp = await update(tableUpdate, columnUpdate, whereUpdate)
+                const updateQuery  = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA - '${boas}', QTD_REFUGO = QTD_REFUGO - ${ruins} WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'`
+                const updateValuesOnPcp = await update(updateQuery)
 
 
                 // console.log("linha 114", insertHisCodReturned.length);

@@ -35,12 +35,8 @@ const codeNote = async (req, res, next) => {
         }
     }
     try {
-        let table = `HISAPONTA`;
-        let top = `TOP 1`;
-        let column = `USUARIO, ODF, NUMOPE,  ITEM, CODAPONTA`;
-        let orderBy = `ORDER BY DATAHORA ASC`;
-        let where = `AND ODF = ${dados.numOdf} AND NUMOPE = '${dados.numOper}' AND ITEM = '${dados.codMaq}'`;
-        const codIdApontamento = await (0, select_1.select)(table, top, column, where, orderBy);
+        const lookForHisaponta = `SELECT TOP 1 USUARIO, ODF, NUMOPE,  ITEM, CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${dados.numOdf} AND NUMOPE = '${dados.numOper}' AND ITEM = '${dados.codMaq} ORDER BY DATAHORA ASC'`;
+        const codIdApontamento = await (0, select_1.select)(lookForHisaponta);
         let lastEmployee = codIdApontamento[0]?.USUARIO;
         let numeroOdfDB = codIdApontamento[0]?.ODF;
         let codigoOperDB = codIdApontamento[0]?.NUMOPE;

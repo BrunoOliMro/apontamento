@@ -1,3 +1,3 @@
 import mssql from 'mssql';
-export declare const select: (table: string, top: string, column: string, where: string, orderBy: string) => Promise<"odf nao encontrada" | mssql.IRecordSet<any> | "Algo deu errado">;
+export declare const select: (query: string) => Promise<"odf nao encontrada" | mssql.IRecordSet<any> | "Algo deu errado">;
 //# sourceMappingURL=select.d.ts.map

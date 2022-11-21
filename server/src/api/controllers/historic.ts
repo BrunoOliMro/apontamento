@@ -6,16 +6,11 @@ import { sanitize } from "../utils/sanitize";
 export const historic: RequestHandler = async (req, res) => {
     let NUMERO_ODF = decrypted(String(sanitize(req.cookies["NUMERO_ODF"])))
     let resultPeçasBoas;
-    let table = `VW_APP_APONTAMENTO_HISTORICO_DETALHADO`
-    let top = ``
-    let column = `*`
-    let where = `AND ODF = '${NUMERO_ODF}'`
-    let orderBy = `ORDER BY DATAHORA DESC`
-    let generalTable = `VW_APP_APONTAMENTO_HISTORICO`
-    let generalOrderBy = ``
+    const lookForDetail = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO_DETALHADO WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' ORDER BY DATAHORA DESC`
+    const lookforGeneric = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO WHERE 1 = 1 AND ODF = '${NUMERO_ODF}'`
     try {
-        const detailHistoric: any = await select(table, top, column, where, orderBy)
-        const generalHistoric: any = await select(generalTable, top, column, where, generalOrderBy)
+        const detailHistoric: any = await select(lookForDetail)
+        const generalHistoric: any = await select(lookforGeneric)
 
         let obj: any = []
 

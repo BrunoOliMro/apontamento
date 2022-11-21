@@ -1,12 +1,10 @@
 import mssql from 'mssql';
 import { sqlConfig } from '../../global.config'
 
-export const update = async (table: string, column: string, where: string) => {
+export const update = async (query: string) => {
     const connection = await mssql.connect(sqlConfig);
     let response: any = {}
-    const data = await connection.query(`
-    UPDATE ${table} SET ${column} WHERE 1 = 1 ${where}
-    `).then((result) => result.recordset)
+    const data = await connection.query(`${query}`).then((result) => result.recordset)
 
     if (data.length <= 0) {
         return response.message = "Error on update"

@@ -1,19 +1,16 @@
 import mssql from 'mssql';
 import { sqlConfig } from '../../global.config'
 
-export const select = async (table: string, top: string, column: string, where: string, orderBy: string) => {
+export const select = async (query: string) => {
     const connection = await mssql.connect(sqlConfig);
-    let response: any = {}
-    const data = await connection.query(`
-    SELECT
-    ${top}
-    ${column}
-    FROM 
-    ${table}
-    WHERE 1 = 1
-    ${where}
-    ${orderBy}
-    `).then((result) => result.recordset)
+    const data = await connection.query(`${query}`).then((result) => result.recordset)
+
+    type Response = { message: string, data: {} }
+
+    let response: Response = {
+        message: '',
+        data: {},
+    }
 
     if (data.length <= 0) {
         return response.message = "odf nao encontrada"

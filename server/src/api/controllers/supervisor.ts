@@ -1,12 +1,13 @@
 import { RequestHandler } from "express";
-import mssql from "mssql";
-import { sqlConfig } from "../../global.config";
 import { select } from "../services/select";
 import { sanitize } from "../utils/sanitize";
 
 export const supervisor: RequestHandler = async (req, res) => {
     let supervisor: string = String(sanitize(req.body['supervisor']))
-    const connection = await mssql.connect(sqlConfig);
+
+    if(!supervisor){
+        return res.json({message : 'supervisor não encontrado inválido'})
+    }
 
     if (
         supervisor === ''||
@@ -19,21 +20,10 @@ export const supervisor: RequestHandler = async (req, res) => {
         return res.json({ message: 'supervisor inválido' })
     }
 
-    if (supervisor === '' || supervisor === undefined || supervisor === null) {
-        return res.json({ message: 'supervisor não encontrado' })
-    }
-
     try {
-        // const resource = await connection.query(`
         // SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`).then(result => result.recordset);
-        
-        let table = `VIEW_GRUPO_APT`
-        let top = `TOP 1`
-        let column = `CRACHA`
-        let where = `AND CRACHA = '${supervisor}'`
-        let orderBy = ``
-
-        const resource = await select(table, top, column, where, orderBy)
+        let lookForBadge = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`
+        const resource = await select(lookForBadge)
 
         if (resource.length > 0) {
             return res.json({ message: 'Supervisor encontrado' })

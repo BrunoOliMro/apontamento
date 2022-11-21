@@ -1,7 +1,5 @@
 import { RequestHandler } from 'express';
-import mssql from 'mssql';
 import sanitize from 'sanitize-html';
-import { sqlConfig } from '../../global.config';
 import { insertInto } from '../services/insert';
 import { select} from '../services/select';
 import { decodedBuffer } from '../utils/decodeOdf';
@@ -41,17 +39,9 @@ export const codeNote: RequestHandler = async (req, res, next) => {
         }
     }
 
-    // console.log('linha 44', dados.numOdf);
-    // console.log('linha 44', dados.numOper);
-    // console.log('linha 44', dados.codMaq);
-
     try {
-        let table = `HISAPONTA`
-        let top = `TOP 1`
-        let column = `USUARIO, ODF, NUMOPE,  ITEM, CODAPONTA`
-        let orderBy = `ORDER BY DATAHORA ASC`
-        let where = `AND ODF = ${dados.numOdf} AND NUMOPE = '${dados.numOper}' AND ITEM = '${dados.codMaq}'`
-        const codIdApontamento: any = await select(table, top, column, where, orderBy)
+        const lookForHisaponta = `SELECT TOP 1 USUARIO, ODF, NUMOPE,  ITEM, CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${dados.numOdf} AND NUMOPE = '${dados.numOper}' AND ITEM = '${dados.codMaq} ORDER BY DATAHORA ASC'`
+        const codIdApontamento: any = await select(lookForHisaponta)
         let lastEmployee = codIdApontamento[0]?.USUARIO
         let numeroOdfDB = codIdApontamento[0]?.ODF
         let codigoOperDB = codIdApontamento[0]?.NUMOPE

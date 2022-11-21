@@ -7,7 +7,7 @@ export const pointBagde: RequestHandler = async (req, res) => {
     let matricula = String(sanitize(req.body["cracha"])) || null
     let start = new Date() || 0;
 
-    if (!matricula) {
+    if (!matricula || matricula === '') {
         return res.json({ message: "codigo de matricula vazia" })
     }
 
@@ -16,14 +16,8 @@ export const pointBagde: RequestHandler = async (req, res) => {
         // SELECT TOP 1 [MATRIC], [FUNCIONARIO], [CRACHA] FROM FUNCIONARIOS WHERE 1 = 1 AND [CRACHA] = '${matricula}' ORDER BY FUNCIONARIO
         //     `.trim()
         // ).then(result => result.recordset)
-
-        let table = `FUNCIONARIOS`
-        let top = `TOP 1`
-        let column = `[MATRIC], [FUNCIONARIO], [CRACHA]`
-        let where = `AND [CRACHA] = '${matricula}'`
-        let orderBy = `ORDER BY FUNCIONARIO`
-
-        const selecionarMatricula = await select(table, top, column, where, orderBy)
+        let lookForBadge = `SELECT TOP 1 [MATRIC], [FUNCIONARIO], [CRACHA] FROM FUNCIONARIOS WHERE 1 = 1 AND [CRACHA] = '${matricula}' ORDER BY FUNCIONARIO`
+        const selecionarMatricula = await select(lookForBadge)
 
         if (selecionarMatricula.length > 0) {
             const strStartTime = encrypted(String(start.getTime()))

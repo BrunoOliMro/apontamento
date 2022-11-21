@@ -95,9 +95,6 @@ export const point: RequestHandler = async (req, res) => {
         faltante = qtdLibMax - valorTotalApontado
     }
 
-    // if (reworkFeed > 0) {
-    //     retrabalhadas = reworkFeed - refugoQEstaNoSistema
-    // }
 
     if (motivorefugo === undefined || motivorefugo === "undefined" || motivorefugo === null) {
         motivorefugo = ''
@@ -109,16 +106,8 @@ export const point: RequestHandler = async (req, res) => {
 
     //Verifica se existe o Supervisor
     if (badFeed > 0) {
-        // const resource = await connection.query(`
-        // SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'
-        // `).then(result => result.recordset);
-        let table = `VIEW_GRUPO_APT`
-        let top = `TOP 1`
-        let column = `CRACHA`
-        let where = `AND CRACHA  = '${supervisor}'`
-        let orderBy = ``
-
-        const resource = await select(table, top, column, where, orderBy)
+        const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`
+        const resource = await select(lookForSupervisor)
 
         if (resource.length <= 0) {
             return res.json({ message: 'Supervisor não encontrado' })
@@ -138,10 +127,8 @@ export const point: RequestHandler = async (req, res) => {
                 // Loop para atualizar os dados no DB
                 for (const [i, qtdItem] of reservedItens.entries()) {
                     // updateQtyQuery.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
-                    let table = `CST_ALOCACAO`
-                    let column = `QUANTIDADE = QUANTIDADE + ${qtdItem}`
-                    let where = `AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`
-                    updateQtyQuery.push(update(table, column, where))
+                    let updateQuery = `UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}' `
+                    updateQtyQuery.push(update(updateQuery))
                 }
                 await connection.query(updateQtyQuery.join("\n"))
             } catch (err) {
@@ -169,21 +156,21 @@ export const point: RequestHandler = async (req, res) => {
         //Verifica o valor e sendo acima de 0 ele libera um "S" no proximo processo
         if (valorTotalApontado < qtdLibMax) {
             //await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${OPERACAO_PROXIMA}' AND CODIGO_MAQUINA = '${MAQUINA_PROXIMA}'`)
-            let whereNextProcess = `AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${OPERACAO_PROXIMA}' AND CODIGO_MAQUINA = '${MAQUINA_PROXIMA}'`
-            await update(table, column, whereNextProcess)
+            const updateNextProcess =`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${OPERACAO_PROXIMA}' AND CODIGO_MAQUINA = '${MAQUINA_PROXIMA}'`
+            await update(updateNextProcess)
         }
 
         //Verifica caso a quantidade apontada pelo usuario seja maior ou igual ao numero que poderia ser lançado, assim lanca um "N" em apontamento para bloquear um proximo apontamento
         if (valorTotalApontado >= qtdLibMax) {
             //await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'N' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
-           let columnWithN = `APONTAMENTO_LIBERADO = 'N'`
-            await update(table, columnWithN, where)
+           const updateQtdpointed = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'N' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'` 
+           await update(updateQtdpointed)
         }
 
         //Seta quantidade apontada da odf para o quanto o usuario diz ser(PCP_PROGRAMACAO_PRODUCAO)
         //await connection.query(`UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`)
-        let columnQtd = `QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}'`
-        await update(table, columnQtd, where)
+        const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`
+        await update(updateCol)
 
 
         //Falta as retrabalhadas

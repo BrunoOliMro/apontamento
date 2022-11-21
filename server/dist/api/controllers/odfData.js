@@ -14,13 +14,9 @@ const odfData = async (req, res) => {
     const numOper = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))) || null;
     const numOpeNew = String(numOper.toString().replaceAll(' ', "0")) || null;
     const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO']))) || null;
-    let table = `VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK)`;
-    let column = `*`;
-    let top = ``;
-    let where = `AND NUMERO_ODF = ${numeroOdf} AND CODIGO_PECA IS NOT NULL`;
-    let orderBy = `ORDER BY NUMERO_OPERACAO ASC`;
+    const lookForOdfData = `SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${numeroOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
     try {
-        const data = await (0, select_1.select)(table, top, column, where, orderBy);
+        const data = await (0, select_1.select)(lookForOdfData);
         res.cookie("qtdProduzir", (0, encryptOdf_1.encrypted)(String(data[0].QTDE_ODF)));
         res.cookie("QTD_REFUGO", (0, encryptOdf_1.encrypted)(String(data[0].QTD_REFUGO)));
         let codigoOperArray = data.map((e) => e.NUMERO_OPERACAO);

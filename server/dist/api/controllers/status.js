@@ -12,16 +12,11 @@ const status = async (req, res) => {
     let maquina = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
     let tempoAgora = new Date().getTime() || 0;
     let startTime = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['starterBarcode']))) || null;
-    let startTimeNow;
-    startTimeNow = Number(startTime) || 0;
+    let startTimeNow = Number(startTime) || 0;
     let tempoDecorrido = Number(tempoAgora - startTimeNow) || 0;
-    let table = `OPERACAO`;
-    let top = `TOP 1`;
-    let column = `EXECUT`;
-    let where = `AND NUMPEC = '${numpec}' AND MAQUIN = '${maquina}'`;
-    let orberBy = `ORDER BY REVISAO DESC`;
+    let lookForTimer = `SELECT TOP 1 EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${numpec}' AND MAQUIN = '${maquina}' ORDER BY REVISAO DESC`;
     try {
-        const resource = await (0, select_1.select)(table, top, column, where, orberBy);
+        const resource = await (0, select_1.select)(lookForTimer);
         let qtdProd = Number(req.cookies["qtdProduzir"][0]);
         let tempoExecut = Number(resource[0].EXECUT);
         let tempoTotalExecução = Number(tempoExecut * qtdProd) * 1000;

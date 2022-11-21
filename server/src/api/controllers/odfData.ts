@@ -10,15 +10,10 @@ export const odfData: RequestHandler = async (req, res) => {
     const numOper: string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
     const numOpeNew = String(numOper!.toString().replaceAll(' ', "0")) || null
     const funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
-    
-    let table = `VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK)`
-    let column = `*`
-    let top = ``
-    let where = `AND NUMERO_ODF = ${numeroOdf} AND CODIGO_PECA IS NOT NULL`
-    let orderBy = `ORDER BY NUMERO_OPERACAO ASC`
 
+    const lookForOdfData = `SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${numeroOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
     try {
-        const data: any = await select(table, top, column, where, orderBy)
+        const data: any = await select(lookForOdfData)
         res.cookie("qtdProduzir", encrypted(String(data[0].QTDE_ODF)))
         res.cookie("QTD_REFUGO", encrypted(String(data[0].QTD_REFUGO)))
         let codigoOperArray = data.map((e: any) => e.NUMERO_OPERACAO)

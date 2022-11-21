@@ -32,14 +32,9 @@ export const pointerPost: RequestHandler = async (req, res) => {
         return res.json({message : 'codeApont 5 maquina parada'})
     }
 
-    let table = `VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK)`
-    let column = `*`
-    let top = ``
-    let where = `AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL`
-    let orderBy = `ORDER BY NUMERO_OPERACAO ASC`
-
     // Seleciona todos os itens da Odf
-    const queryGrupoOdf: any = await select(table, top, column, where, orderBy)
+    const lookForOdfData = `SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
+    const queryGrupoOdf: any = await select(lookForOdfData)
 
     // Caso não encontre o numero da odf
     if (queryGrupoOdf!.message === 'odf não encontrada') {

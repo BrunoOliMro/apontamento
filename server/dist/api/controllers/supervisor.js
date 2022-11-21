@@ -1,16 +1,13 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.supervisor = void 0;
-const mssql_1 = __importDefault(require("mssql"));
-const global_config_1 = require("../../global.config");
 const select_1 = require("../services/select");
 const sanitize_1 = require("../utils/sanitize");
 const supervisor = async (req, res) => {
     let supervisor = String((0, sanitize_1.sanitize)(req.body['supervisor']));
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+    if (!supervisor) {
+        return res.json({ message: 'supervisor não encontrado inválido' });
+    }
     if (supervisor === '' ||
         supervisor === '0' ||
         supervisor === '00' ||
@@ -20,16 +17,9 @@ const supervisor = async (req, res) => {
         supervisor === '000000') {
         return res.json({ message: 'supervisor inválido' });
     }
-    if (supervisor === '' || supervisor === undefined || supervisor === null) {
-        return res.json({ message: 'supervisor não encontrado' });
-    }
     try {
-        let table = `VIEW_GRUPO_APT`;
-        let top = `TOP 1`;
-        let column = `CRACHA`;
-        let where = `AND CRACHA = '${supervisor}'`;
-        let orderBy = ``;
-        const resource = await (0, select_1.select)(table, top, column, where, orderBy);
+        let lookForBadge = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`;
+        const resource = await (0, select_1.select)(lookForBadge);
         if (resource.length > 0) {
             return res.json({ message: 'Supervisor encontrado' });
         }

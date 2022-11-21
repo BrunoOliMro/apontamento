@@ -82,12 +82,8 @@ const point = async (req, res) => {
         return res.json({ message: 'valor apontado maior que a quantidade liberada' });
     }
     if (badFeed > 0) {
-        let table = `VIEW_GRUPO_APT`;
-        let top = `TOP 1`;
-        let column = `CRACHA`;
-        let where = `AND CRACHA  = '${supervisor}'`;
-        let orderBy = ``;
-        const resource = await (0, select_1.select)(table, top, column, where, orderBy);
+        const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`;
+        const resource = await (0, select_1.select)(lookForSupervisor);
         if (resource.length <= 0) {
             return res.json({ message: 'Supervisor não encontrado' });
         }
@@ -100,10 +96,8 @@ const point = async (req, res) => {
         if (condic === 'P') {
             try {
                 for (const [i, qtdItem] of reservedItens.entries()) {
-                    let table = `CST_ALOCACAO`;
-                    let column = `QUANTIDADE = QUANTIDADE + ${qtdItem}`;
-                    let where = `AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}'`;
-                    updateQtyQuery.push((0, update_1.update)(table, column, where));
+                    let updateQuery = `UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}' `;
+                    updateQtyQuery.push((0, update_1.update)(updateQuery));
                 }
                 await connection.query(updateQtyQuery.join("\n"));
             }
@@ -121,15 +115,15 @@ const point = async (req, res) => {
         let column = `APONTAMENTO_LIBERADO = 'S'`;
         let where = `AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`;
         if (valorTotalApontado < qtdLibMax) {
-            let whereNextProcess = `AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${OPERACAO_PROXIMA}' AND CODIGO_MAQUINA = '${MAQUINA_PROXIMA}'`;
-            await (0, update_1.update)(table, column, whereNextProcess);
+            const updateNextProcess = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${OPERACAO_PROXIMA}' AND CODIGO_MAQUINA = '${MAQUINA_PROXIMA}'`;
+            await (0, update_1.update)(updateNextProcess);
         }
         if (valorTotalApontado >= qtdLibMax) {
-            let columnWithN = `APONTAMENTO_LIBERADO = 'N'`;
-            await (0, update_1.update)(table, columnWithN, where);
+            const updateQtdpointed = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'N' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`;
+            await (0, update_1.update)(updateQtdpointed);
         }
-        let columnQtd = `QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}'`;
-        await (0, update_1.update)(table, columnQtd, where);
+        const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`;
+        await (0, update_1.update)(updateCol);
         let codAponta = 4;
         let descricaoCodigoAponta = '';
         await (0, insert_1.insertInto)(funcionario, NUMERO_ODF, codigoPeca, revisao, NUMERO_OPERACAO, CODIGO_MAQUINA, qtdLibMax, qtdBoas, badFeed, codAponta, descricaoCodigoAponta, motivorefugo, faltante, reworkFeed, finalProdTimer);

@@ -12,18 +12,16 @@ const statusImage = async (req, res) => {
     const numpec = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
     const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
     const statusImg = String("_status");
-    const table = `PROCESSO (NOLOCK)`;
-    const top = `TOP 1`;
-    const column = `[NUMPEC], [IMAGEM]`;
-    const where = `AND NUMPEC = '${numpec}' AND REVISAO = '${revisao}' AND IMAGEM IS NOT NULL`;
-    const orderBy = ``;
+    const lookOnProcess = `SELECT TOP 1 [NUMPEC], [IMAGEM] FROM PROCESSO (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${numpec}' AND REVISAO = '${revisao}' AND IMAGEM IS NOT NULL`;
     try {
-        const resource = await (0, select_1.select)(table, top, column, where, orderBy);
+        const resource = await (0, select_1.select)(lookOnProcess);
         let imgResult = [];
-        for await (let [i, record] of resource.entries()) {
-            const rec = await record;
-            const path = await pictures_1.pictures.getPicturePath(rec["NUMPEC"], rec["IMAGEM"], statusImg, String(i));
-            imgResult.push(path);
+        if (typeof resource !== 'string') {
+            for await (let [i, record] of resource.entries()) {
+                const rec = await record;
+                const path = await pictures_1.pictures.getPicturePath(rec["NUMPEC"], rec["IMAGEM"], statusImg, String(i));
+                imgResult.push(path);
+            }
         }
         if (!imgResult) {
             return res.json({ message: 'Erro no servidor' });

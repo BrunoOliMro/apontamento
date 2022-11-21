@@ -33,23 +33,16 @@ const tools = async (req, res) => {
     numeroOdf = Number(numeroOdf);
     qtdLibMax = Number(qtdLibMax);
     try {
-        let top = ``;
-        let tableFer = `VIEW_APTO_FERRAMENTAL`;
-        let columnFer = `[CODIGO], [IMAGEM]`;
-        let whereFer = `AND IMAGEM IS NOT NULL AND CODIGO = '${codigoPeca}'`;
-        let orderByFer = ``;
-        let toolsImg = (0, select_1.select)(tableFer, top, columnFer, whereFer, orderByFer);
+        let lookForTools = `SELECT [CODIGO], [IMAGEM] FROM VIEW_APTO_FERRAMENTAL WHERE 1 = 1 AND IMAGEM IS NOT NULL AND CODIGO = '${codigoPeca}'`;
+        let toolsImg = (0, select_1.select)(lookForTools);
         let result = [];
         for await (let [i, record] of toolsImg.entries()) {
             const rec = await record;
             const path = await pictures_1.pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], ferramenta, String(i));
             result.push(path);
         }
-        let table = `HISAPONTA (NOLOCK)`;
-        let column = `*`;
-        let where = `AND ODF = '${numeroOdf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}'`;
-        let orderBy = `ORDER BY CODAPONTA DESC`;
-        const verifyInsert = await (0, select_1.select)(table, top, column, where, orderBy);
+        let lookForHisaponta = `SELECT * FROM HISAPONTA (NOLOCK) WHERE 1 = 1 AND ODF = '${numeroOdf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}' ORDER BY CODAPONTA DESC`;
+        const verifyInsert = await (0, select_1.select)(lookForHisaponta);
         if (verifyInsert.length <= 0) {
             try {
                 (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, startTime);

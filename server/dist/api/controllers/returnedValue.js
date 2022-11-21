@@ -57,12 +57,8 @@ const returnedValue = async (req, res) => {
         ruins = 0;
     }
     const dados = await (0, unravelBarcode_1.unravelBarcode)(req.body.codigoBarras);
-    let table = `VW_APP_APTO_PROGRAMACAO_PRODUCAO`;
-    let top = `TOP 1 `;
-    let column = `[NUMERO_ODF], [NUMERO_OPERACAO], [CODIGO_MAQUINA], [CODIGO_CLIENTE], [QTDE_ODF], [CODIGO_PECA], [DT_INICIO_OP], [DT_FIM_OP], [QTDE_ODF], [QTDE_APONTADA], [DT_ENTREGA_ODF], [QTD_REFUGO], [HORA_INICIO], [HORA_FIM], [REVISAO]`;
-    let where = `AND [NUMERO_ODF] = ${dados.numOdf} AND [CODIGO_MAQUINA] = '${dados.codMaq}' AND [NUMERO_OPERACAO] = ${dados.numOper}`;
-    let orderBy = `ORDER BY NUMERO_OPERACAO ASC`;
-    const resourceOdfData = await (0, select_1.select)(table, top, column, where, orderBy);
+    let lookForOdfData = `SELECT TOP 1 [NUMERO_ODF], [NUMERO_OPERACAO], [CODIGO_MAQUINA], [CODIGO_CLIENTE], [QTDE_ODF], [CODIGO_PECA], [DT_INICIO_OP], [DT_FIM_OP], [QTDE_ODF], [QTDE_APONTADA], [DT_ENTREGA_ODF], [QTD_REFUGO], [HORA_INICIO], [HORA_FIM], [REVISAO] FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND [NUMERO_ODF] = ${dados.numOdf} AND [CODIGO_MAQUINA] = '${dados.codMaq}' AND [NUMERO_OPERACAO] = ${dados.numOper} ORDER BY NUMERO_OPERACAO ASC`;
+    const resourceOdfData = await (0, select_1.select)(lookForOdfData);
     if (resourceOdfData.length > 0) {
         codigoPeca = String(resourceOdfData[0].CODIGO_PECA);
         revisao = String(resourceOdfData[0].REVISAO);
@@ -78,19 +74,14 @@ const returnedValue = async (req, res) => {
             return res.json({ message: "não ha valor que possa ser devolvido" });
         }
         if (boas > qtdLibMax) {
-            console.log("obj linha 113 /returned/: ", obj);
-            let objRes = {
+            const objRes = {
                 qtdLibMax: qtdLibMax,
                 String: 'valor devolvido maior que o permitido'
             };
             return res.json(objRes);
         }
-        let table = `VIEW_GRUPO_APT`;
-        let top = `TOP 1`;
-        let column = `CRACHA`;
-        let where = `AND CRACHA = '${supervisor}'`;
-        let orderBy = ``;
-        const selectSuper = await (0, select_1.select)(table, top, column, where, orderBy);
+        const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`;
+        const selectSuper = await (0, select_1.select)(lookForSupervisor);
         let codAponta = 7;
         let descricaoCodigoAponta = "";
         let motivo = ``;
@@ -98,10 +89,8 @@ const returnedValue = async (req, res) => {
         if (selectSuper.length > 0) {
             try {
                 const insertHisCodReturned = await (0, insert_1.insertInto)(funcionario, dados.numOdf, codigoPeca, revisao, dados.numOper, dados.codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, tempoDecorrido);
-                let tableUpdate = `PCP_PROGRAMACAO_PRODUCAO`;
-                let columnUpdate = `QTDE_APONTADA = QTDE_APONTADA - '${boas}', QTD_REFUGO = QTD_REFUGO - ${ruins}`;
-                let whereUpdate = `AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'`;
-                const updateValuesOnPcp = await (0, update_1.update)(tableUpdate, columnUpdate, whereUpdate);
+                const updateQuery = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA - '${boas}', QTD_REFUGO = QTD_REFUGO - ${ruins} WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'`;
+                const updateValuesOnPcp = await (0, update_1.update)(updateQuery);
                 if (insertHisCodReturned.length > 0 && updateValuesOnPcp.length > 0) {
                     return res.status(200).json({ message: 'estorno feito' });
                 }

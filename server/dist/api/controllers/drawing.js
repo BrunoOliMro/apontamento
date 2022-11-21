@@ -11,14 +11,10 @@ const decryptedOdf_1 = require("../utils/decryptedOdf");
 const drawing = async (req, res) => {
     const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
     const numpec = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
-    let top = `DISTINCT`;
-    let column = `[NUMPEC], [IMAGEM], [REVISAO]`;
-    let table = `QA_LAYOUT (NOLOCK)`;
-    let where = `AND NUMPEC = '${numpec}' AND REVISAO = ${revisao} AND IMAGEM IS NOT NULL`;
-    let orderBy = ``;
     let desenho = String("_desenho");
+    const lookForImages = `SELECT DISTINC [NUMPEC], [IMAGEM], [REVISAO] FROM QA_LAYOUT (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${numpec}' AND REVISAO = ${revisao} AND IMAGEM IS NOT NULL`;
     try {
-        const resource = await (0, select_1.select)(table, top, column, where, orderBy);
+        const resource = await (0, select_1.select)(lookForImages);
         let imgResult = [];
         for await (let [i, record] of resource.entries()) {
             const rec = await record;
