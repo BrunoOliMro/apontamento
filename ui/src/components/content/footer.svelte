@@ -13,19 +13,41 @@
   let meioFim = "";
   let anoFim = "";
 
+  //Takes an array and modify undefined and null values
+  function modifyObj (array, x){
+    array.forEach(key => {
+      x[key] = x[key] ?? "";
+    });
+  }
+
   async function getOdfData() {
     const res = await fetch(urlString);
     dadosOdf = await res.json();
+    let odf  = dadosOdf.odfSelecionada
 
-    dataInicio = dadosOdf.odfSelecionada.DT_INICIO_OP.slice(6, 8);
-    meioInicio = dadosOdf.odfSelecionada.DT_INICIO_OP.slice(4, 6);
-    anoInicio = dadosOdf.odfSelecionada.DT_INICIO_OP.slice(0, 4);
-    horaInicio = dadosOdf.odfSelecionada.HORA_INICIO.slice(11, 19);
+    // Object.keys(odf).forEach(key => {
+    //   odf[key] = odf[key] ?? "";
+    // });
 
-    dataFim = dadosOdf.odfSelecionada.DT_FIM_OP.slice(6, 8);
-    meioFim = dadosOdf.odfSelecionada.DT_FIM_OP.slice(4, 6);
-    anoFim = dadosOdf.odfSelecionada.DT_FIM_OP.slice(0, 4);
-    horaFinal = dadosOdf.odfSelecionada.HORA_FIM.slice(11, 19);
+    modifyObj(Object.keys(dadosOdf.odfSelecionada), odf)
+
+    dataInicio = odf.DT_INICIO_OP.slice(6, 8);
+
+    meioInicio = odf.DT_INICIO_OP.slice(4, 6);
+
+    anoInicio = odf.DT_INICIO_OP.slice(0, 4);
+
+    horaInicio = odf.HORA_INICIO.slice(11, 19);
+
+    dataFim = odf.DT_FIM_OP.slice(6, 8);
+
+    meioFim = odf.DT_FIM_OP.slice(4, 6);
+
+    anoFim = odf.DT_FIM_OP.slice(0, 4);
+
+    horaFinal = odf.HORA_FIM.slice(11, 19);
+
+    horaFinal = odf.HORA_FIM.slice(11, 19);
   }
   let resultado = getOdfData();
 </script>
@@ -41,16 +63,14 @@
     <div class="text-area">
       <div class="title">INICIO</div>
       <div class="data-time">
-        {dataInicio} / {meioInicio} / {anoInicio} - {(horaInicio =
-          horaInicio === null ? "S/I" : horaInicio)}
+        {dataInicio} / {meioInicio} / {anoInicio} - {(horaInicio = horaInicio === '' ? "S/I" : horaInicio)}
       </div>
     </div>
 
     <div class="text-area">
       <div class="title">FINAL</div>
       <div class="data-time">
-        {dataFim} / {meioFim} / {anoFim} - {(horaFinal =
-          horaFinal === null ? "S/I" : horaFinal)}
+        {dataFim} / {meioFim} / {anoFim} - {(horaFinal = horaFinal === '' ? "S/I" : horaFinal)}
       </div>
     </div>
   </main>

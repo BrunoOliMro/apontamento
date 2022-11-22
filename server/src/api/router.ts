@@ -64,7 +64,6 @@ apiRouter.route("/ferramenta")
 //    // .get(getBefore)
 //     .get(selectedTools)
 
-
 apiRouter.route("/apontar")
     //.get(codeNote)
     //.get(getBefore)

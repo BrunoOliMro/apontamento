@@ -15,6 +15,7 @@ export const getPoint: RequestHandler = async (req, res) => {
     const CODIGO_MAQUINA = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
     let codigoPeca = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
     let funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+    let qtdProduzir = decrypted(String(sanitize(req.cookies['qtdProduzir']))) || null
     const updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`
     var address;
     const hostname = req.get("host")
@@ -35,56 +36,93 @@ export const getPoint: RequestHandler = async (req, res) => {
     const ip = String(Object.entries(results)[0]![1])
     try {
         //Caso a operação seja 999 fará baixa no estoque
+        console.log("linha 38 /getPoint /", NUMERO_OPERACAO);
         if (NUMERO_OPERACAO === "00999") {
             //Caso seja diferente de "EX"
             if (CODIGO_MAQUINA !== 'EX002') {
-                let fisrtSelectAddress: any =  await selectAddress(codigoPeca, 5)
+                let condicional = `= '${codigoPeca}'`
+                let condicional2 = `IS NULL`
+                let fisrtSelectAddress: any = await selectAddress(condicional, 5)
                 let secondSelectAddress: any;
-                if(!fisrtSelectAddress){
-                    fisrtSelectAddress= []
-                    secondSelectAddress =  await selectAddress(codigoPeca, 5)
-                }
 
-                if(!secondSelectAddress){
-                    secondSelectAddress = []
-                }
-
-                if(typeof(secondSelectAddress) === 'string'){
-                    secondSelectAddress = []
-                } 
-                if(typeof(secondSelectAddress) === 'string'){
+                if (fisrtSelectAddress === 'odf nao encontrada') {
                     fisrtSelectAddress = []
+                    secondSelectAddress = await selectAddress(condicional2, 5)
                 }
 
-                const fisrtReqAddress = fisrtSelectAddress.map((callback: any) => callback.QUANTIDADE)
-                const secondReqAddress = secondSelectAddress.map((callback: any) => callback.QUANTIDADE)
-                
+                if (!secondSelectAddress || secondSelectAddress === 'odf nao encontrada') {
+                    secondSelectAddress = []
+                }
+
+
+                console.log('LINHA 66', fisrtSelectAddress);
+                console.log("linha 67", secondSelectAddress);
+                let fisrtReqAddress = fisrtSelectAddress.map((callback: any) => callback.QUANTIDADE)
+                let secondReqAddress = secondSelectAddress.map((callback: any) => callback.QUANTIDADE)
+
                 let smallerNumber = Math.min(...fisrtReqAddress)
                 let small = Math.min(...secondReqAddress)
 
                 let indiceDoArrayDeOdfs: number = fisrtReqAddress.findIndex((callback: any) => callback === smallerNumber)
                 let indice: number = secondReqAddress.findIndex((callback: any) => callback === small)
 
+                // condic === 'M' é peso
+                // condic === 'D' é tempo
+                // Pra fazer essa conta precisa de condic === "M"
+                // Ambos estao na coluna EXECUT
+                console.log("linha 73", codigoPeca);
+                let y = `SELECT TOP 1 CONDIC, EXECUT, COMPRIMENTO, LARGURA FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${codigoPeca}' AND CONDIC = 'M'`
+                const x = await select(y)
+
+
+                let pesoUnidade = x[0].EXECUT
+                let comprimento = x[0].COMPRIMENTO
+                let largura = x[0].LARGURA
+                let areaCubicaMax = 36000000
+                let areaMax = 800
+                let pesoMax = 25
+
+                console.log('linha pesoUnidade', pesoUnidade);
+                console.log('linnha comprimento', comprimento);
+                console.log("linha largura", largura);
+
+                let peso = pesoUnidade * qtdProduzir
+                if (peso < pesoMax) {
+                    console.log("Passou no primeiro teste de estoque ...");
+                }
+
+                let area = comprimento + largura
+                console.log('linha 90', area);
+                if(area <= areaMax){
+                    console.log("passou no segundo teste ...");
+                }
+
+                let areaCubica = comprimento * largura * qtdProduzir
+                console.log("linha 96", areaCubica);
+                if(areaCubica < areaCubicaMax){
+                    console.log("passou no terceiro teste ...");
+                }
+
                 let addressToStorage = {}
 
-                if(secondSelectAddress.length <= 0){
-                    addressToStorage ={
+                if (secondSelectAddress.length <= 0) {
+                    addressToStorage = {
                         message: 'endereço com sucesso',
-                        address : fisrtSelectAddress[indiceDoArrayDeOdfs].ENDERECO,
+                        address: fisrtSelectAddress[indiceDoArrayDeOdfs].ENDERECO,
                     }
                     return res.json(addressToStorage)
                 }
 
-                if(fisrtSelectAddress.length <= 0){
-                    addressToStorage ={
+                if (fisrtSelectAddress.length <= 0) {
+                    addressToStorage = {
                         message: 'endereço com sucesso',
-                        addresss: secondSelectAddress[indice].ENDERECO
+                        address: secondSelectAddress[indice].ENDERECO
                     }
                     return res.json(addressToStorage)
-                }else {
-                    return res.json({message : 'sem endereço'})
+                } else {
+                    console.log('redirecionando para rip...');
+                    return res.redirect('/#/rip')
                 }
-
             }
 
             //Caso seja igual de "EX"
@@ -92,22 +130,23 @@ export const getPoint: RequestHandler = async (req, res) => {
                 let fisrtSelectAddress: any = await selectAddress(codigoPeca, 7)
                 let secondSelectAddress: any;
 
-                if(!fisrtSelectAddress){
-                    fisrtSelectAddress= []
-                    secondSelectAddress =  await selectAddress(codigoPeca, 7)
+                if (!fisrtSelectAddress) {
+                    fisrtSelectAddress = []
+                    secondSelectAddress = await selectAddress(codigoPeca, 7)
                 }
 
-                if(!secondSelectAddress){
+                if (!secondSelectAddress) {
                     secondSelectAddress = []
                 }
 
-                if(typeof(secondSelectAddress) === 'string'){
+                if (typeof (secondSelectAddress) === 'string') {
                     secondSelectAddress = []
-                } 
-                if(typeof(secondSelectAddress) === 'string'){
+                }
+                if (typeof (secondSelectAddress) === 'string') {
                     fisrtSelectAddress = []
                 }
 
+                console.log('LINHA 112', fisrtSelectAddress);
                 const fisrtAdd = fisrtSelectAddress.map((callback: any) => callback.QUANTIDADE)
                 const secondAdd = secondSelectAddress.map((callback: any) => callback.QUANTIDADE)
 
@@ -118,22 +157,22 @@ export const getPoint: RequestHandler = async (req, res) => {
                 let indice: number = secondAdd.findIndex((callback: any) => callback === small)
 
                 let addressToStorage;
-                if(secondSelectAddress.length <= 0){
-                    addressToStorage ={
+                if (secondSelectAddress.length <= 0) {
+                    addressToStorage = {
                         message: 'endereço com sucesso',
-                        address : fisrtSelectAddress[indiceDoArrayDeOdfs].ENDERECO,
+                        address: fisrtSelectAddress[indiceDoArrayDeOdfs].ENDERECO,
                     }
                     return res.json(addressToStorage)
                 }
 
-                if(fisrtSelectAddress.length <= 0){
-                    addressToStorage ={
+                if (fisrtSelectAddress.length <= 0) {
+                    addressToStorage = {
                         message: 'endereço com sucesso',
                         addresss: secondSelectAddress[indice].ENDERECO
                     }
                     return res.json(addressToStorage)
-                }else {
-                    return res.json({message : 'sem endereço'})
+                } else {
+                    return res.json({ message: 'sem endereço' })
                 }
             }
             try {
@@ -164,7 +203,7 @@ export const getPoint: RequestHandler = async (req, res) => {
                     if (NUMERO_OPERACAO === "00999") {
                         const x = await update(updateQuery)
                         console.log("linha 146 /getPoint/", x);
-                    } 
+                    }
 
                     let objRes: any = {
                         address: address,

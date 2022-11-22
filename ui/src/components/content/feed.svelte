@@ -43,9 +43,7 @@
     async function getOdfData() {
         const res = await fetch(urlString);
         dadosOdf = await res.json();
-        console.log("linha 48", dadosOdf.valorMaxdeProducao);
         qtdPossivelProducao = dadosOdf.valorMaxdeProducao;
-        console.log("linha 50 /feed/", qtdPossivelProducao);
         if (qtdPossivelProducao <= 0) {
             qtdPossivelProducao = 0;
         }
@@ -73,7 +71,6 @@
     }
 
     async function checkForSuper(event) {
-        console.log("linha 75/feed/", supervisor);
         if (supervisor.length >= 6 && event.key === "Enter") {
             if (supervisor === "000000") {
                 modalMessage = "Crachá inválido";
@@ -93,7 +90,6 @@
     }
 
     const doPost = async () => {
-        //console.log("linha 78", supervisor);
         loader = true;
         const headers = new Headers();
         const res = await fetch(urlS, {
@@ -170,10 +166,9 @@
     async function getSpaceFunc() {
         const res = await fetch(urlS);
         getSpace = await res.json();
-        console.log("linha 173", getSpace);
-        if (getSpace.message === "sem endereço" || getSpace.address === undefined) {
-            window.location.href = `/#/rip`;
-        } else if (getSpace. message === "endereço com sucesso") {
+        if (getSpace.message === "sem endereço") {
+           window.location.href = `/#/rip`;
+        } else if (getSpace.message === "endereço com sucesso") {
             loader = false
             showAddress = true;
         }
@@ -185,16 +180,10 @@
         let numberQtdAllowed = Number(qtdPossivelProducao);
         let numberMissing = Number(missingFeed || 0);
         let numberReworkFeed = Number(reworkFeed || 0);
-
-        // console.log("linha 185", numberBadFeed);
-        // console.log("linha 185", numberGoodFeed);
-        console.log("linha 192", numberQtdAllowed);
-        // console.log("linha 185", numberMissing);
-        // console.log("linha 185", numberReworkFeed);
+        //console.log("linha 192", numberQtdAllowed);
 
         let total =
             numberBadFeed + numberGoodFeed + numberMissing + numberReworkFeed;
-        console.log("total 198", total);
 
         if(total > numberQtdAllowed){
             modalMessage = 'Quantidade excedida'
@@ -367,10 +356,6 @@
                         name="supervisor"
                         id="supervisor"
                     />
-                    <!-- <button
-                                on:keypress={checkForSuper}
-                                on:click={checkForSuper}>Confirmar</button
-                            > -->
                     <button on:keypress={close} on:click={close}>Fechar</button>
                 </div>
             </div>
@@ -554,15 +539,15 @@
                     >fechar</button
                 >
             </div>
-        </div>
+        </div> 
     {/if}
-    <!-- {/if} -->
 {/await}
 
 <style>
     .footer-area {
         display: flex;
         width: 100%;
+        height: 100%;
     }
     .feed-area {
         margin-top: 50px;
