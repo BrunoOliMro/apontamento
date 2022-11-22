@@ -34,7 +34,6 @@ const tools = async (req, res, next) => {
     const motivo = '';
     let lookForTools = `SELECT [CODIGO], [IMAGEM] FROM VIEW_APTO_FERRAMENTAL WHERE 1 = 1 AND IMAGEM IS NOT NULL AND CODIGO = '${codigoPeca}'`;
     console.log("linha 41", decodedOdfNumber);
-    console.log("linha 43", numeroOdf);
     if (numeroOdf !== decodedOdfNumber) {
         return res.json({ message: 'Erro na ODF' });
     }

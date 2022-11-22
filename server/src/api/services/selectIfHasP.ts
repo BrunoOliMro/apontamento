@@ -25,7 +25,7 @@ export const selectToKnowIfHasP = async (dados: any) => {
                        AND PCP.NUMERO_ODF = '${dados.numOdf}'    
                     `.trim()
         ).then(result => result.recordset)
-        console.log('RESOURCE: ', !selectKnowHasP);
+        console.log('linha 28 /selectHasP/:', selectKnowHasP);
 
         if (selectKnowHasP.length > 0) {
             //Map na quantidade de itens para execução e map do estoque
@@ -98,7 +98,7 @@ export const selectToKnowIfHasP = async (dados: any) => {
             }
             await connection.query(updateQtyQuery.join('\n'));
 
-            console.log("linha 100");
+            console.log("linha 101");
 
             // for (const [i, qtdItem] of reservedItens.entries()) {
             //     updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE - ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
@@ -107,14 +107,14 @@ export const selectToKnowIfHasP = async (dados: any) => {
 
             reservedItens.map((value) => {
                 if (value === 0) {
-                    console.log("linha 82 /selecthasP/", response);
+                    console.log("linha 110 /selecthasP/", response);
                     return response = 'Algo deu errado'
                 } else {
                     return response = 'Valores Reservados'
                 }
             })
 
-            console.log("linha 107", response);
+            console.log("linha 117 Response /select.P/", response);
         } else if (selectKnowHasP.length <= 0) {
             return response = "Não há item para reservar"
         } else {

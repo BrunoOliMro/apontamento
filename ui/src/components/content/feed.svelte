@@ -109,7 +109,7 @@
             }),
         }).then((res) => res.json());
 
-        console.log("res:", res);
+        console.log('linha 112 /feed.svelte/', res);
 
         if (res.message === "Supervisor inválido") {
             modalMessage = "Supervisor inválido";
@@ -173,7 +173,7 @@
         console.log("linha 173", getSpace);
         if (getSpace.message === "sem endereço" || getSpace.address === undefined) {
             window.location.href = `/#/rip`;
-        } else if (getSpace.String === "endereço com sucesso") {
+        } else if (getSpace. message === "endereço com sucesso") {
             loader = false
             showAddress = true;
         }

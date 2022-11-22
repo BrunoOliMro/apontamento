@@ -17,6 +17,7 @@ const tools_1 = require("./controllers/tools");
 const point_1 = require("./controllers/point");
 const pointBagde_1 = require("./controllers/pointBagde");
 const getPoint_1 = require("./controllers/getPoint");
+const supervisor_1 = require("./controllers/supervisor");
 const apiRouter = (0, express_1.Router)();
 apiRouter.route("/apontamentoCracha")
     .post(pointBagde_1.pointBagde);
@@ -40,6 +41,8 @@ apiRouter.route("/lancamentoRip")
     .post(ripPost_1.ripPost);
 apiRouter.route("/returnedValue")
     .post(returnedValue_1.returnedValue);
+apiRouter.route("/supervisor")
+    .post(supervisor_1.supervisor);
 apiRouter.route("/motivoParada")
     .get(stopMotives_1.stopMotives);
 apiRouter.route("/postParada")

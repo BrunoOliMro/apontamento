@@ -101,6 +101,7 @@ export const codeNote: RequestHandler = async (req, res, next) => {
             if (codIdApontamento[0]?.CODAPONTA === 5) {
                 req.body.message = `codeApont 5 maquina parada`
                 next()
+                return res.json({message : `codeApont 5 maquina parada`})
             }
 
             if (codIdApontamento[0]?.CODAPONTA === 6) {

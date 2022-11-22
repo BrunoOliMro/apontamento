@@ -168,6 +168,7 @@
         showSuper = false;
         showError = false;
         showErrorEmpty = false;
+        crachModal = ''
     }
 </script>
 

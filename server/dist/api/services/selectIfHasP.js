@@ -28,7 +28,7 @@ const selectToKnowIfHasP = async (dados) => {
                        AND OP.CONDIC ='P'                 
                        AND PCP.NUMERO_ODF = '${dados.numOdf}'    
                     `.trim()).then(result => result.recordset);
-        console.log('RESOURCE: ', !selectKnowHasP);
+        console.log('linha 28 /selectHasP/:', selectKnowHasP);
         if (selectKnowHasP.length > 0) {
             let codigoNumite = selectKnowHasP.map(e => e.NUMITE);
             const execut = selectKnowHasP.map(item => item.EXECUT);
@@ -56,17 +56,17 @@ const selectToKnowIfHasP = async (dados) => {
                 updateQtyQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${qtdItem} WHERE 1 = 1 AND CODIGO = '${codigoFilho[i]}'`);
             }
             await connection.query(updateQtyQuery.join('\n'));
-            console.log("linha 100");
+            console.log("linha 101");
             reservedItens.map((value) => {
                 if (value === 0) {
-                    console.log("linha 82 /selecthasP/", response);
+                    console.log("linha 110 /selecthasP/", response);
                     return response = 'Algo deu errado';
                 }
                 else {
                     return response = 'Valores Reservados';
                 }
             });
-            console.log("linha 107", response);
+            console.log("linha 117 Response /select.P/", response);
         }
         else if (selectKnowHasP.length <= 0) {
             return response = "Não há item para reservar";

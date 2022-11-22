@@ -40,8 +40,6 @@ export const tools: RequestHandler = async (req, res, next) => {
 
     console.log("linha 41", decodedOdfNumber);
 
-    console.log("linha 43", numeroOdf );
-
     if(numeroOdf !== decodedOdfNumber) {
         return res.json({message : 'Erro na ODF'})
     }
@@ -50,16 +48,6 @@ export const tools: RequestHandler = async (req, res, next) => {
 
 
     try {
-        // const toolsImg = await connection.query(`
-        //     SELECT
-        //         [CODIGO],
-        //         [IMAGEM]
-        //     FROM VIEW_APTO_FERRAMENTAL 
-        //     WHERE 1 = 1 
-        //         AND IMAGEM IS NOT NULL
-        //         AND CODIGO = '${codigoPeca}'
-        // `).then(res => res.recordset);
-
         let toolsImg: any;
         try {
             console.log("linha 55 /tools/");
@@ -85,17 +73,6 @@ export const tools: RequestHandler = async (req, res, next) => {
             result.push(path);
         }
         console.log("linha 61 /tools/");
-
-        // const verifyInsert = await connection.query(`SELECT * FROM HISAPONTA (NOLOCK) WHERE 1 = 1 AND ODF = '${numeroOdf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}' ORDER BY CODAPONTA DESC
-        // `).then(record => record.rowsAffected)
-        // let lookForHisaponta = `SELECT * FROM HISAPONTA (NOLOCK) WHERE 1 = 1 AND ODF = '${numeroOdf}' AND NUMOPE = '${numeroOperacao}' AND ITEM = '${codigoMaq}' ORDER BY CODAPONTA DESC`
-        // const verifyInsert = await select(lookForHisaponta)
-
-        // console.log("linha 67", verifyInsert);
-
-        //Cria o primeiro registro em Hisaponta e insere o CODAPONTA 1 e o primeiro tempo em APT_TEMPO_OPERACAO
-        // if (verifyInsert.length <= 0) {
-        // }
 
         if (toolsImg.length <= 0) {
             return res.json({ message: "/images/sem_imagem.gif" });

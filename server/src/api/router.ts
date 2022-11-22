@@ -81,9 +81,8 @@ apiRouter.route("/returnedValue")
     //.get(codeNote)
     .post(returnedValue)
 
-// apiRouter.route("/supervisor")
-//     //.get(getBefore)
-//     .post(supervisor)
+apiRouter.route("/supervisor")
+    .post(supervisor)
 
 // apiRouter.route("/supervisorParada")
 //     //.get(getBefore)
