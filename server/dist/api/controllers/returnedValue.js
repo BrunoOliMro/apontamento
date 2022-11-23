@@ -17,7 +17,7 @@ const returnedValue = async (req, res) => {
     let choosenOption = Number((0, sanitize_1.sanitize)(req.body["quantity"])) || 0;
     let supervisor = String((0, sanitize_1.sanitize)(req.body["supervisor"])) || null;
     let someC = String((0, sanitize_1.sanitize)(req.body['returnValueStorage'])) || null;
-    let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
+    let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['employee']))) || null;
     let barcode = String((0, sanitize_1.sanitize)(req.body["codigoBarrasReturn"])) || null;
     let boas;
     let ruins;

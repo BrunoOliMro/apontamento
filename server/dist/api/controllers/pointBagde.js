@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.pointBagde = void 0;
+exports.searchBagde = void 0;
 const select_1 = require("../services/select");
 const encryptOdf_1 = require("../utils/encryptOdf");
 const sanitize_1 = require("../utils/sanitize");
-const pointBagde = async (req, res) => {
+const searchBagde = async (req, res) => {
     let matricula = String((0, sanitize_1.sanitize)(req.body["cracha"])) || null;
     let start = new Date() || 0;
     if (!matricula || matricula === '') {
@@ -33,5 +33,5 @@ const pointBagde = async (req, res) => {
     finally {
     }
 };
-exports.pointBagde = pointBagde;
+exports.searchBagde = searchBagde;
 //# sourceMappingURL=pointBagde.js.map

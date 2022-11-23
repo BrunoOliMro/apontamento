@@ -7,7 +7,7 @@
     import Rework from "../inputs/rework.svelte";
     import ModalConfirmation from "../modal/modalConfirmation.svelte";
     import Cod from "./cod.svelte";
-    import Container from "./container.svelte";
+    //import Container from "./container.svelte";
     import Footer from "./footer.svelte";
     import Status from "./status.svelte";
     let supervisorApi = `/api/v1/supervisor`;
@@ -15,14 +15,14 @@
     let badFeed;
     let missingFeed;
     let reworkFeed;
-    let urlS = `/api/v1/apontar`;
-    let motivoUrl = `/api/v1/motivorefugo`;
+    let urlS = `/api/v1/point`;
+    let motivoUrl = `/api/v1/badFeedMotives`;
     let dadosOdf = [];
     let dados = [];
     let showConfirm = false;
     let valorFeed;
     let value;
-    let supervisor = '';
+    let supervisor = "";
     let qtdPossivelProducao;
     let showError = false;
     let showParcialSuper = false;
@@ -37,7 +37,7 @@
     let stopModal = false;
     let showMaqPar = false;
     let modalTitle = "Máquina Parada ";
-    let urlString = `/api/v1/odf`;
+    let urlString = `/api/v1/odfData`;
     getOdfData();
 
     async function getOdfData() {
@@ -105,58 +105,58 @@
             }),
         }).then((res) => res.json());
 
-        console.log('linha 112 /feed.svelte/', res);
+        console.log("linha 112 /feed.svelte/", res);
 
         if (res.message === "Supervisor inválido") {
             modalMessage = "Supervisor inválido";
-            loader = false
+            loader = false;
         }
         if (res.message === "supervisor não encontrado") {
             modalMessage = "Supervisor não encontrado";
-            loader = false
+            loader = false;
             //showSuperNotFound = true;
         }
         if (res.message === "Quantidade inválida") {
             modalMessage = "Quantidade inválida";
-            loader = false
+            loader = false;
         }
         if (res.message === "Código máquina inválido") {
             modalMessage = "Número operação inválido";
-            loader = false
+            loader = false;
         }
         if (res.message === "Código de peça inválido") {
             modalMessage = "Código de peça inválido";
-            loader = false
+            loader = false;
         }
 
         if (res.message === "Número operação inválido") {
             modalMessage = "Número operação inválido";
-            loader = false
+            loader = false;
         }
 
         if (res.message === "Número odf inválido") {
             modalMessage = "Número ODF inválido";
-            loader = false
+            loader = false;
         }
         if (res.message === "Funcionário Inválido") {
             modalMessage = "Funcionário Inválido";
-            loader = false
+            loader = false;
         }
         if (res.message === "Quantidade excedida") {
             modalMessage = "Quantidade excedida";
-            loader = false
+            loader = false;
         }
         if (res.message === "Quantidade inválida") {
             modalMessage = "Quantidade inválida";
-            loader = false
+            loader = false;
         }
         if (res.message === "Erro ao apontar") {
             modalMessage = "Erro ao apontar";
-            loader = false
+            loader = false;
         }
         if (res.message === "Sucesso ao apontar") {
             //loader = true;
-            getSpaceFunc()
+            getSpaceFunc();
             //window.location.href = `/#/rip`;
             modalMessage = "";
             showConfirm = false;
@@ -166,11 +166,20 @@
     async function getSpaceFunc() {
         const res = await fetch(urlS);
         getSpace = await res.json();
-        if (getSpace.message === "sem endereço") {
-           window.location.href = `/#/rip`;
-        } else if (getSpace.message === "endereço com sucesso") {
-            loader = false
+        console.log("linha 169", getSpace.address);
+        if (getSpace.message === "No address") {
+            window.location.href = `/#/rip`;
+        }
+
+        if (getSpace.message === "Address located") {
+            loader = false;
             showAddress = true;
+        }
+
+        if (getSpace.message === "Error on locating space") {
+            loader = false;
+            window.location.href = `/#/codigobarras/apontamento`;
+            location.reload();
         }
     }
 
@@ -185,8 +194,8 @@
         let total =
             numberBadFeed + numberGoodFeed + numberMissing + numberReworkFeed;
 
-        if(total > numberQtdAllowed){
-            modalMessage = 'Quantidade excedida'
+        if (total > numberQtdAllowed) {
+            modalMessage = "Quantidade excedida";
         }
 
         if (numberBadFeed > 0 && total <= numberQtdAllowed) {
@@ -255,16 +264,16 @@
         valorFeed = event.detail.goodFeed;
     }
 
-    function handll(event){
-        badFeed = event.detail.badFeed
+    function handll(event) {
+        badFeed = event.detail.badFeed;
     }
 
-    function hand(event){
-        missingFeed = event.detail.missingFeed
+    function hand(event) {
+        missingFeed = event.detail.missingFeed;
     }
 
-    function handllaa(event){
-        reworkFeed = event.detail.reworkFeed
+    function handllaa(event) {
+        reworkFeed = event.detail.reworkFeed;
     }
 </script>
 
@@ -347,10 +356,10 @@
                     <p>Supervisor</p>
                     <!-- on:input={Sanitize} -->
                     <input
-                        autofocus
                         on:input={blockForbiddenChars}
                         on:keypress={checkForSuper}
                         bind:value={supervisor}
+                        autofocus
                         class="supervisor"
                         type="text"
                         name="supervisor"
@@ -371,9 +380,9 @@
                 <p>Supervisor</p>
                 <input
                     on:input={blockForbiddenChars}
-                    autofocus
-                    bind:value={supervisor}
                     on:keypress={checkForSuper}
+                    bind:value={supervisor}
+                    autofocus
                     class="supervisor"
                     type="text"
                     name="supervisor"
@@ -533,13 +542,16 @@
         <div class="fundo">
             <div class="header">
                 <div class="closed">
-                    <h2>Insira a quantidade no local : {getSpace.address}</h2>
+                    <h2>
+                        Insira a quantidade no local : {getSpace.address
+                            .address}
+                    </h2>
                 </div>
                 <button on:keypress={closeRedirect} on:click={closeRedirect}
                     >fechar</button
                 >
             </div>
-        </div> 
+        </div>
     {/if}
 {/await}
 

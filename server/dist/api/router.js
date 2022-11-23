@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const pointer_1 = require("./controllers/pointer");
+const searchOdf_1 = require("./controllers/searchOdf");
 const badFeedMotives_1 = require("./controllers/badFeedMotives");
 const drawing_1 = require("./controllers/drawing");
 const historic_1 = require("./controllers/historic");
@@ -15,15 +15,19 @@ const stopMotives_1 = require("./controllers/stopMotives");
 const stopPost_1 = require("./controllers/stopPost");
 const tools_1 = require("./controllers/tools");
 const point_1 = require("./controllers/point");
-const pointBagde_1 = require("./controllers/pointBagde");
+const searchBadge_1 = require("./controllers/searchBadge");
 const getPoint_1 = require("./controllers/getPoint");
 const supervisor_1 = require("./controllers/supervisor");
 const apiRouter = (0, express_1.Router)();
-apiRouter.route("/apontamentoCracha")
-    .post(pointBagde_1.pointBagde);
-apiRouter.route("/apontamento")
-    .post(pointer_1.pointerPost);
+apiRouter.route("/badge")
+    .post(searchBadge_1.searchBagde);
 apiRouter.route("/odf")
+    .post(searchOdf_1.searchOdf);
+apiRouter.route("/tools")
+    .get(tools_1.tools);
+apiRouter.route("/ferselecionadas")
+    .get(tools_1.selectedTools);
+apiRouter.route("/odfData")
     .get(odfData_1.odfData);
 apiRouter.route("/imagem")
     .get(statusImage_1.statusImage);
@@ -31,27 +35,24 @@ apiRouter.route("/status")
     .get(status_1.status);
 apiRouter.route("/historic")
     .get(historic_1.historic);
-apiRouter.route("/ferramenta")
-    .get(tools_1.tools)
-    .get(tools_1.selectedTools);
-apiRouter.route("/apontar")
-    .get(getPoint_1.getPoint)
-    .post(point_1.point);
-apiRouter.route("/lancamentoRip")
+apiRouter.route("/point")
+    .post(point_1.point)
+    .get(getPoint_1.getPoint);
+apiRouter.route("/rip")
+    .get(rip_1.rip);
+apiRouter.route("/pointRip")
     .post(ripPost_1.ripPost);
 apiRouter.route("/returnedValue")
     .post(returnedValue_1.returnedValue);
 apiRouter.route("/supervisor")
     .post(supervisor_1.supervisor);
-apiRouter.route("/motivoParada")
+apiRouter.route("/stopMotives")
     .get(stopMotives_1.stopMotives);
-apiRouter.route("/postParada")
+apiRouter.route("/stopPost")
     .post(stopPost_1.stopPost);
-apiRouter.route("/motivorefugo")
+apiRouter.route("/badFeedMotives")
     .get(badFeedMotives_1.badFeedMotives);
-apiRouter.route("/rip")
-    .get(rip_1.rip);
-apiRouter.route("/desenho")
+apiRouter.route("/drawing")
     .get(drawing_1.drawing);
 exports.default = apiRouter;
 //# sourceMappingURL=router.js.map

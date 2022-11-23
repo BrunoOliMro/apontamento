@@ -13,8 +13,8 @@ export const rip: RequestHandler = async (req, res) => {
     let codigoPeca:string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
     let numeroOdf:number = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
     let numeroOperacao :string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
-    let funcionario:string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
-    let start:string = decrypted(String(sanitize(req.cookies["starterBarcode"]))) || null
+    let funcionario:string = decrypted(String(sanitize(req.cookies['employee']))) || null
+    let start:string = decrypted(String(sanitize(req.cookies["startSetupTime"]))) || null
     let qtdLibMax:number = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
     let startTime:number = Number(new Date(start).getTime()) || 0
     try {

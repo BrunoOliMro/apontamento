@@ -2,7 +2,7 @@
     // @ts-nocheck
     import ModalConfirmation from '../modal/modalConfirmation.svelte'
     let imageLoader = '/images/axonLoader.gif';
-    let urlString = `/api/v1/odf`;
+    let urlString = `/api/v1/odfData`;
     let odfData;
     let message = '';
     let resultOdf = getOdfData();

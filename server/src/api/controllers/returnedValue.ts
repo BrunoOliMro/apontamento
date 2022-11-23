@@ -13,7 +13,7 @@ export const returnedValue: RequestHandler = async (req, res) => {
     let choosenOption = Number(sanitize(req.body["quantity"])) || 0
     let supervisor = String(sanitize(req.body["supervisor"])) || null
     let someC = String(sanitize(req.body['returnValueStorage'])) || null
-    let funcionario: string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+    let funcionario: string = decrypted(String(sanitize(req.cookies['employee']))) || null
     let barcode = String(sanitize(req.body["codigoBarrasReturn"])) || null
     let boas;
     let ruins;

@@ -28,17 +28,17 @@ const selectToKnowIfHasP = async (dados) => {
                        AND OP.CONDIC ='P'                 
                        AND PCP.NUMERO_ODF = '${dados.numOdf}'    
                     `.trim()).then(result => result.recordset);
-        console.log('linha 28 /selectHasP/:', selectKnowHasP);
+        console.log('selectHasP :', selectKnowHasP);
         if (selectKnowHasP.length > 0) {
             let codigoNumite = selectKnowHasP.map(e => e.NUMITE);
             const execut = selectKnowHasP.map(item => item.EXECUT);
             const codigoFilho = selectKnowHasP.map(item => item.NUMITE);
             const qtdLibProd = selectKnowHasP.map(e => e.QTD_LIBERADA_PRODUZIR);
             const numberOfQtd = Math.min(...qtdLibProd);
+            console.log("LINHA 63", numberOfQtd);
             if (numberOfQtd <= 0) {
                 return response = 'Quantidade para reserva inválida';
             }
-            console.log("LINHA 63", numberOfQtd);
             const reservedItens = execut.map((quantItens) => {
                 return Math.floor((numberOfQtd || 0) * quantItens);
             }, Infinity);
@@ -47,26 +47,31 @@ const selectToKnowIfHasP = async (dados) => {
                 reservedItens: reservedItens,
                 codigoFilho: codigoFilho,
                 condic: selectKnowHasP[0].CONDIC,
-                numite: codigoNumite,
             };
             const updateQtyQuery = [];
+            const updateQtyRes = [];
             for (const [i, qtdItem] of reservedItens.entries()) {
-                console.log("i", i);
-                console.log("codigo", codigoFilho[i]);
+                console.log("linha 95", qtdItem);
                 updateQtyQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${qtdItem} WHERE 1 = 1 AND CODIGO = '${codigoFilho[i]}'`);
             }
             await connection.query(updateQtyQuery.join('\n'));
-            console.log("linha 101");
-            reservedItens.map((value) => {
-                if (value === 0) {
-                    console.log("linha 110 /selecthasP/", response);
-                    return response = 'Algo deu errado';
-                }
-                else {
-                    return response = 'Valores Reservados';
-                }
-            });
-            console.log("linha 117 Response /select.P/", response);
+            for (const [i, qtdItem] of reservedItens.entries()) {
+                updateQtyRes.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES ('1504024', 40, '105831437', '${codigoFilho[i]}', ${qtdItem}, 'WEUHGV', NULL, GETDATE(), 'CESAR')`);
+            }
+            const cstAlocacao = await connection.query(updateQtyRes.join('\n'));
+            console.log("linha 102/cstAlocacao/", cstAlocacao);
+            if (!cstAlocacao) {
+                return response = 'Algo deu errado';
+            }
+            else {
+                let obj = {
+                    message: 'Valores Reservados',
+                    reservedItens: reservedItens,
+                    codigoFilho: codigoFilho,
+                    condic: selectKnowHasP[0].CONDIC,
+                };
+                return obj;
+            }
         }
         else if (selectKnowHasP.length <= 0) {
             return response = "Não há item para reservar";
@@ -78,8 +83,6 @@ const selectToKnowIfHasP = async (dados) => {
     catch (error) {
         console.log('linha 214: ', error);
         return response = "Algo deu errado";
-    }
-    finally {
     }
 };
 exports.selectToKnowIfHasP = selectToKnowIfHasP;

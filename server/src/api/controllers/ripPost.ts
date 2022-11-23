@@ -16,7 +16,7 @@ export const ripPost: RequestHandler = async (req, res) => {
     let NUMERO_OPERACAO : string= decrypted(String(req.cookies['NUMERO_OPERACAO'])) || null
     let CODIGO_MAQUINA : string= decrypted(String((req.cookies['CODIGO_MAQUINA']))) || null
     let codigoPeca : string= decrypted(String((req.cookies['CODIGO_PECA']))) || null
-    let funcionario : string= decrypted(String((req.cookies['FUNCIONARIO']))) || null
+    let funcionario : string= decrypted(String((req.cookies['employee']))) || null
     let revisao : string= decrypted(String((req.cookies['REVISAO']))) || null
     let qtdLibMax : number= decrypted(String((req.cookies['qtdLibMax']))) || null
     const updateQtyQuery: string[] = [];

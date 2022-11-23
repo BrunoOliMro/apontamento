@@ -1,13 +1,11 @@
 <script>
-    // import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
     const imageLoader = "/images/axonLoader.gif";
     let back = "/images/icons8-go-back-24.png";
-
     export let Subtitle = "DESENHO";
     let zoomNumber = 400;
     let rotation = 0;
     let imagemBack = [];
-    let urlString = `/api/v1/desenho?`;
+    let urlString = `/api/v1/drawing`;
     let imagemMsg = ''
 
     async function getIMAGEM() {

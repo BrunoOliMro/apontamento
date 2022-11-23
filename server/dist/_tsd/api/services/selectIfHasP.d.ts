@@ -1,2 +1,7 @@
-export declare const selectToKnowIfHasP: (dados: any) => Promise<"Quantidade para reserva inválida" | "Não há item para reservar" | "Algo deu errado" | undefined>;
+export declare const selectToKnowIfHasP: (dados: any) => Promise<"Quantidade para reserva inválida" | "Algo deu errado" | {
+    message: string;
+    reservedItens: number[];
+    codigoFilho: any[];
+    condic: any;
+} | "Não há item para reservar">;
 //# sourceMappingURL=selectIfHasP.d.ts.map

@@ -122,15 +122,14 @@ const pointerPost = async (req, res) => {
         return res.json({ message: 'Quantidade para reserva inválida' });
     }
     if (lookForChildComponents === 'Não há item para reservar') {
-        return res.json({ message: 'Não há item para reservar' });
+        console.log("linha 168/pointer.ts/");
+        return res.redirect('http://localhost:3000/#/rip');
     }
     res.cookie('reservedItens', lookForChildComponents.reservedItens);
     res.cookie('codigoFilho', lookForChildComponents.codigoFilho);
     res.cookie('CONDIC', lookForChildComponents.selectKnowHasP[0].CONDIC);
     res.cookie('NUMITE', lookForChildComponents.codigoNumite);
     res.cookie('resultadoFinalProducao', lookForChildComponents.resultadoFinalProducao);
-    return res.redirect('/#/ferramenta');
-    return res.json({ message: 'codeApont 1 setup iniciado' });
 };
 exports.pointerPost = pointerPost;
 //# sourceMappingURL=pointer.js.map

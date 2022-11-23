@@ -25,7 +25,7 @@ export const selectToKnowIfHasP = async (dados: any) => {
                        AND PCP.NUMERO_ODF = '${dados.numOdf}'    
                     `.trim()
         ).then(result => result.recordset)
-        console.log('linha 28 /selectHasP/:', selectKnowHasP);
+        console.log('selectHasP :', selectKnowHasP);
 
         if (selectKnowHasP.length > 0) {
             //Map na quantidade de itens para execução e map do estoque
@@ -53,21 +53,21 @@ export const selectToKnowIfHasP = async (dados: any) => {
 
             const qtdLibProd: any = selectKnowHasP.map(e => e.QTD_LIBERADA_PRODUZIR)
 
-            const  numberOfQtd = Math.min(...qtdLibProd)
+            const numberOfQtd = Math.min(...qtdLibProd)
 
-            
-            if(numberOfQtd <= 0){
+            console.log("LINHA 63", numberOfQtd);
+
+            if (numberOfQtd <= 0) {
                 return response = 'Quantidade para reserva inválida'
             }
-            
-            console.log("LINHA 63",numberOfQtd );
+
             //let qtdTotal = calMaxQuant(execut, saldoReal);
 
 
             //let qtdProdOdf: Number = Number(selectKnowHasP[0].QTDE_ODF)
 
-           //let resultadoFinalProducao: Number = Number(Number(qtdTotal) - Number(qtdProdOdf))
-            
+            //let resultadoFinalProducao: Number = Number(Number(qtdTotal) - Number(qtdProdOdf))
+
             // if (resultadoFinalProducao <= 0) {
             //     resultadoFinalProducao = 0
             //     return resultadoFinalProducao
@@ -83,38 +83,43 @@ export const selectToKnowIfHasP = async (dados: any) => {
                 reservedItens: reservedItens,
                 codigoFilho: codigoFilho,
                 condic: selectKnowHasP[0].CONDIC,
-                numite: codigoNumite,
+                //numite: codigoNumite,
                 //resultadoFinalProducao: resultadoFinalProducao,
             }
 
             const updateQtyQuery = [];
-            //const updateQtyRes = [];
+            const updateQtyRes = [];
 
             // Loop para atualizar os dados no DB
             for (const [i, qtdItem] of reservedItens.entries()) {
-                console.log("i", i);
-                console.log("codigo", codigoFilho[i]);
+                console.log("linha 95", qtdItem);
                 updateQtyQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${qtdItem} WHERE 1 = 1 AND CODIGO = '${codigoFilho[i]}'`);
             }
             await connection.query(updateQtyQuery.join('\n'));
 
-            console.log("linha 101");
+            for (const [i, qtdItem] of reservedItens.entries()) {
+                //updateQtyRes.push(`UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
+                updateQtyRes.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES ('1504024', 40, '105831437', '${codigoFilho[i]}', ${qtdItem}, 'WEUHGV', NULL, GETDATE(), 'CESAR')`)
+            }
+            const cstAlocacao = await connection.query(updateQtyRes.join('\n'));
+            console.log("linha 102/cstAlocacao/", cstAlocacao);
+            if (!cstAlocacao) {
+                return response = 'Algo deu errado'
+            } else {
 
-            // for (const [i, qtdItem] of reservedItens.entries()) {
-            //     updateQtyRes.push(`UPDATE CST_ALOCACAO SET  QUANTIDADE = QUANTIDADE - ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
-            // }
-            // await connection.query(updateQtyRes.join('\n'));
 
-            reservedItens.map((value) => {
-                if (value === 0) {
-                    console.log("linha 110 /selecthasP/", response);
-                    return response = 'Algo deu errado'
-                } else {
-                    return response = 'Valores Reservados'
+
+                let obj = {
+                    message: 'Valores Reservados',
+                    reservedItens: reservedItens,
+                    codigoFilho: codigoFilho,
+                    condic: selectKnowHasP[0].CONDIC,
                 }
-            })
 
-            console.log("linha 117 Response /select.P/", response);
+                return obj
+
+
+            }
         } else if (selectKnowHasP.length <= 0) {
             return response = "Não há item para reservar"
         } else {
@@ -124,7 +129,5 @@ export const selectToKnowIfHasP = async (dados: any) => {
     } catch (error) {
         console.log('linha 214: ', error);
         return response = "Algo deu errado"
-    } finally {
-        // await connection.close()
     }
 }

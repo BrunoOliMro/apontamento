@@ -1,6 +1,6 @@
 import { Router } from "express";
 //import assert from "node:assert";
-import { pointerPost } from "./controllers/pointer";
+import { searchOdf } from "./controllers/searchOdf";
 import { badFeedMotives } from "./controllers/badFeedMotives";
 import { drawing } from "./controllers/drawing";
 import { historic } from "./controllers/historic";
@@ -15,7 +15,7 @@ import { stopPost } from "./controllers/stopPost";
 import { stopSupervisor } from "./controllers/stopSupervisor";
 import { selectedTools, tools } from "./controllers/tools";
 import { point } from "./controllers/point";
-import { pointBagde } from "./controllers/pointBagde";
+import { searchBagde } from "./controllers/searchBadge";
 import { getPoint } from "./controllers/getPoint";
 import { supervisor } from "./controllers/supervisor";
 import { codeNote } from "./controllers/codeNote";
@@ -25,59 +25,43 @@ import { odfDataQtd } from "./controllers/odfDataQtd";
 // /api/v1/
 const apiRouter = Router();
 
-apiRouter.route("/apontamentoCracha")
-    .post(pointBagde)
-
-apiRouter.route("/apontamento")
-    //.post(codeNote)
-    .post(pointerPost)
+apiRouter.route("/badge")
+    .post(searchBagde)
 
 apiRouter.route("/odf")
+    .post(searchOdf)
+
+apiRouter.route("/tools")
+    .get(tools)
+    //.get(selectedTools)
+
+apiRouter.route("/ferselecionadas")
     //.get(codeNote)
+    .get(selectedTools)
+
+apiRouter.route("/odfData")
     .get(odfData)
 
-// apiRouter.route("/odfQtd")
-//     .get(odfDataQtd)
-
 apiRouter.route("/imagem")
-    //.get(getBefore)
     .get(statusImage)
 
 apiRouter.route("/status")
-    //.get(codeNote)
-    //.get(getBefore)
     .get(status)
 
 apiRouter.route("/historic")
-    //.get(getBefore)
     .get(historic)
 
-apiRouter.route("/ferramenta")
-    //GET das Fotos das desenhodiv
-    //.get(getBefore)
-    .get(tools)
-    .get(selectedTools)
-
-
-// apiRouter.route("/ferselecionadas")
-//     //.get(codeNote)
-//    // .get(getBefore)
-//     .get(selectedTools)
-
-apiRouter.route("/apontar")
-    //.get(codeNote)
-    //.get(getBefore)
-    .get(getPoint)
+apiRouter.route("/point")
     .post(point)
+    .get(getPoint)
 
-apiRouter.route("/lancamentoRip")
-    //.get(getBefore)
-    //.get(codeNote)
+apiRouter.route("/rip")
+    .get(rip)
+
+apiRouter.route("/pointRip")
     .post(ripPost)
 
 apiRouter.route("/returnedValue")
-    //.get(getBefore)
-    //.get(codeNote)
     .post(returnedValue)
 
 apiRouter.route("/supervisor")
@@ -87,26 +71,19 @@ apiRouter.route("/supervisor")
 //     //.get(getBefore)
 //     .post(stopSupervisor)
 
-apiRouter.route("/motivoParada")
-    //.get(getBefore)
+apiRouter.route("/stopMotives")
     .get(stopMotives)
 
-apiRouter.route("/postParada")
-   // .get(getBefore)
+
+apiRouter.route("/stopPost")
     .post(stopPost)
 
-apiRouter.route("/motivorefugo")
-    //.get(getBefore)
-    //.get(codeNote)
+
+apiRouter.route("/badFeedMotives")
     .get(badFeedMotives)
 
-apiRouter.route("/rip")
-    //.get(getBefore)
-    .get(rip)
 
-apiRouter.route("/desenho")
-    //GET Desenho TECNICO
-    //.get(getBefore)
+apiRouter.route("/drawing")
     .get(drawing)
 
 export default apiRouter;

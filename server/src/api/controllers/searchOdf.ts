@@ -1,17 +1,15 @@
 import type { RequestHandler } from 'express';
-import mssql from 'mssql';
 import sanitize from 'sanitize-html';
-import { sqlConfig } from '../../global.config';
 import { select } from '../services/select';
 import { selectToKnowIfHasP } from '../services/selectIfHasP';
+import { update } from '../services/update';
 import { decrypted } from '../utils/decryptedOdf';
 import { encoded } from '../utils/encodedOdf';
 import { encrypted } from '../utils/encryptOdf';
 import { unravelBarcode } from '../utils/unravelBarcode'
 
-export const pointerPost: RequestHandler = async (req, res) => {
-    const connection = await mssql.connect(sqlConfig);
-    const dados: any = unravelBarcode(req.body.codigoBarras)
+export const searchOdf: RequestHandler = async (req, res) => {
+    const dados: any = unravelBarcode(req.body.barcode)
     let message = String(req.body.message) || null
     let qtdLib: number = 0
     let apontLib: string = ''
@@ -92,15 +90,15 @@ export const pointerPost: RequestHandler = async (req, res) => {
 
     // Caso seja a primeira Odf, objOdfSelecAnterior vai vir como undefined
     if (objOdfSelecAnterior === undefined) {
-        await connection.query(`
-        UPDATE 
-        PCP_PROGRAMACAO_PRODUCAO 
-        SET 
-        APONTAMENTO_LIBERADO = 'S' 
-        WHERE 1 = 1 
-        AND NUMERO_ODF = '${dados.numOdf}' 
-        AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' 
-        AND CODIGO_MAQUINA = '${dados.codMaq}'`)
+        let updateQuery = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'`
+        console.log("linha 105 /searchOdf / updating APONTAMENTO LIBERADO = 'S'");
+        
+        try{
+            const apontLib = await update(updateQuery)
+            console.log('linha 98 /searchOdf/', apontLib);
+        } catch (err){
+            console.log("err linha 100", apontLib);
+        }
     }
 
     if (objOdfSelecAnterior === undefined) {
@@ -110,7 +108,7 @@ export const pointerPost: RequestHandler = async (req, res) => {
     let numeroOper = '00' + objOdfSelecionada.NUMERO_OPERACAO.replaceAll(' ', '0')
 
     // Descriptografa o funcionario dos cookies
-    let funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))
+    let funcionario = decrypted(String(sanitize(req.cookies['employee'])))
 
     if (!funcionario) {
         return res.json({ message: 'Algo deu errado' })
@@ -143,8 +141,6 @@ export const pointerPost: RequestHandler = async (req, res) => {
     res.cookie('NUMERO_OPERACAO', operationNumber)
     res.cookie('REVISAO', encryptedRevision)
 
-    console.log("linha 146 /pointer/");
-
     // if(message === 'codeApont 2 setup finalizado'){
     //     return res.json({message : 'codeApont 1 setup iniciado'})
     // }
@@ -155,7 +151,16 @@ export const pointerPost: RequestHandler = async (req, res) => {
 
     let lookForChildComponents: any = await selectToKnowIfHasP(dados)
 
-    console.log("linha 158 /pointer/", lookForChildComponents);
+    // console.log("linha 153 /searchOdf /", lookForChildComponents);
+
+    // let numite =  lookForChildComponents.selectKnowHasP.map((element: any )=> element.NUMITE)
+
+    // console.log("linha 158", numite);
+
+    if(!lookForChildComponents){
+        return res.json({ message: 'Algo deu errado' })
+    }
+
     if (lookForChildComponents === 'Algo deu errado') {
         return res.json({ message: 'Algo deu errado' })
     }
@@ -165,17 +170,26 @@ export const pointerPost: RequestHandler = async (req, res) => {
     }
 
     if (lookForChildComponents === 'Não há item para reservar') {
-        return res.json({ message: 'Não há item para reservar' })
+        console.log("linha 168/pointer.ts/");
+        return res.json({message : 'Não há item para reservar'})
     }
 
+    // console.log("linha 167 /reserveditens/", lookForChildComponents!.reservedItens );
+    // console.log("linha 167 /codigoFilho/", lookForChildComponents!.codigoFilho );
+    // console.log("linha 167 /condic/", lookForChildComponents!.condic );
 
     res.cookie('reservedItens', lookForChildComponents!.reservedItens)
     res.cookie('codigoFilho', lookForChildComponents!.codigoFilho)
-    res.cookie('CONDIC', lookForChildComponents!.selectKnowHasP[0].CONDIC)
-    res.cookie('NUMITE', lookForChildComponents!.codigoNumite)
-    res.cookie('resultadoFinalProducao', lookForChildComponents!.resultadoFinalProducao)
-    return res.redirect('/#/ferramenta')
-    return res.json({ message: 'codeApont 1 setup iniciado' })
+    res.cookie('condic', lookForChildComponents!.condic)
+    //res.cookie('NUMITE', lookForChildComponents!.codigoNumite)
+    //res.cookie('resultadoFinalProducao', lookForChildComponents!.resultadoFinalProducao)
+
+    if(lookForChildComponents.message === 'Valores Reservados'){
+        return res.json({message : 'Valores Reservados'})
+    } else {
+        return res.json({message : 'Algo deu errado'})
+    }
+    //return res.json({ message: 'codeApont 1 setup iniciado' })
     // if (message !== 'codeApont 1 setup iniciado') {
     //     await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
     //     VALUES (GETDATE(), '${funcionario}', ${dados.numOdf}, '${codigoPeca}', ${queryGrupoOdf[0].REVISAO},'${dados.numOper}', '${dados.numOper}', 'D', '${dados.codMaq}',0, 0, 0, '${funcionario}', '0', 1, '1', 'Ini Set.', 0, 0, '1', 0, 0 )`)

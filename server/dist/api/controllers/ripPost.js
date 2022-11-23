@@ -19,7 +19,7 @@ const ripPost = async (req, res) => {
     let NUMERO_OPERACAO = (0, decryptedOdf_1.decrypted)(String(req.cookies['NUMERO_OPERACAO'])) || null;
     let CODIGO_MAQUINA = (0, decryptedOdf_1.decrypted)(String((req.cookies['CODIGO_MAQUINA']))) || null;
     let codigoPeca = (0, decryptedOdf_1.decrypted)(String((req.cookies['CODIGO_PECA']))) || null;
-    let funcionario = (0, decryptedOdf_1.decrypted)(String((req.cookies['FUNCIONARIO']))) || null;
+    let funcionario = (0, decryptedOdf_1.decrypted)(String((req.cookies['employee']))) || null;
     let revisao = (0, decryptedOdf_1.decrypted)(String((req.cookies['REVISAO']))) || null;
     let qtdLibMax = (0, decryptedOdf_1.decrypted)(String((req.cookies['qtdLibMax']))) || null;
     const updateQtyQuery = [];

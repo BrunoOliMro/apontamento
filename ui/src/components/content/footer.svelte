@@ -1,7 +1,7 @@
 <script>
   let imageLoader = "/images/axonLoader.gif";
   let dadosOdf = [];
-  let urlString = `/api/v1/odf`;
+  let urlString = `/api/v1/odfData`;
   let horaInicio = "";
   let horaFinal = "";
 

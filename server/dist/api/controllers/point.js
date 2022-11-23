@@ -23,7 +23,7 @@ const point = async (req, res) => {
     console.log("linha 21 /point.ts/", qtdBoas);
     var codigoFilho = ((req.cookies['codigoFilho'])) || null;
     var reservedItens = (req.cookies['reservedItens']) || null;
-    let condic = String((0, sanitize_1.sanitize)(req.cookies['CONDIC'])) || null;
+    let condic = String((0, sanitize_1.sanitize)(req.cookies['condic'])) || null;
     let NUMERO_ODF = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))) || null;
     NUMERO_ODF = Number(NUMERO_ODF);
     let NUMERO_OPERACAO = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"]))) || null;
@@ -32,8 +32,9 @@ const point = async (req, res) => {
     let qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['qtdLibMax']))) || null;
     let MAQUINA_PROXIMA = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['MAQUINA_PROXIMA']))) || null;
     let OPERACAO_PROXIMA = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['OPERACAO_PROXIMA']))) || null;
-    let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
+    let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['employee']))) || null;
     let revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
+    let numite = (req.cookies['codigoFilho']) || null;
     const updateQtyQuery = [];
     let startRip = Number(new Date()) || 0;
     res.cookie("startRip", startRip);
@@ -102,21 +103,25 @@ const point = async (req, res) => {
         codigoFilho = [];
     }
     console.log("linha 144 Condic /point.ts/", condic);
+    console.log("linha 143 /point.ts/", numite);
+    console.log("linha 144 /point.ts/", reservedItens);
+    console.log("linha 145 /point.ts/", codigoFilho);
     try {
         if (condic === 'P') {
             try {
+                let queryyyy;
                 for (const [i, qtdItem] of reservedItens.entries()) {
-                    console.log("atualizando a quantidade em itens filhos /linha 153 point.ts/", i);
-                    let updateQuery = `UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}' `;
+                    console.log("atualizando a quantidade em itens filhos /linha 153 point.ts/", qtdItem);
+                    let updateQuery = `UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE - ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}' `;
                     updateQtyQuery.push((0, update_1.update)(updateQuery));
                 }
-                await connection.query(updateQtyQuery.join("\n"));
+                queryyyy = await connection.query(updateQtyQuery.join("\n"));
+                console.log("linha 162/ point.ts /", queryyyy);
             }
             catch (err) {
-                return res.json({ message: 'erro ao efetivar estoque das peças filhas ' });
+                return res.json({ message: 'erro ao efetivar estoque das peças filhas' });
             }
         }
-        console.log("linha 147", condic);
     }
     catch (err) {
         console.log(err);

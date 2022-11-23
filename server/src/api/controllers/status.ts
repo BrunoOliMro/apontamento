@@ -7,7 +7,7 @@ export const status: RequestHandler = async (req, res) => {
     let numpec = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
     let maquina = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
     let tempoAgora = new Date().getTime() || 0
-    let startTime = decrypted(String(sanitize(req.cookies['starterBarcode']))) || null;
+    let startTime = decrypted(String(sanitize(req.cookies['startSetupTime']))) || null;
     let startTimeNow: number = Number(startTime) || 0;
     let tempoDecorrido = Number(tempoAgora - startTimeNow) || 0;
     let lookForTimer = `SELECT TOP 1 EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${numpec}' AND MAQUIN = '${maquina}' ORDER BY REVISAO DESC`

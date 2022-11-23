@@ -10,11 +10,11 @@ import { decrypted } from "../utils/decryptedOdf";
 export const getPoint: RequestHandler = async (req, res) => {
     const connection = await mssql.connect(sqlConfig);
     let NUMERO_ODF = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
-    let qtdBoas = decrypted(String(sanitize(req.cookies["qtdBoas"]))) || null;
+    let qtdBoas: number = decrypted(String(sanitize(req.cookies["qtdBoas"]))) || null;
     const NUMERO_OPERACAO = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
     const CODIGO_MAQUINA = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
     let codigoPeca = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
-    let funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+    let funcionario = decrypted(String(sanitize(req.cookies['employee']))) || null
     let qtdProduzir = decrypted(String(sanitize(req.cookies['qtdProduzir']))) || null
     const updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`
     var address;
@@ -38,6 +38,37 @@ export const getPoint: RequestHandler = async (req, res) => {
         //Caso a operação seja 999 fará baixa no estoque
         console.log("linha 38 /getPoint /", NUMERO_OPERACAO);
         if (NUMERO_OPERACAO === "00999") {
+                // Verificar onde é possível alocar essas peças
+                // condic === 'M' é peso
+                // condic === 'D' é tempo
+                // Pra fazer essa conta precisa de condic === "M"
+                // Ambos estao na coluna EXECUT
+                let y = `SELECT TOP 1 CONDIC, EXECUT, COMPRIMENTO, LARGURA FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${codigoPeca}' AND CONDIC = 'M'`
+                const x = await select(y)
+
+                let pesoUnidade = x[0].EXECUT
+                let comprimento = x[0].COMPRIMENTO
+                let largura = x[0].LARGURA
+                let areaCubicaMax = 36000000
+                let areaMax = 800
+                let pesoMax = 25
+
+                let peso = pesoUnidade * qtdProduzir
+                if (peso < pesoMax) {
+                    console.log("Passou no primeiro teste ...");
+                }
+
+                let area = comprimento + largura
+                if(area <= areaMax){
+                    console.log("passou no segundo teste ...");
+                }
+
+                let areaCubica = comprimento * largura * qtdProduzir
+                if(areaCubica < areaCubicaMax){
+                    console.log("passou no terceiro teste ...");
+                }
+
+
             //Caso seja diferente de "EX"
             if (CODIGO_MAQUINA !== 'EX002') {
                 let condicional = `= '${codigoPeca}'`
@@ -54,9 +85,6 @@ export const getPoint: RequestHandler = async (req, res) => {
                     secondSelectAddress = []
                 }
 
-
-                console.log('LINHA 66', fisrtSelectAddress);
-                console.log("linha 67", secondSelectAddress);
                 let fisrtReqAddress = fisrtSelectAddress.map((callback: any) => callback.QUANTIDADE)
                 let secondReqAddress = secondSelectAddress.map((callback: any) => callback.QUANTIDADE)
 
@@ -66,62 +94,24 @@ export const getPoint: RequestHandler = async (req, res) => {
                 let indiceDoArrayDeOdfs: number = fisrtReqAddress.findIndex((callback: any) => callback === smallerNumber)
                 let indice: number = secondReqAddress.findIndex((callback: any) => callback === small)
 
-                // condic === 'M' é peso
-                // condic === 'D' é tempo
-                // Pra fazer essa conta precisa de condic === "M"
-                // Ambos estao na coluna EXECUT
-                console.log("linha 73", codigoPeca);
-                let y = `SELECT TOP 1 CONDIC, EXECUT, COMPRIMENTO, LARGURA FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${codigoPeca}' AND CONDIC = 'M'`
-                const x = await select(y)
-
-
-                let pesoUnidade = x[0].EXECUT
-                let comprimento = x[0].COMPRIMENTO
-                let largura = x[0].LARGURA
-                let areaCubicaMax = 36000000
-                let areaMax = 800
-                let pesoMax = 25
-
-                console.log('linha pesoUnidade', pesoUnidade);
-                console.log('linnha comprimento', comprimento);
-                console.log("linha largura", largura);
-
-                let peso = pesoUnidade * qtdProduzir
-                if (peso < pesoMax) {
-                    console.log("Passou no primeiro teste de estoque ...");
-                }
-
-                let area = comprimento + largura
-                console.log('linha 90', area);
-                if(area <= areaMax){
-                    console.log("passou no segundo teste ...");
-                }
-
-                let areaCubica = comprimento * largura * qtdProduzir
-                console.log("linha 96", areaCubica);
-                if(areaCubica < areaCubicaMax){
-                    console.log("passou no terceiro teste ...");
-                }
-
                 let addressToStorage = {}
 
                 if (secondSelectAddress.length <= 0) {
                     addressToStorage = {
-                        message: 'endereço com sucesso',
+                        message: 'Address located',
                         address: fisrtSelectAddress[indiceDoArrayDeOdfs].ENDERECO,
                     }
-                    return res.json(addressToStorage)
+                    address = addressToStorage
+                    //return res.json(addressToStorage)
                 }
 
                 if (fisrtSelectAddress.length <= 0) {
                     addressToStorage = {
-                        message: 'endereço com sucesso',
+                        message: 'Address located',
                         address: secondSelectAddress[indice].ENDERECO
                     }
-                    return res.json(addressToStorage)
-                } else {
-                    console.log('redirecionando para rip...');
-                    return res.redirect('/#/rip')
+                    address = addressToStorage
+                    //return res.json(addressToStorage)
                 }
             }
 
@@ -146,7 +136,6 @@ export const getPoint: RequestHandler = async (req, res) => {
                     fisrtSelectAddress = []
                 }
 
-                console.log('LINHA 112', fisrtSelectAddress);
                 const fisrtAdd = fisrtSelectAddress.map((callback: any) => callback.QUANTIDADE)
                 const secondAdd = secondSelectAddress.map((callback: any) => callback.QUANTIDADE)
 
@@ -159,26 +148,23 @@ export const getPoint: RequestHandler = async (req, res) => {
                 let addressToStorage;
                 if (secondSelectAddress.length <= 0) {
                     addressToStorage = {
-                        message: 'endereço com sucesso',
+                        message: 'Address located',
                         address: fisrtSelectAddress[indiceDoArrayDeOdfs].ENDERECO,
                     }
-                    return res.json(addressToStorage)
+                    address = addressToStorage
+                    //return res.json(addressToStorage)
                 }
 
                 if (fisrtSelectAddress.length <= 0) {
                     addressToStorage = {
-                        message: 'endereço com sucesso',
+                        message: 'Address located',
                         addresss: secondSelectAddress[indice].ENDERECO
                     }
-                    return res.json(addressToStorage)
-                } else {
-                    return res.json({ message: 'sem endereço' })
+                    address = addressToStorage
+                   // return res.json(addressToStorage)
                 }
             }
             try {
-                // const hisReal = await connection.query(`SELECT TOP 1  * FROM HISREAL  WHERE 1 = 1 AND CODIGO = '${codigoPeca}' ORDER BY DATA DESC`)
-                //     .then(record => record.recordset)
-
                 const lookForHisReal = `SELECT TOP 1  * FROM HISREAL  WHERE 1 = 1 AND CODIGO = '${codigoPeca}' ORDER BY DATA DESC`
                 const resultQuery = await select(lookForHisReal)
                 try {
@@ -197,37 +183,46 @@ export const getPoint: RequestHandler = async (req, res) => {
                     return res.json({ message: 'erro inserir em hisreal' })
                 }
 
-                console.log("linha 155 /getPoint/", NUMERO_OPERACAO);
                 try {
-                    console.log("linha 157 /getPoint/");
+                    let updateStorage;
                     if (NUMERO_OPERACAO === "00999") {
-                        const x = await update(updateQuery)
-                        console.log("linha 146 /getPoint/", x);
+                        updateStorage = await update(updateQuery)
                     }
 
-                    let objRes: any = {
-                        address: address,
-                        message: 'endereço com sucesso'
+                    console.log("linha 197 /getPoint.ts/", updateStorage);
+
+
+                    if(updateStorage === 'Update sucess' && address === 'No address'){
+                        console.log("linha 201");
+                        return res.json({ message: 'No address' })
                     }
-                    if (address === undefined) {
-                        return res.json({ message: 'sem endereço' })
+
+                    let responseObj: any = {
+                        address,
+                        message: 'Address located'
+                    }
+
+                    if (!address) {
+                        console.log("linha 210 /getPoint.ts/ ");
+                        return res.json({ message: 'No address' })
                     } else {
-                        return res.json(objRes)
+                        console.log("linha 214 /getPoint.ts/ ");
+                        return res.json(responseObj)
                     }
                 } catch (error) {
                     console.log(error);
-                    return res.json({ message: 'erro ao inserir estoque' })
+                    return res.json({ message: 'Error on updating storage' })
                 }
 
             } catch (error) {
                 console.log(error);
-                return res.json({ message: 'erro ao em localizar espaço' })
+                return res.json({ message: 'Error on locating space' })
             }
         } else {
-            return res.json({ message: 'sem endereço' })
+            return res.json({ message: 'No address' })
         }
     } catch (error) {
         console.log('linha 185', error);
-        return res.json({ message: 'erro ao localizar os dados em hisreal' })
+        return res.json({ message: 'Error on locating space' })
     }
 }

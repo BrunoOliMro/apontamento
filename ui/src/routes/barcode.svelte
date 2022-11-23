@@ -3,12 +3,12 @@
   import ModalConfirmation from "../../src/components/modal/modalConfirmation.svelte";
   import blockForbiddenChars from "../routes/presanitize";
   let imageLoader = "/images/axonLoader.gif";
-  let codigoBarrasReturn = "";
-  let codigoBarras = "";
-  let urlS = `/api/v1/apontamento`;
-  let urlBagde = `/api/v1/apontamentoCracha`;
+  let barcodeReturn = "";
+  let barcode = "";
+  let urlS = `/api/v1/odf`;
+  let urlBagde = `/api/v1/badge`;
   let supervisorApi = "api/v1/supervisorParada";
-  let cracha = "";
+  let badge = "";
   let showmodal = false;
   let showCorr = false;
   let returnedValueApi = `/api/v1/returnedValue`;
@@ -75,7 +75,28 @@
     }
   };
 
+  function verifyBarcodeBefore(event) {
+
+    if(!barcode && barcode.length > 0){
+      return modalMessage = "Algo deu errado";
+    }
+
+    if (event.key === "Enter" && barcode.length >= 16) {
+      doPost();
+    }
+
+  }
+
   const doPost = async () => {
+
+    if(!barcode){
+      return modalMessage = 'Algo deu errado'
+    }
+
+    if(barcode.length <16){
+      return modalMessage = 'Algo deu errado'
+    }
+
     loader = true;
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
@@ -83,10 +104,15 @@
       method: "POST",
       headers: headers,
       body: JSON.stringify({
-        codigoBarras,
+        barcode,
       }),
     }).then((res) => res.json());
     console.log("linha 89 res /barcode/", res);
+
+    if(res.message === 'Valores Reservados'){
+      window.location.href = "/#/ferramenta";
+      location.reload();
+    }
 
     if (res.message === "Quantidade para reserva inválida") {
       modalMessage = "Quantidade para reserva inválida";
@@ -95,7 +121,7 @@
 
     if (res.message === "Não há item para reservar") {
       modalMessage = "Não há item para reservar";
-      window.location.href = "/#/codigobarras/apontamento";
+      window.location.href = "/#/ferramenta";
       location.reload();
     }
 
@@ -145,18 +171,14 @@
     }
   };
 
-  function writeOnHand(event) {
-    if (event.key === "Enter" && codigoBarras.length >= 16) {
-      doPost();
-    }
-  }
 
   function checkBeforeBadge(event) {
-    if (cracha.length >= 6 && event.key === "Enter") {
-      if (cracha === "000000") {
-        modalMessage = "Crachá inválido";
+    if (badge.length >= 6 && event.key === "Enter") {
+      if(!badge || badge === "000000" || badge === "0" || badge === '0' || badge === '00' || badge === '000' || badge === '0000' || badge === '00000'){
+        modalMessage = 'Crachá inválido'
+      } else {
+        checkBagde();
       }
-      checkBagde();
     }
   }
 
@@ -167,22 +189,24 @@
     const res = await fetch(urlBagde, {
       method: "POST",
       body: JSON.stringify({
-        cracha,
+        badge,
       }),
       headers,
     }).then((res) => res.json());
     loader = false;
-    console.log("linha 165", res);
-    if (res.message === "cracha encontrado") {
+    if (res.message === "Badge found") {
       showBarcode = true;
       showBadge = false;
       showBreadcrumb = true;
     }
-    if (res.message === "cracha não encontrado") {
+    if (res.message === "Badge not found") {
       modalMessage = "Crachá não encontrado";
     }
-    if (res.message === "codigo de matricula vazia") {
+    if (res.message === "Empty badge") {
       modalMessage = "Crachá vazio";
+    }
+    if(res.message === 'Error on searching for badge'){
+      modalMessage = 'Erro ao localizar crachá'
     }
   };
 
@@ -192,6 +216,7 @@
     window.location.href = "/#/codigobarras";
     location.reload();
   }
+
   function returnValue() {
     if (showmodal === false) {
       showmodal = true;
@@ -208,7 +233,7 @@
         returnValueStorage: returnValueStorage,
         supervisor: supervisor,
         quantity: quantity,
-        codigoBarrasReturn: !codigoBarrasReturn ? "" : codigoBarrasReturn,
+        barcodeReturn: !barcodeReturn ? "" : barcodeReturn,
       }),
     }).then((res) => res.json());
     loader = false;
@@ -276,8 +301,8 @@
     showBreadcrumb = false;
     showBarcode = false;
     showBadge = true;
-    cracha = "";
-    codigoBarras = "";
+    badge = "";
+    barcode = "";
     modalMessage = "";
   }
   let back = "/images/icons8-go-back-24.png";
@@ -413,9 +438,9 @@
           <input
             autocomplete="off"
             autofocus
-            on:keypress={writeOnHand}
+            on:keypress={verifyBarcodeBefore}
             on:input|preventDefault={blockForbiddenChars}
-            bind:value={codigoBarras}
+            bind:value={barcode}
             onkeyup="this.value = this.value.toUpperCase()"
             name="MATRIC"
             id="MATRIC"
@@ -434,7 +459,7 @@
             autofocus
             on:keypress={checkBeforeBadge}
             on:input|preventDefault={blockForbiddenChars}
-            bind:value={cracha}
+            bind:value={badge}
             onkeyup="this.value = this.value.toUpperCase()"
             name="MATRIC"
             id="MATRIC"
@@ -495,9 +520,9 @@
           autocomplete="off"
           class="returnInput"
           onkeyup="this.value = this.value.toUpperCase()"
-          bind:value={codigoBarrasReturn}
-          id="codigoBarras"
-          name="codigoBarras"
+          bind:value={barcodeReturn}
+          id="barcode"
+          name="barcode"
           type="text"
         />
 

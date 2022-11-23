@@ -4,7 +4,7 @@
     import TableRipRow from "../components/Tables/TableRipRow.svelte";
     let seq = "Seq";
     let extraColumns = [];
-    let urlS = `/api/v1/lancamentoRip`;
+    let urlS = `/api/v1/pointRip`;
     let urlString = `/api/v1/rip`;
     let Subtitle = "RIP - RELATÓRIO DE INSPEÇÃO DE PROCESSOS";
     let showEnd = false;

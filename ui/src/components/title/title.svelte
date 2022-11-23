@@ -4,9 +4,9 @@
     import StopButton from "../buttons/stopButton.svelte";
     import ModalCloseConfirm from "../modal/modalCloseConfirm.svelte";
     import ModalConfirmation from "../modal/modalConfirmation.svelte";
-    let apiMotivoParada = "api/v1/motivoParada";
+    let apiMotivoParada = "api/v1/stopMotives";
     let title = "APONTAMENTO";
-    let postParada = `api/v1/postParada`;
+    let postParada = `api/v1/stopPost`;
     let stopModal = false;
     let showMaqPar = false;
     let value;

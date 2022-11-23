@@ -9,7 +9,7 @@ export const odfData: RequestHandler = async (req, res) => {
     numeroOdf = Number(numeroOdf)
     const numOper: string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
     const numOpeNew = String(numOper!.toString().replaceAll(' ', "0")) || null
-    const funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+    const funcionario = decrypted(String(sanitize(req.cookies['employee']))) || null
 
     const lookForOdfData = `SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${numeroOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
     try {

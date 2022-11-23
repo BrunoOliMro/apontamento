@@ -10,8 +10,8 @@
     // import retrabalhar from "../content/feed.svelte";
     // import faltante from "../content/feed.svelte";
     // import Title from "../title/title.svelte";
-    let apiMotivoParada = "api/v1/motivoParada";
-    let postParada = `/api/v1/postParada`;
+    let apiMotivoParada = "api/v1/badFeedMotives";
+    let postParada = `/api/v1/stopPost`;
     //let dadosOdf = [];
     let dados = [];
     let value = "";

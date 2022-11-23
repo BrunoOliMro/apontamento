@@ -1,3 +1,3 @@
 import { RequestHandler } from "express";
-export declare const pointBagde: RequestHandler;
+export declare const searchBagde: RequestHandler;
 //# sourceMappingURL=pointBagde.d.ts.map

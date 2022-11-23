@@ -8,7 +8,7 @@ import { decrypted } from "../utils/decryptedOdf";
 export const stopPost: RequestHandler = async (req, res) => {
     const connection = await mssql.connect(sqlConfig);
     let numeroOdf = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
-    let funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+    let funcionario = decrypted(String(sanitize(req.cookies['employee']))) || null
     let codigoPeca = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
     let revisao = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
     let numeroOperacao = decrypted(String(req.cookies['NUMERO_OPERACAO'])) || null
@@ -17,7 +17,7 @@ export const stopPost: RequestHandler = async (req, res) => {
 
     //Encerra o processo todo
     let end = new Date().getTime() || 0;
-    let start = decrypted(String(sanitize(req.cookies["starterBarcode"]))) || 0
+    let start = decrypted(String(sanitize(req.cookies["startSetupTime"]))) || 0
     let newStart: number
     newStart = Number(start)
     let final = Number(end - newStart) || 0

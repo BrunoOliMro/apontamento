@@ -2,7 +2,7 @@
   // @ts-nocheck
   import ModalConfirmation from "../components/modal/modalConfirmation.svelte";
   let imageLoader = "/images/axonLoader.gif";
-  let urlString = `/api/v1/ferramenta`;
+  let urlString = `/api/v1/tools`;
   let urlFer = `/api/v1/ferselecionadas`;
   let tools = [];
   let loader = true;
@@ -16,11 +16,12 @@
   async function ferSelected() {
     const res = await fetch(urlFer);
     fer = await res.json();
-    console.log("res", fer);
+
     if (fer.message === "ferramentas selecionadas com successo") {
       window.location.href = "/#/codigobarras/apontamento";
       location.reload(); 
     }
+    
   }
 
   async function getTools() {
@@ -38,22 +39,22 @@
       ferSelected();
     }
 
-    if (tools.message === `codeApont 3 prod iniciado`) {
-      message = `codeApont 3 prod iniciado`;
-      window.location.href = "/#/codigobarras/apontamento";
-    }
+    // if (tools.message === `codeApont 3 prod iniciado`) {
+    //   message = `codeApont 3 prod iniciado`;
+    //   window.location.href = "/#/codigobarras/apontamento";
+    // }
 
-    if (tools.message === "codeApont 5 maquina parada") {
-      message = "codeApont 5 maquina parada";
-      window.location.href = "/#/codigobarras";
-      location.reload();
-    }
+    // if (tools.message === "codeApont 5 maquina parada") {
+    //   message = "codeApont 5 maquina parada";
+    //   window.location.href = "/#/codigobarras";
+    //   location.reload();
+    // }
 
-    if (tools.message === `codeApont 6 processo finalizado`) {
-      message = `codeApont 6 processo finalizado`;
-      window.location.href = "/#/codigobarras";
-      location.reload();
-    }
+    // if (tools.message === `codeApont 6 processo finalizado`) {
+    //   message = `codeApont 6 processo finalizado`;
+    //   window.location.href = "/#/codigobarras";
+    //   location.reload();
+    // }
 
     if(tools.message === 'Data not found'){
       window.location.href = "/#/codigobarras/apontamento";

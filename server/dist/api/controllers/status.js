@@ -11,7 +11,7 @@ const status = async (req, res) => {
     let numpec = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA']))) || null;
     let maquina = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
     let tempoAgora = new Date().getTime() || 0;
-    let startTime = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['starterBarcode']))) || null;
+    let startTime = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['startSetupTime']))) || null;
     let startTimeNow = Number(startTime) || 0;
     let tempoDecorrido = Number(tempoAgora - startTimeNow) || 0;
     let lookForTimer = `SELECT TOP 1 EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${numpec}' AND MAQUIN = '${maquina}' ORDER BY REVISAO DESC`;

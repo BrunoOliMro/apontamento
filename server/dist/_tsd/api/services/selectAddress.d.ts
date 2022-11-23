@@ -1,3 +1,3 @@
 import mssql from 'mssql';
-export declare const selectAddress: (condicional: string, percentage: number) => Promise<"odf nao encontrada" | mssql.IRecordSet<any> | "Algo deu errado">;
+export declare const selectAddress: (condicional: string, percentage: number) => Promise<mssql.IRecordSet<any> | "Algo deu errado" | "odf nao encontrada">;
 //# sourceMappingURL=selectAddress.d.ts.map

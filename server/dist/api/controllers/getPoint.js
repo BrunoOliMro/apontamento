@@ -18,7 +18,7 @@ const getPoint = async (req, res) => {
     const NUMERO_OPERACAO = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_OPERACAO']))) || null;
     const CODIGO_MAQUINA = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
     let codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA']))) || null;
-    let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO']))) || null;
+    let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['employee']))) || null;
     let qtdProduzir = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['qtdProduzir']))) || null;
     const updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`;
     var address;
@@ -40,6 +40,26 @@ const getPoint = async (req, res) => {
     try {
         console.log("linha 38 /getPoint /", NUMERO_OPERACAO);
         if (NUMERO_OPERACAO === "00999") {
+            let y = `SELECT TOP 1 CONDIC, EXECUT, COMPRIMENTO, LARGURA FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${codigoPeca}' AND CONDIC = 'M'`;
+            const x = await (0, select_1.select)(y);
+            let pesoUnidade = x[0].EXECUT;
+            let comprimento = x[0].COMPRIMENTO;
+            let largura = x[0].LARGURA;
+            let areaCubicaMax = 36000000;
+            let areaMax = 800;
+            let pesoMax = 25;
+            let peso = pesoUnidade * qtdProduzir;
+            if (peso < pesoMax) {
+                console.log("Passou no primeiro teste ...");
+            }
+            let area = comprimento + largura;
+            if (area <= areaMax) {
+                console.log("passou no segundo teste ...");
+            }
+            let areaCubica = comprimento * largura * qtdProduzir;
+            if (areaCubica < areaCubicaMax) {
+                console.log("passou no terceiro teste ...");
+            }
             if (CODIGO_MAQUINA !== 'EX002') {
                 let condicional = `= '${codigoPeca}'`;
                 let condicional2 = `IS NULL`;
@@ -52,58 +72,26 @@ const getPoint = async (req, res) => {
                 if (!secondSelectAddress || secondSelectAddress === 'odf nao encontrada') {
                     secondSelectAddress = [];
                 }
-                console.log('LINHA 66', fisrtSelectAddress);
-                console.log("linha 67", secondSelectAddress);
                 let fisrtReqAddress = fisrtSelectAddress.map((callback) => callback.QUANTIDADE);
                 let secondReqAddress = secondSelectAddress.map((callback) => callback.QUANTIDADE);
                 let smallerNumber = Math.min(...fisrtReqAddress);
                 let small = Math.min(...secondReqAddress);
                 let indiceDoArrayDeOdfs = fisrtReqAddress.findIndex((callback) => callback === smallerNumber);
                 let indice = secondReqAddress.findIndex((callback) => callback === small);
-                console.log("linha 73", codigoPeca);
-                let y = `SELECT TOP 1 CONDIC, EXECUT, COMPRIMENTO, LARGURA FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${codigoPeca}' AND CONDIC = 'M'`;
-                const x = await (0, select_1.select)(y);
-                let pesoUnidade = x[0].EXECUT;
-                let comprimento = x[0].COMPRIMENTO;
-                let largura = x[0].LARGURA;
-                let areaCubicaMax = 36000000;
-                let areaMax = 800;
-                let pesoMax = 25;
-                console.log('linha pesoUnidade', pesoUnidade);
-                console.log('linnha comprimento', comprimento);
-                console.log("linha largura", largura);
-                let peso = pesoUnidade * qtdProduzir;
-                if (peso < pesoMax) {
-                    console.log("Passou no primeiro teste de estoque ...");
-                }
-                let area = comprimento + largura;
-                console.log('linha 90', area);
-                if (area <= areaMax) {
-                    console.log("passou no segundo teste ...");
-                }
-                let areaCubica = comprimento * largura * qtdProduzir;
-                console.log("linha 96", areaCubica);
-                if (areaCubica < areaCubicaMax) {
-                    console.log("passou no terceiro teste ...");
-                }
                 let addressToStorage = {};
                 if (secondSelectAddress.length <= 0) {
                     addressToStorage = {
-                        message: 'endereço com sucesso',
+                        message: 'Address located',
                         address: fisrtSelectAddress[indiceDoArrayDeOdfs].ENDERECO,
                     };
-                    return res.json(addressToStorage);
+                    address = addressToStorage;
                 }
                 if (fisrtSelectAddress.length <= 0) {
                     addressToStorage = {
-                        message: 'endereço com sucesso',
+                        message: 'Address located',
                         address: secondSelectAddress[indice].ENDERECO
                     };
-                    return res.json(addressToStorage);
-                }
-                else {
-                    console.log('redirecionando para rip...');
-                    return res.redirect('/#/rip');
+                    address = addressToStorage;
                 }
             }
             if (CODIGO_MAQUINA === 'EX002') {
@@ -122,7 +110,6 @@ const getPoint = async (req, res) => {
                 if (typeof (secondSelectAddress) === 'string') {
                     fisrtSelectAddress = [];
                 }
-                console.log('LINHA 112', fisrtSelectAddress);
                 const fisrtAdd = fisrtSelectAddress.map((callback) => callback.QUANTIDADE);
                 const secondAdd = secondSelectAddress.map((callback) => callback.QUANTIDADE);
                 let smallerNumber = Math.min(...fisrtAdd);
@@ -132,20 +119,17 @@ const getPoint = async (req, res) => {
                 let addressToStorage;
                 if (secondSelectAddress.length <= 0) {
                     addressToStorage = {
-                        message: 'endereço com sucesso',
+                        message: 'Address located',
                         address: fisrtSelectAddress[indiceDoArrayDeOdfs].ENDERECO,
                     };
-                    return res.json(addressToStorage);
+                    address = addressToStorage;
                 }
                 if (fisrtSelectAddress.length <= 0) {
                     addressToStorage = {
-                        message: 'endereço com sucesso',
+                        message: 'Address located',
                         addresss: secondSelectAddress[indice].ENDERECO
                     };
-                    return res.json(addressToStorage);
-                }
-                else {
-                    return res.json({ message: 'sem endereço' });
+                    address = addressToStorage;
                 }
             }
             try {
@@ -167,41 +151,46 @@ const getPoint = async (req, res) => {
                     console.log('linha 151', error);
                     return res.json({ message: 'erro inserir em hisreal' });
                 }
-                console.log("linha 155 /getPoint/", NUMERO_OPERACAO);
                 try {
-                    console.log("linha 157 /getPoint/");
+                    let updateStorage;
                     if (NUMERO_OPERACAO === "00999") {
-                        const x = await (0, update_1.update)(updateQuery);
-                        console.log("linha 146 /getPoint/", x);
+                        updateStorage = await (0, update_1.update)(updateQuery);
                     }
-                    let objRes = {
-                        address: address,
-                        message: 'endereço com sucesso'
+                    console.log("linha 197 /getPoint.ts/", updateStorage);
+                    if (updateStorage === 'Update sucess' && address === 'No address') {
+                        console.log("linha 201");
+                        return res.json({ message: 'No address' });
+                    }
+                    let responseObj = {
+                        address,
+                        message: 'Address located'
                     };
-                    if (address === undefined) {
-                        return res.json({ message: 'sem endereço' });
+                    if (!address) {
+                        console.log("linha 210 /getPoint.ts/ ");
+                        return res.json({ message: 'No address' });
                     }
                     else {
-                        return res.json(objRes);
+                        console.log("linha 214 /getPoint.ts/ ");
+                        return res.json(responseObj);
                     }
                 }
                 catch (error) {
                     console.log(error);
-                    return res.json({ message: 'erro ao inserir estoque' });
+                    return res.json({ message: 'Error on updating storage' });
                 }
             }
             catch (error) {
                 console.log(error);
-                return res.json({ message: 'erro ao em localizar espaço' });
+                return res.json({ message: 'Error on locating space' });
             }
         }
         else {
-            return res.json({ message: 'sem endereço' });
+            return res.json({ message: 'No address' });
         }
     }
     catch (error) {
         console.log('linha 185', error);
-        return res.json({ message: 'erro ao localizar os dados em hisreal' });
+        return res.json({ message: 'Error on locating space' });
     }
 };
 exports.getPoint = getPoint;
