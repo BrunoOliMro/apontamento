@@ -24,6 +24,9 @@ const point = async (req, res) => {
     var codigoFilho = ((req.cookies['codigoFilho'])) || null;
     var reservedItens = (req.cookies['reservedItens']) || null;
     let condic = String((0, sanitize_1.sanitize)(req.cookies['condic'])) || null;
+    console.log("linha 27 /codigoFilho/", codigoFilho);
+    console.log("linha 27 /reservedItens/", reservedItens);
+    console.log("linha 27 /condic/", condic);
     let NUMERO_ODF = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))) || null;
     NUMERO_ODF = Number(NUMERO_ODF);
     let NUMERO_OPERACAO = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"]))) || null;
@@ -102,30 +105,51 @@ const point = async (req, res) => {
         condic = "D";
         codigoFilho = [];
     }
-    console.log("linha 144 Condic /point.ts/", condic);
-    console.log("linha 143 /point.ts/", numite);
-    console.log("linha 144 /point.ts/", reservedItens);
-    console.log("linha 145 /point.ts/", codigoFilho);
-    try {
-        if (condic === 'P') {
-            try {
-                let queryyyy;
-                for (const [i, qtdItem] of reservedItens.entries()) {
-                    console.log("atualizando a quantidade em itens filhos /linha 153 point.ts/", qtdItem);
-                    let updateQuery = `UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE - ${qtdItem} WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}' `;
-                    updateQtyQuery.push((0, update_1.update)(updateQuery));
+    if (condic === 'P') {
+        try {
+            let query;
+            let min = Math.min(...reservedItens);
+            let diferença = min - valorTotalApontado;
+            if (valorTotalApontado < min) {
+                try {
+                    console.log("Atualizando estoque...");
+                    console.log("linha 163/diferença/", diferença);
+                    for (const [i] of reservedItens.entries()) {
+                        let updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${diferença} WHERE 1 = 1 AND CODIGO = '${codigoFilho[i]}' `;
+                        updateQtyQuery.push(updateQuery);
+                    }
+                    query = await connection.query(updateQtyQuery.join("\n")).then(result => result.rowsAffected);
+                    let minValue = Math.min(...query);
+                    if (minValue <= 0) {
+                        return res.json({ message: 'Algo deu errado' });
+                    }
                 }
-                queryyyy = await connection.query(updateQtyQuery.join("\n"));
-                console.log("linha 162/ point.ts /", queryyyy);
+                catch (error) {
+                    console.log("linha 180 /point.ts/", error);
+                    return res.json({ message: 'Algo deu errado' });
+                }
             }
-            catch (err) {
-                return res.json({ message: 'erro ao efetivar estoque das peças filhas' });
+            if (query) {
+                console.log("Deletando cst alocacao...");
+                try {
+                    for (const [i] of reservedItens.entries()) {
+                        let updateQuery = `DELETE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}' `;
+                        updateQtyQuery.push(updateQuery);
+                    }
+                    let deletQuery = await connection.query(updateQtyQuery.join("\n")).then(result => result.rowsAffected);
+                    if (!deletQuery) {
+                        return res.json({ message: 'Algo deu errado' });
+                    }
+                }
+                catch (error) {
+                    console.log("linha 185 /selectHasP/", error);
+                    return res.json({ message: 'Algo deu errado' });
+                }
             }
         }
-    }
-    catch (err) {
-        console.log(err);
-        return res.json({ message: 'erro ao verificar o "P' });
+        catch (err) {
+            return res.json({ message: 'erro ao efetivar estoque das peças filhas' });
+        }
     }
     try {
         if (valorTotalApontado < qtdLibMax) {

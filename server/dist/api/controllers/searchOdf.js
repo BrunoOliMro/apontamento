@@ -12,6 +12,8 @@ const decryptedOdf_1 = require("../utils/decryptedOdf");
 const encodedOdf_1 = require("../utils/encodedOdf");
 const encryptOdf_1 = require("../utils/encryptOdf");
 const unravelBarcode_1 = require("../utils/unravelBarcode");
+const mssql_1 = __importDefault(require("mssql"));
+const global_config_1 = require("../../global.config");
 const searchOdf = async (req, res) => {
     const dados = (0, unravelBarcode_1.unravelBarcode)(req.body.barcode);
     let message = String(req.body.message) || null;
@@ -71,7 +73,6 @@ const searchOdf = async (req, res) => {
     qtdLibMax = qtdLib - qntdeJaApontada;
     if (objOdfSelecAnterior === undefined) {
         let updateQuery = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'`;
-        console.log("linha 105 /searchOdf / updating APONTAMENTO LIBERADO = 'S'");
         try {
             const apontLib = await (0, update_1.update)(updateQuery);
             console.log('linha 98 /searchOdf/', apontLib);
@@ -89,6 +90,7 @@ const searchOdf = async (req, res) => {
         return res.json({ message: 'Algo deu errado' });
     }
     let qtdLibString = (0, encryptOdf_1.encrypted)(String(qtdLibMax));
+    console.log("linha 121 quantidade liberada /searchOdf/", qtdLibMax);
     let encryptedOdfNumber = (0, encryptOdf_1.encrypted)(String(objOdfSelecionada['NUMERO_ODF']));
     const encryptedNextMachine = (0, encryptOdf_1.encrypted)(String(codigoMaquinaProxOdf));
     const encryptedNextOperation = (0, encryptOdf_1.encrypted)(String(codMaqProxOdf));
@@ -110,28 +112,53 @@ const searchOdf = async (req, res) => {
     res.cookie('CODIGO_MAQUINA', encryptedMachineCode);
     res.cookie('NUMERO_OPERACAO', operationNumber);
     res.cookie('REVISAO', encryptedRevision);
-    let lookForChildComponents = await (0, selectIfHasP_1.selectToKnowIfHasP)(dados);
+    let lookForChildComponents = await (0, selectIfHasP_1.selectToKnowIfHasP)(dados, qtdLibMax);
+    if (lookForChildComponents.message === 'Rodar insert') {
+        const insertAlocaoQuery = [];
+        let insertAlocacao;
+        const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+        try {
+            if (lookForChildComponents.reserved) {
+                lookForChildComponents.reserved.forEach((qtdItem, i) => {
+                    insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES ('${dados.numOdf}', 40, '105831437', '${lookForChildComponents.codigoFilho[i]}', ${qtdItem}, 'WEUHGV', NULL, GETDATE(), 'CESAR')`);
+                });
+                insertAlocacao = await connection.query(insertAlocaoQuery.join('\n')).then(result => result.rowsAffected);
+                let min = Math.min(...insertAlocacao);
+                console.log("linha 172", min);
+                if (min <= 0) {
+                    return res.json({ message: 'Algo deu errado' });
+                }
+                else {
+                    res.cookie('reservedItens', lookForChildComponents.reserved);
+                    res.cookie('codigoFilho', lookForChildComponents.codigoFilho);
+                    res.cookie('condic', lookForChildComponents.condic);
+                    return res.json({ message: 'Valores Reservados' });
+                }
+            }
+        }
+        catch (error) {
+            console.log("linha 181 /selectHasP/", error);
+            return res.json({ message: 'Algo deu errado' });
+        }
+    }
     if (!lookForChildComponents) {
         return res.json({ message: 'Algo deu errado' });
     }
-    if (lookForChildComponents === 'Algo deu errado') {
+    if (lookForChildComponents.message === 'Algo deu errado') {
         return res.json({ message: 'Algo deu errado' });
     }
-    if (lookForChildComponents === 'Quantidade para reserva inválida') {
-        return res.json({ message: 'Quantidade para reserva inválida' });
-    }
-    if (lookForChildComponents === 'Não há item para reservar') {
-        console.log("linha 168/pointer.ts/");
-        return res.json({ message: 'Não há item para reservar' });
-    }
-    res.cookie('reservedItens', lookForChildComponents.reservedItens);
-    res.cookie('codigoFilho', lookForChildComponents.codigoFilho);
-    res.cookie('condic', lookForChildComponents.condic);
     if (lookForChildComponents.message === 'Valores Reservados') {
+        res.cookie('reservedItens', lookForChildComponents.reserved);
+        res.cookie('codigoFilho', lookForChildComponents.codigoFilho);
+        res.cookie('condic', lookForChildComponents.condic);
         return res.json({ message: 'Valores Reservados' });
     }
-    else {
-        return res.json({ message: 'Algo deu errado' });
+    if (lookForChildComponents.message === 'Quantidade para reserva inválida') {
+        return res.json({ message: 'Quantidade para reserva inválida' });
+    }
+    if (lookForChildComponents.message === 'Não há item para reservar') {
+        console.log("linha 168/pointer.ts/");
+        return res.json({ message: 'Não há item para reservar' });
     }
 };
 exports.searchOdf = searchOdf;

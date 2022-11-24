@@ -106,6 +106,10 @@
         }).then((res) => res.json());
 
         console.log("linha 112 /feed.svelte/", res);
+        if(res.message === 'Algo deu errado'){
+            //window.location.href = `/#/codigobarras`;
+            location.reload();
+        }
 
         if (res.message === "Supervisor inválido") {
             modalMessage = "Supervisor inválido";
@@ -166,7 +170,7 @@
     async function getSpaceFunc() {
         const res = await fetch(urlS);
         getSpace = await res.json();
-        console.log("linha 169", getSpace.address);
+        //console.log("linha 169", getSpace);
         if (getSpace.message === "No address") {
             window.location.href = `/#/rip`;
         }
@@ -543,8 +547,7 @@
             <div class="header">
                 <div class="closed">
                     <h2>
-                        Insira a quantidade no local : {getSpace.address
-                            .address}
+                        Insira a quantidade no local : {getSpace.address}
                     </h2>
                 </div>
                 <button on:keypress={closeRedirect} on:click={closeRedirect}

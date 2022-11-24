@@ -7,6 +7,8 @@ import { decrypted } from '../utils/decryptedOdf';
 import { encoded } from '../utils/encodedOdf';
 import { encrypted } from '../utils/encryptOdf';
 import { unravelBarcode } from '../utils/unravelBarcode'
+import mssql from 'mssql';
+import { sqlConfig } from '../../global.config'
 
 export const searchOdf: RequestHandler = async (req, res) => {
     const dados: any = unravelBarcode(req.body.barcode)
@@ -91,12 +93,12 @@ export const searchOdf: RequestHandler = async (req, res) => {
     // Caso seja a primeira Odf, objOdfSelecAnterior vai vir como undefined
     if (objOdfSelecAnterior === undefined) {
         let updateQuery = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'`
-        console.log("linha 105 /searchOdf / updating APONTAMENTO LIBERADO = 'S'");
-        
-        try{
+        // console.log("linha 105 /searchOdf / updating APONTAMENTO LIBERADO = 'S'");
+
+        try {
             const apontLib = await update(updateQuery)
             console.log('linha 98 /searchOdf/', apontLib);
-        } catch (err){
+        } catch (err) {
             console.log("err linha 100", apontLib);
         }
     }
@@ -116,6 +118,7 @@ export const searchOdf: RequestHandler = async (req, res) => {
 
     //Criptografa os dados da ODF
     let qtdLibString: string = encrypted(String(qtdLibMax))
+    console.log("linha 121 quantidade liberada /searchOdf/", qtdLibMax);
     let encryptedOdfNumber = encrypted(String(objOdfSelecionada['NUMERO_ODF']))
     const encryptedNextMachine = encrypted(String(codigoMaquinaProxOdf))
     const encryptedNextOperation = encrypted(String(codMaqProxOdf))
@@ -149,46 +152,79 @@ export const searchOdf: RequestHandler = async (req, res) => {
     //     return res.json({message : 'codeApont 3 prod iniciado'})
     // }
 
-    let lookForChildComponents: any = await selectToKnowIfHasP(dados)
-
-    // console.log("linha 153 /searchOdf /", lookForChildComponents);
+    let lookForChildComponents: any = await selectToKnowIfHasP(dados, qtdLibMax)
 
     // let numite =  lookForChildComponents.selectKnowHasP.map((element: any )=> element.NUMITE)
 
-    // console.log("linha 158", numite);
+    //console.log("linha 158", lookForChildComponents);
 
-    if(!lookForChildComponents){
+    if (lookForChildComponents.message === 'Rodar insert') {
+        const insertAlocaoQuery: any = [];
+        let insertAlocacao;
+        const connection = await mssql.connect(sqlConfig);
+
+        try {
+            if (lookForChildComponents.reserved) {
+                lookForChildComponents.reserved.forEach((qtdItem: number, i: number) => {
+                    insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES ('${dados.numOdf}', 40, '105831437', '${lookForChildComponents.codigoFilho[i]}', ${qtdItem}, 'WEUHGV', NULL, GETDATE(), 'CESAR')`);
+                });
+                insertAlocacao = await connection.query(insertAlocaoQuery.join('\n')).then(result => result.rowsAffected);
+                let min = Math.min(...insertAlocacao)
+                console.log("linha 172", min);
+                if (min <= 0) {
+                    return res.json({ message: 'Algo deu errado' })
+                } else {
+                    res.cookie('reservedItens', lookForChildComponents!.reserved)
+                    res.cookie('codigoFilho', lookForChildComponents!.codigoFilho)
+                    res.cookie('condic', lookForChildComponents!.condic)
+                    return res.json({ message: 'Valores Reservados' })
+                }
+            }
+        } catch (error) {
+            console.log("linha 181 /selectHasP/", error);
+            return res.json({ message: 'Algo deu errado' })
+        }
+    }
+
+    if (!lookForChildComponents) {
         return res.json({ message: 'Algo deu errado' })
     }
 
-    if (lookForChildComponents === 'Algo deu errado') {
+    if (lookForChildComponents.message === 'Algo deu errado') {
         return res.json({ message: 'Algo deu errado' })
     }
 
-    if (lookForChildComponents === 'Quantidade para reserva inválida') {
+    if (lookForChildComponents.message === 'Valores Reservados') {
+        res.cookie('reservedItens', lookForChildComponents!.reserved)
+        res.cookie('codigoFilho', lookForChildComponents!.codigoFilho)
+        res.cookie('condic', lookForChildComponents!.condic)
+        return res.json({ message: 'Valores Reservados' })
+    }
+
+    if (lookForChildComponents.message === 'Quantidade para reserva inválida') {
         return res.json({ message: 'Quantidade para reserva inválida' })
     }
 
-    if (lookForChildComponents === 'Não há item para reservar') {
+    if (lookForChildComponents.message === 'Não há item para reservar') {
         console.log("linha 168/pointer.ts/");
-        return res.json({message : 'Não há item para reservar'})
+        return res.json({ message: 'Não há item para reservar' })
     }
 
     // console.log("linha 167 /reserveditens/", lookForChildComponents!.reservedItens );
     // console.log("linha 167 /codigoFilho/", lookForChildComponents!.codigoFilho );
     // console.log("linha 167 /condic/", lookForChildComponents!.condic );
 
-    res.cookie('reservedItens', lookForChildComponents!.reservedItens)
-    res.cookie('codigoFilho', lookForChildComponents!.codigoFilho)
-    res.cookie('condic', lookForChildComponents!.condic)
+    // res.cookie('reservedItens', lookForChildComponents!.reservedItens)
+    // res.cookie('codigoFilho', lookForChildComponents!.codigoFilho)
+    // res.cookie('condic', lookForChildComponents!.condic)
     //res.cookie('NUMITE', lookForChildComponents!.codigoNumite)
     //res.cookie('resultadoFinalProducao', lookForChildComponents!.resultadoFinalProducao)
 
-    if(lookForChildComponents.message === 'Valores Reservados'){
-        return res.json({message : 'Valores Reservados'})
-    } else {
-        return res.json({message : 'Algo deu errado'})
-    }
+    // if (lookForChildComponents.message === 'Valores Reservados') {
+    //     return res.json({ message: 'Valores Reservados' })
+    // } else {
+    //     return res.json({ message: 'Algo deu errado' })
+    // }
     //return res.json({ message: 'codeApont 1 setup iniciado' })
     // if (message !== 'codeApont 1 setup iniciado') {
     //     await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 

@@ -1,11 +1,18 @@
 import mssql from 'mssql';
 import { sqlConfig } from '../../global.config'
 
-export const selectToKnowIfHasP = async (dados: any) => {
-    let response = {}
+export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number) => {
+    let response = {
+        message: '',
+        quantidade: 0,
+        reserved: [],
+        codigoFilho: [],
+        condic: '',
+    }
     try {
         //Seleciona as peças filhas, a quantidade para execução e o estoque dos itens
         const connection = await mssql.connect(sqlConfig);
+        console.log("linha 14", dados.numOdf);
         const selectKnowHasP = await connection.query(`
                     SELECT DISTINCT                 
                        OP.NUMITE,                 
@@ -27,12 +34,18 @@ export const selectToKnowIfHasP = async (dados: any) => {
         ).then(result => result.recordset)
         console.log('selectHasP :', selectKnowHasP);
 
+
         if (selectKnowHasP.length > 0) {
             //Map na quantidade de itens para execução e map do estoque
-            let codigoNumite = selectKnowHasP.map(e => e.NUMITE)
+            //let codigoNumite = selectKnowHasP.map(e => e.NUMITE)
             const execut = selectKnowHasP.map(item => item.EXECUT);
             //const saldoReal = selectKnowHasP.map(item => item.SALDOREAL);
-            const codigoFilho = selectKnowHasP.map(item => item.NUMITE)
+            const codigoFilho: any = selectKnowHasP.map(item => item.NUMITE)
+
+
+            response.condic = selectKnowHasP[0].CONDIC
+
+            response.codigoFilho = codigoFilho
 
             /**
              * Calcula quantas peças pai podem ser produzidas com o estoque atual de componentes
@@ -53,12 +66,14 @@ export const selectToKnowIfHasP = async (dados: any) => {
 
             const qtdLibProd: any = selectKnowHasP.map(e => e.QTD_LIBERADA_PRODUZIR)
 
+            console.log("linha 67", qtdLibProd);
+
             const numberOfQtd = Math.min(...qtdLibProd)
 
             console.log("LINHA 63", numberOfQtd);
 
             if (numberOfQtd <= 0) {
-                return response = 'Quantidade para reserva inválida'
+                return response.message = 'Quantidade para reserva inválida'
             }
 
             //let qtdTotal = calMaxQuant(execut, saldoReal);
@@ -74,60 +89,126 @@ export const selectToKnowIfHasP = async (dados: any) => {
             // }
 
             //Retorna um array com a quantidade de itens total da execução
-            const reservedItens = execut.map((quantItens) => {
+            const reservedItens: any = execut.map((quantItens) => {
                 return Math.floor((numberOfQtd || 0) * quantItens)
             }, Infinity)
 
-            response = {
-                message: '',
-                reservedItens: reservedItens,
-                codigoFilho: codigoFilho,
-                condic: selectKnowHasP[0].CONDIC,
-                //numite: codigoNumite,
-                //resultadoFinalProducao: resultadoFinalProducao,
+            let minReserved = Math.min(...reservedItens)
+
+            if (minReserved === 0) {
+                return response.message = 'Algo deu errado'
             }
 
-            const updateQtyQuery = [];
-            const updateQtyRes = [];
+            if (minReserved < quantidadeOdf) {
+                response.quantidade = minReserved
+            } else if (quantidadeOdf < minReserved) {
+                response.quantidade = quantidadeOdf
+            }
+            
+            response.reserved = reservedItens;
+            // response = {
+            //     message: '',
+            //     reservedItens: reservedItens,
+            //     codigoFilho: codigoFilho,
+            //     condic: selectKnowHasP[0].CONDIC,
+            // }
+
+            const updateStorageQuery = [];
+            const insertAlocaoQuery = [];
+            let updateAlocacaoQuery = [];
+            let updateStorage: any;
+            let updateAlocacao: any;
+            let insertAlocacao;
 
             // Loop para atualizar os dados no DB
-            for (const [i, qtdItem] of reservedItens.entries()) {
-                console.log("linha 95", qtdItem);
-                updateQtyQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${qtdItem} WHERE 1 = 1 AND CODIGO = '${codigoFilho[i]}'`);
-            }
-            await connection.query(updateQtyQuery.join('\n'));
-
-            for (const [i, qtdItem] of reservedItens.entries()) {
-                //updateQtyRes.push(`UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}';`);
-                updateQtyRes.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES ('1504024', 40, '105831437', '${codigoFilho[i]}', ${qtdItem}, 'WEUHGV', NULL, GETDATE(), 'CESAR')`)
-            }
-            const cstAlocacao = await connection.query(updateQtyRes.join('\n'));
-            console.log("linha 102/cstAlocacao/", cstAlocacao);
-            if (!cstAlocacao) {
-                return response = 'Algo deu errado'
-            } else {
-
-
-
-                let obj = {
-                    message: 'Valores Reservados',
-                    reservedItens: reservedItens,
-                    codigoFilho: codigoFilho,
-                    condic: selectKnowHasP[0].CONDIC,
+            try {
+                for (const [i, qtdItem] of reservedItens.entries()) {
+                    updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${qtdItem} WHERE 1 = 1 AND CODIGO = '${codigoFilho[i]}'`);
                 }
+                updateStorage = await connection.query(updateStorageQuery.join('\n')).then(result => result.rowsAffected);
+                console.log("linha 121 /selecthasP/", updateStorage);
+                let minValueUpdateStorage = Math.min(...updateStorage)
+                if (minValueUpdateStorage > 0) {
+                    try {
+                        for (const [i, qtdItem] of reservedItens.entries()) {
+                            updateAlocacaoQuery.push(`UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
+                        }
+                        updateAlocacao = await connection.query(updateAlocacaoQuery.join('\n')).then(result => result.rowsAffected);
+                        console.log("linha 132/selectHasP/", updateAlocacao);
 
-                return obj
-
-
+                        let minValueFromUpdate = Math.min(...updateAlocacao)
+                        if (minValueFromUpdate === 0) {
+                            response.message = 'Rodar insert'
+                            return response
+                        }
+                        if (minValueFromUpdate > 0) {
+                            response.message = 'Valores Reservados'
+                            return response
+                        }
+                    } catch (error) {
+                        console.log("linha 116 /selectHasp/", error);
+                        return response.message = 'Algo deu errado'
+                    }
+                } else {
+                    return response.message = 'Algo deu errado'
+                }
+            } catch (error) {
+                console.log("linha 123 /selectHasP/", error);
+                return response.message = 'Algo deu errado'
             }
+
+
+            // if (updateStorage === 'Deu certo') {
+            //     try {
+            //         for (const [i, qtdItem] of reservedItens.entries()) {
+            //             updateAlocacaoQuery.push(`UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
+            //         }
+            //         updateAlocacao = await connection.query(updateAlocacaoQuery.join('\n'));
+            //         console.log("linha 117 / selecthasP /", updateAlocacao);
+            //         if (!updateAlocacao) {
+            //             return response.message = 'Rodar insert'
+            //         }
+            //     } catch (error) {
+            //         console.log("linha 119 /selectHasp/");
+            //         return response.message = 'Algo deu errado'
+            //     }
+            // } else {
+            //     return response.message = 'Algo deu errado'
+            // }
+
+
+            // if (!updateAlocacao) {
+            //     try {
+            //         for (const [i, qtdItem] of reservedItens.entries()) {
+            //             insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES ('${dados.numOdf}', 40, '105831437', '${codigoFilho[i]}', ${qtdItem}, 'WEUHGV', NULL, GETDATE(), 'CESAR')`)
+            //         }
+            //         insertAlocacao = await connection.query(insertAlocaoQuery.join('\n'));
+            //     } catch (error) {
+            //         console.log("linha 136 /selectHasP/", error);
+            //         return response.message = 'Algo deu errado'
+            //     }
+            // }
+
+            // if (updateStorage.length > 0 && updateAlocacao.length > 0) {
+            //     let obj = {
+            //         message: 'Valores Reservados',
+            //         reservedItens: reservedItens,
+            //         codigoFilho: codigoFilho,
+            //         condic: selectKnowHasP[0].CONDIC,
+            //     }
+
+            //     return obj
+            // } else {
+            //     return response.message = 'Algo deu errado'
+            // }
         } else if (selectKnowHasP.length <= 0) {
-            return response = "Não há item para reservar"
+            return response.message = "Não há item para reservar"
         } else {
-            return response = "Algo deu errado"
+            return response.message = "Algo deu errado"
         }
 
     } catch (error) {
         console.log('linha 214: ', error);
-        return response = "Algo deu errado"
+        return response.message = "Algo deu errado"
     }
 }

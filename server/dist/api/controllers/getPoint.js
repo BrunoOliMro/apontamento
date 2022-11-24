@@ -20,8 +20,14 @@ const getPoint = async (req, res) => {
     let codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA']))) || null;
     let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['employee']))) || null;
     let qtdProduzir = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['qtdProduzir']))) || null;
+    let revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
+    console.log("linha 20 /revisao/", revisao);
     const updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`;
     var address;
+    var response = {
+        message: '',
+        address: ''
+    };
     const hostname = req.get("host");
     const { networkInterfaces } = require('os');
     const nets = networkInterfaces();
@@ -38,10 +44,13 @@ const getPoint = async (req, res) => {
     }
     const ip = String(Object.entries(results)[0][1]);
     try {
-        console.log("linha 38 /getPoint /", NUMERO_OPERACAO);
         if (NUMERO_OPERACAO === "00999") {
-            let y = `SELECT TOP 1 CONDIC, EXECUT, COMPRIMENTO, LARGURA FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${codigoPeca}' AND CONDIC = 'M'`;
+            let numeroOp = NUMERO_OPERACAO.replaceAll('0', '');
+            let y = `SELECT TOP 1 * FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${codigoPeca}' AND NUMOPE = '${numeroOp}' AND REVISAO = ${revisao}`;
             const x = await (0, select_1.select)(y);
+            console.log("linha 52", x[0].EXECUT);
+            console.log("linha 52", x[0].COMPRIMENTO);
+            console.log("linha 52", x[0].LARGURA);
             let pesoUnidade = x[0].EXECUT;
             let comprimento = x[0].COMPRIMENTO;
             let largura = x[0].LARGURA;
@@ -49,6 +58,7 @@ const getPoint = async (req, res) => {
             let areaMax = 800;
             let pesoMax = 25;
             let peso = pesoUnidade * qtdProduzir;
+            console.log("linha 60 /getPoint.ts/", peso);
             if (peso < pesoMax) {
                 console.log("Passou no primeiro teste ...");
             }
@@ -78,28 +88,26 @@ const getPoint = async (req, res) => {
                 let small = Math.min(...secondReqAddress);
                 let indiceDoArrayDeOdfs = fisrtReqAddress.findIndex((callback) => callback === smallerNumber);
                 let indice = secondReqAddress.findIndex((callback) => callback === small);
-                let addressToStorage = {};
                 if (secondSelectAddress.length <= 0) {
-                    addressToStorage = {
-                        message: 'Address located',
-                        address: fisrtSelectAddress[indiceDoArrayDeOdfs].ENDERECO,
-                    };
-                    address = addressToStorage;
+                    response.message = 'Address located';
+                    response.address = fisrtSelectAddress[indiceDoArrayDeOdfs].ENDERECO;
                 }
                 if (fisrtSelectAddress.length <= 0) {
-                    addressToStorage = {
-                        message: 'Address located',
-                        address: secondSelectAddress[indice].ENDERECO
-                    };
-                    address = addressToStorage;
+                    response.message = 'Address located';
+                    response.address = secondSelectAddress[indice].ENDERECO;
                 }
             }
             if (CODIGO_MAQUINA === 'EX002') {
-                let fisrtSelectAddress = await (0, selectAddress_1.selectAddress)(codigoPeca, 7);
+                console.log("linha 119 /getPoint.ts/", codigoPeca);
+                let condicional = `= '${codigoPeca}'`;
+                let condicional2 = `IS NULL`;
+                let fisrtSelectAddress = await (0, selectAddress_1.selectAddress)(condicional, 7);
                 let secondSelectAddress;
-                if (!fisrtSelectAddress) {
+                if (fisrtSelectAddress === 'odf nao encontrada') {
+                    console.log("linha 124 /getPoint.ts/");
                     fisrtSelectAddress = [];
-                    secondSelectAddress = await (0, selectAddress_1.selectAddress)(codigoPeca, 7);
+                    secondSelectAddress = await (0, selectAddress_1.selectAddress)(condicional2, 7);
+                    console.log("linha 129 ", secondSelectAddress);
                 }
                 if (!secondSelectAddress) {
                     secondSelectAddress = [];
@@ -116,20 +124,13 @@ const getPoint = async (req, res) => {
                 let small = Math.min(...secondAdd);
                 let indiceDoArrayDeOdfs = fisrtAdd.findIndex((callback) => callback === smallerNumber);
                 let indice = secondAdd.findIndex((callback) => callback === small);
-                let addressToStorage;
                 if (secondSelectAddress.length <= 0) {
-                    addressToStorage = {
-                        message: 'Address located',
-                        address: fisrtSelectAddress[indiceDoArrayDeOdfs].ENDERECO,
-                    };
-                    address = addressToStorage;
+                    response.message = 'Address located';
+                    response.address = fisrtSelectAddress[indiceDoArrayDeOdfs].ENDERECO;
                 }
                 if (fisrtSelectAddress.length <= 0) {
-                    addressToStorage = {
-                        message: 'Address located',
-                        addresss: secondSelectAddress[indice].ENDERECO
-                    };
-                    address = addressToStorage;
+                    response.message = 'Address located';
+                    response.address = secondSelectAddress[indice].ENDERECO;
                 }
             }
             try {
@@ -161,17 +162,14 @@ const getPoint = async (req, res) => {
                         console.log("linha 201");
                         return res.json({ message: 'No address' });
                     }
-                    let responseObj = {
-                        address,
-                        message: 'Address located'
-                    };
-                    if (!address) {
+                    if (!response.address) {
                         console.log("linha 210 /getPoint.ts/ ");
-                        return res.json({ message: 'No address' });
+                        response.message = 'No address';
+                        return res.json({ response });
                     }
                     else {
                         console.log("linha 214 /getPoint.ts/ ");
-                        return res.json(responseObj);
+                        return res.json(response);
                     }
                 }
                 catch (error) {
