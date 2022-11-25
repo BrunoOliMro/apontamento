@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.selectToKnowIfHasP = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
-const selectToKnowIfHasP = async (dados, quantidadeOdf) => {
+const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOperacao, codigoPeca) => {
     let response = {
         message: '',
         quantidade: 0,
@@ -16,7 +16,6 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf) => {
     };
     try {
         const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-        console.log("linha 14", dados.numOdf);
         const selectKnowHasP = await connection.query(`
                     SELECT DISTINCT                 
                        OP.NUMITE,                 
@@ -41,7 +40,7 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf) => {
             const codigoFilho = selectKnowHasP.map(item => item.NUMITE);
             response.condic = selectKnowHasP[0].CONDIC;
             response.codigoFilho = codigoFilho;
-            const qtdLibProd = selectKnowHasP.map(e => e.QTD_LIBERADA_PRODUZIR);
+            const qtdLibProd = selectKnowHasP.map(element => element.QTD_LIBERADA_PRODUZIR);
             console.log("linha 67", qtdLibProd);
             const numberOfQtd = Math.min(...qtdLibProd);
             console.log("LINHA 63", numberOfQtd);
@@ -55,25 +54,24 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf) => {
             if (minReserved === 0) {
                 return response.message = 'Algo deu errado';
             }
+            console.log('linha 102 /selectHasP/');
             if (minReserved < quantidadeOdf) {
                 response.quantidade = minReserved;
             }
             else if (quantidadeOdf < minReserved) {
                 response.quantidade = quantidadeOdf;
             }
+            response.quantidade = numberOfQtd;
             response.reserved = reservedItens;
             const updateStorageQuery = [];
-            const insertAlocaoQuery = [];
             let updateAlocacaoQuery = [];
             let updateStorage;
             let updateAlocacao;
-            let insertAlocacao;
             try {
                 for (const [i, qtdItem] of reservedItens.entries()) {
                     updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${qtdItem} WHERE 1 = 1 AND CODIGO = '${codigoFilho[i]}'`);
                 }
                 updateStorage = await connection.query(updateStorageQuery.join('\n')).then(result => result.rowsAffected);
-                console.log("linha 121 /selecthasP/", updateStorage);
                 let minValueUpdateStorage = Math.min(...updateStorage);
                 if (minValueUpdateStorage > 0) {
                     try {
@@ -81,11 +79,32 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf) => {
                             updateAlocacaoQuery.push(`UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
                         }
                         updateAlocacao = await connection.query(updateAlocacaoQuery.join('\n')).then(result => result.rowsAffected);
-                        console.log("linha 132/selectHasP/", updateAlocacao);
                         let minValueFromUpdate = Math.min(...updateAlocacao);
                         if (minValueFromUpdate === 0) {
-                            response.message = 'Rodar insert';
-                            return response;
+                            const insertAlocaoQuery = [];
+                            let insertAlocacao;
+                            console.log("linha 143 /selectHasP/");
+                            try {
+                                if (reservedItens) {
+                                    reservedItens.forEach((qtdItem, i) => {
+                                        insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES ('${dados.numOdf}', ${numeroOperacao}, '${codigoPeca}', '${codigoFilho[i]}', ${qtdItem}, 'WEUHGV', NULL, GETDATE(), '${funcionario}')`);
+                                    });
+                                    insertAlocacao = await connection.query(insertAlocaoQuery.join('\n')).then(result => result.rowsAffected);
+                                    let min = Math.min(...insertAlocacao);
+                                    console.log("linha 172", min);
+                                    if (min <= 0) {
+                                        return response.message = 'Algo deu errado';
+                                    }
+                                    else {
+                                        response.message = 'Valores Reservados';
+                                        return response;
+                                    }
+                                }
+                            }
+                            catch (error) {
+                                console.log("linha 159 /selectHasP/", error);
+                                return response.message = 'Algo deu errado';
+                            }
                         }
                         if (minValueFromUpdate > 0) {
                             response.message = 'Valores Reservados';
@@ -114,7 +133,7 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf) => {
         }
     }
     catch (error) {
-        console.log('linha 214: ', error);
+        console.log('linha 235 /error: selectHasP/: ', error);
         return response.message = "Algo deu errado";
     }
 };

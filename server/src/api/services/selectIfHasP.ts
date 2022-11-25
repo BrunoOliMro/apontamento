@@ -1,7 +1,7 @@
 import mssql from 'mssql';
 import { sqlConfig } from '../../global.config'
 
-export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number) => {
+export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, funcionario: string, numeroOperacao: string, codigoPeca: string) => {
     let response = {
         message: '',
         quantidade: 0,
@@ -12,7 +12,7 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number) => {
     try {
         //Seleciona as peças filhas, a quantidade para execução e o estoque dos itens
         const connection = await mssql.connect(sqlConfig);
-        console.log("linha 14", dados.numOdf);
+       // console.log("linha 14", dados.numOdf);
         const selectKnowHasP = await connection.query(`
                     SELECT DISTINCT                 
                        OP.NUMITE,                 
@@ -64,7 +64,7 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number) => {
             //     return (qtdMaxProduzivel === Infinity ? 0 : qtdMaxProduzivel);
             // }
 
-            const qtdLibProd: any = selectKnowHasP.map(e => e.QTD_LIBERADA_PRODUZIR)
+            const qtdLibProd: any = selectKnowHasP.map(element => element.QTD_LIBERADA_PRODUZIR)
 
             console.log("linha 67", qtdLibProd);
 
@@ -99,12 +99,15 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number) => {
                 return response.message = 'Algo deu errado'
             }
 
+            console.log('linha 102 /selectHasP/');
+
             if (minReserved < quantidadeOdf) {
                 response.quantidade = minReserved
             } else if (quantidadeOdf < minReserved) {
                 response.quantidade = quantidadeOdf
             }
-            
+
+            response.quantidade = numberOfQtd
             response.reserved = reservedItens;
             // response = {
             //     message: '',
@@ -114,11 +117,9 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number) => {
             // }
 
             const updateStorageQuery = [];
-            const insertAlocaoQuery = [];
             let updateAlocacaoQuery = [];
             let updateStorage: any;
             let updateAlocacao: any;
-            let insertAlocacao;
 
             // Loop para atualizar os dados no DB
             try {
@@ -126,7 +127,6 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number) => {
                     updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${qtdItem} WHERE 1 = 1 AND CODIGO = '${codigoFilho[i]}'`);
                 }
                 updateStorage = await connection.query(updateStorageQuery.join('\n')).then(result => result.rowsAffected);
-                console.log("linha 121 /selecthasP/", updateStorage);
                 let minValueUpdateStorage = Math.min(...updateStorage)
                 if (minValueUpdateStorage > 0) {
                     try {
@@ -134,12 +134,36 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number) => {
                             updateAlocacaoQuery.push(`UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${qtdItem} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
                         }
                         updateAlocacao = await connection.query(updateAlocacaoQuery.join('\n')).then(result => result.rowsAffected);
-                        console.log("linha 132/selectHasP/", updateAlocacao);
 
                         let minValueFromUpdate = Math.min(...updateAlocacao)
                         if (minValueFromUpdate === 0) {
-                            response.message = 'Rodar insert'
-                            return response
+
+                            const insertAlocaoQuery: any = [];
+                            let insertAlocacao;
+
+                            console.log("linha 143 /selectHasP/");
+                            try {
+                                if (reservedItens) {
+                                    reservedItens.forEach((qtdItem: number, i: number) => {
+                                        insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES ('${dados.numOdf}', ${numeroOperacao}, '${codigoPeca}', '${codigoFilho[i]}', ${qtdItem}, 'WEUHGV', NULL, GETDATE(), '${funcionario}')`);
+                                    });
+                                    insertAlocacao = await connection.query(insertAlocaoQuery.join('\n')).then(result => result.rowsAffected);
+                                    let min = Math.min(...insertAlocacao)
+                                    console.log("linha 172", min);
+                                    if (min <= 0) {
+                                        return response.message = 'Algo deu errado'
+                                    } else {
+                                        response.message = 'Valores Reservados'
+                                        return response
+                                    }
+                                }
+                            } catch (error) {
+                                console.log("linha 159 /selectHasP/", error);
+                                return response.message = 'Algo deu errado'
+                            }
+
+                            // response.message = 'Rodar insert'
+                            // return response
                         }
                         if (minValueFromUpdate > 0) {
                             response.message = 'Valores Reservados'
@@ -156,7 +180,6 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number) => {
                 console.log("linha 123 /selectHasP/", error);
                 return response.message = 'Algo deu errado'
             }
-
 
             // if (updateStorage === 'Deu certo') {
             //     try {
@@ -206,9 +229,8 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number) => {
         } else {
             return response.message = "Algo deu errado"
         }
-
     } catch (error) {
-        console.log('linha 214: ', error);
+        console.log('linha 235 /error: selectHasP/: ', error);
         return response.message = "Algo deu errado"
     }
 }

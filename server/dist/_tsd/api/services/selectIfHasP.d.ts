@@ -1,4 +1,4 @@
-export declare const selectToKnowIfHasP: (dados: any, quantidadeOdf: number) => Promise<{
+export declare const selectToKnowIfHasP: (dados: any, quantidadeOdf: number, funcionario: string, numeroOperacao: string, codigoPeca: string) => Promise<{
     message: string;
     quantidade: number;
     reserved: never[];

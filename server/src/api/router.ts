@@ -20,7 +20,6 @@ import { getPoint } from "./controllers/getPoint";
 import { supervisor } from "./controllers/supervisor";
 import { codeNote } from "./controllers/codeNote";
 import { getBefore } from "./controllers/getBefSel";
-import { odfDataQtd } from "./controllers/odfDataQtd";
 
 // /api/v1/
 const apiRouter = Router();

@@ -16,35 +16,24 @@ export const point: RequestHandler = async (req, res) => {
     let badFeed = Number(sanitize(req.body["badFeed"])) || 0;
     let missingFeed = Number(sanitize(req.body["missingFeed"])) || 0;
     let reworkFeed = Number(sanitize(req.body["reworkFeed"])) || 0;
-    //let parcialFeed = Number(sanitize(req.body["parcialFeed"])) || 0;
-
-    console.log("linha 21 /point.ts/", qtdBoas);
-
     var codigoFilho: string[] = ((req.cookies['codigoFilho'])) || null // VER DEPOIS !!!!!!!!!!!!!!
     var reservedItens: number[] = (req.cookies['reservedItens']) || null // VER DEPOIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     let condic = String(sanitize(req.cookies['condic'])) || null
-
-    console.log("linha 27 /codigoFilho/", codigoFilho);
-    console.log("linha 27 /reservedItens/", reservedItens);
-    console.log("linha 27 /condic/", condic);
-
-
-    let NUMERO_ODF: number = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
-    NUMERO_ODF = Number(NUMERO_ODF)
-    let NUMERO_OPERACAO = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
-    let codigoPeca = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
-    let CODIGO_MAQUINA = decrypted(String(sanitize(req.cookies["CODIGO_MAQUINA"]))) || null
-    let qtdLibMax = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
-    let MAQUINA_PROXIMA = decrypted(String(sanitize(req.cookies['MAQUINA_PROXIMA']))) || null
-    let OPERACAO_PROXIMA = decrypted(String(sanitize(req.cookies['OPERACAO_PROXIMA']))) || null
-    let funcionario = decrypted(String(sanitize(req.cookies['employee']))) || null
-    let revisao = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
-    let numite = (req.cookies['codigoFilho']) || null
-    //let retrabalhadas = 0;
-    //let qtdProd = Number(sanitize(req.cookies['qtdProduzir'])) || 0
+    let odfNumberDecrypted: number = decrypted(sanitize(req.cookies["NUMERO_ODF"])) || null
+    odfNumberDecrypted = Number(odfNumberDecrypted)
+    let operationNumber = decrypted(sanitize(req.cookies["NUMERO_OPERACAO"])) || null
+    let codigoPeca = decrypted(sanitize(req.cookies['CODIGO_PECA'])) || null
+    let machineCode = decrypted(sanitize(req.cookies["CODIGO_MAQUINA"])) || null
+    let qtdLibMax = decrypted(sanitize(req.cookies['qtdLibMax'])) || null
+    let nextMachineProcess = decrypted(sanitize(req.cookies['MAQUINA_PROXIMA'])) || null
+    let nextOperationProcess = decrypted(sanitize(req.cookies['OPERACAO_PROXIMA'])) || null
+    console.log("linha 22 /point.ts/", decrypted(req.cookies["NUMERO_ODF"]));
+    let employee = decrypted(sanitize(req.cookies['employee'])) || null
+    let revisao = decrypted(sanitize(req.cookies['REVISAO'])) || null
     const updateQtyQuery = [];
-    let startRip = Number(new Date()) || 0;
+    let startRip = Number(new Date()) || 0
     res.cookie("startRip", startRip)
+    console.log('linha 35 /point.ts/');
 
     //Encerra o tempo da produção
     let endProdTimer = new Date() || 0;
@@ -61,6 +50,10 @@ export const point: RequestHandler = async (req, res) => {
 
     console.log("linha 56 /point.ts/");
 
+    if (!valorTotalApontado) {
+        return res.json({ message: 'Algo deu errado' })
+    }
+
     if (!supervisor || supervisor === 'undefined' || supervisor === '' && valorTotalApontado === qtdLibMax) {
         supervisor = '004067'
     }
@@ -68,8 +61,11 @@ export const point: RequestHandler = async (req, res) => {
     console.log("linha 62 Supervisor /point.ts/", supervisor);
 
     if (!supervisor || supervisor === 'undefined' || supervisor === '' || supervisor === '000000' || supervisor === '0' || supervisor === '00' || supervisor === '000' || supervisor === '0000' || supervisor === '00000') {
+        console.log("linha 64");
         return res.json({ message: 'Supervisor inválido' })
     }
+
+    console.log("linha 68", qtdLibMax);
 
     if (!qtdLibMax || qtdLibMax === 0) {
         return res.json({ message: 'Quantidade inválida' })
@@ -77,11 +73,11 @@ export const point: RequestHandler = async (req, res) => {
 
     console.log("linha 73 /point.ts/");
 
-    if (CODIGO_MAQUINA === null || CODIGO_MAQUINA === undefined || CODIGO_MAQUINA === '' || CODIGO_MAQUINA === '0' || CODIGO_MAQUINA === '00' || CODIGO_MAQUINA === '000' || CODIGO_MAQUINA === '0000' || CODIGO_MAQUINA === '00000') {
+    if (!machineCode || machineCode === '' || machineCode === '0' || machineCode === '00' || machineCode === '000' || machineCode === '0000' || machineCode === '00000') {
         return res.json({ message: 'Código máquina inválido' })
     }
 
-    if (NUMERO_OPERACAO === null || NUMERO_OPERACAO === undefined || NUMERO_OPERACAO === '' || NUMERO_OPERACAO === '0' || NUMERO_OPERACAO === '00' || NUMERO_OPERACAO === '000' || NUMERO_OPERACAO === '0000' || NUMERO_OPERACAO === '00000') {
+    if (!operationNumber || operationNumber === '' || operationNumber === '0' || operationNumber === '00' || operationNumber === '000' || operationNumber === '0000' || operationNumber === '00000') {
         return res.json({ message: 'Número operação inválido' })
     }
 
@@ -89,16 +85,13 @@ export const point: RequestHandler = async (req, res) => {
         return res.json({ message: 'Código de peça inválido' })
     }
 
-    // if (codigoPeca === null || codigoPeca === undefined || codigoPeca === '' || codigoPeca === '0' || codigoPeca === '00' || codigoPeca === '000' || codigoPeca === '0000' || codigoPeca === '00000') {
-    // }
-
     console.log("linha 87 /point.ts/");
 
-    if (NUMERO_ODF === 0 || NUMERO_ODF === null || NUMERO_ODF === undefined) {
+    if (!odfNumberDecrypted || odfNumberDecrypted === 0) {
         return res.json({ message: 'Número odf inválido' })
     }
 
-    if (funcionario === undefined || funcionario === null || funcionario === '' || funcionario === '0') {
+    if (!employee || employee === '' || employee === '0') {
         return res.json({ message: 'Funcionário Inválido' })
     }
 
@@ -106,11 +99,11 @@ export const point: RequestHandler = async (req, res) => {
         return res.json({ message: 'Quantidade excedida' })
     }
 
-    console.log("linha 56 Boas /point.ts/", qtdBoas);
+    console.log("linha 99 Boas /point.ts/", qtdBoas);
 
-    if (qtdBoas === null || qtdBoas === undefined || missingFeed === null || missingFeed === undefined || valorTotalApontado === null || valorTotalApontado === undefined) {
-        return res.json({ message: 'Quantidade inválida' })
-    }
+    // if (!qtdBoas || !missingFeed || !valorTotalApontado) {
+    //     return res.json({ message: 'Quantidade inválida' })
+    // }
 
     if (missingFeed <= 0) {
         faltante = qtdLibMax - valorTotalApontado
@@ -118,131 +111,132 @@ export const point: RequestHandler = async (req, res) => {
 
     console.log("linha 113 Faltante  /point.ts/", faltante);
 
-    if (motivorefugo === undefined || motivorefugo === "undefined") {
+    if (!motivorefugo || motivorefugo === "undefined") {
         motivorefugo = ''
     }
-
-    console.log("linha 119  - Motivo /point.ts/", motivorefugo);
 
     if (valorTotalApontado > qtdLibMax) {
         return res.json({ message: 'valor apontado maior que a quantidade liberada' })
     }
 
-    //Verifica se existe o Supervisor
+    // Se houver refugo, verifica se o supervisor esta correto
     if (badFeed > 0) {
         const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`
-        const resource = await select(lookForSupervisor)
+        const findSupervisor = await select(lookForSupervisor)
 
-        if (resource.length <= 0) {
+        if (findSupervisor === 'Algo deu errado' || findSupervisor === 'Data not found') {
             return res.json({ message: 'Supervisor não encontrado' })
         }
     }
 
-    console.log("linha 137 BadFeed / point.ts/ ", badFeed);
-
-    if (condic === undefined || condic === null || condic === 'undefined') {
+    if (!condic) {
         condic = "D";
         codigoFilho = [];
     }
 
-    // console.log("linha 144 Condic /point.ts/", condic);
-    //console.log("linha 143 /point.ts/", numite);
-    // console.log("linha 144 /point.ts/", reservedItens);
-    // console.log("linha 145 /point.ts/", codigoFilho);
+    let quantidadePossivelProduzir = Number(req.cookies['quantidade'])
 
+    if (valorTotalApontado > quantidadePossivelProduzir) {
+        return res.json({ message: 'Algo deu errado' })
+    }
 
-    //Caso haja "P" faz update na quantidade de peças dos filhos
+    // Caso haja "P" faz update na quantidade de peças dos filhos
     if (condic === 'P') {
         try {
-            let query;
             let min = Math.min(...reservedItens)
+            let diference = min - valorTotalApontado
+            let returnValueToStorage = diference / 2
 
-            let diferença = min - valorTotalApontado
-
-            // console.log("linha 163/diferença/", min);
-            // console.log("linha 163/valorTotalApontado/", valorTotalApontado);
-            
-            // Loop para atualizar os dados no DB
+            // Loop para atualizar o estoque
             if (valorTotalApontado < min) {
                 try {
-                    console.log("Atualizando estoque...");
-                    console.log("linha 163/diferença/", diferença);
                     for (const [i] of reservedItens.entries()) {
-                        let updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${diferença} WHERE 1 = 1 AND CODIGO = '${codigoFilho[i]}' `
-                        updateQtyQuery.push(updateQuery)
+                        updateQtyQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${returnValueToStorage} WHERE 1 = 1 AND CODIGO = '${codigoFilho[i]}'`)
                     }
-                    query = await connection.query(updateQtyQuery.join("\n")).then(result => result.rowsAffected)
-                    let minValue = Math.min(...query)
-                    if (minValue <= 0) {
-                        return res.json({ message: 'Algo deu errado' })
-                    }
+                    await connection.query(updateQtyQuery.join("\n")).then(result => result.rowsAffected)
                 } catch (error) {
-                    console.log("linha 180 /point.ts/", error);
+                    console.log("linha 159 /point.ts/", error);
                     return res.json({ message: 'Algo deu errado' })
                 }
             }
 
-            if (query) {
-                console.log("Deletando cst alocacao...");
-                try {
-                    for (const [i] of reservedItens.entries()) {
-                        let updateQuery = `DELETE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho[i]}' `
-                        updateQtyQuery.push(updateQuery)
-                    }
-                    let deletQuery = await connection.query(updateQtyQuery.join("\n")).then(result => result.rowsAffected)
-                    if (!deletQuery) {
-                        return res.json({ message: 'Algo deu errado' })
-                    }
-                } catch (error) {
-                    console.log("linha 185 /selectHasP/", error);
-                    return res.json({ message: 'Algo deu errado' })
+            // Loop para deletar o saldo alocado
+            try {
+                for (const [i] of reservedItens.entries()) {
+                    let updateQuery = `DELETE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${odfNumberDecrypted}' AND CODIGO_FILHO = '${codigoFilho[i]}' `
+                    updateQtyQuery.push(updateQuery)
                 }
+                await connection.query(updateQtyQuery.join("\n")).then(result => result.rowsAffected)
+            } catch (error) {
+                console.log("linha 185 /selectHasP/", error);
+                return res.json({ message: 'Algo deu errado' })
             }
         } catch (err) {
+            console.log("linha 175  -Point.ts-", err);
             return res.json({ message: 'erro ao efetivar estoque das peças filhas' })
         }
     }
 
     try {
-        //Verifica o valor e sendo acima de 0 ele libera um "S" no proximo processo
-        if (valorTotalApontado < qtdLibMax) {
-            const updateNextProcess = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = ${NUMERO_ODF}  AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${OPERACAO_PROXIMA}' AND CODIGO_MAQUINA = '${MAQUINA_PROXIMA}'`
-            await update(updateNextProcess)
-        }
-
-        //Verifica caso a quantidade apontada pelo usuario seja maior ou igual ao numero que poderia ser lançado, assim lanca um "N" em apontamento para bloquear um proximo apontamento
-        if (valorTotalApontado >= qtdLibMax) {
-            const updateQtdpointed = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'N' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`
-            await update(updateQtdpointed)
-        }
-
-        console.log("linha 184 - valor Apontado /point.ts/", valorTotalApontado);
-
-        //Seta quantidade apontada da odf para o quanto o usuario diz ser(PCP_PROGRAMACAO_PRODUCAO)
-        const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = '${NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${NUMERO_OPERACAO}' AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`
-        await update(updateCol)
-
-
+        // Verifica o valor e sendo acima de 0 ele libera um "S" no proximo processo
         try {
-            console.log("linha 189 /point.ts/ Inserindo dados de apontamento...");
+            if (valorTotalApontado < qtdLibMax) {
+                const updateNextProcess = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = ${odfNumberDecrypted}  AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${nextOperationProcess}' AND CODIGO_MAQUINA = '${nextMachineProcess}'`
+                await update(updateNextProcess)
+            }
+        } catch (error) {
+            if (error) {
+                console.log('linha 19888888888888');
+            }
+            console.log('linha 198 - error - //point.ts', error);
+            return res.json({ message: 'Algo deu errado' })
+        }
+
+        // Verifica caso a quantidade apontada pelo usuario seja maior ou igual ao numero que poderia ser lançado, assim lanca um "N" em apontamento para bloquear um proximo apontamento
+        if (valorTotalApontado === quantidadePossivelProduzir) {
+            try {
+                const updateQtdpointed = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'N' WHERE 1 = 1 AND NUMERO_ODF = ${odfNumberDecrypted} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${operationNumber}' AND CODIGO_MAQUINA = '${machineCode}'`
+                await update(updateQtdpointed)
+            } catch (error) {
+                if (error) {
+                    console.log('cadeeeeeee');
+                }
+                console.log('linha 212 - error - //point.ts', error);
+                return res.json({ message: 'Algo deu errado' })
+            }
+        }
+
+
+        // Seta quantidade apontada da odf para o quanto o usuario diz ser(PCP_PROGRAMACAO_PRODUCAO)
+        try {
+            const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = ${odfNumberDecrypted} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${operationNumber}' AND CODIGO_MAQUINA = '${machineCode}'`
+            await update(updateCol)
+        } catch (error) {
+            console.log("linha 209 - error - /point.ts/", error);
+            return res.json({ message: 'Algo deu errado' })
+        }
+
+        // Insere codigo de apontamento 4 final de producao
+        try {
+            console.log("linha 215 /point.ts/ Inserindo dados de apontamento...");
             let codAponta = 4
             let descricaoCodigoAponta = 'Fin Prod'
-            await insertInto(funcionario, NUMERO_ODF, codigoPeca, revisao, NUMERO_OPERACAO, CODIGO_MAQUINA, qtdLibMax, qtdBoas, badFeed, codAponta, descricaoCodigoAponta, motivorefugo, faltante, reworkFeed, finalProdTimer)
+            await insertInto(employee, odfNumberDecrypted, codigoPeca, revisao, operationNumber, machineCode, qtdLibMax, qtdBoas, badFeed, codAponta, descricaoCodigoAponta, motivorefugo, faltante, reworkFeed, finalProdTimer)
         } catch (error) {
-            console.log("erro ao fazer insert linha 188 /point.ts/");
+            console.log("erro ao fazer insert linha 220 /point.ts/", error);
+            return res.json({ message: 'Algo deu errado' })
         }
-
 
         qtdBoas = encrypted(String(qtdBoas))
         res.cookie('qtdBoas', qtdBoas)
 
-        console.log("linha 197 - chegou ao fim /point.ts/", qtdBoas);
+        console.log("linha 227 - chegou ao fim /point.ts/", qtdBoas);
 
         return res.json({ message: 'Sucesso ao apontar' })
     } catch (error) {
         console.log(error);
         return res.json({ message: 'Erro ao apontar' })
     } finally {
-        //await connection.close()
+        await connection.close()
     }
 }

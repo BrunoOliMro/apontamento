@@ -1,2 +1,2 @@
-export declare const sanitize: (input?: string) => string | undefined;
+export declare const sanitize: (input?: string | any) => any;
 //# sourceMappingURL=sanitize.d.ts.map

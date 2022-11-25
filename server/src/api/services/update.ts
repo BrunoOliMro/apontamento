@@ -6,7 +6,7 @@ export const update = async (query: string) => {
     let response = {
         message: '',
     }
-    const data = await connection.query(`${query}`).then((result) => result.rowsAffected)
+    const data: any = await connection.query(`${query}`).then((result) => result)
     if (data.length <= 0) {
         return response.message = "Error on update"
     }
