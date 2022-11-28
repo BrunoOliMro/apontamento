@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.odfIndex = void 0;
 const odfIndex = async (array, numOper) => {
-    console.log("linha 2 /odfIndex/", array);
     let indexNumber = Number(array
         .map((element) => element.NUMERO_OPERACAO)
         .map((value) => '00' + value)

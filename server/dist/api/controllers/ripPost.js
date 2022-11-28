@@ -47,7 +47,6 @@ const ripPost = async (req, res) => {
     }
     NUMERO_ODF = Number(NUMERO_ODF);
     qtdLibMax = Number(qtdLibMax);
-    console.log("linha 58 /ripPost/");
     let boas = 0;
     let ruins = 0;
     let codAponta = 6;
@@ -83,7 +82,11 @@ const ripPost = async (req, res) => {
                 VALUES('${NUMERO_ODF}','1', '${revisao}' , '${numCar[i]}', '${descricao[i]}',  '${especif[i]}',${lie[i]}, ${lse[i]},${resultSplitLines[row].SETUP ? `'${resultSplitLines[row].SETUP}'` : null},${resultSplitLines[row].M2 ? `${resultSplitLines[row].M2}` : null},${resultSplitLines[row].M3 ? `${resultSplitLines[row].M3}` : null},${resultSplitLines[row].M4 ? `${resultSplitLines[row].M4}` : null},${resultSplitLines[row].M5 ? `${resultSplitLines[row].M5}` : null},${resultSplitLines[row].M6 ? `${resultSplitLines[row].M6}` : null},${resultSplitLines[row].M7 ? `${resultSplitLines[row].M7}` : null},${resultSplitLines[row].M8 ? `${resultSplitLines[row].M8}` : null},${resultSplitLines[row].M9 ? `${resultSplitLines[row].M9}` : null},${resultSplitLines[row].M10 ? `${resultSplitLines[row].M10}` : null},${resultSplitLines[row].M11 ? `${resultSplitLines[row].M11}` : null},${resultSplitLines[row].M12 ? `${resultSplitLines[row].M12}` : null},${resultSplitLines[row].M13 ? `${resultSplitLines[row].M13}` : null},'${instrumento[i]}','${CODIGO_MAQUINA}','${NUMERO_OPERACAO}')`);
         });
         await connection.query(updateQtyQuery.join("\n"));
-        return res.json({ message: "rip enviada, odf finalizada" });
+        let response = {
+            message: "rip enviada, odf finalizada",
+            url: '/#/codigobarras'
+        };
+        return res.json(response);
     }
     catch (error) {
         console.log("linha 75 /ripPost/", error);

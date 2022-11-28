@@ -22,6 +22,7 @@
     let loader = false;
     let odfFinish = false;
     let crachModal = "";
+    let redirect;
 
     async function callRip() {
         const res = await fetch(urlString);
@@ -33,10 +34,11 @@
         if (ripTable.length <= 0) {
             loader = true;
             window.location.href = "/#/codigobarras";
-            doPost()
+            doPost();
             location.reload();
         }
     }
+
     function checkSuper(event) {
         if (supervisor.length >= 6 && event.key === "Enter") {
             if (supervisor === "000000") {
@@ -61,10 +63,10 @@
         console.log("linha 60 /do post Super/", res);
         if (res.message === "Supervisor encontrado") {
             showSuper = false;
-            doPost();
-            odfFinish = true;
-            window.location.href = "/#/codigobarras";
-            location.reload();
+            await doPost();
+            //odfFinish = true;
+            //window.location.href = "/#/codigobarras";
+            //location.reload();
         } else if (res.message === "Supervisor não encontrado") {
             showError = true;
         }
@@ -80,12 +82,15 @@
                 setup: setup,
             }),
         }).then((res) => res.json());
-        loader = false;
+        if(res){
+            loader = false;
+        }
         if (res.message === "rip vazia") {
             showErrorEmpty = true;
         }
         if (res.message === "rip enviada, odf finalizada") {
             odfFinish = true;
+            redirect = res.url;
             //window.location.href = "/#/codigobarras";
         }
         if (res.message === "ocorreu um erro ao enviar os dados da rip") {
@@ -94,9 +99,9 @@
         }
     };
 
-    function finish() {
+    function callFinish() {
         odfFinish = false;
-        window.location.href = "/#/codigobarras";
+        window.location.href = redirect
     }
 
     function createCol() {
@@ -168,7 +173,7 @@
         showSuper = false;
         showError = false;
         showErrorEmpty = false;
-        crachModal = ''
+        crachModal = "";
     }
 </script>
 
@@ -252,7 +257,9 @@
         <div class="fundo">
             <div class="header">
                 <h3>ODF FINALIZADA</h3>
-                <button on:click={finish} on:keypress={finish}>Fechar</button>
+                <button on:click={callFinish} on:keypress={callFinish}
+                    >Fechar</button
+                >
             </div>
         </div>
     {/if}
