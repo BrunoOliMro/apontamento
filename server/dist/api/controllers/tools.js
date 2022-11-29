@@ -6,16 +6,16 @@ const insert_1 = require("../services/insert");
 const select_1 = require("../services/select");
 const decodeOdf_1 = require("../utils/decodeOdf");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
-const encryptOdf_1 = require("../utils/encryptOdf");
+const encodedOdf_1 = require("../utils/encodedOdf");
 const sanitize_1 = require("../utils/sanitize");
-const tools = async (req, res, next) => {
+const tools = async (req, res) => {
     if (!Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))))) {
         return res.json({ message: 'Algo deu errado' });
     }
     const decodedOdfNumber = Number((0, decodeOdf_1.decodedBuffer)(String((0, sanitize_1.sanitize)(req.cookies['encodedOdfNumber'])))) || 0;
     const numeroOdf = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"])))) || 0;
     const codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_PECA"]))) || null;
-    const numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"]))) || null;
+    let numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"]))) || null;
     const codigoMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_MAQUINA"]))) || null;
     const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['employee']))) || null;
     const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
@@ -40,35 +40,35 @@ const tools = async (req, res, next) => {
         if (inserted === 'Algo deu errado') {
             return res.json({ message: "Erro ao inserir codapontamento 1" });
         }
-        else {
+        else if (inserted === 'insert done') {
             try {
                 toolsImg = await (0, select_1.select)(lookForTools);
-                if (!toolsImg) {
+                if (toolsImg.length <= 0) {
                     return res.json({ message: "/images/sem_imagem.gif" });
                 }
-                for await (const [i, record] of toolsImg.entries()) {
-                    const rec = await record;
-                    const path = await pictures_1.pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], ferramenta, String(i));
-                    result.push(path);
-                }
-                if (toolsImg) {
+                if (toolsImg.length > 0) {
+                    for await (const [i, record] of toolsImg.entries()) {
+                        const rec = await record;
+                        const path = await pictures_1.pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], ferramenta, String(i));
+                        result.push(path);
+                    }
                     const obj = {
                         message: 'codeApont 1 inserido',
                         result: result,
                     };
                     return res.json(obj);
                 }
-                else if (!toolsImg) {
-                    return res.json({ message: 'Data not found' });
-                }
                 else {
-                    return next();
+                    return res.json({ message: "/images/sem_imagem.gif" });
                 }
             }
             catch (error) {
                 console.log(error);
                 return res.json({ message: 'Data not found' });
             }
+        }
+        else {
+            return res.json({ message: 'Data not found' });
         }
     }
     catch (error) {
@@ -94,24 +94,35 @@ const selectedTools = async (req, res) => {
     const faltante = 0;
     const retrabalhada = 0;
     const motivo = String('' || null);
-    const tempoDecorrido = Number(Number(new Date().getTime()) || 0 - Number(Number(new Date().getTime()) || 0 - Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['startSetupTime']))))) || 0);
-    res.cookie("startProd", (0, encryptOdf_1.encrypted)(Number(new Date().getTime() || 0)));
+    let x = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['startSetupTime']));
+    let y = Number(new Date().getTime());
+    const tempoDecorrido = Number(y - x) || 0;
+    let z = (0, encodedOdf_1.encoded)(String(new Date().getTime()));
+    res.cookie("startProd", z);
     try {
         const codApontamentoFinalSetup = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, tempoDecorrido);
+        console.log('linha 117', codApontamentoFinalSetup);
         if (codApontamentoFinalSetup === 'Algo deu errado') {
             return res.json({ message: 'Algo deu errado' });
         }
-    }
-    catch (error) {
-        return res.json({ message: 'Algo deu errado' });
-    }
-    try {
-        const codApontamentoInicioSetup = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta3, descricaoCodigoAponta3, motivo, faltante, retrabalhada, Number(new Date().getTime() || 0));
-        if (codApontamentoInicioSetup === 'Algo deu errado') {
-            return res.json({ message: 'Algo deu errado' });
-        }
-        else if (codApontamentoInicioSetup === 'insert done') {
-            return res.json({ message: 'ferramentas selecionadas com successo' });
+        else if (codApontamentoFinalSetup === 'insert done') {
+            try {
+                const codApontamentoInicioSetup = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta3, descricaoCodigoAponta3, motivo, faltante, retrabalhada, Number(new Date().getTime() || 0));
+                console.log("linha 123", codApontamentoInicioSetup);
+                if (codApontamentoInicioSetup === 'Algo deu errado') {
+                    return res.json({ message: 'Algo deu errado' });
+                }
+                else if (codApontamentoInicioSetup === 'insert done') {
+                    console.log("feer selecionadas");
+                    return res.json({ message: 'ferramentas selecionadas com successo' });
+                }
+                else {
+                    return res.json({ message: 'Algo deu errado' });
+                }
+            }
+            catch (error) {
+                return res.json({ message: 'Algo deu errado' });
+            }
         }
         else {
             return res.json({ message: 'Algo deu errado' });

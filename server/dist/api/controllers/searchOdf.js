@@ -37,6 +37,7 @@ const searchOdf = async (req, res) => {
     }
     let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['employee'])));
     if (!funcionario) {
+        console.log("linha 52 /funcionario/", funcionario);
         return res.json({ message: 'Algo deu errado' });
     }
     let qtdLibString = (0, encryptOdf_1.encrypted)(String(qtdLibMax));
@@ -61,6 +62,7 @@ const searchOdf = async (req, res) => {
     res.cookie('NUMERO_OPERACAO', operationNumber, { httpOnly: true });
     res.cookie('REVISAO', encryptedRevision, { httpOnly: true });
     let lookForChildComponents = await (0, selectIfHasP_1.selectToKnowIfHasP)(dados, qtdLibMax, funcionario, selectedItens.odf.NUMERO_OPERACAO, selectedItens.odf.CODIGO_PECA);
+    console.log("linha 85 /searchOdf/", lookForChildComponents);
     if (lookForChildComponents.quantidade) {
         res.cookie('qtdLibMax', (0, encryptOdf_1.encrypted)(String(lookForChildComponents.quantidade)) || qtdLibString, { httpOnly: true });
     }

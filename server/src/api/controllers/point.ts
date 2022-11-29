@@ -4,6 +4,7 @@ import { sqlConfig } from "../../global.config";
 import { insertInto } from "../services/insert";
 import { select } from "../services/select";
 import { update } from "../services/update";
+import { decodedBuffer } from "../utils/decodeOdf";
 import { decrypted } from "../utils/decryptedOdf";
 import { encrypted } from "../utils/encryptOdf";
 import { sanitize } from "../utils/sanitize";
@@ -11,43 +12,37 @@ import { sanitize } from "../utils/sanitize";
 export const point: RequestHandler = async (req, res) => {
     const connection = await mssql.connect(sqlConfig);
     let qtdBoas = Number(sanitize(req.body["valorFeed"])) || 0;
-    let supervisor = String(sanitize(req.body["supervisor"])) || null
-    let motivorefugo: string = String(sanitize(req.body["value"]))
-    let badFeed = Number(sanitize(req.body["badFeed"])) || 0;
-    let missingFeed = Number(sanitize(req.body["missingFeed"])) || 0;
-    let reworkFeed = Number(sanitize(req.body["reworkFeed"])) || 0;
-    var codigoFilho: string[] = ((req.cookies['codigoFilho'])) || null // VER DEPOIS !!!!!!!!!!!!!!
+    let supervisor: string = sanitize(req.body["supervisor"]) || null
+    const motivorefugo: string | null = sanitize(req.body["value"]) || null
+    const badFeed = Number(sanitize(req.body["badFeed"])) || 0;
+    const missingFeed = Number(sanitize(req.body["missingFeed"])) || 0;
+    const reworkFeed = Number(sanitize(req.body["reworkFeed"])) || 0;
+    var codigoFilho: string[] = (decrypted(sanitize(req.cookies['codigoFilho']))) || null // VER DEPOIS !!!!!!!!!!!!!!
+    console.log("linha 20 /point.ts/", codigoFilho);
     //var reservedItens: number[] = (req.cookies['reservedItens']) || null // VER DEPOIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    let condic = String(sanitize(req.cookies['condic'])) || null
-    let odfNumberDecrypted: number = decrypted(sanitize(req.cookies["NUMERO_ODF"])) || null
-    odfNumberDecrypted = Number(odfNumberDecrypted)
-    let operationNumber = decrypted(sanitize(req.cookies["NUMERO_OPERACAO"])) || null
-    let codigoPeca = decrypted(sanitize(req.cookies['CODIGO_PECA'])) || null
-    let machineCode = decrypted(sanitize(req.cookies["CODIGO_MAQUINA"])) || null
-    let qtdLibMax = decrypted(sanitize(req.cookies['qtdLibMax'])) || null
-    let nextMachineProcess = decrypted(sanitize(req.cookies['MAQUINA_PROXIMA'])) || null
-    let nextOperationProcess = decrypted(sanitize(req.cookies['OPERACAO_PROXIMA'])) || null
-    console.log("linha 22 /point.ts/", decrypted(req.cookies["NUMERO_ODF"]));
-    let employee = decrypted(sanitize(req.cookies['employee'])) || null
-    let revisao = decrypted(sanitize(req.cookies['REVISAO'])) || null
-    let quantidade = req.cookies['quantidade']
-    const updateQtyQuery = [];
-    let startRip = Number(new Date()) || 0
-    res.cookie("startRip", startRip)
-    console.log('linha 35 /point.ts/');
-
-    //Encerra o tempo da produção
-    let endProdTimer = new Date() || 0;
+    const condic: string | null = String(sanitize(req.cookies['condic'])) || null
+    const odfNumberDecrypted: number = Number(decrypted(sanitize(req.cookies["NUMERO_ODF"]))) || 0
+    const operationNumber = decrypted(sanitize(req.cookies["NUMERO_OPERACAO"])) || null
+    const codigoPeca = decrypted(sanitize(req.cookies['CODIGO_PECA'])) || null
+    const machineCode = decrypted(sanitize(req.cookies["CODIGO_MAQUINA"])) || null
+    const qtdLibMax: number = Number(decrypted(sanitize(req.cookies['qtdLibMax']))) || 0
+    const nextMachineProcess = decrypted(sanitize(req.cookies['MAQUINA_PROXIMA'])) || null
+    const nextOperationProcess = decrypted(sanitize(req.cookies['OPERACAO_PROXIMA'])) || null
+    const employee = decrypted(sanitize(req.cookies['employee'])) || null
+    const revisao = decrypted(sanitize(req.cookies['REVISAO'])) || null
+    const quantidade = req.cookies['quantidade']
+    const updateQtyQuery: string[] = [];
+    const updateQtyQuery2: string[] = [];
 
     //Inicia tempo de Rip
-    let startProd = Number(req.cookies["startProd"] / 1000) || 0
-    let finalProdTimer = Number(endProdTimer.getTime() - startProd / 1000) || 0
+    res.cookie("startRip", Number(new Date()))
+
+    // Tempo final de produção
+    const finalProdTimer = Number(new Date().getTime() - Number(decodedBuffer(req.cookies['startProd'])) / 1000) || 0
 
     // Varial que guarda o valor total dos apontamentos
-    let valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed)) //+ Number(parcialFeed))
+    const valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed)) //+ Number(parcialFeed))
     let faltante = qtdLibMax - valorTotalApontado
-
-    qtdLibMax = Number(qtdLibMax)
 
     console.log("linha 56 /point.ts/");
 
@@ -55,20 +50,25 @@ export const point: RequestHandler = async (req, res) => {
         return res.json({ message: 'Algo deu errado' })
     }
 
-    if (!supervisor || supervisor === 'undefined' || supervisor === '' && valorTotalApontado === qtdLibMax) {
-        supervisor = '004067'
+    if (!supervisor || supervisor === '' && valorTotalApontado === qtdLibMax) {
+        if (badFeed > 0) {
+            return res.json({ message: 'Supervisor inválido' })
+        } else {
+            supervisor = '004067'
+        }
     }
 
     console.log("linha 62 Supervisor /point.ts/", supervisor);
 
-    if (!supervisor || supervisor === 'undefined' || supervisor === '' || supervisor === '000000' || supervisor === '0' || supervisor === '00' || supervisor === '000' || supervisor === '0000' || supervisor === '00000') {
+    if (!supervisor || supervisor === '' || supervisor === '000000' || supervisor === '0' || supervisor === '00' || supervisor === '000' || supervisor === '0000' || supervisor === '00000') {
         console.log("linha 64");
         return res.json({ message: 'Supervisor inválido' })
     }
 
     console.log("linha 68", qtdLibMax);
 
-    if (!qtdLibMax || qtdLibMax === 0) {
+    if (!qtdLibMax) {
+        console.log("linha 68 /point.ts/ qtdLibMax /", qtdLibMax);
         return res.json({ message: 'Quantidade inválida' })
     }
 
@@ -88,11 +88,11 @@ export const point: RequestHandler = async (req, res) => {
 
     console.log("linha 87 /point.ts/");
 
-    if (!odfNumberDecrypted || odfNumberDecrypted === 0) {
+    if (!odfNumberDecrypted) {
         return res.json({ message: 'Número odf inválido' })
     }
 
-    if (!employee || employee === '' || employee === '0') {
+    if (!employee || employee === '0') {
         return res.json({ message: 'Funcionário Inválido' })
     }
 
@@ -106,15 +106,11 @@ export const point: RequestHandler = async (req, res) => {
     //     return res.json({ message: 'Quantidade inválida' })
     // }
 
-    if (missingFeed <= 0) {
+    if (!missingFeed) {
         faltante = qtdLibMax - valorTotalApontado
     }
 
     console.log("linha 113 Faltante  /point.ts/", faltante);
-
-    if (!motivorefugo || motivorefugo === "undefined") {
-        motivorefugo = ''
-    }
 
     if (valorTotalApontado > qtdLibMax) {
         return res.json({ message: 'valor apontado maior que a quantidade liberada' })
@@ -122,6 +118,10 @@ export const point: RequestHandler = async (req, res) => {
 
     // Se houver refugo, verifica se o supervisor esta correto
     if (badFeed > 0) {
+        if (!motivorefugo) {
+            console.log(["Não foi dado motivo para o refugo"]);
+            return res.json({ message: 'Algo deu errado' })
+        }
         const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`
         const findSupervisor = await select(lookForSupervisor)
 
@@ -130,12 +130,7 @@ export const point: RequestHandler = async (req, res) => {
         }
     }
 
-    if (!condic) {
-        condic = "D";
-        codigoFilho = [];
-    }
-
-    let quantidadePossivelProduzir = Number(req.cookies['quantidade'])
+    const quantidadePossivelProduzir = Number(req.cookies['quantidade'])
 
     if (valorTotalApontado > quantidadePossivelProduzir) {
         return res.json({ message: 'Algo deu errado' })
@@ -143,10 +138,14 @@ export const point: RequestHandler = async (req, res) => {
 
     // Caso haja "P" faz update na quantidade de peças dos filhos
     if (condic === 'P') {
+        if (!codigoFilho) {
+            console.log(["Sem dados dos filhos"]);
+            return res.json({ message: 'Algo deu errado' })
+        }
         try {
-            //let min = Math.min(...reservedItens)
-            let diference = qtdLibMax - valorTotalApontado
-            let returnValueToStorage = diference / 2
+            //const min = Math.min(...reservedItens)
+            const diference = qtdLibMax - valorTotalApontado
+            const returnValueToStorage = diference / 2
 
             console.log("diference", returnValueToStorage);
             console.log("qtdLibMax", qtdLibMax);
@@ -155,23 +154,29 @@ export const point: RequestHandler = async (req, res) => {
             // Loop para atualizar o estoque
             if (valorTotalApontado < quantidade) {
                 try {
-                    for (const [i] of quantidade.length.entries()) {
-                        updateQtyQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${returnValueToStorage} WHERE 1 = 1 AND CODIGO = '${codigoFilho[i]}'`)
-                    }
+                    codigoFilho.forEach((codigoFilho: string) => {
+                        updateQtyQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${returnValueToStorage} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`)
+                    });
                     await connection.query(updateQtyQuery.join("\n")).then(result => result.rowsAffected)
+
+                    // for (const [i] of quantidade.length.entries()) {
+                    // }
                 } catch (error) {
                     console.log("linha 159 /point.ts/", error);
                     return res.json({ message: 'Algo deu errado' })
                 }
             }
 
-            // Loop para deletar o saldo alocado
+            // Loop para deconstar o saldo alocado
             try {
-                for (const [i] of quantidade.length.entries()) {
-                    let updateQuery = `DELETE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${odfNumberDecrypted}' AND CODIGO_FILHO = '${codigoFilho[i]}' `
-                    updateQtyQuery.push(updateQuery)
-                }
+                codigoFilho.forEach((element: string) => {
+                    const updateQuery: string = `UPDATE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${odfNumberDecrypted}' AND CODIGO_FILHO = '${element}' `
+                    updateQtyQuery2.push(updateQuery)
+                });
                 await connection.query(updateQtyQuery.join("\n")).then(result => result.rowsAffected)
+
+                // for (const [i] of quantidade.length.entries()) {
+                // }
             } catch (error) {
                 console.log("linha 185 /selectHasP/", error);
                 return res.json({ message: 'Algo deu errado' })
@@ -221,8 +226,8 @@ export const point: RequestHandler = async (req, res) => {
         // Insere codigo de apontamento 4 final de producao
         try {
             console.log("linha 215 /point.ts/ Inserindo dados de apontamento...");
-            let codAponta = 4
-            let descricaoCodigoAponta = 'Fin Prod'
+            const codAponta = 4
+            const descricaoCodigoAponta = 'Fin Prod'
             await insertInto(employee, odfNumberDecrypted, codigoPeca, revisao, operationNumber, machineCode, qtdLibMax, qtdBoas, badFeed, codAponta, descricaoCodigoAponta, motivorefugo, faltante, reworkFeed, finalProdTimer)
         } catch (error) {
             console.log("erro ao fazer insert linha 220 /point.ts/", error);

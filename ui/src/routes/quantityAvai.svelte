@@ -11,8 +11,11 @@
     async function getOdfData() {
         const res = await fetch(odfDataRouter);
         dadosOdf = await res.json();
+        console.log("linha 14 /quantity/", dadosOdf);
         quantityAvailableProd = dadosOdf.valorMaxdeProducao;
+        console.log('linha 15 /quantityAvailableProd/', quantityAvailableProd);
         if (quantityAvailableProd <= 0) {
+            console.log("ubrwegubrugbrubvbr");
             quantityAvailableProd = 0;
             errorMessage = 'Quantidade a produzir inválida'
         }
@@ -38,7 +41,7 @@
         </div>
     </div>
 {/await}
-{#if errorMessage = 'Quantidade a produzir inválida'}
+{#if errorMessage === 'Quantidade a produzir inválida'}
     <ModalConfirmation on:message={close}/>
 {/if}
 

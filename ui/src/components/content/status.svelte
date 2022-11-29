@@ -1,7 +1,8 @@
 <script>
     // @ts-nocheck
     // import Sanitize from '../../routes/sanitize.JS'
-    import ModalConfirmation from "../modal/modalConfirmation.svelte";
+    //import ModalConfirmation from "../modal/modalConfirmation.svelte";
+    import blockForbiddenChars from "../../routes/presanitize";
     let searchIcon = `/images/search.png`;
     let imageLoader = `/images/axonLoader.gif`;
     let tempoDecorrido = 0;
@@ -25,7 +26,8 @@
         const res = await fetch(urlString);
         prodTime = await res.json();
         tempoMax = prodTime;
-        if (tempoMax === null || tempoMax === 0) {
+
+        if (!tempoMax || tempoMax.message === 'time for execution not found') {
             tempoMax = 600000;
         }
     }
@@ -145,6 +147,7 @@
                     autocomplete="off"
                     bind:value={supervisor}
                     on:keypress={checkForSuper}
+                    on:input={blockForbiddenChars}
                     name="supervisor"
                     id="supervisor"
                     type="text"
@@ -154,9 +157,9 @@
     </div>
 {/if}
 
-{#if modalMessage === "Supervisor não encontrado" || modalMessage === "Erro ao localizar supervisor"}
+<!-- {#if modalMessage === "Supervisor não encontrado" || modalMessage === "Erro ao localizar supervisor"}
     <ModalConfirmation on:message={close} title={modalMessage} />
-{/if}
+{/if} -->
 
 {#await resultPromises}
     <div class="imageLoader" id="imageLoader">
@@ -229,12 +232,7 @@
     .blue {
         background-color: blue;
     }
-    /* .status{
-        display: flex;
-        flex-direction: column;
-        align-items: left;
-        text-align: left;
-    } */
+
     h3 {
         font-size: 20px;
         margin: 0px, 0px, 0px, 0px;

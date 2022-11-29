@@ -13,11 +13,12 @@ const status = async (req, res) => {
     const lookForTimer = `SELECT TOP 1 EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${numpec}' AND MAQUIN = '${maquina}' ORDER BY REVISAO DESC`;
     try {
         const resource = await (0, select_1.select)(lookForTimer);
-        const tempoRestante = Number(resource[0].EXECUT * Number((0, decryptedOdf_1.decrypted)((0, sanitize_html_1.default)(String(req.cookies["qtdLibMax"])))) * 1000 - (Number(new Date().getTime() - (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['startSetupTime'])))))) || 0;
+        let tempoRestante = Number(resource[0].EXECUT * Number((0, decryptedOdf_1.decrypted)((0, sanitize_html_1.default)(String(req.cookies["qtdLibMax"])))) * 1000 - (Number(new Date().getTime() - (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['startSetupTime'])))))) || 0;
         if (tempoRestante > 0) {
             return res.status(200).json(tempoRestante);
         }
         else if (tempoRestante <= 0) {
+            tempoRestante = 0;
             return res.json({ message: 'time for execution not found' });
         }
         else {

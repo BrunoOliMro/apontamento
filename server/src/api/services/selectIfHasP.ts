@@ -33,28 +33,29 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                AND PRO.CONCLUIDO ='T'                
                AND OP.CONDIC ='P'                 
                AND PCP.NUMERO_ODF = '${dados.numOdf}'
-               AND OP.NUMSEQ = '${numeroOperacao}'`
+               AND OP.NUMSEQ = ${numeroOperacao}`
         const selectKnowHasP = await select(queryStorageFund)
 
-        //console.log("linha 48 ", x);
+        console.log("linha 39 /selectKnowHasP/ ", selectKnowHasP);
         if (selectKnowHasP.length > 0) {
-            //const execut = selectKnowHasP.map((item: any) => item.EXECUT);
             const qtdLibProd: number[] = selectKnowHasP.map((element: any) => element.QTD_LIBERADA_PRODUZIR)
             const numberOfQtd = Math.min(...qtdLibProd)
             response.quantidade = numberOfQtd
             const codigoFilho: any = selectKnowHasP.map((item: any) => item.NUMITE)
-            const updateStorageQuery = [];
-            let updateAlocacaoQuery = [];
+            const updateStorageQuery: any = [];
+            let updateAlocacaoQuery: any = [];
             const insertAlocaoQuery: any = [];
             response.condic = selectKnowHasP[0].CONDIC
             response.codigoFilho = codigoFilho
             let quantityToPoint: number;
 
             // Check to see if it's to make a reservation
-            let makeReservation = selectKnowHasP.map((item: any) => item.NUMSEQ).filter((element: string) => element === numeroOperacao)
-            response.reserved = makeReservation;
+            // let makeReservation = selectKnowHasP.map((item: any) => item.NUMSEQ).filter((element: string) => element === numeroOperacao)
+            //response.reserved = makeReservation;
+            let x = String(numeroOperacao.replaceAll(' ', ''))
+            let makeReservation = selectKnowHasP.map((item: any) => item.NUMSEQ).filter((element: string) => element === x)
 
-            if (!makeReservation) {
+            if (makeReservation.length <= 0) {
                 return response.message = ({ message: 'Algo deu errado' })
             }
 
@@ -76,29 +77,27 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
 
             // Loop para atualizar os dados no DB
             try {
-                for (const [i] of makeReservation.length) {
-                    updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${quantityToPoint} WHERE 1 = 1 AND CODIGO = '${codigoFilho[i]}'`);
-                }
+                codigoFilho.forEach((element: string) => {
+                    updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${quantityToPoint} WHERE 1 = 1 AND CODIGO = '${element}'`);
+                });
                 let updateStorage = Math.min(...await connection.query(updateStorageQuery.join('\n')).then(result => result.rowsAffected));
                 if (updateStorage > 0) {
                     try {
-                        for (const [i] of makeReservation.length) {
-                            updateAlocacaoQuery.push(`UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${quantityToPoint} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
-                        }
-                        const updateAlocacao = await connection.query(updateAlocacaoQuery.join('\n')).then(result => result.rowsAffected);
-
-                        const minValueFromUpdate = Math.min(...updateAlocacao)
-
-                        if (minValueFromUpdate === 0) {
+                        codigoFilho.forEach((codigoFilho: string) => {
+                            updateAlocacaoQuery.push(`UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${quantityToPoint} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho}'`);
+                        });
+                        const updateAlocacao = Math.min(...await connection.query(updateAlocacaoQuery.join('\n')).then(result => result.rowsAffected));
+                        if (updateAlocacao === 0) {
                             try {
                                 if (makeReservation) {
-                                    makeReservation.forEach((_qtdItem: number, i: number) => {
-                                        insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES ('${dados.numOdf}', ${numeroOperacao}, '${codigoPeca}', '${codigoFilho[i]}', ${quantityToPoint}, 'WEUHGV', NULL, GETDATE(), '${funcionario}')`);
+                                    codigoFilho.forEach((codigoFilho: string) => {
+                                        insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES (${dados.numOdf}, ${numeroOperacao}, '${codigoPeca}', '${codigoFilho}', ${quantityToPoint}, 'ADDRESS', NULL, GETDATE(), '${funcionario}')`);
                                     });
                                     const insertAlocacao = Math.min(...await connection.query(insertAlocaoQuery.join('\n')).then(result => result.rowsAffected));
                                     if (insertAlocacao <= 0) {
                                         return response.message = 'Algo deu errado'
                                     } else {
+                                        console.log("linha 103", insertAlocacao);
                                         response.message = 'Valores Reservados'
                                         response.url = '/#/ferramenta'
                                         return response

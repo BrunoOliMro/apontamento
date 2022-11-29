@@ -36,7 +36,7 @@
     let modalMessage = "";
     let stopModal = false;
     let showMaqPar = false;
-    let modalTitle = "Máquina Parada ";
+    //let modalTitle = "Máquina Parada ";
     let urlString = `/api/v1/odfData`;
     getOdfData();
 
@@ -44,6 +44,7 @@
         const res = await fetch(urlString);
         dadosOdf = await res.json();
         qtdPossivelProducao = dadosOdf.valorMaxdeProducao;
+        console.log("linha 47 /feed.svelte/", qtdPossivelProducao);
         if (qtdPossivelProducao <= 0) {
             qtdPossivelProducao = 0;
         }
@@ -67,7 +68,7 @@
     async function getRefugodata() {
         const res = await fetch(motivoUrl);
         dados = await res.json();
-        console.log("linha 67", dados.length);
+        console.log("linha 67", dados);
     }
 
     async function checkForSuper(event) {
@@ -160,6 +161,7 @@
         }
         if (res.message === "Sucesso ao apontar") {
             //loader = true;
+            console.log("eubfuebvueb linha 164 /feed.svelte/");
             getSpaceFunc();
             //window.location.href = `/#/rip`;
             modalMessage = "";
@@ -170,9 +172,9 @@
     async function getSpaceFunc() {
         const res = await fetch(urlS);
         getSpace = await res.json();
-        //console.log("linha 169", getSpace);
         if (getSpace.message === "No address") {
-            window.location.href = `/#/rip`;
+            loader = false
+            window.location.href = `${getSpace.url}`
         }
 
         if (getSpace.message === "Address located") {
@@ -182,7 +184,7 @@
 
         if (getSpace.message === "Error on locating space") {
             loader = false;
-            window.location.href = `/#/codigobarras/apontamento`;
+            window.location.href = `${getSpace.url}`;
             location.reload();
         }
     }
@@ -258,6 +260,7 @@
                 value: value,
             }),
         }).then((res) => res.json());
+        console.log('linha 261 /feed.svelte/', res);
         if (res.message === "maquina parada com sucesso") {
             showMaqPar = true;
             showmodal = false;
@@ -400,10 +403,10 @@
         </div>
     {/if}
 
-    {#if showMaqPar === true}
+    <!-- {#if showMaqPar === true}
         <ModalConfirmation title={modalTitle} on:message={closeConfirm} />
-    {/if}
-
+    {/if} -->
+<!-- 
     {#if stopModal === true}
         <div class="modalBackground">
             <div class="itensInsideModal">
@@ -439,7 +442,7 @@
                 </div>
             </div>
         </div>
-    {/if}
+    {/if} -->
 
     {#if modalMessage === "Quantidade excedida"}
         <div class="fundo">
@@ -567,17 +570,6 @@
     .feed-area {
         margin-top: 50px;
         display: grid;
-        /* grid-template-areas: 'a', 'a', 'a', 'a'; */
-        /* flex-direction: row; */
-        /* justify-content: space-around; */
-        /* align-items: center;
-        text-align: center; */
-        /* margin: 8%; */
-        /* margin-left: 0%;
-        margin-bottom: 0%;
-        margin-top: 0%;
-        padding: 0%;
-        width: 100%; */
     }
     .feed-area-div {
         margin: 4%;
@@ -590,31 +582,6 @@
         align-items: center;
         text-align: center;
     }
-    /* .inputsBtn {
-        display: flex;
-        justify-content: left;
-    } */
-    /* .inputsFeed {
-        display: grid;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-    } */
-    /* .inputChange {
-        display: grid;
-        justify-content: right;
-        margin: 1%;
-        padding: 0%;
-    } */
-    /* .changeInput {
-        display: grid;
-        flex-direction: column;
-        justify-content: right;
-        align-items: left;
-        text-align: left;
-        height: 100%;
-    }  */
     .modalContent {
         margin-left: 25px;
         margin-top: 0%;
@@ -802,13 +769,6 @@
         width: 50%;
     }
 
-    /* .inputsFeed {
-        margin: 0%;
-        padding: 0%;
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-    } */
     .status-area {
         margin: 0%;
         padding: 0%;
@@ -989,25 +949,7 @@
         }
     }
 
-    /* .write {
-        margin: 0%;
-        font-size: 52px;
-        padding: 0%;
-        height: fit-content;
-        width: fit-content;
-    }
-    #feed-area {
-        width: fit-content;
-        height: fit-content;
-        margin: 0%;
-        padding: 0px 60px 0px 0px;
-    } */
 
-    /* input {
-        border-color: grey;
-        border-radius: 8px;
-        width: 100%;
-    } */
     .header {
         margin: 0%;
         padding: 0%;

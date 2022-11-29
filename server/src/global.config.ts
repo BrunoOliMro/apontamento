@@ -7,9 +7,9 @@ export const sqlConfig: mssql.config = {
     database: process.env["DB_SCHEMA"],
     server: '192.168.100.11',
     pool: {
-        max: 10,
+        max: 15,
         min: 0,
-        idleTimeoutMillis: 300000
+        idleTimeoutMillis: 3000000
     },
     options: {
         trustServerCertificate: true // change to true for local dev / self-signed certs

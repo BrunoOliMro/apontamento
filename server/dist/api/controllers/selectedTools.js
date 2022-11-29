@@ -29,23 +29,27 @@ const selectedTools = async (req, res) => {
     res.cookie("startProd", (0, encryptOdf_1.encrypted)(Number(new Date().getTime() || 0)));
     try {
         const codApontamentoFinalSetup = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, tempoDecorrido);
+        console.log("linha 107", codApontamentoFinalSetup);
         if (codApontamentoFinalSetup === 'Algo deu errado') {
             return res.json({ message: 'Algo deu errado' });
         }
-    }
-    catch (error) {
-        return res.json({ message: 'Algo deu errado' });
-    }
-    try {
-        const codApontamentoInicioSetup = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta3, descricaoCodigoAponta3, motivo, faltante, retrabalhada, Number(new Date().getTime() || 0));
-        if (codApontamentoInicioSetup === 'Algo deu errado') {
-            return res.json({ message: 'Algo deu errado' });
-        }
-        else if (codApontamentoInicioSetup === 'insert done') {
-            return res.json({ message: 'ferramentas selecionadas com successo' });
-        }
         else {
-            return res.json({ message: 'Algo deu errado' });
+            try {
+                const codApontamentoInicioSetup = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta3, descricaoCodigoAponta3, motivo, faltante, retrabalhada, Number(new Date().getTime() || 0));
+                console.log("linha 42 ", codApontamentoInicioSetup);
+                if (codApontamentoInicioSetup === 'Algo deu errado') {
+                    return res.json({ message: 'Algo deu errado' });
+                }
+                else if (codApontamentoInicioSetup === 'insert done') {
+                    return res.json({ message: 'ferramentas selecionadas com successo' });
+                }
+                else {
+                    return res.json({ message: 'Algo deu errado' });
+                }
+            }
+            catch (error) {
+                return res.json({ message: 'Algo deu errado' });
+            }
         }
     }
     catch (error) {

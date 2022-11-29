@@ -36,8 +36,9 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                AND PRO.CONCLUIDO ='T'                
                AND OP.CONDIC ='P'                 
                AND PCP.NUMERO_ODF = '${dados.numOdf}'
-               AND OP.NUMSEQ = '${numeroOperacao}'`;
+               AND OP.NUMSEQ = ${numeroOperacao}`;
         const selectKnowHasP = await (0, select_1.select)(queryStorageFund);
+        console.log("linha 39 /selectKnowHasP/ ", selectKnowHasP);
         if (selectKnowHasP.length > 0) {
             const qtdLibProd = selectKnowHasP.map((element) => element.QTD_LIBERADA_PRODUZIR);
             const numberOfQtd = Math.min(...qtdLibProd);
@@ -49,9 +50,9 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
             response.condic = selectKnowHasP[0].CONDIC;
             response.codigoFilho = codigoFilho;
             let quantityToPoint;
-            let makeReservation = selectKnowHasP.map((item) => item.NUMSEQ).filter((element) => element === numeroOperacao);
-            response.reserved = makeReservation;
-            if (!makeReservation) {
+            let x = String(numeroOperacao.replaceAll(' ', ''));
+            let makeReservation = selectKnowHasP.map((item) => item.NUMSEQ).filter((element) => element === x);
+            if (makeReservation.length <= 0) {
                 return response.message = ({ message: 'Algo deu errado' });
             }
             if (numberOfQtd <= 0) {
@@ -64,28 +65,28 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                 quantityToPoint = numberOfQtd;
             }
             try {
-                for (const [i] of makeReservation.length) {
-                    updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${quantityToPoint} WHERE 1 = 1 AND CODIGO = '${codigoFilho[i]}'`);
-                }
+                codigoFilho.forEach((element) => {
+                    updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${quantityToPoint} WHERE 1 = 1 AND CODIGO = '${element}'`);
+                });
                 let updateStorage = Math.min(...await connection.query(updateStorageQuery.join('\n')).then(result => result.rowsAffected));
                 if (updateStorage > 0) {
                     try {
-                        for (const [i] of makeReservation.length) {
-                            updateAlocacaoQuery.push(`UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${quantityToPoint} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho[i]}'`);
-                        }
-                        const updateAlocacao = await connection.query(updateAlocacaoQuery.join('\n')).then(result => result.rowsAffected);
-                        const minValueFromUpdate = Math.min(...updateAlocacao);
-                        if (minValueFromUpdate === 0) {
+                        codigoFilho.forEach((codigoFilho) => {
+                            updateAlocacaoQuery.push(`UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${quantityToPoint} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho}'`);
+                        });
+                        const updateAlocacao = Math.min(...await connection.query(updateAlocacaoQuery.join('\n')).then(result => result.rowsAffected));
+                        if (updateAlocacao === 0) {
                             try {
                                 if (makeReservation) {
-                                    makeReservation.forEach((_qtdItem, i) => {
-                                        insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES ('${dados.numOdf}', ${numeroOperacao}, '${codigoPeca}', '${codigoFilho[i]}', ${quantityToPoint}, 'WEUHGV', NULL, GETDATE(), '${funcionario}')`);
+                                    codigoFilho.forEach((codigoFilho) => {
+                                        insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES (${dados.numOdf}, ${numeroOperacao}, '${codigoPeca}', '${codigoFilho}', ${quantityToPoint}, 'ADDRESS', NULL, GETDATE(), '${funcionario}')`);
                                     });
                                     const insertAlocacao = Math.min(...await connection.query(insertAlocaoQuery.join('\n')).then(result => result.rowsAffected));
                                     if (insertAlocacao <= 0) {
                                         return response.message = 'Algo deu errado';
                                     }
                                     else {
+                                        console.log("linha 103", insertAlocacao);
                                         response.message = 'Valores Reservados';
                                         response.url = '/#/ferramenta';
                                         return response;

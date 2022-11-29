@@ -47,7 +47,9 @@ export const searchOdf: RequestHandler = async (req, res) => {
     // Descriptografa o funcionario dos cookies
     let funcionario = decrypted(String(sanitize(req.cookies['employee'])))
 
+    
     if (!funcionario) {
+        console.log("linha 52 /funcionario/", funcionario);
         return res.json({ message: 'Algo deu errado' })
     }
 
@@ -71,7 +73,6 @@ export const searchOdf: RequestHandler = async (req, res) => {
     res.cookie('encodedOdfNumber', encodedOdfNumber, { httpOnly: true })
     res.cookie('encodedOperationNumber', encodedOperationNumber, { httpOnly: true })
     res.cookie('encodedMachineCode', encodedMachineCode, { httpOnly: true })
-    //res.cookie('qtdLibMax', qtdLibString, {httpOnly: true})
     res.cookie('MAQUINA_PROXIMA', encryptedNextMachine, { httpOnly: true })
     res.cookie('OPERACAO_PROXIMA', encryptedNextOperation, { httpOnly: true })
     res.cookie('CODIGO_PECA', encryptedCodePart, { httpOnly: true })
@@ -80,6 +81,8 @@ export const searchOdf: RequestHandler = async (req, res) => {
     res.cookie('REVISAO', encryptedRevision, { httpOnly: true })
 
     let lookForChildComponents = await selectToKnowIfHasP(dados, qtdLibMax, funcionario, selectedItens.odf.NUMERO_OPERACAO, selectedItens.odf.CODIGO_PECA)
+
+    console.log("linha 85 /searchOdf/", lookForChildComponents);
 
     if (lookForChildComponents.quantidade) {
         res.cookie('qtdLibMax', encrypted(String(lookForChildComponents.quantidade)) || qtdLibString, { httpOnly: true })

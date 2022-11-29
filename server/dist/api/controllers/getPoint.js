@@ -19,14 +19,15 @@ const getPoint = async (req, res) => {
     const CODIGO_MAQUINA = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
     let codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA']))) || null;
     let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['employee']))) || null;
-    let qtdProduzir = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['qtdProduzir']))) || null;
+    let qtdProduzir = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['qtdLibMax']))) || null;
     let revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
     console.log("linha 20 /revisao/", revisao);
     const updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`;
     var address;
     var response = {
         message: '',
-        address: ''
+        address: '',
+        url: '',
     };
     const hostname = req.get("host");
     const { networkInterfaces } = require('os');
@@ -183,7 +184,9 @@ const getPoint = async (req, res) => {
             }
         }
         else {
-            return res.json({ message: 'No address' });
+            response.url = '/#/rip';
+            response.message = 'No address';
+            return res.json(response);
         }
     }
     catch (error) {

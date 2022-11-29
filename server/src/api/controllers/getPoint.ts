@@ -15,14 +15,16 @@ export const getPoint: RequestHandler = async (req, res) => {
     const CODIGO_MAQUINA = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
     let codigoPeca = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
     let funcionario = decrypted(String(sanitize(req.cookies['employee']))) || null
-    let qtdProduzir = decrypted(String(sanitize(req.cookies['qtdProduzir']))) || null
+    let qtdProduzir = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
+    //let quantidade: string | null = sanitize(req.cookies['quantidade']) || null
     let revisao = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
     console.log("linha 20 /revisao/", revisao);
     const updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`
     var address;
     var response = {
         message : '',
-        address: ''
+        address: '',
+        url: '',
     }
     const hostname = req.get("host")
     const { networkInterfaces } = require('os');
@@ -260,7 +262,9 @@ export const getPoint: RequestHandler = async (req, res) => {
                 return res.json({ message: 'Error on locating space' })
             }
         } else {
-            return res.json({ message: 'No address' })
+            response.url = '/#/rip'
+            response.message = 'No address'
+            return res.json(response)
         }
     } catch (error) {
         console.log('linha 185', error);

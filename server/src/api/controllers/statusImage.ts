@@ -9,23 +9,24 @@ export const statusImage: RequestHandler = async (req, res) => {
     const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
     const statusImg: string = String("_status")
     const lookOnProcess = `SELECT TOP 1 [NUMPEC], [IMAGEM] FROM PROCESSO (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${numpec}' AND REVISAO = '${revisao}' AND IMAGEM IS NOT NULL`
+    let imgResult: string[] = [];
     try {
         const resource = await select(lookOnProcess)
-        let imgResult: string[] = [];
-        if (typeof resource !== 'string') {
-            for await (let [i, record] of resource.entries()) {
-                const rec = await record;
-                const path = await pictures.getPicturePath(rec["NUMPEC"], rec["IMAGEM"], statusImg, String(i));
-                imgResult.push(path);
+        if (resource.length > 0) {
+            try {
+                for await (let [i, record] of resource.entries()) {
+                    const rec = await record;
+                    const path = await pictures.getPicturePath(rec["NUMPEC"], rec["IMAGEM"], statusImg, String(i));
+                    imgResult.push(path);
+                }
+                return res.status(200).json(imgResult)
+            } catch (error) {
+                console.log('error - statusimage -', error);
+                return res.json({ error: true, message: "Erro no servidor." });
             }
-        }
-
-        if (!imgResult) {
-            return res.json({ message: 'Erro no servidor' })
         } else {
-            return res.status(200).json(imgResult)
+            return res.json({ message: 'Status image not found' })
         }
-
     } catch (error) {
         console.log(error)
         return res.json({ error: true, message: "Erro no servidor." });

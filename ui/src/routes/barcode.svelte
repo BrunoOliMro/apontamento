@@ -8,7 +8,7 @@
   let urlS = `/api/v1/odf`;
   let urlBagde = `/api/v1/badge`;
   let supervisorApi = "api/v1/supervisorParada";
-  let badge = "";
+  let badge = "" || null;
   let showmodal = false;
   let showCorr = false;
   let returnedValueApi = `/api/v1/returnedValue`;
@@ -54,7 +54,7 @@
         superSuperMaqPar: !superSuperMaqPar ? "" : superSuperMaqPar,
       }),
     }).then((res) => res.json());
-    //console.log("linha 54", res);
+    console.log("linha 57 /barcode.svelte/", res);
     if (res.message === "maquina") {
       loader = false;
       window.location.href = "/#/codigobarras";
@@ -76,25 +76,22 @@
   };
 
   function verifyBarcodeBefore(event) {
-
-    if(!barcode && barcode.length > 0){
-      return modalMessage = "Algo deu errado";
+    if (!barcode && barcode.length > 0) {
+      return (modalMessage = "Algo deu errado");
     }
 
     if (event.key === "Enter" && barcode.length >= 16) {
       doPost();
     }
-
   }
 
   const doPost = async () => {
-
-    if(!barcode){
-      return modalMessage = 'Algo deu errado'
+    if (!barcode) {
+      return (modalMessage = "Algo deu errado");
     }
 
-    if(barcode.length <16){
-      return modalMessage = 'Algo deu errado'
+    if (barcode.length < 16) {
+      return (modalMessage = "Algo deu errado");
     }
 
     loader = true;
@@ -109,7 +106,7 @@
     }).then((res) => res.json());
     console.log("linha 89 res /barcode/", res);
 
-    if(res.message === 'Valores Reservados'){
+    if (res.message === "Valores Reservados") {
       window.location.href = "/#/ferramenta";
       location.reload();
     }
@@ -130,29 +127,29 @@
       modalMessage = "Algo deu errado";
     }
 
-    if (res.message === "codeApont 1 setup iniciado") {
-      loader = false;
-      window.location.href = "/#/ferramenta";
-    }
+    // if (res.message === "codeApont 1 setup iniciado") {
+    //   loader = false;
+    //   window.location.href = "/#/ferramenta";
+    // }
 
-    if (res.message === "codeApont 2 setup finalizado") {
-      loader = false;
-      window.location.href = "/#/ferramenta";
-    }
+    // if (res.message === "codeApont 2 setup finalizado") {
+    //   loader = false;
+    //   window.location.href = "/#/ferramenta";
+    // }
 
-    if (res.message === "codeApont 3 prod iniciado") {
-      loader = false;
-      window.location.href = "/#/codigobarras/apontamento";
-    }
+    // if (res.message === "codeApont 3 prod iniciado") {
+    //   loader = false;
+    //   window.location.href = "/#/codigobarras/apontamento";
+    // }
 
-    if (res.message === "codeApont 4 prod finalzado") {
-      window.location.href = "/#/rip";
-    }
+    // if (res.message === "codeApont 4 prod finalzado") {
+    //   window.location.href = "/#/rip";
+    // }
 
-    if (res.message === "codeApont 5 maquina parada") {
-      loader = false;
-      superParada = true;
-    }
+    // if (res.message === "codeApont 5 maquina parada") {
+    //   loader = false;
+    //   superParada = true;
+    // }
 
     if (res.message === "codigo de barras vazio") {
       modalMessage = "Código de barras vazio";
@@ -171,11 +168,19 @@
     }
   };
 
-
   function checkBeforeBadge(event) {
     if (badge.length >= 6 && event.key === "Enter") {
-      if(!badge || badge === "000000" || badge === "0" || badge === '0' || badge === '00' || badge === '000' || badge === '0000' || badge === '00000'){
-        modalMessage = 'Crachá inválido'
+      if (
+        !badge ||
+        badge === "000000" ||
+        badge === "0" ||
+        badge === "0" ||
+        badge === "00" ||
+        badge === "000" ||
+        badge === "0000" ||
+        badge === "00000"
+      ) {
+        modalMessage = "Crachá inválido";
       } else {
         checkBagde();
       }
@@ -205,8 +210,8 @@
     if (res.message === "Empty badge") {
       modalMessage = "Crachá vazio";
     }
-    if(res.message === 'Error on searching for badge'){
-      modalMessage = 'Erro ao localizar crachá'
+    if (res.message === "Error on searching for badge") {
+      modalMessage = "Erro ao localizar crachá";
     }
   };
 
@@ -391,7 +396,6 @@
 
     {#if modalMessage === "Limite de estorno excedido"}
       <ModalConfirmation on:message={closePopCor} title={modalMessage} />
-
     {/if}
 
     {#if modalMessage === "Não há limite na ODF"}

@@ -8,8 +8,7 @@ import { selectedItensFromOdf } from "../utils/queryGroup";
 
 export const odfData: RequestHandler = async (req, res) => {
     const numeroOdf: number = Number(decrypted(String(sanitize(req.cookies["NUMERO_ODF"])))) || 0
-    const numOper: string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
-   // const numOpeNew = String(numOper!.toString().replaceAll(' ', "0")) || null
+    const numOper: string =  "00" + decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))).replaceAll(' ', '0')
     const funcionario = decrypted(String(sanitize(req.cookies['employee']))) || null
     const lookForOdfData = `SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${numeroOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
     let qtdLibMax: number;
@@ -21,7 +20,8 @@ export const odfData: RequestHandler = async (req, res) => {
     }
     try {
         const data = await select(lookForOdfData)
-        res.cookie("qtdLibMax", encrypted(String(data[0].QTDE_ODF)))
+        let x = encrypted(String(data[0].QTDE_ODF))
+        res.cookie("qtdLibMax", x)
 
         if (!funcionario) {
             return res.json({ message: 'Algo deu errado' })

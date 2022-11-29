@@ -29,8 +29,13 @@ const stopSupervisor = async (req, res) => {
     try {
         const resource = await (0, select_1.select)(lookForSupervisor);
         if (resource) {
-            await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, NUMERO_OPERACAO, CODIGO_MAQUINA, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido);
-            return res.status(200).json({ message: 'maquina' });
+            const insertTimerBackTo3 = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, NUMERO_OPERACAO, CODIGO_MAQUINA, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido);
+            if (insertTimerBackTo3 === 'insert done') {
+                return res.status(200).json({ message: 'maquina' });
+            }
+            else {
+                return res.json({ message: "supervisor não encontrado" });
+            }
         }
         else if (!resource) {
             return res.json({ message: "supervisor não encontrado" });

@@ -12,7 +12,7 @@ const odfIndex_1 = require("../utils/odfIndex");
 const queryGroup_1 = require("../utils/queryGroup");
 const odfData = async (req, res) => {
     const numeroOdf = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"])))) || 0;
-    const numOper = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))) || null;
+    const numOper = "00" + (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))).replaceAll(' ', '0');
     const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['employee']))) || null;
     const lookForOdfData = `SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${numeroOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
     let qtdLibMax;
@@ -24,7 +24,8 @@ const odfData = async (req, res) => {
     };
     try {
         const data = await (0, select_1.select)(lookForOdfData);
-        res.cookie("qtdLibMax", (0, encryptOdf_1.encrypted)(String(data[0].QTDE_ODF)));
+        let x = (0, encryptOdf_1.encrypted)(String(data[0].QTDE_ODF));
+        res.cookie("qtdLibMax", x);
         if (!funcionario) {
             return res.json({ message: 'Algo deu errado' });
         }
