@@ -31,10 +31,8 @@ const ripPost = async (req, res) => {
     let descricao = (req.cookies['descricao']) || null;
     var objectSanitized = {};
     console.log("linha 31 /rip Post/", setup);
-    const startRip = Number(req.cookies["startRip"]) || 0;
-    const endProdRip = Number(new Date().getDate()) || 0;
-    const tempoDecorridoRip = Number(new Date(startRip).getDate()) || 0;
-    const finalProdRip = Number(tempoDecorridoRip - endProdRip) || 0;
+    const tempoDecorridoRip = Number(new Date(req.cookies["startRip"]).getDate()) || 0;
+    const finalProdRip = Number(new Date(req.cookies["startRip"]).getDate() - new Date().getDate()) || 0;
     if (!setup) {
         if (Object.keys(setup).length <= 0) {
             return res.json({ message: "rip vazia" });
@@ -56,7 +54,7 @@ const ripPost = async (req, res) => {
     let retrabalhada = 0;
     await (0, insert_1.insertInto)(funcionario, NUMERO_ODF, codigoPeca, revisao, NUMERO_OPERACAO, CODIGO_MAQUINA, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorridoRip);
     try {
-        const updatePcpProg = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${NUMERO_ODF} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${NUMERO_OPERACAO} AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`;
+        const updatePcpProg = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = ${finalProdRip} WHERE 1 = 1 AND NUMERO_ODF = ${NUMERO_ODF} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${NUMERO_OPERACAO} AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`;
         await (0, update_1.update)(updatePcpProg);
     }
     catch (error) {

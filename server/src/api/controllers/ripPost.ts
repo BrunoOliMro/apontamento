@@ -36,10 +36,8 @@ export const ripPost: RequestHandler = async (req, res) => {
     //let final = Number(tempoDecorrido - end) || 0 // Errp em type numeric
 
     // Encerra ao final da Rip
-    const startRip = Number(req.cookies["startRip"]) || 0
-    const endProdRip = Number(new Date().getDate()) || 0;
-    const tempoDecorridoRip = Number(new Date(startRip).getDate()) || 0
-    const finalProdRip = Number(tempoDecorridoRip - endProdRip) || 0
+    const tempoDecorridoRip = Number(new Date(req.cookies["startRip"]).getDate()) || 0
+    const finalProdRip = Number(new Date(req.cookies["startRip"]).getDate() - new Date().getDate()) || 0
 
     if(!setup){
         if (Object.keys(setup).length <= 0) {
@@ -70,7 +68,7 @@ export const ripPost: RequestHandler = async (req, res) => {
 
     //Atualiza o tempo total que a operação levou
     try {
-                const updatePcpProg = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${NUMERO_ODF} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${NUMERO_OPERACAO} AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`
+                const updatePcpProg = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = ${finalProdRip} WHERE 1 = 1 AND NUMERO_ODF = ${NUMERO_ODF} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${NUMERO_OPERACAO} AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`
                 await update(updatePcpProg)
             } catch (error) {
         console.log(error)

@@ -33,7 +33,7 @@ export const codeNote: RequestHandler = async (req, res, next) => {
 
         //Compara o Codigo Descodificado e o descriptografado
         if (encodedOdfString === numeroOdfCookies) {
-            next()
+            return next()
         } else {
             return res.json({ message: 'Acesso negado' })
         }

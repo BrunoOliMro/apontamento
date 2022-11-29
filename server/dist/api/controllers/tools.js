@@ -40,38 +40,40 @@ const tools = async (req, res, next) => {
         if (inserted === 'Algo deu errado') {
             return res.json({ message: "Erro ao inserir codapontamento 1" });
         }
+        else {
+            try {
+                toolsImg = await (0, select_1.select)(lookForTools);
+                if (!toolsImg) {
+                    return res.json({ message: "/images/sem_imagem.gif" });
+                }
+                for await (const [i, record] of toolsImg.entries()) {
+                    const rec = await record;
+                    const path = await pictures_1.pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], ferramenta, String(i));
+                    result.push(path);
+                }
+                if (toolsImg) {
+                    const obj = {
+                        message: 'codeApont 1 inserido',
+                        result: result,
+                    };
+                    return res.json(obj);
+                }
+                else if (!toolsImg) {
+                    return res.json({ message: 'Data not found' });
+                }
+                else {
+                    return next();
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return res.json({ message: 'Data not found' });
+            }
+        }
     }
     catch (error) {
         console.log(error);
         return res.json({ message: "Erro ao inserir codapontamento 1" });
-    }
-    try {
-        toolsImg = await (0, select_1.select)(lookForTools);
-        if (!toolsImg) {
-            return res.json({ message: "/images/sem_imagem.gif" });
-        }
-        for await (const [i, record] of toolsImg.entries()) {
-            const rec = await record;
-            const path = await pictures_1.pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], ferramenta, String(i));
-            result.push(path);
-        }
-        if (toolsImg) {
-            const obj = {
-                message: 'codeApont 1 inserido',
-                result: result,
-            };
-            return res.json(obj);
-        }
-        else if (!toolsImg) {
-            return res.json({ message: 'Data not found' });
-        }
-        else {
-            next();
-        }
-    }
-    catch (error) {
-        console.log(error);
-        return res.json({ message: 'Data not found' });
     }
 };
 exports.tools = tools;

@@ -6,7 +6,6 @@ const decryptedOdf_1 = require("../utils/decryptedOdf");
 const sanitize_1 = require("../utils/sanitize");
 const historic = async (req, res) => {
     let NUMERO_ODF = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"])));
-    let resultPeçasBoas;
     const lookForDetail = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO_DETALHADO WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' ORDER BY DATAHORA DESC`;
     const lookforGeneric = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' ORDER BY OP ASC`;
     let obj = [];
@@ -23,7 +22,7 @@ const historic = async (req, res) => {
                 obj.push(iterator);
             }
         }
-        resultPeçasBoas = detailHistoric.reduce((acc, iterator) => {
+        detailHistoric.reduce((acc, iterator) => {
             return acc + iterator.BOAS + iterator.REFUGO;
         }, 0);
         try {

@@ -28,7 +28,7 @@ const codeNote = async (req, res, next) => {
         dados.codMaq = codigoMaq;
         const encodedOdfString = (0, decodeOdf_1.decodedBuffer)(String((0, sanitize_html_1.default)(req.cookies['encodedOdfString'])));
         if (encodedOdfString === numeroOdfCookies) {
-            next();
+            return next();
         }
         else {
             return res.json({ message: 'Acesso negado' });
