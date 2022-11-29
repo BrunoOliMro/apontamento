@@ -4,25 +4,27 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.rip = void 0;
-const mssql_1 = __importDefault(require("mssql"));
 const sanitize_html_1 = __importDefault(require("sanitize-html"));
-const global_config_1 = require("../../global.config");
 const insert_1 = require("../services/insert");
+const select_1 = require("../services/select");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const rip = async (req, res) => {
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let numpec = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
-    let revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
-    let codMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
-    let codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
-    let numeroOdf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"]))) || null;
-    let numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))) || null;
-    let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['employee']))) || null;
-    let start = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["startSetupTime"]))) || null;
-    let qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['qtdLibMax']))) || null;
-    let startTime = Number(new Date(start).getTime()) || 0;
-    try {
-        const ripDetails = await connection.query(`
+    const numpec = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
+    const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
+    const codMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
+    const codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
+    const numeroOdf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"]))) || null;
+    const numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))) || null;
+    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['employee']))) || null;
+    const start = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["startSetupTime"]))) || null;
+    const qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['qtdLibMax']))) || null;
+    const startTime = Number(new Date(start).getTime()) || 0;
+    const response = {
+        message: '',
+        url: '',
+        object: '',
+    };
+    const rip = `
         SELECT  DISTINCT
         PROCESSO.NUMPEC,
         PROCESSO.REVISAO,
@@ -43,44 +45,47 @@ const rip = async (req, res) => {
         WHERE PROCESSO.NUMPEC = '${numpec}' 
         AND PROCESSO.REVISAO = '${revisao}' 
         AND NUMCAR < '2999'
-        ORDER BY NUMPEC ASC
-            `.trim()).then(result => result.recordset);
-        let arrayNumope = ripDetails.map((acc) => {
-            if (acc.CST_NUMOPE === codMaq) {
-                return acc;
-            }
-        });
-        console.log("linha 53 /rip/", arrayNumope);
-        let numopeFilter = arrayNumope.filter(acc => acc);
-        res.cookie('cstNumope', numopeFilter.map(acc => acc.CST_NUMOPE));
-        res.cookie('numCar', numopeFilter.map(acc => acc.NUMCAR));
-        res.cookie('descricao', numopeFilter.map(acc => acc.DESCRICAO));
-        res.cookie('especif', numopeFilter.map(acc => acc.ESPECIF));
-        res.cookie('instrumento', numopeFilter.map(acc => acc.INSTRUMENTO));
-        res.cookie('lie', numopeFilter.map(acc => acc.LIE));
-        res.cookie('lse', numopeFilter.map(acc => acc.LSE));
-        let descricaoCodAponta = `Rip Ini`;
-        let boas = 0;
-        let ruins = 0;
-        let faltante = 0;
-        let retrabalhada = 0;
-        let codAponta = 5;
-        let motivo = ``;
-        try {
-            await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime);
+        ORDER BY NUMPEC ASC`;
+    const ripDetails = await (0, select_1.select)(rip);
+    let arrayNumope = ripDetails.map((acc) => {
+        if (acc.CST_NUMOPE === codMaq) {
+            return acc;
         }
-        catch (error) {
-            return res.json({ message: 'Erro ao iniciar tempo da rip' });
+        else {
+            return acc;
         }
-        if (numopeFilter.length <= 0) {
+    });
+    let numopeFilter = arrayNumope.filter((acc) => acc);
+    res.cookie('cstNumope', numopeFilter.map((acc) => acc.CST_NUMOPE));
+    res.cookie('numCar', numopeFilter.map((acc) => acc.NUMCAR));
+    res.cookie('descricao', numopeFilter.map((acc) => acc.DESCRICAO));
+    res.cookie('especif', numopeFilter.map((acc) => acc.ESPECIF));
+    res.cookie('instrumento', numopeFilter.map((acc) => acc.INSTRUMENTO));
+    res.cookie('lie', numopeFilter.map((acc) => acc.LIE));
+    res.cookie('lse', numopeFilter.map((acc) => acc.LSE));
+    const descricaoCodAponta = `Rip Ini`;
+    const boas = 0;
+    const ruins = 0;
+    const faltante = 0;
+    const retrabalhada = 0;
+    const codAponta = 5;
+    const motivo = ``;
+    try {
+        const inserted = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime);
+        if (inserted === 'insert done') {
+            return res.json(numopeFilter);
         }
-        return res.json(numopeFilter);
+        else if (inserted === 'Algo deu errado') {
+            return response.message = 'Algo deu errado';
+        }
+        else {
+            return response.message = 'Algo deu errado';
+        }
     }
     catch (error) {
-        console.log(error);
-        return res.redirect("/#/codigobarras/apontamento?error=ripnotFound");
-    }
-    finally {
+        response.url = '/#/codigobarras/';
+        response.message = 'Erro ao iniciar tempo da rip';
+        return res.json(response);
     }
 };
 exports.rip = rip;

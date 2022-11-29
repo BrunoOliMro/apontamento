@@ -1,23 +1,30 @@
 <script>
-    let imageLoader = "/images/axonLoader.gif";
-    let title = "Quantidade a produzir: ";
+    import ModalConfirmation from "../components/modal/modalConfirmation.svelte";
+    const imageLoader = "/images/axonLoader.gif";
+    const title = "Quantidade a produzir: ";
     let quantityAvailableProd;
     let dadosOdf = [];
-    let urlString = `/api/v1/odfData`;
-    let result = getOdfData();
+    let odfDataRouter = `/api/v1/odfData`;
+    const promiseResult = getOdfData();
+    let errorMessage = ''
 
     async function getOdfData() {
-        const res = await fetch(urlString);
+        const res = await fetch(odfDataRouter);
         dadosOdf = await res.json();
-        console.log('linha 41', dadosOdf);
         quantityAvailableProd = dadosOdf.valorMaxdeProducao;
         if (quantityAvailableProd <= 0) {
             quantityAvailableProd = 0;
+            errorMessage = 'Quantidade a produzir inválida'
         }
+    }
+
+    function close (){
+        errorMessage = ''
+        window.location.href = "/#/codigobarras";
     }
 </script>
 
-{#await result}
+{#await promiseResult}
     <div class="imageLoader">
         <div class="loader">
             <img src={imageLoader} alt="" />
@@ -31,6 +38,9 @@
         </div>
     </div>
 {/await}
+{#if errorMessage = 'Quantidade a produzir inválida'}
+    <ModalConfirmation on:message={close}/>
+{/if}
 
 <style>
     p{

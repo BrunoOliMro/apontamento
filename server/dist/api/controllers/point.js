@@ -21,7 +21,6 @@ const point = async (req, res) => {
     let missingFeed = Number((0, sanitize_1.sanitize)(req.body["missingFeed"])) || 0;
     let reworkFeed = Number((0, sanitize_1.sanitize)(req.body["reworkFeed"])) || 0;
     var codigoFilho = ((req.cookies['codigoFilho'])) || null;
-    var reservedItens = (req.cookies['reservedItens']) || null;
     let condic = String((0, sanitize_1.sanitize)(req.cookies['condic'])) || null;
     let odfNumberDecrypted = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"])) || null;
     odfNumberDecrypted = Number(odfNumberDecrypted);
@@ -34,6 +33,7 @@ const point = async (req, res) => {
     console.log("linha 22 /point.ts/", (0, decryptedOdf_1.decrypted)(req.cookies["NUMERO_ODF"]));
     let employee = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['employee'])) || null;
     let revisao = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['REVISAO'])) || null;
+    let quantidade = req.cookies['quantidade'];
     const updateQtyQuery = [];
     let startRip = Number(new Date()) || 0;
     res.cookie("startRip", startRip);
@@ -108,12 +108,14 @@ const point = async (req, res) => {
     }
     if (condic === 'P') {
         try {
-            let min = Math.min(...reservedItens);
-            let diference = min - valorTotalApontado;
+            let diference = qtdLibMax - valorTotalApontado;
             let returnValueToStorage = diference / 2;
-            if (valorTotalApontado < min) {
+            console.log("diference", returnValueToStorage);
+            console.log("qtdLibMax", qtdLibMax);
+            console.log("valorTotalApontado", valorTotalApontado);
+            if (valorTotalApontado < quantidade) {
                 try {
-                    for (const [i] of reservedItens.entries()) {
+                    for (const [i] of quantidade.length.entries()) {
                         updateQtyQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${returnValueToStorage} WHERE 1 = 1 AND CODIGO = '${codigoFilho[i]}'`);
                     }
                     await connection.query(updateQtyQuery.join("\n")).then(result => result.rowsAffected);
@@ -124,7 +126,7 @@ const point = async (req, res) => {
                 }
             }
             try {
-                for (const [i] of reservedItens.entries()) {
+                for (const [i] of quantidade.length.entries()) {
                     let updateQuery = `DELETE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${odfNumberDecrypted}' AND CODIGO_FILHO = '${codigoFilho[i]}' `;
                     updateQtyQuery.push(updateQuery);
                 }
@@ -148,9 +150,6 @@ const point = async (req, res) => {
             }
         }
         catch (error) {
-            if (error) {
-                console.log('linha 19888888888888');
-            }
             console.log('linha 198 - error - //point.ts', error);
             return res.json({ message: 'Algo deu errado' });
         }

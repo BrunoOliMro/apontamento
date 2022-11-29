@@ -34,8 +34,6 @@ const statusImage = async (req, res) => {
         console.log(error);
         return res.json({ error: true, message: "Erro no servidor." });
     }
-    finally {
-    }
 };
 exports.statusImage = statusImage;
 //# sourceMappingURL=statusImage.js.map

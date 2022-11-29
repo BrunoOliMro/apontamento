@@ -5,6 +5,7 @@ const select_1 = require("../services/select");
 const sanitize_1 = require("../utils/sanitize");
 const supervisor = async (req, res) => {
     let supervisor = String((0, sanitize_1.sanitize)(req.body['supervisor']));
+    let lookForBadge = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`;
     if (!supervisor) {
         return res.json({ message: 'supervisor não encontrado inválido' });
     }
@@ -18,10 +19,12 @@ const supervisor = async (req, res) => {
         return res.json({ message: 'supervisor inválido' });
     }
     try {
-        let lookForBadge = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`;
         const resource = await (0, select_1.select)(lookForBadge);
-        if (resource.length > 0) {
+        if (resource) {
             return res.json({ message: 'Supervisor encontrado' });
+        }
+        else if (!resource) {
+            return res.json({ message: 'Supervisor não encontrado' });
         }
         else {
             return res.json({ message: 'Supervisor não encontrado' });
@@ -29,8 +32,6 @@ const supervisor = async (req, res) => {
     }
     catch (error) {
         return res.json({ message: 'Erro ao localizar supervisor' });
-    }
-    finally {
     }
 };
 exports.supervisor = supervisor;

@@ -10,18 +10,7 @@ export const statusImage: RequestHandler = async (req, res) => {
     const statusImg: string = String("_status")
     const lookOnProcess = `SELECT TOP 1 [NUMPEC], [IMAGEM] FROM PROCESSO (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${numpec}' AND REVISAO = '${revisao}' AND IMAGEM IS NOT NULL`
     try {
-        // const resource = await connection.query(`
-        // SELECT TOP 1
-        // [NUMPEC],
-        // [IMAGEM]
-        // FROM PROCESSO (NOLOCK)
-        // WHERE 1 = 1
-        // AND NUMPEC = '${numpec}'
-        // AND REVISAO = '${revisao}'
-        // AND IMAGEM IS NOT NULL
-        // `).then(record => record.recordset);
         const resource = await select(lookOnProcess)
-
         let imgResult: string[] = [];
         if (typeof resource !== 'string') {
             for await (let [i, record] of resource.entries()) {
@@ -40,7 +29,5 @@ export const statusImage: RequestHandler = async (req, res) => {
     } catch (error) {
         console.log(error)
         return res.json({ error: true, message: "Erro no servidor." });
-    } finally {
-        //await connection.close()
     }
 }

@@ -4,28 +4,27 @@
     import TableRipRow from "../components/Tables/TableRipRow.svelte";
     let seq = "Seq";
     let extraColumns = [];
-    let urlS = `/api/v1/pointRip`;
-    let urlString = `/api/v1/rip`;
+    let pointRipRouter = `/api/v1/pointRip`;
+    let ripRouter = `/api/v1/rip`;
     let Subtitle = "RIP - RELATÓRIO DE INSPEÇÃO DE PROCESSOS";
-    let showEnd = false;
     let ripTable = [];
     let setup = {};
     let showErrorEmpty = false;
     let showSuper = false;
-    let supervisor = "";
-    let supervisorApi = `/api/v1/supervisor`;
+    let supervisorMessage = "";
+    let supervisorRouter = `/api/v1/supervisor`;
     let showError = false;
     let showSetup = false;
-    let resultado = callRip();
+    const promiseResult = callRip();
     let lie;
     let lsd;
     let loader = false;
     let odfFinish = false;
-    let crachModal = "";
+    let badgeMessage = "";
     let redirect;
 
     async function callRip() {
-        const res = await fetch(urlString);
+        const res = await fetch(ripRouter);
         ripTable = await res.json();
 
         lie = ripTable.map((acc) => acc.LIE);
@@ -33,16 +32,16 @@
 
         if (ripTable.length <= 0) {
             loader = true;
-            window.location.href = "/#/codigobarras";
-            doPost();
-            location.reload();
+            //window.location.href = "/#/codigobarras";
+            await doPost();
+            //location.reload();
         }
     }
 
     function checkSuper(event) {
-        if (supervisor.length >= 6 && event.key === "Enter") {
-            if (supervisor === "000000") {
-                crachModal = "cracha invalido";
+        if (supervisorMessage.length >= 6 && event.key === "Enter") {
+            if (supervisorMessage === "000000") {
+                badgeMessage = "cracha invalido";
             }
             doPostSuper();
         }
@@ -52,11 +51,11 @@
         loader = true;
         const headers = new Headers();
         headers.append("Content-Type", "application/json");
-        const res = await fetch(supervisorApi, {
+        const res = await fetch(supervisorRouter, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                supervisor: !supervisor ? "" : supervisor,
+                supervisor: !supervisorMessage ? "" : supervisorMessage,
             }),
         }).then((res) => res.json());
         loader = false;
@@ -75,14 +74,14 @@
     const doPost = async () => {
         loader = true;
         const headers = new Headers();
-        const res = await fetch(urlS, {
+        const res = await fetch(pointRipRouter, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 setup: setup,
             }),
         }).then((res) => res.json());
-        if(res){
+        if (res) {
             loader = false;
         }
         if (res.message === "rip vazia") {
@@ -94,14 +93,14 @@
             //window.location.href = "/#/codigobarras";
         }
         if (res.message === "ocorreu um erro ao enviar os dados da rip") {
-            crachModal = "ocorreu um erro ao enviar os dados da rip";
+            badgeMessage = "ocorreu um erro ao enviar os dados da rip";
             //window.location.href = "/#/codigobarras";
         }
     };
 
     function callFinish() {
         odfFinish = false;
-        window.location.href = redirect
+        window.location.href = redirect;
     }
 
     function createCol() {
@@ -173,7 +172,7 @@
         showSuper = false;
         showError = false;
         showErrorEmpty = false;
-        crachModal = "";
+        badgeMessage = "";
     }
 </script>
 
@@ -205,7 +204,7 @@
         </div>
     {/if}
 
-    {#await resultado}
+    {#await promiseResult}
         <div class="imageLoader">
             <div class="loader">
                 <img src={imageLoader} alt="" />
@@ -226,10 +225,6 @@
                                 <th scope="col">LSE</th>
                                 <th scope="col">Instrumento</th>
                                 <th scope="col">SETUP</th>
-                                <!-- <th scope="col">M 2</th>
-                            <th scope="col">M 3</th>
-                            <th scope="col">M 4</th>
-                            <th scope="col">M 5</th> -->
                                 {#each extraColumns as columnNumber}
                                     <th scope="col">M {columnNumber}</th>
                                 {/each}
@@ -270,7 +265,7 @@
                 <input
                     autofocus
                     tabindex="18"
-                    bind:value={supervisor}
+                    bind:value={supervisorMessage}
                     on:keypress={checkSuper}
                     onkeyup="this.value = this.value.toUpperCase()"
                     type="text"
@@ -299,7 +294,6 @@
             </div>
         </div>
     {/if}
-
     {#if showSetup === true}
         <div class="fundo">
             <div class="header">
@@ -308,8 +302,7 @@
             </div>
         </div>
     {/if}
-
-    {#if crachModal === "ocorreu um erro ao enviar os dados da rip"}
+    {#if badgeMessage === "ocorreu um erro ao enviar os dados da rip"}
         <div class="fundo">
             <div class="header">
                 <h3>Erro ao enviar a rip</h3>
@@ -355,12 +348,6 @@
     main {
         letter-spacing: 1px;
     }
-    /* .close{
-        display: flex;
-        justify-content: right;
-        text-align: right;
-        align-items: right;
-    } */
     h2 {
         font-size: 30px;
     }
@@ -382,9 +369,6 @@
         background-color: black;
         width: 500px;
         height: 300px;
-        /* position: absolute;
-        top: 20%;
-        left: 40%; */
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -396,17 +380,7 @@
         width: 300px;
         border-radius: 3px;
     }
-    /* .returnValue {
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        width: 500px;
-        height: 100px;
-        border-radius: 3px;
-        position: absolute;
-        color: white;
-        background-color: black;
-    } */
+
     .divBtn {
         display: flex;
         margin: 1%;

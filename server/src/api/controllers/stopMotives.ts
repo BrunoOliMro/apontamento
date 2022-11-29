@@ -1,13 +1,11 @@
 import { RequestHandler } from "express";
-import mssql from "mssql";
-import { sqlConfig } from "../../global.config";
+import { select } from "../services/select";
 
 export const stopMotives: RequestHandler = async (_req, res) => {
-    const connection = await mssql.connect(sqlConfig);
     try {
-        const resource = await connection.query(`
-            SELECT CODIGO, DESCRICAO FROM APT_PARADA (NOLOCK) ORDER BY DESCRICAO ASC`).then(record => record.recordset);
-        let resoc = resource.map(e => e.DESCRICAO)
+        const s = `SELECT CODIGO, DESCRICAO FROM APT_PARADA (NOLOCK) ORDER BY DESCRICAO ASC`
+        let resource = await select(s)
+        let resoc = resource.map((e: any) => e.DESCRICAO)
         if (!resource) {
             return res.json({ message: 'erro motivos de parada de maquina' })
         } else {
@@ -15,7 +13,5 @@ export const stopMotives: RequestHandler = async (_req, res) => {
         }
     } catch (error) {
         return res.json({ message: 'erro motivos de parada de maquina' })
-    } finally {
-        //await connection.close()
     }
 }

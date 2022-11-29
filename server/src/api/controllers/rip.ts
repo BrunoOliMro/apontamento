@@ -1,24 +1,26 @@
 import { RequestHandler } from "express";
-import mssql from "mssql";
 import sanitize from "sanitize-html";
-import { sqlConfig } from "../../global.config";
 import { insertInto } from "../services/insert";
+import { select } from "../services/select";
 import { decrypted } from "../utils/decryptedOdf";
 
 export const rip: RequestHandler = async (req, res) => {
-    const connection = await mssql.connect(sqlConfig);
-    let numpec:string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
-    let revisao:string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
-    let codMaq:string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
-    let codigoPeca:string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
-    let numeroOdf:number = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
-    let numeroOperacao :string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
-    let funcionario:string = decrypted(String(sanitize(req.cookies['employee']))) || null
-    let start:string = decrypted(String(sanitize(req.cookies["startSetupTime"]))) || null
-    let qtdLibMax:number = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
-    let startTime:number = Number(new Date(start).getTime()) || 0
-    try {
-        const ripDetails = await connection.query(`
+    const numpec: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
+    const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
+    const codMaq: string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
+    const codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
+    const numeroOdf: number = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
+    const numeroOperacao: string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
+    const funcionario: string = decrypted(String(sanitize(req.cookies['employee']))) || null
+    const start: string = decrypted(String(sanitize(req.cookies["startSetupTime"]))) || null
+    const qtdLibMax: number = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
+    const startTime: number = Number(new Date(start).getTime()) || 0
+    const response = {
+        message: '',
+        url: '',
+        object: '',
+    }
+    const rip = `
         SELECT  DISTINCT
         PROCESSO.NUMPEC,
         PROCESSO.REVISAO,
@@ -39,51 +41,47 @@ export const rip: RequestHandler = async (req, res) => {
         WHERE PROCESSO.NUMPEC = '${numpec}' 
         AND PROCESSO.REVISAO = '${revisao}' 
         AND NUMCAR < '2999'
-        ORDER BY NUMPEC ASC
-            `.trim()
-        ).then(result => result.recordset)
+        ORDER BY NUMPEC ASC`
+    const ripDetails = await select(rip)
 
-        
-        let arrayNumope = ripDetails.map((acc) => {
-            if (acc.CST_NUMOPE === codMaq) {
-                return acc
-            }
-        })
-        
-        console.log("linha 53 /rip/", arrayNumope);
-        let numopeFilter = arrayNumope.filter(acc => acc)
-        res.cookie('cstNumope', numopeFilter.map(acc => acc.CST_NUMOPE))
-        res.cookie('numCar', numopeFilter.map(acc => acc.NUMCAR))
-        res.cookie('descricao', numopeFilter.map(acc => acc.DESCRICAO))
-        res.cookie('especif', numopeFilter.map(acc => acc.ESPECIF))
-        res.cookie('instrumento', numopeFilter.map(acc => acc.INSTRUMENTO))
-        res.cookie('lie', numopeFilter.map(acc => acc.LIE))
-        res.cookie('lse', numopeFilter.map(acc => acc.LSE))
-
-        let descricaoCodAponta = `Rip Ini`
-        let boas = 0
-        let ruins = 0
-        let faltante = 0
-        let retrabalhada = 0
-        let codAponta = 5
-        let motivo =  ``
-
-        try {
-            await insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime)
-        } catch (error) {
-            return res.json({ message: 'Erro ao iniciar tempo da rip'})
+    let arrayNumope = ripDetails.map((acc: { CST_NUMOPE: string; }) => {
+        if (acc.CST_NUMOPE === codMaq) {
+            return acc
+        } else {
+            return acc
         }
+    })
 
-        if (numopeFilter.length <= 0) {
-            // await connection.query(`INSERT INTO HISAPONTA(DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) 
-            // VALUES (GETDATE(), '${funcionario}', ${numeroOdf}, '${codigoPeca}', '${revisao}', '${numeroOperacao}', '${numeroOperacao}', 'D', '${codMaq}', ${qtdLibMax}, 0, 0, '${funcionario}', '0', '6', '6', 'ODF Fin.', ${startTime}, ${startTime}, '1', 0, 0 )`).then(record => record.rowsAffected)
-        
+    let numopeFilter = arrayNumope.filter((acc: any) => acc)
+    res.cookie('cstNumope', numopeFilter.map((acc: { CST_NUMOPE: string; }) => acc.CST_NUMOPE))
+    res.cookie('numCar', numopeFilter.map((acc: { NUMCAR: any; }) => acc.NUMCAR))
+    res.cookie('descricao', numopeFilter.map((acc: { DESCRICAO: any; }) => acc.DESCRICAO))
+    res.cookie('especif', numopeFilter.map((acc: { ESPECIF: any; }) => acc.ESPECIF))
+    res.cookie('instrumento', numopeFilter.map((acc: { INSTRUMENTO: any; }) => acc.INSTRUMENTO))
+    res.cookie('lie', numopeFilter.map((acc: { LIE: any; }) => acc.LIE))
+    res.cookie('lse', numopeFilter.map((acc: { LSE: any; }) => acc.LSE))
+
+    const descricaoCodAponta = `Rip Ini`
+    const boas = 0
+    const ruins = 0
+    const faltante = 0
+    const retrabalhada = 0
+    const codAponta = 5
+    const motivo = ``
+
+    try {
+        const inserted = await insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime)
+        if (inserted === 'insert done') {
+            return res.json(numopeFilter)
+        } else if (inserted === 'Algo deu errado') {
+            return response.message = 'Algo deu errado'
+        } else {
+            return response.message = 'Algo deu errado'
         }
-        return res.json(numopeFilter)
     } catch (error) {
-        console.log(error)
-        return res.redirect("/#/codigobarras/apontamento?error=ripnotFound")
-    } finally {
-        //await connection.close()
+        response.url = '/#/codigobarras/'
+        response.message = 'Erro ao iniciar tempo da rip'
+        return res.json(response)
     }
+
 }

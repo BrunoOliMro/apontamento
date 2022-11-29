@@ -8,11 +8,13 @@ export const historic: RequestHandler = async (req, res) => {
     let resultPeçasBoas;
     const lookForDetail = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO_DETALHADO WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' ORDER BY DATAHORA DESC`
     const lookforGeneric = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' ORDER BY OP ASC`
+    let obj = []
     try {
-        const detailHistoric: any = await select(lookForDetail)
-        const generalHistoric: any = await select(lookforGeneric)
+        const detailHistoric = await select(lookForDetail)
 
-        let obj: any = []
+        if (!detailHistoric) {
+            return res.json({ message: 'Error ao localizar o histórico' });
+        }
 
         for (const iterator of detailHistoric) {
             if (iterator.BOAS > 0) {
@@ -27,23 +29,24 @@ export const historic: RequestHandler = async (req, res) => {
             return acc + iterator.BOAS + iterator.REFUGO
         }, 0)
 
-        if (resultPeçasBoas > 0) {
-            let objRes = {
-                resourceDetail: generalHistoric,
-                resource: obj,
-                message: 'Exibir histórico'
+        try {
+            const generalHistoric: any = await select(lookforGeneric)
+            if (!generalHistoric) {
+                return res.json({ message: 'Error ao localizar o histórico' });
+            } else {
+                let objRes = {
+                    resourceDetail: generalHistoric,
+                    resource: obj,
+                    message: 'Exibir histórico'
+                }
+                return res.json(objRes)
             }
-            return res.json(objRes)
-        }
-        if (resultPeçasBoas <= 0) {
-            return res.json({ message: 'Não há histórico a exibir' })
-        } else {
+        } catch (error) {
+            console.log(error)
             return res.json({ message: 'Error ao localizar o histórico' });
         }
     } catch (error) {
         console.log(error)
         return res.json({ message: 'Error ao localizar o histórico' });
-    } finally {
-        //await connection.close()
     }
 }

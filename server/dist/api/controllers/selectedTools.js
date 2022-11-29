@@ -9,43 +9,47 @@ const insert_1 = require("../services/insert");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const encryptOdf_1 = require("../utils/encryptOdf");
 const selectedTools = async (req, res) => {
-    let numeroOdf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_ODF']))) || null;
-    numeroOdf = Number(numeroOdf);
+    const numeroOdf = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_ODF'])))) || 0;
     const numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_OPERACAO']))) || null;
     const codigoMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
     const codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
-    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO']))) || null;
+    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['employee']))) || null;
     const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
-    let qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['qtdLibMax']))) || null;
-    qtdLibMax = Number(qtdLibMax);
-    let start = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['starterBarcode']))) || null;
+    const qtdLibMax = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['qtdLibMax'])))) || 0;
     const boas = 0;
     const ruins = 0;
     const codAponta = 2;
     const codAponta3 = 3;
     const descricaoCodigoAponta = 'Fin Setup.';
-    let descricaoCodigoAponta3 = 'Ini Prod.';
+    const descricaoCodigoAponta3 = 'Ini Prod.';
     const faltante = 0;
-    let retrabalhada = 0;
+    const retrabalhada = 0;
     const motivo = String('' || null);
-    const end = Number(new Date().getTime()) || 0;
-    let startTime;
-    startTime = Number(start);
-    let tempoDecorrido = String(end - startTime || 0);
-    String(tempoDecorrido);
-    let startProd = Number(new Date().getTime() || 0);
-    start = (0, encryptOdf_1.encrypted)(start);
-    res.cookie("startProd", startProd);
+    const tempoDecorrido = Number(Number(new Date().getTime()) || 0 - Number(Number(new Date().getTime()) || 0 - Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['startSetupTime']))))) || 0);
+    res.cookie("startProd", (0, encryptOdf_1.encrypted)(Number(new Date().getTime() || 0)));
     try {
-        (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, startProd);
-        (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta3, descricaoCodigoAponta3, motivo, faltante, retrabalhada, startProd);
-        return res.json({ message: 'ferramentas selecionadas com successo' });
+        const codApontamentoFinalSetup = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, tempoDecorrido);
+        if (codApontamentoFinalSetup === 'Algo deu errado') {
+            return res.json({ message: 'Algo deu errado' });
+        }
     }
     catch (error) {
-        console.log('linha 104 /selected Tools/: ', error);
-        return res.redirect("/#/ferramenta");
+        return res.json({ message: 'Algo deu errado' });
     }
-    finally {
+    try {
+        const codApontamentoInicioSetup = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta3, descricaoCodigoAponta3, motivo, faltante, retrabalhada, Number(new Date().getTime() || 0));
+        if (codApontamentoInicioSetup === 'Algo deu errado') {
+            return res.json({ message: 'Algo deu errado' });
+        }
+        else if (codApontamentoInicioSetup === 'insert done') {
+            return res.json({ message: 'ferramentas selecionadas com successo' });
+        }
+        else {
+            return res.json({ message: 'Algo deu errado' });
+        }
+    }
+    catch (error) {
+        return res.json({ message: 'Algo deu errado' });
     }
 };
 exports.selectedTools = selectedTools;
