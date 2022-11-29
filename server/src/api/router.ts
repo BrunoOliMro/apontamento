@@ -1,318 +1,88 @@
 import { Router } from "express";
-import mssql from "mssql";
-import { sqlConfig } from "../global.config";
-const apiRouter = Router();
+//import assert from "node:assert";
+import { searchOdf } from "./controllers/searchOdf";
+import { badFeedMotives } from "./controllers/badFeedMotives";
+import { drawing } from "./controllers/drawing";
+import { historic } from "./controllers/historic";
+import { odfData } from "./controllers/odfData";
+import { returnedValue } from "./controllers/returnedValue";
+import { rip } from "./controllers/rip";
+import { ripPost } from "./controllers/ripPost";
+import { status } from "./controllers/status";
+import { statusImage } from "./controllers/statusImage";
+import { stopMotives } from "./controllers/stopMotives";
+import { stopPost } from "./controllers/stopPost";
+//import { stopSupervisor } from "./controllers/stopSupervisor";
+import { selectedTools, tools } from "./controllers/tools";
+import { point } from "./controllers/point";
+import { searchBagde } from "./controllers/searchBadge";
+import { getPoint } from "./controllers/getPoint";
+import { supervisor } from "./controllers/supervisor";
+//import { codeNote } from "./controllers/codeNote";
+//import { getBefore } from "./controllers/getBefSel";
 
 // /api/v1/
+const apiRouter = Router();
 
-apiRouter.route("/apontamento")
-    .post(
-        //Sanitização do codigo
-        async (req, _res, next) => {
-            req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
-            return next();
+apiRouter.route("/badge")
+    .post(searchBagde)
 
-            function sanitize(input: string) {
-                const allowedChars = /[A-Za-z0-9]/;
-                return input
-                    .split("")
-                    .map((char) => (allowedChars.test(char) ? char : ""))
-                    .join("");
-            }
-        },
-        async (req, res, next) => {
-            const barcode = req.body["codigoBarras"];
-            res.cookie("barcode", barcode)
-            const tool = 0
+apiRouter.route("/odf")
+    .post(searchOdf)
 
-            if (barcode === "") {
-                res.redirect('/#/codigobarras')
-            } else {
-                //Divide o codigo em 3 partes para a verificação na proxima etapa
-                const dados = {
-                    numOdf: Number(barcode.slice(10)),
-                    numOper: barcode.slice(0, 5),
-                    codMaq: barcode.slice(5, 10),
-                }
-                //Inicia a conexão com o banco de dados e verifica se existe esse codigo
-                const connection = await mssql.connect(sqlConfig);
-                try {
-                    const resource = await connection.query(`
-                        SELECT TOP 1
-                        [NUMERO_ODF], 
-                        [CODIGO_MAQUINA],
-                        [NUMERO_OPERACAO]
-                        FROM PCP_PROGRAMACAO_PRODUCAO
-                        WHERE 1 = 1
-                        AND [NUMERO_ODF] = ${dados.numOdf}
-                        AND [CODIGO_MAQUINA] = '${dados.codMaq}'
-                        AND [NUMERO_OPERACAO] = ${dados.numOper}
-                        ORDER BY NUMERO_OPERACAO ASC
-                        `.trim()
-                    ).then(result => result.recordset);
+apiRouter.route("/tools")
+    .get(tools)
+    //.get(selectedTools)
 
-                    //Verifica se houve um resultado em resource e caso haja redireciona
-                    if (resource.length > tool) {
-                        // Vai ate o final da ferramenta
-                        // Vai até o final do processo
-                        var secondSetup = performance.now()
-                        res.cookie("secondSetup", secondSetup)
-                        console.log("Iniciou processo: " + secondSetup)
-                        res.redirect(`/#/ferramenta/`)
-                    } else {
-                        res.redirect(`/#/codigobarras`)
-                    }
-                } catch (error) {
-                    console.log(error);
-                } finally {
-                    await connection.close();
-                    next()
-                }
-            }
-        }
-    )
-    .get(async (req, res, next) => {
-        console.log("ODF FEED iniciado")
-        const NUMERO_ODF: any = (req.query["NUMERO_ODF"] as string).trim() || undefined;
-        const CODIGO_MAQUINA = (req.query["CODIGO_MAQUINA"] as string).trim() || undefined;
-        const NUMERO_OPERACAO = (req.query["NUMERO_OPERACAO"] as string).trim() || undefined;
-        const NOME_CRACHA = (req.query["NOME_CRACHA"] as string).trim() || undefined;
+apiRouter.route("/ferselecionadas")
+    //.get(codeNote)
+    .get(selectedTools)
 
-        // SQL QUERY TO (
-        //     SELECT TOP 1 ISNULL(NOME_CRACHA,'INVALIDO') AS NOME_CRACHA, US.NOME FROM FUNCIONARIOS (NOLOCK)
-        //     INNER JOIN USUARIOS_SISTEMA US (NOLOCK) ON US.R_E_C_N_O_ = FUNCIONARIOS.USUARIO_SISTEMA
-        //     WHERE FUNCIONARIOS.CRACHA = AS OPERADOR'   
-        // ) AS OPERADOR
-        console.log(NOME_CRACHA)
+apiRouter.route("/odfData")
+    .get(odfData)
 
-        const connection = await mssql.connect(sqlConfig);
-        try {
-            const resource: any = await connection.query(`
-                SELECT TOP 1
-                [NUMERO_ODF], 
-                [CODIGO_MAQUINA], 
-                [NUMERO_OPERACAO],
-                [QTDE_ODF],
-                [CODIGO_CLIENTE],
-                [CODIGO_PECA],
-                [DT_INICIO_OP],
-                [DT_FIM_OP],
-                [QTDE_ODF],
-                [QTDE_APONTADA],
-                [DT_ENTREGA_ODF],
-                [QTD_REFUGO],
-                [HORA_INICIO],
-                [HORA_FIM],
-                [CODIGO_PECA],
-                (
-                    SELECT TOP 1
-                    [NOME_CRACHA]
-                    FROM FUNCIONARIOS
-                ) as NOME_CRACHA
-                FROM PCP_PROGRAMACAO_PRODUCAO
-                WHERE 1 = 1
-                AND [NUMERO_ODF] = ${NUMERO_ODF}
-                AND [CODIGO_MAQUINA] = '${CODIGO_MAQUINA}'
-                AND [NUMERO_OPERACAO] = ${NUMERO_OPERACAO}
-                ORDER BY NUMERO_OPERACAO ASC`.trim()).then(result => result.recordset);
-            res.json(resource);
-            console.log(NOME_CRACHA)
-            console.log(resource)
-        } catch (error) {
-            console.log(error);
-        } finally {
-            console.log("ODF FEED finalizado")
-            await connection.close()
-            next()
-        }
-    },
-        // async (req, res, next) => {
-        //     console.log("GET barra de status iniciado")
-        //     const connection = await mssql.connect(sqlConfig);
-        //     let status = req.query["status"];
+apiRouter.route("/imagem")
+    .get(statusImage)
 
-        //     const dados2 = {
-        //         apontaTempo: status
-        //     }
+apiRouter.route("/status")
+    .get(status)
 
-        //     try {
-        //         const resource = await connection.query(`
-        //         SELECT TOP 1
-        //         [APT_TEMPO_OPERACAO]
-        //         FROM HISAPONTA
-        //         WHERE 1 = 1
-        //         AND [APT_TEMPO_OPERACAO] = ${dados2.apontaTempo}
-        //         ORDER BY CAST(LTRIM(NUMOPE) AS INT) ASC
-        //         `.trim()).then(result => result.recordset);
-        //         console.log(resource)
-        //         res.json(resource);
-        //     } catch (error) {
-        //         console.log(error)
-        //     } finally {
-        //         await connection.close()
-        //         next()
-        //     }
-        // }
-    )
+apiRouter.route("/historic")
+    .get(historic)
 
-apiRouter.route("/ferramenta")
-    .get(async (req, res) => {
-        var APT_TEMPO_OPERACAO: any = req.query["APT_TEMPO_OPERACAO"]
-        var secondSetup = performance.now()
-        const tools = 0
+apiRouter.route("/point")
+    .post(point)
+    .get(getPoint)
 
-        //Encerra a primeira parte do Setup 
-        const getSecondTimer = req.cookies["secondSetup"]
-        var ffSetup = getSecondTimer - secondSetup;
-        APT_TEMPO_OPERACAO = ffSetup
-
-        //Inicia o processo de Produção
-        var processSetup = performance.now()
-        res.cookie("processSetup", processSetup)
-
-        const connection = await mssql.connect(sqlConfig);
-        try {
-            //Verifica se houve um resultado em resource e caso haja redireciona
-            if (tools === 0) {
-                const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO + ')')
-                console.log(insertSql)
-                console.log("Tempo de Ferramenta: " + APT_TEMPO_OPERACAO)
-                res.redirect(`/#/codigobarras/apontamento`)
-            } else {
-                res.redirect(`/#/ferramenta`)
-            }
-        } catch (error) {
-            console.log(error);
-        } finally {
-            console.log("get FERRAMENTA finalizado")
-            await connection.close()
-        }
-    })
-
-apiRouter.route("/apontar")
-    .post(
-        async (req, _res, next) => {
-            console.log("POST iniciado")
-            // const status = '';
-            // const goodFeed = 1
-            // const badFeed = 1
-            // const NUMERO_ODF = 548548
-            // const NUMERO_OPERACAO = "'50'"
-            // const CODIGO_MAQUINA = "'LASO1'"
-            // const EMPRESA_RECNO = 1
-            // const QTDE_APONTADA = 1
-            // const QTD_REFUGO = 1
-
-            // const dados2 = {
-            //     apontaTempo: status
-            // }
-
-            //Sanitizaão de input
-            function sanitize(input: string) {
-                const allowedChars = /[A-Za-z0-9]/;
-                return input
-                    .split("")
-                    .map((char) => (allowedChars.test(char) ? char : ""))
-                    .join("");
-            }
-            console.log(sanitize)
-
-            //INSERIR VALOR PREVIO PARA CASO HAJA UM VALOR PARCIAL/INICIAL
-            // var preventValue;
-
-            //Logica de negocio
-            // if (goodFeed === "" || badFeed === "") {
-            //     goodFeed = 0
-            //     badFeed = 0
-            // }
-
-            // if(!preventValue){
-            //     preventValue + goodFeed
-            //     return goodFeed
-            // }
-
-            // if(badFeed === QTD_ODF){
-            //     console.log("serviço Incompleto")
-            //     return badFeed
-            // }
-
-
-            // AO APONTAR ENCERRA A PRODUÇÃO FINAL
-            // const resource = await connection.query(`
-            // SELECT TOP 1
-            // [APT_TEMPO_OPERACAO]
-            // FROM HISAPONTA
-            // WHERE ODF = '329682' order by DATAHORA asc
-            // `.trim()).then(result => result.recordset);
-
-
-
-            //Ta funcionando
-            var APT_TEMPO_OPERACAO: any = req.query["APT_TEMPO_OPERACAO"]
-            const connection = await mssql.connect(sqlConfig);
-            try {
-                //Ajustar para receber os dados do front
-                // const insertSql = await connection.query('INSERT INTO PCP_PROGRAMACAO_PRODUCAO(NUMERO_ODF,NUMERO_OPERACAO,CODIGO_MAQUINA,EMPRESA_RECNO, QTDE_APONTADA, QTD_REFUGO) VALUES (' + NUMERO_ODF + ',' + NUMERO_OPERACAO + ',' + CODIGO_MAQUINA + ',' + EMPRESA_RECNO + ',' + QTDE_APONTADA + ',' + QTD_REFUGO + ')')
-                // console.log(insertSqlFeed)
-                //Encerra A Segunda Fase do Setup
-                const processSetup = req.cookies["processSetup"]
-                var endTimer = performance.now();
-                var secondSetup = processSetup - endTimer;
-                APT_TEMPO_OPERACAO = secondSetup
-
-                const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO + ')')
-                console.log(insertSql)
-                console.log("Produção : " + APT_TEMPO_OPERACAO)
-
-                //Inicia o Timer da Rip
-                var ripTimer = performance.now()
-                _res.cookie("ripTimer", ripTimer)
-                console.log("inicou o processo da rip : " + ripTimer)
-
-                _res.redirect(`/#/rip`)
-            } catch (error) {
-                _res.redirect(`/#/rip`)
-            } finally {
-                await connection.close()
-                next()
-            }
-        }
-    )
 apiRouter.route("/rip")
-    .get(async (req, _res) => {
-        //Após inserir os dados na tabela, encerra o tempo da rip e finaliza
-        var APT_TEMPO_OPERACAO: any = req.query["APT_TEMPO_OPERACAO"]
-        var APT_TEMPO_OPERACAO_TOTAL: any = req.query["APT_TEMPO_OPERACAO"]
+    .get(rip)
+
+apiRouter.route("/pointRip")
+    .post(ripPost)
+
+apiRouter.route("/returnedValue")
+    .post(returnedValue)
+
+apiRouter.route("/supervisor")
+    .post(supervisor)
+
+// apiRouter.route("/supervisorParada")
+//     //.get(getBefore)
+//     .post(stopSupervisor)
+
+apiRouter.route("/stopMotives")
+    .get(stopMotives)
 
 
-        const connection = await mssql.connect(sqlConfig);
-        try {
-            const ripTimer = req.cookies["ripTimer"]
-            var endTimer = performance.now();
-            var finalRipTimer = ripTimer - endTimer;
-            APT_TEMPO_OPERACAO = finalRipTimer
+apiRouter.route("/stopPost")
+    .post(stopPost)
 
-            const secondSetup = req.cookies["secondSetup"]
-            var endTimer = performance.now();
-            var finalsecondSetup = secondSetup - endTimer;
-            APT_TEMPO_OPERACAO_TOTAL = finalsecondSetup
 
-            // Insert com o tempo final no banco
-            const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO + ')')
-            console.log(insertSql)
-            console.log("Rip: " + APT_TEMPO_OPERACAO)
+apiRouter.route("/badFeedMotives")
+    .get(badFeedMotives)
 
-            const insertSql2 = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO_TOTAL + ')')
-            console.log(insertSql2)
-            console.log("Completo: " + APT_TEMPO_OPERACAO_TOTAL)
 
-        } catch (error) {
-            console.log(error)
-        } finally {
-            console.log("RIP finalizada")
-            //Encerra Conexão com banco
-            await connection.close()
-        }
+apiRouter.route("/drawing")
+    .get(drawing)
 
-    })
 export default apiRouter;

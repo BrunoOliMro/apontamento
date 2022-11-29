@@ -6,14 +6,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const app_1 = __importDefault(require("../app"));
 const node_http_1 = __importDefault(require("node:http"));
-const PORT = normalizePort(process.env["PORT"] || "3000");
+const PORT = normalizePort("3000");
 app_1.default.set("port", PORT);
 const server = node_http_1.default.createServer(app_1.default);
 server.on("error", onErrorHandler);
 server.on("listening", onListeningHandler);
 process.on("exit", () => server.close());
-process.on("uncaughtException", () => server.close());
-process.on("unhandledRejection", () => server.close());
 process.on("SIGTERM", () => server.close());
 server.listen(PORT);
 function normalizePort(port) {

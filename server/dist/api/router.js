@@ -1,211 +1,58 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const mssql_1 = __importDefault(require("mssql"));
-const global_config_1 = require("../global.config");
+const searchOdf_1 = require("./controllers/searchOdf");
+const badFeedMotives_1 = require("./controllers/badFeedMotives");
+const drawing_1 = require("./controllers/drawing");
+const historic_1 = require("./controllers/historic");
+const odfData_1 = require("./controllers/odfData");
+const returnedValue_1 = require("./controllers/returnedValue");
+const rip_1 = require("./controllers/rip");
+const ripPost_1 = require("./controllers/ripPost");
+const status_1 = require("./controllers/status");
+const statusImage_1 = require("./controllers/statusImage");
+const stopMotives_1 = require("./controllers/stopMotives");
+const stopPost_1 = require("./controllers/stopPost");
+const tools_1 = require("./controllers/tools");
+const point_1 = require("./controllers/point");
+const searchBadge_1 = require("./controllers/searchBadge");
+const getPoint_1 = require("./controllers/getPoint");
+const supervisor_1 = require("./controllers/supervisor");
 const apiRouter = (0, express_1.Router)();
-apiRouter.route("/apontamento")
-    .post(async (req, _res, next) => {
-    req.body["codigoBarras"] = sanitize(req.body["codigoBarras"].trim());
-    return next();
-    function sanitize(input) {
-        const allowedChars = /[A-Za-z0-9]/;
-        return input
-            .split("")
-            .map((char) => (allowedChars.test(char) ? char : ""))
-            .join("");
-    }
-}, async (req, res, next) => {
-    const barcode = req.body["codigoBarras"];
-    res.cookie("barcode", barcode);
-    const tool = 0;
-    if (barcode === "") {
-        res.redirect('/#/codigobarras');
-    }
-    else {
-        const dados = {
-            numOdf: Number(barcode.slice(10)),
-            numOper: barcode.slice(0, 5),
-            codMaq: barcode.slice(5, 10),
-        };
-        const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-        try {
-            const resource = await connection.query(`
-                        SELECT TOP 1
-                        [NUMERO_ODF], 
-                        [CODIGO_MAQUINA],
-                        [NUMERO_OPERACAO]
-                        FROM PCP_PROGRAMACAO_PRODUCAO
-                        WHERE 1 = 1
-                        AND [NUMERO_ODF] = ${dados.numOdf}
-                        AND [CODIGO_MAQUINA] = '${dados.codMaq}'
-                        AND [NUMERO_OPERACAO] = ${dados.numOper}
-                        ORDER BY NUMERO_OPERACAO ASC
-                        `.trim()).then(result => result.recordset);
-            if (resource.length > tool) {
-                var secondSetup = performance.now();
-                res.cookie("secondSetup", secondSetup);
-                console.log("Iniciou processo: " + secondSetup);
-                res.redirect(`/#/ferramenta/`);
-            }
-            else {
-                res.redirect(`/#/codigobarras`);
-            }
-        }
-        catch (error) {
-            console.log(error);
-        }
-        finally {
-            await connection.close();
-            next();
-        }
-    }
-})
-    .get(async (req, res, next) => {
-    console.log("ODF FEED iniciado");
-    const NUMERO_ODF = req.query["NUMERO_ODF"].trim() || undefined;
-    const CODIGO_MAQUINA = req.query["CODIGO_MAQUINA"].trim() || undefined;
-    const NUMERO_OPERACAO = req.query["NUMERO_OPERACAO"].trim() || undefined;
-    const NOME_CRACHA = req.query["NOME_CRACHA"].trim() || undefined;
-    console.log(NOME_CRACHA);
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    try {
-        const resource = await connection.query(`
-                SELECT TOP 1
-                [NUMERO_ODF], 
-                [CODIGO_MAQUINA], 
-                [NUMERO_OPERACAO],
-                [QTDE_ODF],
-                [CODIGO_CLIENTE],
-                [CODIGO_PECA],
-                [DT_INICIO_OP],
-                [DT_FIM_OP],
-                [QTDE_ODF],
-                [QTDE_APONTADA],
-                [DT_ENTREGA_ODF],
-                [QTD_REFUGO],
-                [HORA_INICIO],
-                [HORA_FIM],
-                [CODIGO_PECA],
-                (
-                    SELECT TOP 1
-                    [NOME_CRACHA]
-                    FROM FUNCIONARIOS
-                ) as NOME_CRACHA
-                FROM PCP_PROGRAMACAO_PRODUCAO
-                WHERE 1 = 1
-                AND [NUMERO_ODF] = ${NUMERO_ODF}
-                AND [CODIGO_MAQUINA] = '${CODIGO_MAQUINA}'
-                AND [NUMERO_OPERACAO] = ${NUMERO_OPERACAO}
-                ORDER BY NUMERO_OPERACAO ASC`.trim()).then(result => result.recordset);
-        res.json(resource);
-        console.log(NOME_CRACHA);
-        console.log(resource);
-    }
-    catch (error) {
-        console.log(error);
-    }
-    finally {
-        console.log("ODF FEED finalizado");
-        await connection.close();
-        next();
-    }
-});
-apiRouter.route("/ferramenta")
-    .get(async (req, res) => {
-    var APT_TEMPO_OPERACAO = req.query["APT_TEMPO_OPERACAO"];
-    var secondSetup = performance.now();
-    const tools = 0;
-    const getSecondTimer = req.cookies["secondSetup"];
-    var ffSetup = getSecondTimer - secondSetup;
-    APT_TEMPO_OPERACAO = ffSetup;
-    var processSetup = performance.now();
-    res.cookie("processSetup", processSetup);
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    try {
-        if (tools === 0) {
-            const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO + ')');
-            console.log(insertSql);
-            console.log("Tempo de Ferramenta: " + APT_TEMPO_OPERACAO);
-            res.redirect(`/#/codigobarras/apontamento`);
-        }
-        else {
-            res.redirect(`/#/ferramenta`);
-        }
-    }
-    catch (error) {
-        console.log(error);
-    }
-    finally {
-        console.log("get FERRAMENTA finalizado");
-        await connection.close();
-    }
-});
-apiRouter.route("/apontar")
-    .post(async (req, _res, next) => {
-    console.log("POST iniciado");
-    function sanitize(input) {
-        const allowedChars = /[A-Za-z0-9]/;
-        return input
-            .split("")
-            .map((char) => (allowedChars.test(char) ? char : ""))
-            .join("");
-    }
-    console.log(sanitize);
-    var APT_TEMPO_OPERACAO = req.query["APT_TEMPO_OPERACAO"];
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    try {
-        const processSetup = req.cookies["processSetup"];
-        var endTimer = performance.now();
-        var secondSetup = processSetup - endTimer;
-        APT_TEMPO_OPERACAO = secondSetup;
-        const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO + ')');
-        console.log(insertSql);
-        console.log("Produção : " + APT_TEMPO_OPERACAO);
-        var ripTimer = performance.now();
-        _res.cookie("ripTimer", ripTimer);
-        console.log("inicou o processo da rip : " + ripTimer);
-        _res.redirect(`/#/rip`);
-    }
-    catch (error) {
-        _res.redirect(`/#/rip`);
-    }
-    finally {
-        await connection.close();
-        next();
-    }
-});
+apiRouter.route("/badge")
+    .post(searchBadge_1.searchBagde);
+apiRouter.route("/odf")
+    .post(searchOdf_1.searchOdf);
+apiRouter.route("/tools")
+    .get(tools_1.tools);
+apiRouter.route("/ferselecionadas")
+    .get(tools_1.selectedTools);
+apiRouter.route("/odfData")
+    .get(odfData_1.odfData);
+apiRouter.route("/imagem")
+    .get(statusImage_1.statusImage);
+apiRouter.route("/status")
+    .get(status_1.status);
+apiRouter.route("/historic")
+    .get(historic_1.historic);
+apiRouter.route("/point")
+    .post(point_1.point)
+    .get(getPoint_1.getPoint);
 apiRouter.route("/rip")
-    .get(async (req, _res) => {
-    var APT_TEMPO_OPERACAO = req.query["APT_TEMPO_OPERACAO"];
-    var APT_TEMPO_OPERACAO_TOTAL = req.query["APT_TEMPO_OPERACAO"];
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    try {
-        const ripTimer = req.cookies["ripTimer"];
-        var endTimer = performance.now();
-        var finalRipTimer = ripTimer - endTimer;
-        APT_TEMPO_OPERACAO = finalRipTimer;
-        const secondSetup = req.cookies["secondSetup"];
-        var endTimer = performance.now();
-        var finalsecondSetup = secondSetup - endTimer;
-        APT_TEMPO_OPERACAO_TOTAL = finalsecondSetup;
-        const insertSql = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO + ')');
-        console.log(insertSql);
-        console.log("Rip: " + APT_TEMPO_OPERACAO);
-        const insertSql2 = await connection.query('INSERT INTO HISAPONTA(APT_TEMPO_OPERACAO) VALUES (' + APT_TEMPO_OPERACAO_TOTAL + ')');
-        console.log(insertSql2);
-        console.log("Completo: " + APT_TEMPO_OPERACAO_TOTAL);
-    }
-    catch (error) {
-        console.log(error);
-    }
-    finally {
-        console.log("RIP finalizada");
-        await connection.close();
-    }
-});
+    .get(rip_1.rip);
+apiRouter.route("/pointRip")
+    .post(ripPost_1.ripPost);
+apiRouter.route("/returnedValue")
+    .post(returnedValue_1.returnedValue);
+apiRouter.route("/supervisor")
+    .post(supervisor_1.supervisor);
+apiRouter.route("/stopMotives")
+    .get(stopMotives_1.stopMotives);
+apiRouter.route("/stopPost")
+    .post(stopPost_1.stopPost);
+apiRouter.route("/badFeedMotives")
+    .get(badFeedMotives_1.badFeedMotives);
+apiRouter.route("/drawing")
+    .get(drawing_1.drawing);
 exports.default = apiRouter;
 //# sourceMappingURL=router.js.map

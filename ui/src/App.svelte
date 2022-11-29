@@ -1,17 +1,18 @@
 <script>
-	import Logobar from "./components/navigation/Logobar.svelte";
 	import Index from "./routes/index.svelte";
 	import Router from "svelte-spa-router";
-	import Ferramenta from "./routes/ferramenta.svelte";
+	import Ferramenta from './routes/ferramenta.svelte'
 	import Rip from "./routes/rip.svelte";
 	import Desenho from "./routes/desenho.svelte";
 	import Barcode from "./routes/barcode.svelte";
-	import Parada from "./routes/parada.svelte";
+	import historico from "./routes/historico.svelte";
+	import Logobar from "./components/navigation/logobar.svelte";
 </script>
 
 <main>
 	<Logobar />
 </main>
+
 
 <Router
 	routes={{
@@ -20,6 +21,6 @@
 		"/rip": Rip,
 		"/ferramenta": Ferramenta,
 		"/codigobarras": Barcode,
-		"/parada": Parada,
+		"/historico": historico,
 	}}
 />
