@@ -1,7 +1,7 @@
-export declare const selectedItensFromOdf: (groupOdf: any, indexOdf: number) => Promise<{
+export declare const selectedItensFromOdf: (groupOdf: any, indexOdf: number) => Promise<"Algo deu errado" | {
     message: string;
     odf: string;
     nextOdf: string;
     beforeOdf: string;
-} | "Algo deu errado">;
+}>;
 //# sourceMappingURL=queryGroup.d.ts.map

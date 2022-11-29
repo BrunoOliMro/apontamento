@@ -6,13 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.insertInto = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
-const insertInto = async (funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, tempoDecorrido) => {
+const insertInto = async (funcionario, numeroOdf, codigoPeca, numeroOperacao, codigoFilho, i, revisao) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let response = {
         message: '',
     };
     try {
-        const data = await connection.query(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES ('1504024', 40, '105831437', '105831437-3', 2, 'WEUHGV', NULL, GETDATE(), 'CESAR')`)
+        const data = await connection.query(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES ('${numeroOdf}', ${numeroOperacao}, '${codigoPeca}', '${codigoFilho[i]}', ${revisao}, 'ADDRESS', NULL, GETDATE(), '${funcionario}')`)
             .then((result) => result.rowsAffected);
         console.log("insert into -");
         if (data) {

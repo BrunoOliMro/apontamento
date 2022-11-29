@@ -5,7 +5,6 @@ import { sanitize } from "../utils/sanitize";
 
 export const historic: RequestHandler = async (req, res) => {
     let NUMERO_ODF = decrypted(String(sanitize(req.cookies["NUMERO_ODF"])))
-    let resultPeçasBoas;
     const lookForDetail = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO_DETALHADO WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' ORDER BY DATAHORA DESC`
     const lookforGeneric = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' ORDER BY OP ASC`
     let obj = []
@@ -25,7 +24,7 @@ export const historic: RequestHandler = async (req, res) => {
             }
         }
 
-        resultPeçasBoas = detailHistoric.reduce((acc: any, iterator: any) => {
+        detailHistoric.reduce((acc: any, iterator: any) => {
             return acc + iterator.BOAS + iterator.REFUGO
         }, 0)
 

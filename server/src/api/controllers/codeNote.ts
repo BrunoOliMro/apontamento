@@ -7,8 +7,7 @@ import { decrypted } from '../utils/decryptedOdf';
 import { unravelBarcode } from '../utils/unravelBarcode';
 
 export const codeNote: RequestHandler = async (req, res, next) => {
-    //const connection = await mssql.connect(sqlConfig);
-    let dados = unravelBarcode(req.body.codigoBarras)
+     let dados = unravelBarcode(req.body.codigoBarras)
     const funcionario: string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
     let codigoPeca = String('' || null)
 
@@ -18,7 +17,6 @@ export const codeNote: RequestHandler = async (req, res, next) => {
     }
 
     if (!dados) {
-        console.log("linha 24");
         //Descriptografar numero da ODF
         const numeroOdfCookies = decrypted(String(sanitize(req.cookies['NUMERO_ODF']))) || null
         const codigoOper: string = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
@@ -33,7 +31,7 @@ export const codeNote: RequestHandler = async (req, res, next) => {
 
         //Compara o Codigo Descodificado e o descriptografado
         if (encodedOdfString === numeroOdfCookies) {
-            next()
+            return next()
         } else {
             return res.json({ message: 'Acesso negado' })
         }
@@ -128,7 +126,7 @@ export const codeNote: RequestHandler = async (req, res, next) => {
             if (resultInsert === 'Algo deu errado') {
                 return res.json({ message: 'Algo deu errado' })
             }
-            next()
+            return next()
         }
     } catch (error) {
         return res.json({ message: 'Algo deu errado' })

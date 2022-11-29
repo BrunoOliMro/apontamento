@@ -19,7 +19,6 @@ const codeNote = async (req, res, next) => {
         return res.json({ message: 'Acesso negado' });
     }
     if (!dados) {
-        console.log("linha 24");
         const numeroOdfCookies = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_ODF']))) || null;
         const codigoOper = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_OPERACAO']))) || null;
         const codigoMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
@@ -28,7 +27,7 @@ const codeNote = async (req, res, next) => {
         dados.codMaq = codigoMaq;
         const encodedOdfString = (0, decodeOdf_1.decodedBuffer)(String((0, sanitize_html_1.default)(req.cookies['encodedOdfString'])));
         if (encodedOdfString === numeroOdfCookies) {
-            next();
+            return next();
         }
         else {
             return res.json({ message: 'Acesso negado' });
@@ -109,7 +108,7 @@ const codeNote = async (req, res, next) => {
             if (resultInsert === 'Algo deu errado') {
                 return res.json({ message: 'Algo deu errado' });
             }
-            next();
+            return next();
         }
     }
     catch (error) {

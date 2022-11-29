@@ -1,14 +1,14 @@
 import mssql from 'mssql';
 import { sqlConfig } from '../../global.config'
 
-export const insertInto = async (funcionario: string, numeroOdf: number, codigoPeca: string, revisao: string, numeroOperacao: string, codigoMaq: string, qtdLibMax: number, boas: number, ruins: number, codAponta: number, descricaoCodigoAponta: string, motivo: string, faltante: number, retrabalhada: number, tempoDecorrido: number) => {
+export const insertInto = async (funcionario: string, numeroOdf: number, codigoPeca: string, numeroOperacao: string, codigoFilho: string, i: number, revisao: number) => {
     const connection = await mssql.connect(sqlConfig);
     let response = {
         message: '',
     }
 
     try {
-        const data = await connection.query(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES ('1504024', 40, '105831437', '105831437-3', 2, 'WEUHGV', NULL, GETDATE(), 'CESAR')`)
+        const data = await connection.query(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES ('${numeroOdf}', ${numeroOperacao}, '${codigoPeca}', '${codigoFilho[i]}', ${revisao}, 'ADDRESS', NULL, GETDATE(), '${funcionario}')`)
             .then((result) => result.rowsAffected)
         console.log("insert into -");
         if (data) {
