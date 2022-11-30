@@ -5,7 +5,7 @@
     import GoodFeed from "../inputs/goodFeed.svelte";
     import Missing from "../inputs/missing.svelte";
     import Rework from "../inputs/rework.svelte";
-    import ModalConfirmation from "../modal/modalConfirmation.svelte";
+    //import ModalConfirmation from "../modal/modalConfirmation.svelte";
     import Cod from "./cod.svelte";
     //import Container from "./container.svelte";
     import Footer from "./footer.svelte";
@@ -38,6 +38,7 @@
     let showMaqPar = false;
     //let modalTitle = "Máquina Parada ";
     let urlString = `/api/v1/odfData`;
+    let balance;
     getOdfData();
 
     async function getOdfData() {
@@ -105,10 +106,13 @@
                 supervisor: supervisor,
             }),
         }).then((res) => res.json());
-
-        console.log("linha 112 /feed.svelte/", res);
-        if(res.message === 'Algo deu errado'){
-            //window.location.href = `/#/codigobarras`;
+        if (res.message === "Saldo menor que o apontado") {
+            modalMessage = ``;
+            modalMessage = "Saldo menor que o apontado";
+            balance = res.balance;
+            loader = false;
+        }
+        if (res.message === "Algo deu errado") {
             location.reload();
         }
 
@@ -119,7 +123,6 @@
         if (res.message === "supervisor não encontrado") {
             modalMessage = "Supervisor não encontrado";
             loader = false;
-            //showSuperNotFound = true;
         }
         if (res.message === "Quantidade inválida") {
             modalMessage = "Quantidade inválida";
@@ -160,10 +163,7 @@
             loader = false;
         }
         if (res.message === "Sucesso ao apontar") {
-            //loader = true;
-            console.log("eubfuebvueb linha 164 /feed.svelte/");
             getSpaceFunc();
-            //window.location.href = `/#/rip`;
             modalMessage = "";
             showConfirm = false;
         }
@@ -173,8 +173,8 @@
         const res = await fetch(urlS);
         getSpace = await res.json();
         if (getSpace.message === "No address") {
-            loader = false
-            window.location.href = `${getSpace.url}`
+            loader = false;
+            window.location.href = `${getSpace.url}`;
         }
 
         if (getSpace.message === "Address located") {
@@ -217,7 +217,6 @@
             numberGoodFeed < numberQtdAllowed
         ) {
             modalMessage = "Apontamento parcial";
-            //showParcialSuper = true;
         }
 
         if (
@@ -260,7 +259,7 @@
                 value: value,
             }),
         }).then((res) => res.json());
-        console.log('linha 261 /feed.svelte/', res);
+        console.log("linha 261 /feed.svelte/", res);
         if (res.message === "maquina parada com sucesso") {
             showMaqPar = true;
             showmodal = false;
@@ -311,7 +310,6 @@
             </div>
             <div class="feed-area">
                 <div class="feed-area-div">
-                    <!-- bind:value={goodFeed} -->
                     <GoodFeed tabindex="1" autofocus on:message={handleSS} />
                 </div>
                 <div class="feed-area-div">
@@ -361,7 +359,6 @@
                         {/each}
                     </select>
                     <p>Supervisor</p>
-                    <!-- on:input={Sanitize} -->
                     <input
                         on:input={blockForbiddenChars}
                         on:keypress={checkForSuper}
@@ -372,7 +369,11 @@
                         name="supervisor"
                         id="supervisor"
                     />
-                    <button on:keypress={close} on:click={close}>Fechar</button>
+                    <div class="modalFooter">
+                        <button on:keypress={close} on:click={close}
+                            >Fechar</button
+                        >
+                    </div>
                 </div>
             </div>
         {/if}
@@ -381,24 +382,33 @@
     {#if modalMessage === "Apontamento parcial"}
         <div class="fundo">
             <div class="header">
-                <div class="closed">
-                    <h2>{modalMessage}</h2>
+                <div class="content-area">
+                    <div class="modalTitle">
+                        <h3>{modalMessage}</h3>
+                    </div>
+                    <div class="modalContent">
+                        <div class="modalCenter">
+                            <h4>Informe o supervisor: </h4>
+                            <div class="input">
+                                <input
+                                    on:input={blockForbiddenChars}
+                                    on:keypress={checkForSuper}
+                                    bind:value={supervisor}
+                                    autofocus
+                                    class="supervisor"
+                                    type="text"
+                                    name="supervisor"
+                                    id="supervisor"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modalFooter">
+                        <button on:keypress={close} on:click={close}
+                            >Fechar</button
+                        >
+                    </div>
                 </div>
-                <p>Supervisor</p>
-                <input
-                    on:input={blockForbiddenChars}
-                    on:keypress={checkForSuper}
-                    bind:value={supervisor}
-                    autofocus
-                    class="supervisor"
-                    type="text"
-                    name="supervisor"
-                    id="supervisor"
-                />
-                <!-- <button on:keypress={doPost} on:click={doPost}
-                            >Confirmar</button
-                        > -->
-                <button on:keypress={close} on:click={close}>Fechar</button>
             </div>
         </div>
     {/if}
@@ -406,7 +416,7 @@
     <!-- {#if showMaqPar === true}
         <ModalConfirmation title={modalTitle} on:message={closeConfirm} />
     {/if} -->
-<!-- 
+    <!-- 
     {#if stopModal === true}
         <div class="modalBackground">
             <div class="itensInsideModal">
@@ -443,6 +453,18 @@
             </div>
         </div>
     {/if} -->
+
+    {#if modalMessage === "Saldo menor que o apontado"}
+        <div class="fundo">
+            <div class="header">
+                <div class="closed">
+                    <h2>{modalMessage}</h2>
+                    <h4>Dispónivel para apontameto: {balance}</h4>
+                </div>
+                <button on:keypress={close} on:click={close}>fechar</button>
+            </div>
+        </div>
+    {/if}
 
     {#if modalMessage === "Quantidade excedida"}
         <div class="fundo">
@@ -562,6 +584,22 @@
 {/await}
 
 <style>
+    h3 {
+        width: 100%;
+        font-size: 45px;
+        margin: 0%;
+        padding: 0%;
+        display: flex;
+        justify-content: left;
+        text-align: left;
+        text-align: left;
+    }
+    h4 {
+        width: 100%;
+        font-size: 28px;
+        margin: 0%;
+        padding: 0%;
+    }
     .footer-area {
         display: flex;
         width: 100%;
@@ -582,12 +620,12 @@
         align-items: center;
         text-align: center;
     }
-    .modalContent {
+    /* .modalContent {
         margin-left: 25px;
         margin-top: 0%;
         margin-bottom: 0%;
         margin-right: 0%;
-    }
+    } */
     button {
         letter-spacing: 0.5px;
         width: 100%;
@@ -838,6 +876,10 @@
     }
     .closed {
         display: flex;
+        flex-direction: row;
+        justify-content: center;
+        text-align: center;
+        align-items: center;
     }
     select {
         width: 200px;
@@ -949,20 +991,74 @@
         }
     }
 
+    .content-area{
+        width: 100%;
+        margin: 0%;
+        padding: 0%;
+    }
 
+    .input {
+        display: flex;
+        text-align: center;
+        justify-content: center;
+        align-items: center;
+        margin: 0%;
+        width: 100%;
+        padding: 0%;
+    }
+
+    .modalTitle {
+        margin-left: 1%;
+        margin-bottom: 5%;
+        padding: 0%;
+        width: 100%;
+        justify-content: left;
+        align-items: left;
+        text-align: center;
+    }
+    .modalFooter {
+        margin: 0%;
+        padding: 0%;
+        display: flex;
+        flex-direction: row;
+        align-items: right;
+        text-align: right;
+        justify-content: right;
+    }
+
+    .modalContent {
+        margin: 0%;
+        padding: 0%;
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        text-align: center;
+    }
+
+    .modalCenter {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        width: 100%;
+        margin: 0%;
+        padding: 0%;
+    }
     .header {
         margin: 0%;
         padding: 0%;
         color: white;
         background-color: #252525;
-        width: 450px;
-        height: 300px;
+        width: 550px;
+        height: 250px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         text-align: center;
-        border-radius: 3px;
+        border-radius: 10px;
         z-index: 9;
     }
 
@@ -983,7 +1079,7 @@
     }
 
     p {
-        font-size: 65px;
+        font-size: 50px;
         width: fit-content;
         height: fit-content;
         margin: 0%;
@@ -991,11 +1087,14 @@
     }
 
     input {
-        width: 130px;
+        width: 160px;
         height: 50px;
+        justify-content: center;
+        text-align: center;
+        align-items: center;
         margin: 0%;
         padding: 0%;
-        border-radius: 8px;
+        border-radius: 10px;
     }
     div {
         margin-left: 0%;

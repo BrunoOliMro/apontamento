@@ -242,17 +242,39 @@
       }),
     }).then((res) => res.json());
     loader = false;
+    console.log('linha 245 -return-', res);
+
+    // barcodeReturn = ''
+    // supervisor = ''
+    // quantity = ''
+    // returnValueStorage = ''
+
+    if(res.message === 'Refugo Inválido'){
+      modalMessage = 'Não há refugo para estornar'
+      showmodal = false;
+    }
+
+    if(res.message === 'Valor acima'){
+      modalMessage = 'Valor apontado maior que o possível'
+      showmodal = false;
+    }
+
     if (res.message === "supervisor esta vazio") {
       modalMessage = "Campo supervisor está vazio";
       showSupervisor = true;
       showmodal = false;
       //location.reload();
     }
+    if(res.message === 'Essa não pode ser estornada'){
+      modalMessage = 'Essa não pode ser estornada'
+      showmodal = false
+    }
+
     if (res.message === "estorno feito") {
       modalMessage = "Estorno realizado";
       showmodal = false;
       //showCorr = true;
-      window.location.href = "/#/codigobarras";
+      //window.location.href = "/#/codigobarras";
       //location.reload();
     }
     if (res.message === "erro de estorno") {
@@ -293,7 +315,6 @@
   function closePopCor() {
     barcodeMsg = "";
     paradaMsg = "";
-    //errorReturnValue = false;
     showSupervisor = false;
     quantityModal = "";
     showCorr = false;
@@ -372,6 +393,14 @@
           />
         </div>
       </div>
+    {/if}
+
+    {#if modalMessage === 'Não há refugo para estornar'}
+      <ModalConfirmation title={modalMessage} on:message={closePopCor} />
+    {/if}
+
+    {#if modalMessage === "Essa não pode ser estornada"}
+      <ModalConfirmation title={modalMessage} on:message={closePopCor} />
     {/if}
 
     {#if modalMessage === "Estorno realizado"}
@@ -501,8 +530,6 @@
           >
             <option>BOAS</option>
             <option>RUINS</option>
-            <!-- <option>PARCIAL</option>
-              <option>FALTANTE</option> -->
           </select>
         </div>
         <h4>Insira a quantidade que deseja estornar</h4>
@@ -545,6 +572,21 @@
 </main>
 
 <style>
+  .header {
+    margin: 0%;
+    padding: 0%;
+    color: white;
+    background-color: black;
+    width: 700px;
+    height: 350px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-radius: 10px;
+    z-index: 9;
+  }
   a {
     color: #252525;
     font-size: 20px;
@@ -684,7 +726,7 @@
     position: fixed;
     top: 0;
     left: 0;
-    background-color: #252525;
+    background-color: rgba(17, 17, 17, 0.618);
     height: 100vh;
     width: 100vw;
     display: flex;

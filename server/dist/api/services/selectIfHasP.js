@@ -15,6 +15,7 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
         url: '',
         codigoFilho: [],
         condic: '',
+        execut: 0,
     };
     try {
         const queryStorageFund = `SELECT DISTINCT                 
@@ -41,7 +42,6 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
         if (selectKnowHasP.length > 0) {
             const qtdLibProd = selectKnowHasP.map((element) => element.QTD_LIBERADA_PRODUZIR);
             const numberOfQtd = Math.min(...qtdLibProd);
-            response.quantidade = numberOfQtd;
             const codigoFilho = selectKnowHasP.map((item) => item.NUMITE);
             const updateStorageQuery = [];
             let updateAlocacaoQuery = [];
@@ -49,8 +49,9 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
             response.condic = selectKnowHasP[0].CONDIC;
             response.codigoFilho = codigoFilho;
             let quantityToPoint;
-            let x = String(numeroOperacao.replaceAll(' ', ''));
-            let makeReservation = selectKnowHasP.map((item) => item.NUMSEQ).filter((element) => element === x);
+            let execut = Math.max(...selectKnowHasP.map((element) => element.EXECUT));
+            let numeroOperNew = String(numeroOperacao.replaceAll(' ', ''));
+            let makeReservation = selectKnowHasP.map((item) => item.NUMSEQ).filter((element) => element === numeroOperNew);
             if (makeReservation.length <= 0) {
                 response.message = 'Algo deu errado';
                 return response;
@@ -59,21 +60,18 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                 response.message = 'Quantidade para reserva inválida';
                 return response;
             }
-            console.log('linha 74 /SelectHasP - numberOfQtd/', numberOfQtd);
-            console.log("linha 75 /selectHasP/quantidade", quantidadeOdf);
             if (quantidadeOdf < numberOfQtd) {
-                response.quantidade = quantidadeOdf;
                 quantityToPoint = quantidadeOdf;
             }
             else {
-                response.quantidade = numberOfQtd;
                 quantityToPoint = numberOfQtd;
             }
-            response.quantidade;
-            console.log('linha 83', quantityToPoint);
+            let quantitySetStorage = quantityToPoint * execut;
+            response.execut = execut;
+            response.quantidade = numberOfQtd;
             try {
                 codigoFilho.forEach((element) => {
-                    updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${quantityToPoint} WHERE 1 = 1 AND CODIGO = '${element}'`);
+                    updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${quantitySetStorage} WHERE 1 = 1 AND CODIGO = '${element}'`);
                 });
                 let updateStorage = Math.min(...await connection.query(updateStorageQuery.join('\n')).then(result => result.rowsAffected));
                 if (updateStorage > 0) {

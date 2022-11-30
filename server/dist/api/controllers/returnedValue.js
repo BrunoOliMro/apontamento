@@ -1,11 +1,6 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.returnedValue = void 0;
-const mssql_1 = __importDefault(require("mssql"));
-const global_config_1 = require("../../global.config");
 const insert_1 = require("../services/insert");
 const select_1 = require("../services/select");
 const update_1 = require("../services/update");
@@ -13,12 +8,11 @@ const decryptedOdf_1 = require("../utils/decryptedOdf");
 const sanitize_1 = require("../utils/sanitize");
 const unravelBarcode_1 = require("../utils/unravelBarcode");
 const returnedValue = async (req, res) => {
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     const choosenOption = Number((0, sanitize_1.sanitize)(req.body["quantity"])) || 0;
-    const supervisor = String((0, sanitize_1.sanitize)(req.body["supervisor"])) || null;
+    const supervisor = (0, sanitize_1.sanitize)(req.body["supervisor"]) || null;
     const returnValues = String((0, sanitize_1.sanitize)(req.body['returnValueStorage'])) || null;
     const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['employee']))) || null;
-    const barcode = String((0, sanitize_1.sanitize)(req.body["codigoBarrasReturn"])) || null;
+    const barcode = (0, sanitize_1.sanitize)(req.body["barcodeReturn"]) || null;
     const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`;
     let boas;
     let ruins;
@@ -26,6 +20,9 @@ const returnedValue = async (req, res) => {
     let descricaoCodigoAponta = "";
     let motivo = ``;
     let tempoDecorrido = 0;
+    var response = {
+        message: '',
+    };
     if (!funcionario) {
         return res.json({ message: 'odf não encontrada' });
     }
@@ -53,40 +50,72 @@ const returnedValue = async (req, res) => {
     if (!ruins) {
         ruins = 0;
     }
-    const dados = await (0, unravelBarcode_1.unravelBarcode)(req.body.codigoBarras);
-    const lookForOdfData = `SELECT TOP 1 [NUMERO_ODF], [NUMERO_OPERACAO], [CODIGO_MAQUINA], [CODIGO_CLIENTE], [QTDE_ODF], [CODIGO_PECA], [DT_INICIO_OP], [DT_FIM_OP], [QTDE_ODF], [QTDE_APONTADA], [DT_ENTREGA_ODF], [QTD_REFUGO], [HORA_INICIO], [HORA_FIM], [REVISAO] FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND [NUMERO_ODF] = ${dados.numOdf} AND [CODIGO_MAQUINA] = '${dados.codMaq}' AND [NUMERO_OPERACAO] = ${dados.numOper} ORDER BY NUMERO_OPERACAO ASC`;
+    const dados = await (0, unravelBarcode_1.unravelBarcode)(barcode);
+    const lookForOdfData = `SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
     const resourceOdfData = await (0, select_1.select)(lookForOdfData);
-    if (resourceOdfData.length > 0) {
-        let codigoPeca = String(resourceOdfData[0].CODIGO_PECA);
-        let revisao = String(resourceOdfData[0].REVISAO);
-        let qtdOdf = Number(resourceOdfData[0].QTDE_ODF[0]) || 0;
-        let qtdApontOdf = Number(resourceOdfData[0].QTDE_APONTADA) || 0;
+    let quantityPointedbefore = resourceOdfData.map((element) => element.QTDE_APONTADA);
+    let numeroOperacao = dados.numOper.replaceAll(' ', '');
+    let index = quantityPointedbefore.findIndex((value) => value === 0);
+    if (index < 0) {
+        index = resourceOdfData.length - 1;
+    }
+    let availableToReturn = resourceOdfData[index - 1];
+    console.log('linha 70', availableToReturn);
+    let valorTotal = boas + ruins;
+    console.log('linha 73', "00" + availableToReturn.NUMERO_OPERACAO.replaceAll(' ', '0'));
+    console.log('linha 74', numeroOperacao);
+    if ("00" + availableToReturn.NUMERO_OPERACAO.replaceAll(' ', '0') !== numeroOperacao) {
+        console.log('linha 74');
+        response.message = 'Essa não pode ser estornada';
+        return res.json(response);
+    }
+    else if (ruins > 0) {
+        if (!availableToReturn.QTD_REFUGO) {
+            console.log('linha 79');
+            response.message = 'Refugo Inválido';
+            return res.json(response);
+        }
+    }
+    else if (availableToReturn.QTDE_APONTADA < valorTotal) {
+        console.log('linha 84');
+        response.message = 'Valor acima';
+        return res.json(response);
+    }
+    else if (availableToReturn.QTDE_APONTADA <= 0) {
+        console.log('linha 88');
+        response.message = 'Não há o que estornar';
+        return res.json(response);
+    }
+    else {
+        console.log('linha 92');
+        let codigoPeca = String(availableToReturn.CODIGO_PECA);
+        let revisao = String(availableToReturn.REVISAO);
+        let qtdOdf = Number(availableToReturn.QTDE_ODF) || 0;
+        let qtdApontOdf = Number(availableToReturn.QTDE_APONTADA) || 0;
         let faltante = Number(0);
         let retrabalhada = Number(0);
         let qtdLibMax = qtdOdf - qtdApontOdf;
-        if (resourceOdfData[0].QTDE_APONTADA <= 0) {
+        if (availableToReturn.QTDE_APONTADA <= 0) {
             qtdLibMax = 0;
         }
         if (qtdLibMax <= 0) {
             return res.json({ message: "não ha valor que possa ser devolvido" });
         }
-        if (boas > qtdLibMax) {
-            const response = {
-                qtdLibMax: qtdLibMax,
-                String: 'valor devolvido maior que o permitido'
-            };
-            return res.json(response);
-        }
-        const selectSuper = Math.min(...await (0, select_1.select)(lookForSupervisor).then((result) => result.rowsAffected));
-        if (selectSuper > 0) {
+        const selectSuper = await (0, select_1.select)(lookForSupervisor);
+        if (selectSuper.length > 0) {
             try {
                 const insertHisCodReturned = await (0, insert_1.insertInto)(funcionario, dados.numOdf, codigoPeca, revisao, dados.numOper, dados.codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, tempoDecorrido);
-                const updateQuery = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA - '${boas}', QTD_REFUGO = QTD_REFUGO - ${ruins} WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'`;
-                const updateValuesOnPcp = await (0, update_1.update)(updateQuery);
-                if (insertHisCodReturned.length > 0 && updateValuesOnPcp.length > 0) {
-                    return res.status(200).json({ message: 'estorno feito' });
+                if (insertHisCodReturned === 'insert done') {
+                    const updateQuery = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA - '${valorTotal}', QTD_REFUGO = QTD_REFUGO - ${ruins} WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'`;
+                    const updateValuesOnPcp = await (0, update_1.update)(updateQuery);
+                    if (updateValuesOnPcp === 'Update sucess') {
+                        return res.status(200).json({ message: 'estorno feito' });
+                    }
+                    else {
+                        return res.json({ message: 'erro de estorno' });
+                    }
                 }
-                else if (insertHisCodReturned.length <= 0 || updateValuesOnPcp.length <= 0) {
+                else {
                     return res.json({ message: 'erro de estorno' });
                 }
             }
@@ -94,17 +123,10 @@ const returnedValue = async (req, res) => {
                 console.log(error);
                 return res.json({ message: 'erro de estorno' });
             }
-            finally {
-                await connection.close();
-            }
-            return res.json({ message: 'erro de estorno' });
         }
         else {
             return res.json({ message: 'erro de estorno' });
         }
-    }
-    else {
-        return res.json({ message: 'erro de estorno' });
     }
 };
 exports.returnedValue = returnedValue;

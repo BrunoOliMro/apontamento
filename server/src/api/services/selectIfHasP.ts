@@ -10,6 +10,7 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
         url: '',
         codigoFilho: [],
         condic: '',
+        execut: 0,
     }
 
     try {
@@ -39,8 +40,6 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
         if (selectKnowHasP.length > 0) {
             const qtdLibProd: number[] = selectKnowHasP.map((element: any) => element.QTD_LIBERADA_PRODUZIR)
             const numberOfQtd = Math.min(...qtdLibProd)
-
-            response.quantidade = numberOfQtd
             const codigoFilho: any = selectKnowHasP.map((item: any) => item.NUMITE)
             const updateStorageQuery: any = [];
             let updateAlocacaoQuery: any = [];
@@ -48,50 +47,37 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
             response.condic = selectKnowHasP[0].CONDIC
             response.codigoFilho = codigoFilho
             let quantityToPoint: number;
+            let execut =  Math.max(...selectKnowHasP.map((element: any)=> element.EXECUT))
 
             // Check to see if it's to make a reservation
-            // let makeReservation = selectKnowHasP.map((item: any) => item.NUMSEQ).filter((element: string) => element === numeroOperacao)
-            //response.reserved = makeReservation;
-            let x = String(numeroOperacao.replaceAll(' ', ''))
-            let makeReservation = selectKnowHasP.map((item: any) => item.NUMSEQ).filter((element: string) => element === x)
+            let numeroOperNew = String(numeroOperacao.replaceAll(' ', ''))
+            let makeReservation = selectKnowHasP.map((item: any) => item.NUMSEQ).filter((element: string) => element === numeroOperNew)
 
             if (makeReservation.length <= 0) {
                 response.message = 'Algo deu errado'
                 return response
             }
 
-            //Retorna um array com a quantidade de itens total da execução
-            // const reservedItens: number[] = execut.map((quantItens: number) => {
-            //     return Math.floor((numberOfQtd || 0) * quantItens)
-            // }, Infinity)
-
             if (numberOfQtd <= 0) {
                 response.message = 'Quantidade para reserva inválida'
                 return response
             }
 
-            console.log('linha 74 /SelectHasP - numberOfQtd/', numberOfQtd);
-            console.log("linha 75 /selectHasP/quantidade", quantidadeOdf);
-
             // Caso a quantidade liberada para odf seja maior ou menor que a quantidade a produzir
             if (quantidadeOdf < numberOfQtd) {
-                response.quantidade = quantidadeOdf
                 quantityToPoint = quantidadeOdf;
             } else {
-                response.quantidade = numberOfQtd
                 quantityToPoint = numberOfQtd;
             }
 
-
-            response.quantidade
-
-            console.log('linha 83', quantityToPoint);
-
+            let quantitySetStorage = quantityToPoint * execut 
+            response.execut = execut
+            response.quantidade = numberOfQtd
 
             // Loop para atualizar os dados no DB
             try {
                 codigoFilho.forEach((element: string) => {
-                    updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${quantityToPoint} WHERE 1 = 1 AND CODIGO = '${element}'`);
+                    updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${quantitySetStorage} WHERE 1 = 1 AND CODIGO = '${element}'`);
                 });
                 let updateStorage = Math.min(...await connection.query(updateStorageQuery.join('\n')).then(result => result.rowsAffected));
                 if (updateStorage > 0) {

@@ -34,6 +34,11 @@ export const point: RequestHandler = async (req, res) => {
     const revisao = decrypted(sanitize(req.cookies['REVISAO'])) || null
     const updateQtyQuery: string[] = [];
     const updateQtyQuery2: string[] = [];
+    var response = {
+        message: '',
+        balance: 0,
+        url: '',
+    }
 
     //Inicia tempo de Rip
     res.cookie("startRip", Number(new Date()))
@@ -142,13 +147,19 @@ export const point: RequestHandler = async (req, res) => {
     console.log("linha 141 /point.ts /  quantidade possivel", quantidadePossivelProduzir);
 
     if (valorTotalApontado > quantidadePossivelProduzir!) {
-        return res.json({ message: 'Algo deu errado' })
+        console.log('linha 145 /não da pra fazer essa operação/');
+        response.message = 'Saldo menor que o apontado'
+        response.balance = quantidadePossivelProduzir
+        console.log('linha 148/response/', response);
+        return res.json(response)
     }
-
-    console.log("linha 139 /point.ts/", condic);
 
     // Caso haja "P" faz update na quantidade de peças dos filhos
     if (condic === 'P') {
+        if (!req.cookies['execut']) {
+            return res.json({ message: 'Algo deu errado' })
+        }
+        let execut = Number(decrypted(sanitize(req.cookies['execut'])))
         let codigoFilho: string[];
         if (!req.cookies['codigoFilho']) {
             return res.json({ message: 'Algo deu errado' })
@@ -162,9 +173,9 @@ export const point: RequestHandler = async (req, res) => {
         console.log("linha 145 /point.ts/");
         try {
             const connection = await mssql.connect(sqlConfig);
-            const diferenceBetween = quantidadePossivelProduzir! - valorTotalApontado
+            const diferenceBetween = quantidadePossivelProduzir! - valorTotalApontado * execut
             console.log("apontado", valorTotalApontado);
-            console.log('quantidadePossivel', quantidadePossivelProduzir );
+            console.log('quantidadePossivel', quantidadePossivelProduzir);
             console.log('linha 159 /point.ts/', diferenceBetween);
 
             // Loop para atualizar o estoque

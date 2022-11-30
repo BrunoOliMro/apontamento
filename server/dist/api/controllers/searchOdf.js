@@ -26,10 +26,6 @@ const searchOdf = async (req, res) => {
         return res.json({ message: 'Algo deu errado' });
     }
     const selectedItens = await (0, queryGroup_1.selectedItensFromOdf)(groupOdf, indexOdf);
-    console.log("linha 32", selectedItens.odf);
-    console.log('linha 32 ', selectedItens.beforeOdf.QTDE_APONTADA);
-    console.log('linha 34 ', selectedItens.odf.QTDE_APONTADA);
-    console.log('linha 38 /indexOdf/', indexOdf);
     if (indexOdf === 0) {
         qtdLibMax = selectedItens.odf.QTDE_ODF - selectedItens.odf.QTDE_APONTADA;
     }
@@ -87,6 +83,7 @@ const searchOdf = async (req, res) => {
         return res.json({ message: 'Algo deu errado' });
     }
     if (lookForChildComponents.message === 'Valores Reservados') {
+        res.cookie('execut', (0, encryptOdf_1.encrypted)(String(lookForChildComponents.execut)));
         res.cookie('reservedItens', (0, encryptOdf_1.encrypted)(String(lookForChildComponents.reserved)));
         res.cookie('codigoFilho', (0, encryptOdf_1.encrypted)(String(lookForChildComponents.codigoFilho)));
         res.cookie('condic', (0, encryptOdf_1.encrypted)(String(lookForChildComponents.condic)));

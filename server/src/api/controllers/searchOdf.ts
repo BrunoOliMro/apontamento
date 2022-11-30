@@ -29,13 +29,6 @@ export const searchOdf: RequestHandler = async (req, res) => {
 
     const selectedItens: any = await selectedItensFromOdf(groupOdf, indexOdf)
 
-    console.log("linha 32", selectedItens.odf);
-
-    console.log('linha 32 ', selectedItens.beforeOdf.QTDE_APONTADA);
-
-    console.log('linha 34 ', selectedItens.odf.QTDE_APONTADA);
-
-    console.log('linha 38 /indexOdf/', indexOdf);
     if (indexOdf === 0) {
         qtdLibMax = selectedItens.odf.QTDE_ODF - selectedItens.odf.QTDE_APONTADA
     } else {
@@ -116,6 +109,7 @@ export const searchOdf: RequestHandler = async (req, res) => {
     }
 
     if (lookForChildComponents.message === 'Valores Reservados') {
+        res.cookie('execut', encrypted(String(lookForChildComponents!.execut)))
         res.cookie('reservedItens', encrypted(String(lookForChildComponents!.reserved)))
         res.cookie('codigoFilho', encrypted(String(lookForChildComponents!.codigoFilho)))
         res.cookie('condic', encrypted(String(lookForChildComponents!.condic)))

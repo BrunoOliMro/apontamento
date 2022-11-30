@@ -38,6 +38,11 @@ const point = async (req, res) => {
     const revisao = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['REVISAO'])) || null;
     const updateQtyQuery = [];
     const updateQtyQuery2 = [];
+    var response = {
+        message: '',
+        balance: 0,
+        url: '',
+    };
     res.cookie("startRip", Number(new Date()));
     console.log('linha 38');
     const finalProdTimer = Number(new Date().getTime() - Number((0, decodeOdf_1.decodedBuffer)(String(req.cookies['startProd']))) / 1000) || 0;
@@ -108,10 +113,17 @@ const point = async (req, res) => {
     console.log("linha 141 /point.ts/ qtdLibMax", qtdLibMax);
     console.log("linha 141 /point.ts /  quantidade possivel", quantidadePossivelProduzir);
     if (valorTotalApontado > quantidadePossivelProduzir) {
-        return res.json({ message: 'Algo deu errado' });
+        console.log('linha 145 /não da pra fazer essa operação/');
+        response.message = 'Saldo menor que o apontado';
+        response.balance = quantidadePossivelProduzir;
+        console.log('linha 148/response/', response);
+        return res.json(response);
     }
-    console.log("linha 139 /point.ts/", condic);
     if (condic === 'P') {
+        if (!req.cookies['execut']) {
+            return res.json({ message: 'Algo deu errado' });
+        }
+        let execut = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['execut'])));
         let codigoFilho;
         if (!req.cookies['codigoFilho']) {
             return res.json({ message: 'Algo deu errado' });
@@ -126,7 +138,7 @@ const point = async (req, res) => {
         console.log("linha 145 /point.ts/");
         try {
             const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-            const diferenceBetween = quantidadePossivelProduzir - valorTotalApontado;
+            const diferenceBetween = quantidadePossivelProduzir - valorTotalApontado * execut;
             console.log("apontado", valorTotalApontado);
             console.log('quantidadePossivel', quantidadePossivelProduzir);
             console.log('linha 159 /point.ts/', diferenceBetween);
