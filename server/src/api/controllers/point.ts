@@ -10,17 +10,19 @@ import { encrypted } from "../utils/encryptOdf";
 import { sanitize } from "../utils/sanitize";
 
 export const point: RequestHandler = async (req, res) => {
-    const connection = await mssql.connect(sqlConfig);
     let qtdBoas = Number(sanitize(req.body["valorFeed"])) || 0;
     let supervisor: string = sanitize(req.body["supervisor"]) || null
     const motivorefugo: string | null = sanitize(req.body["value"]) || null
     const badFeed = Number(sanitize(req.body["badFeed"])) || 0;
     const missingFeed = Number(sanitize(req.body["missingFeed"])) || 0;
     const reworkFeed = Number(sanitize(req.body["reworkFeed"])) || 0;
-    var codigoFilho: string[] = (decrypted(sanitize(req.cookies['codigoFilho']))) || null // VER DEPOIS !!!!!!!!!!!!!!
-    console.log("linha 20 /point.ts/", codigoFilho);
     //var reservedItens: number[] = (req.cookies['reservedItens']) || null // VER DEPOIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    const condic: string | null = String(sanitize(req.cookies['condic'])) || null
+    let condic: string | null;
+    if (!req.cookies['condic']) {
+        condic = null
+    } else {
+        condic = decrypted(String(sanitize(req.cookies['condic']))) || null
+    }
     const odfNumberDecrypted: number = Number(decrypted(sanitize(req.cookies["NUMERO_ODF"]))) || 0
     const operationNumber = decrypted(sanitize(req.cookies["NUMERO_OPERACAO"])) || null
     const codigoPeca = decrypted(sanitize(req.cookies['CODIGO_PECA'])) || null
@@ -30,15 +32,14 @@ export const point: RequestHandler = async (req, res) => {
     const nextOperationProcess = decrypted(sanitize(req.cookies['OPERACAO_PROXIMA'])) || null
     const employee = decrypted(sanitize(req.cookies['employee'])) || null
     const revisao = decrypted(sanitize(req.cookies['REVISAO'])) || null
-    const quantidade = req.cookies['quantidade']
     const updateQtyQuery: string[] = [];
     const updateQtyQuery2: string[] = [];
 
     //Inicia tempo de Rip
     res.cookie("startRip", Number(new Date()))
-
+    console.log('linha 38');
     // Tempo final de produção
-    const finalProdTimer = Number(new Date().getTime() - Number(decodedBuffer(req.cookies['startProd'])) / 1000) || 0
+    const finalProdTimer = Number(new Date().getTime() - Number(decodedBuffer(String(req.cookies['startProd']))) / 1000) || 0
 
     // Varial que guarda o valor total dos apontamentos
     const valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed)) //+ Number(parcialFeed))
@@ -130,56 +131,70 @@ export const point: RequestHandler = async (req, res) => {
         }
     }
 
-    const quantidadePossivelProduzir = Number(req.cookies['quantidade'])
+    //let quantidadePossivelProduzir ? Number(req.cookies['quantidade']) : qtdLibMax
+    //const quantidadePossivelProduzir = quantidadePossivelProduzir ? Number(req.cookies['quantidade'])
 
-    if (valorTotalApontado > quantidadePossivelProduzir) {
+    //console.log("linha 136 ", quantidadePossivelProduzir);
+    let quantidadePossivelProduzir = Number(req.cookies['quantidade']);
+    //quantidadePossivelProduzir = NaN ? quantidadePossivelProduzir : qtdLibMax;
+
+    console.log("linha 141 /point.ts/ qtdLibMax", qtdLibMax);
+    console.log("linha 141 /point.ts /  quantidade possivel", quantidadePossivelProduzir);
+
+    if (valorTotalApontado > quantidadePossivelProduzir!) {
         return res.json({ message: 'Algo deu errado' })
     }
 
+    console.log("linha 139 /point.ts/", condic);
+
     // Caso haja "P" faz update na quantidade de peças dos filhos
     if (condic === 'P') {
-        if (!codigoFilho) {
-            console.log(["Sem dados dos filhos"]);
+        let codigoFilho: string[];
+        if (!req.cookies['codigoFilho']) {
             return res.json({ message: 'Algo deu errado' })
+        } else {
+            codigoFilho = decrypted(String(sanitize(req.cookies['codigoFilho']))).split(",") || null // VER DEPOIS !!!!!!!!!!!!!!
+            if (!codigoFilho) {
+                console.log(["Sem dados dos filhos"]);
+                return res.json({ message: 'Algo deu errado' })
+            }
         }
+        console.log("linha 145 /point.ts/");
         try {
-            //const min = Math.min(...reservedItens)
-            const diference = qtdLibMax - valorTotalApontado
-            const returnValueToStorage = diference / 2
-
-            console.log("diference", returnValueToStorage);
-            console.log("qtdLibMax", qtdLibMax);
-            console.log("valorTotalApontado", valorTotalApontado);
+            const connection = await mssql.connect(sqlConfig);
+            const diferenceBetween = quantidadePossivelProduzir! - valorTotalApontado
+            console.log("apontado", valorTotalApontado);
+            console.log('quantidadePossivel', quantidadePossivelProduzir );
+            console.log('linha 159 /point.ts/', diferenceBetween);
 
             // Loop para atualizar o estoque
-            if (valorTotalApontado < quantidade) {
+            if (valorTotalApontado < quantidadePossivelProduzir!) {
+                console.log("linha 156 /point.ts/");
                 try {
                     codigoFilho.forEach((codigoFilho: string) => {
-                        updateQtyQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${returnValueToStorage} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`)
+                        updateQtyQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${diferenceBetween} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`)
                     });
+                    console.log("linha 161");
                     await connection.query(updateQtyQuery.join("\n")).then(result => result.rowsAffected)
-
-                    // for (const [i] of quantidade.length.entries()) {
-                    // }
                 } catch (error) {
                     console.log("linha 159 /point.ts/", error);
                     return res.json({ message: 'Algo deu errado' })
                 }
             }
 
-            // Loop para deconstar o saldo alocado
+            // Loop para desconstar o saldo alocado
             try {
+                console.log("linha 172 /point.ts/");
                 codigoFilho.forEach((element: string) => {
-                    const updateQuery: string = `UPDATE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${odfNumberDecrypted}' AND CODIGO_FILHO = '${element}' `
+                    const updateQuery: string = `DELETE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${odfNumberDecrypted}' AND CODIGO_FILHO = '${element}' `
                     updateQtyQuery2.push(updateQuery)
                 });
-                await connection.query(updateQtyQuery.join("\n")).then(result => result.rowsAffected)
-
-                // for (const [i] of quantidade.length.entries()) {
-                // }
+                await connection.query(updateQtyQuery2.join("\n")).then(result => result.rowsAffected)
             } catch (error) {
                 console.log("linha 185 /selectHasP/", error);
                 return res.json({ message: 'Algo deu errado' })
+            } finally {
+                await connection.close()
             }
         } catch (err) {
             console.log("linha 175  -Point.ts-", err);
@@ -243,7 +258,5 @@ export const point: RequestHandler = async (req, res) => {
     } catch (error) {
         console.log(error);
         return res.json({ message: 'Erro ao apontar' })
-    } finally {
-        await connection.close()
     }
 }

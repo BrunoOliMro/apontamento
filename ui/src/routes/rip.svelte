@@ -27,15 +27,14 @@
         const res = await fetch(ripRouter);
         ripTable = await res.json();
 
+        if(ripTable.message === 'Não há rip a mostrar'){
+            loader = true;
+            await doPost()
+            return window.location.href = `${ripTable.url}`;
+        }
+
         lie = ripTable.map((acc) => acc.LIE);
         lsd = ripTable.map((acc) => acc.LSE);
-
-        if (ripTable.length <= 0) {
-            loader = true;
-            //window.location.href = "/#/codigobarras";
-            await doPost();
-            //location.reload();
-        }
     }
 
     function checkSuper(event) {
@@ -81,8 +80,14 @@
                 setup: setup,
             }),
         }).then((res) => res.json());
+        console.log("linha 84 res. rip", res);
+
         if (res) {
             loader = false;
+        }
+
+        if(res.message === 'Não há rip a mostrar'){
+            return window.location.href =`${res.url}`;
         }
         if (res.message === "rip vazia") {
             showErrorEmpty = true;

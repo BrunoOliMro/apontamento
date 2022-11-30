@@ -35,6 +35,7 @@ const tools = async (req, res) => {
     if (numeroOdf !== decodedOdfNumber) {
         return res.json({ message: 'Erro na ODF' });
     }
+    console.log("linha 49 /tools/");
     try {
         const inserted = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, start);
         if (inserted === 'Algo deu errado') {
@@ -78,6 +79,7 @@ const tools = async (req, res) => {
 };
 exports.tools = tools;
 const selectedTools = async (req, res) => {
+    console.log("linha 91 /selectedTools.ts/");
     const numeroOdf = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'])))) || 0;
     const numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO']))) || null;
     const codigoMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
@@ -98,6 +100,7 @@ const selectedTools = async (req, res) => {
     let y = Number(new Date().getTime());
     const tempoDecorrido = Number(y - x) || 0;
     let z = (0, encodedOdf_1.encoded)(String(new Date().getTime()));
+    console.log("linha 115");
     res.cookie("startProd", z);
     try {
         const codApontamentoFinalSetup = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, tempoDecorrido);

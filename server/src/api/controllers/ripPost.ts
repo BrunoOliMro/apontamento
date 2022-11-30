@@ -11,7 +11,6 @@ export const ripPost: RequestHandler = async (req, res) => {
     console.log('linha 11 /ripPost.ts/', setup);
     let keySan: any
     let valueSan: any;
-    const connection = await mssql.connect(sqlConfig);
     const NUMERO_ODF: number = Number(decrypted(sanitize(req.cookies['NUMERO_ODF']))) || 0
     const NUMERO_OPERACAO: string = decrypted(sanitize(req.cookies['NUMERO_OPERACAO'])) || null
     const CODIGO_MAQUINA: string = decrypted(sanitize(req.cookies['CODIGO_MAQUINA'])) || null
@@ -39,7 +38,7 @@ export const ripPost: RequestHandler = async (req, res) => {
     //const end = Number(new Date().getTime()) || 0;
     // const tempoDecorrido = Number(new Date(start).getTime()) || 0
     //const final = Number(tempoDecorrido - end) || 0 // Errp em type numeric
-   // console.log("lirenbierbirebi", new Date().getTime() - req.cookies['startRip']);    // Encerra ao final da Rip
+    // console.log("lirenbierbirebi", new Date().getTime() - req.cookies['startRip']);    // Encerra ao final da Rip
 
     const tempoDecorridoRip = new Date().getTime() - req.cookies['startRip']
     const finalProdRip = new Date().getTime() - decrypted(req.cookies['startSetupTime'])
@@ -69,7 +68,7 @@ export const ripPost: RequestHandler = async (req, res) => {
     //Atualiza o tempo total que a operação levou
     try {
         console.log('linha 70');
-        const updatePcpProg = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = ${finalProdRip} WHERE 1 = 1 AND NUMERO_ODF = ${NUMERO_ODF} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${NUMERO_OPERACAO} AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`
+        const updatePcpProg = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${NUMERO_ODF} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${NUMERO_OPERACAO} AND CODIGO_MAQUINA = '${CODIGO_MAQUINA}'`
         await update(updatePcpProg)
     } catch (error) {
         console.log(error)
@@ -89,13 +88,16 @@ export const ripPost: RequestHandler = async (req, res) => {
             if (resultSplitLines[row].SETUP === "ok" && lie![i] === null && lse![i] === null) {
                 resultSplitLines[row] = 0
             }
-            updateQtyQuery.push(`
-            INSERT INTO
-                CST_RIP_ODF_PRODUCAO 
-                    (ODF, ITEM, REVISAO, NUMCAR, DESCRICAO, ESPECIFICACAO, LIE, LSE, SETUP, M2, M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13, INSTRUMENTO, OPE_MAQUIN, OPERACAO) 
+            updateQtyQuery.push(`INSERT INTO CST_RIP_ODF_PRODUCAO (ODF, ITEM, REVISAO, NUMCAR, DESCRICAO, ESPECIFICACAO, LIE, LSE, SETUP, M2, M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13, INSTRUMENTO, OPE_MAQUIN, OPERACAO) 
                 VALUES('${NUMERO_ODF}','1', '${revisao}' , '${numCar![i]}', '${descricao![i]}',  '${especif![i]}',${lie![i]}, ${lse![i]},${resultSplitLines[row].SETUP ? `'${resultSplitLines[row].SETUP}'` : null},${resultSplitLines[row].M2 ? `${resultSplitLines[row].M2}` : null},${resultSplitLines[row].M3 ? `${resultSplitLines[row].M3}` : null},${resultSplitLines[row].M4 ? `${resultSplitLines[row].M4}` : null},${resultSplitLines[row].M5 ? `${resultSplitLines[row].M5}` : null},${resultSplitLines[row].M6 ? `${resultSplitLines[row].M6}` : null},${resultSplitLines[row].M7 ? `${resultSplitLines[row].M7}` : null},${resultSplitLines[row].M8 ? `${resultSplitLines[row].M8}` : null},${resultSplitLines[row].M9 ? `${resultSplitLines[row].M9}` : null},${resultSplitLines[row].M10 ? `${resultSplitLines[row].M10}` : null},${resultSplitLines[row].M11 ? `${resultSplitLines[row].M11}` : null},${resultSplitLines[row].M12 ? `${resultSplitLines[row].M12}` : null},${resultSplitLines[row].M13 ? `${resultSplitLines[row].M13}` : null},'${instrumento![i]}','${CODIGO_MAQUINA}','${NUMERO_OPERACAO}')`)
         })
-        await connection.query(updateQtyQuery.join("\n"))
+        try {
+            const connection = await mssql.connect(sqlConfig);
+            await connection.query(updateQtyQuery.join("\n"))
+        } catch (error) {
+            console.log("error - linha 98 /ripPost.ts/ - ", error)
+            return res.json({ message: "ocorreu um erro ao enviar os dados da rip" })
+        }
         const response = {
             message: "rip enviada, odf finalizada",
             url: '/#/codigobarras'

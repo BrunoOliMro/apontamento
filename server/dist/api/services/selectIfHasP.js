@@ -13,7 +13,6 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
         message: '',
         quantidade: quantidadeOdf,
         url: '',
-        reserved: [],
         codigoFilho: [],
         condic: '',
     };
@@ -53,17 +52,25 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
             let x = String(numeroOperacao.replaceAll(' ', ''));
             let makeReservation = selectKnowHasP.map((item) => item.NUMSEQ).filter((element) => element === x);
             if (makeReservation.length <= 0) {
-                return response.message = ({ message: 'Algo deu errado' });
+                response.message = 'Algo deu errado';
+                return response;
             }
             if (numberOfQtd <= 0) {
-                return response.message = 'Quantidade para reserva inválida';
+                response.message = 'Quantidade para reserva inválida';
+                return response;
             }
+            console.log('linha 74 /SelectHasP - numberOfQtd/', numberOfQtd);
+            console.log("linha 75 /selectHasP/quantidade", quantidadeOdf);
             if (quantidadeOdf < numberOfQtd) {
+                response.quantidade = quantidadeOdf;
                 quantityToPoint = quantidadeOdf;
             }
             else {
+                response.quantidade = numberOfQtd;
                 quantityToPoint = numberOfQtd;
             }
+            response.quantidade;
+            console.log('linha 83', quantityToPoint);
             try {
                 codigoFilho.forEach((element) => {
                     updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${quantityToPoint} WHERE 1 = 1 AND CODIGO = '${element}'`);
@@ -83,7 +90,8 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                                     });
                                     const insertAlocacao = Math.min(...await connection.query(insertAlocaoQuery.join('\n')).then(result => result.rowsAffected));
                                     if (insertAlocacao <= 0) {
-                                        return response.message = 'Algo deu errado';
+                                        response.message = 'Algo deu errado';
+                                        return response;
                                     }
                                     else {
                                         console.log("linha 103", insertAlocacao);
@@ -95,7 +103,8 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                             }
                             catch (error) {
                                 console.log("linha 129 /selectHasP/", error);
-                                return response.message = 'Algo deu errado';
+                                response.message = 'Algo deu errado';
+                                return response;
                             }
                         }
                         else {
@@ -107,23 +116,28 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                     }
                     catch (error) {
                         console.log("linha 138 /selectHasp/", error);
-                        return response.message = 'Algo deu errado';
+                        response.message = 'Algo deu errado';
+                        return response;
                     }
                 }
                 else {
-                    return response.message = 'Algo deu errado';
+                    response.message = 'Algo deu errado';
+                    return response;
                 }
             }
             catch (error) {
                 console.log("linha 145 /selectHasP/", error);
-                return response.message = 'Algo deu errado';
+                response.message = 'Algo deu errado';
+                return response;
             }
         }
         else if (selectKnowHasP.length <= 0) {
-            return response.message = "Não há item para reservar";
+            response.message = "Não há item para reservar";
+            return response;
         }
         else {
-            return response.message = "Algo deu errado";
+            response.message = "Algo deu errado";
+            return response;
         }
     }
     catch (error) {

@@ -32,15 +32,13 @@ export const odfData: RequestHandler = async (req, res) => {
         const selectedItens: any = await selectedItensFromOdf(data, indexOdf)
 
         if(indexOdf === 0){
-            qtdLibMax = selectedItens.odf.QTDE_ODF
+            qtdLibMax = selectedItens.odf.QTDE_ODF - selectedItens.odf.QTDE_APONTADA;
         } else {
             qtdLibMax = selectedItens.beforeOdf.QTDE_APONTADA - selectedItens.odf.QTDE_APONTADA;
         }
 
         response.odfSelecionada = selectedItens.odf;
         response.valorMaxdeProducao = qtdLibMax
-
-
 
         if (response.message === 'Algo deu errado') {
             return res.json({ message: 'Algo deu errado' });

@@ -29,8 +29,15 @@ export const searchOdf: RequestHandler = async (req, res) => {
 
     const selectedItens: any = await selectedItensFromOdf(groupOdf, indexOdf)
 
+    console.log("linha 32", selectedItens.odf);
+
+    console.log('linha 32 ', selectedItens.beforeOdf.QTDE_APONTADA);
+
+    console.log('linha 34 ', selectedItens.odf.QTDE_APONTADA);
+
+    console.log('linha 38 /indexOdf/', indexOdf);
     if (indexOdf === 0) {
-        qtdLibMax = selectedItens.odf.QTDE_ODF
+        qtdLibMax = selectedItens.odf.QTDE_ODF - selectedItens.odf.QTDE_APONTADA
     } else {
         qtdLibMax = selectedItens.beforeOdf.QTDE_APONTADA - selectedItens.odf.QTDE_APONTADA
     }
@@ -80,6 +87,8 @@ export const searchOdf: RequestHandler = async (req, res) => {
     res.cookie('NUMERO_OPERACAO', operationNumber, { httpOnly: true })
     res.cookie('REVISAO', encryptedRevision, { httpOnly: true })
 
+    console.log("linha 83", qtdLibMax);
+
     let lookForChildComponents = await selectToKnowIfHasP(dados, qtdLibMax, funcionario, selectedItens.odf.NUMERO_OPERACAO, selectedItens.odf.CODIGO_PECA)
 
     console.log("linha 85 /searchOdf/", lookForChildComponents);
@@ -119,7 +128,8 @@ export const searchOdf: RequestHandler = async (req, res) => {
     }
 
     if (lookForChildComponents.message === 'Não há item para reservar') {
-        return res.json({ message: 'Não há item para reservar' })
+        console.log("uiwrbhubrv");
+        return res.json({ message: 'Valores Reservados' })
     }
     else {
         return res.json({ message: 'Algo deu errado' })

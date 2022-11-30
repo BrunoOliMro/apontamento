@@ -26,8 +26,12 @@ const searchOdf = async (req, res) => {
         return res.json({ message: 'Algo deu errado' });
     }
     const selectedItens = await (0, queryGroup_1.selectedItensFromOdf)(groupOdf, indexOdf);
+    console.log("linha 32", selectedItens.odf);
+    console.log('linha 32 ', selectedItens.beforeOdf.QTDE_APONTADA);
+    console.log('linha 34 ', selectedItens.odf.QTDE_APONTADA);
+    console.log('linha 38 /indexOdf/', indexOdf);
     if (indexOdf === 0) {
-        qtdLibMax = selectedItens.odf.QTDE_ODF;
+        qtdLibMax = selectedItens.odf.QTDE_ODF - selectedItens.odf.QTDE_APONTADA;
     }
     else {
         qtdLibMax = selectedItens.beforeOdf.QTDE_APONTADA - selectedItens.odf.QTDE_APONTADA;
@@ -61,6 +65,7 @@ const searchOdf = async (req, res) => {
     res.cookie('CODIGO_MAQUINA', encryptedMachineCode, { httpOnly: true });
     res.cookie('NUMERO_OPERACAO', operationNumber, { httpOnly: true });
     res.cookie('REVISAO', encryptedRevision, { httpOnly: true });
+    console.log("linha 83", qtdLibMax);
     let lookForChildComponents = await (0, selectIfHasP_1.selectToKnowIfHasP)(dados, qtdLibMax, funcionario, selectedItens.odf.NUMERO_OPERACAO, selectedItens.odf.CODIGO_PECA);
     console.log("linha 85 /searchOdf/", lookForChildComponents);
     if (lookForChildComponents.quantidade) {
@@ -92,7 +97,8 @@ const searchOdf = async (req, res) => {
         return res.json({ message: 'Quantidade para reserva inválida' });
     }
     if (lookForChildComponents.message === 'Não há item para reservar') {
-        return res.json({ message: 'Não há item para reservar' });
+        console.log("uiwrbhubrv");
+        return res.json({ message: 'Valores Reservados' });
     }
     else {
         return res.json({ message: 'Algo deu errado' });

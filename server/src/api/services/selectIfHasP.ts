@@ -8,7 +8,6 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
         message: '',
         quantidade: quantidadeOdf,
         url: '',
-        reserved: [],
         codigoFilho: [],
         condic: '',
     }
@@ -40,6 +39,7 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
         if (selectKnowHasP.length > 0) {
             const qtdLibProd: number[] = selectKnowHasP.map((element: any) => element.QTD_LIBERADA_PRODUZIR)
             const numberOfQtd = Math.min(...qtdLibProd)
+
             response.quantidade = numberOfQtd
             const codigoFilho: any = selectKnowHasP.map((item: any) => item.NUMITE)
             const updateStorageQuery: any = [];
@@ -56,7 +56,8 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
             let makeReservation = selectKnowHasP.map((item: any) => item.NUMSEQ).filter((element: string) => element === x)
 
             if (makeReservation.length <= 0) {
-                return response.message = ({ message: 'Algo deu errado' })
+                response.message = 'Algo deu errado'
+                return response
             }
 
             //Retorna um array com a quantidade de itens total da execução
@@ -65,15 +66,27 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
             // }, Infinity)
 
             if (numberOfQtd <= 0) {
-                return response.message = 'Quantidade para reserva inválida'
+                response.message = 'Quantidade para reserva inválida'
+                return response
             }
+
+            console.log('linha 74 /SelectHasP - numberOfQtd/', numberOfQtd);
+            console.log("linha 75 /selectHasP/quantidade", quantidadeOdf);
 
             // Caso a quantidade liberada para odf seja maior ou menor que a quantidade a produzir
             if (quantidadeOdf < numberOfQtd) {
+                response.quantidade = quantidadeOdf
                 quantityToPoint = quantidadeOdf;
             } else {
+                response.quantidade = numberOfQtd
                 quantityToPoint = numberOfQtd;
             }
+
+
+            response.quantidade
+
+            console.log('linha 83', quantityToPoint);
+
 
             // Loop para atualizar os dados no DB
             try {
@@ -95,7 +108,8 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                                     });
                                     const insertAlocacao = Math.min(...await connection.query(insertAlocaoQuery.join('\n')).then(result => result.rowsAffected));
                                     if (insertAlocacao <= 0) {
-                                        return response.message = 'Algo deu errado'
+                                        response.message = 'Algo deu errado'
+                                        return response
                                     } else {
                                         console.log("linha 103", insertAlocacao);
                                         response.message = 'Valores Reservados'
@@ -105,7 +119,8 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                                 }
                             } catch (error) {
                                 console.log("linha 129 /selectHasP/", error);
-                                return response.message = 'Algo deu errado'
+                                response.message = 'Algo deu errado'
+                                return response
                             }
                         } else {
                             console.log("linha 134 /selectHasP/")
@@ -115,19 +130,24 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                         }
                     } catch (error) {
                         console.log("linha 138 /selectHasp/", error);
-                        return response.message = 'Algo deu errado'
+                        response.message = 'Algo deu errado'
+                        return response
                     }
                 } else {
-                    return response.message = 'Algo deu errado'
+                    response.message = 'Algo deu errado'
+                    return response
                 }
             } catch (error) {
                 console.log("linha 145 /selectHasP/", error);
-                return response.message = 'Algo deu errado'
+                response.message = 'Algo deu errado'
+                return response
             }
         } else if (selectKnowHasP.length <= 0) {
-            return response.message = "Não há item para reservar"
+            response.message = "Não há item para reservar"
+            return response
         } else {
-            return response.message = "Algo deu errado"
+            response.message = "Algo deu errado"
+            return response
         }
     } catch (error) {
         console.log('linha 154 /error: selectHasP/: ', error);

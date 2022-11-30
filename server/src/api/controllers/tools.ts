@@ -46,6 +46,8 @@ export const tools: RequestHandler = async (req, res) => {
     // console.log("func", codigoMaq);
     // console.log("func", qtdLibMax);
 
+    console.log("linha 49 /tools/");
+
     try {
         const inserted = await insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, start)
         if (inserted === 'Algo deu errado') {
@@ -86,6 +88,7 @@ export const tools: RequestHandler = async (req, res) => {
 
 //Ferramentas Selecionadas
 export const selectedTools: RequestHandler = async (req, res) => {
+    console.log("linha 91 /selectedTools.ts/");
     const numeroOdf: number = Number(decrypted(String(sanitize(req.cookies['NUMERO_ODF'])))) || 0
     const numeroOperacao: string = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
     const codigoMaq: string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
@@ -108,6 +111,9 @@ export const selectedTools: RequestHandler = async (req, res) => {
     //Encerra o primeiro tempo de setup
     const tempoDecorrido = Number(y - x) || 0
     let z = encoded(String(new Date().getTime()))
+
+    console.log("linha 115");
+
 
     //Inicia a produção
     res.cookie("startProd", z)

@@ -32,7 +32,7 @@ const odfData = async (req, res) => {
         const indexOdf = await (0, odfIndex_1.odfIndex)(data, numOper);
         const selectedItens = await (0, queryGroup_1.selectedItensFromOdf)(data, indexOdf);
         if (indexOdf === 0) {
-            qtdLibMax = selectedItens.odf.QTDE_ODF;
+            qtdLibMax = selectedItens.odf.QTDE_ODF - selectedItens.odf.QTDE_APONTADA;
         }
         else {
             qtdLibMax = selectedItens.beforeOdf.QTDE_APONTADA - selectedItens.odf.QTDE_APONTADA;

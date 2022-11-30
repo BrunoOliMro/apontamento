@@ -12,6 +12,7 @@ const rip = async (req, res) => {
     const numpec = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
     const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
     const codMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
+    console.log('linha codmaqs', codMaq);
     const codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
     const numeroOdf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"]))) || null;
     const numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))) || null;
@@ -44,9 +45,17 @@ const rip = async (req, res) => {
         FROM OPERACAO OP (NOLOCK)) AS TBL ON TBL.RECNO_PROCESSO = PROCESSO.R_E_C_N_O_  AND TBL.MAQUIN = QA_CARACTERISTICA.CST_NUMOPE
         WHERE PROCESSO.NUMPEC = '${numpec}' 
         AND PROCESSO.REVISAO = '${revisao}' 
+        AND CST_NUMOPE = '${codMaq}'
         AND NUMCAR < '2999'
         ORDER BY NUMPEC ASC`;
     const ripDetails = await (0, select_1.select)(rip);
+    console.log("linha ripDetaisl", ripDetails);
+    if (ripDetails.length <= 0) {
+        console.log("iewniureb");
+        response.message = 'Não há rip a mostrar';
+        response.url = '/#/codigobarras';
+        return res.json(response);
+    }
     let arrayNumope = ripDetails.map((acc) => {
         if (acc.CST_NUMOPE === codMaq) {
             return acc;

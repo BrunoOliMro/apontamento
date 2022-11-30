@@ -14,16 +14,19 @@ const decryptedOdf_1 = require("../utils/decryptedOdf");
 const encryptOdf_1 = require("../utils/encryptOdf");
 const sanitize_1 = require("../utils/sanitize");
 const point = async (req, res) => {
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let qtdBoas = Number((0, sanitize_1.sanitize)(req.body["valorFeed"])) || 0;
     let supervisor = (0, sanitize_1.sanitize)(req.body["supervisor"]) || null;
     const motivorefugo = (0, sanitize_1.sanitize)(req.body["value"]) || null;
     const badFeed = Number((0, sanitize_1.sanitize)(req.body["badFeed"])) || 0;
     const missingFeed = Number((0, sanitize_1.sanitize)(req.body["missingFeed"])) || 0;
     const reworkFeed = Number((0, sanitize_1.sanitize)(req.body["reworkFeed"])) || 0;
-    var codigoFilho = ((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['codigoFilho']))) || null;
-    console.log("linha 20 /point.ts/", codigoFilho);
-    const condic = String((0, sanitize_1.sanitize)(req.cookies['condic'])) || null;
+    let condic;
+    if (!req.cookies['condic']) {
+        condic = null;
+    }
+    else {
+        condic = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['condic']))) || null;
+    }
     const odfNumberDecrypted = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))) || 0;
     const operationNumber = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"])) || null;
     const codigoPeca = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])) || null;
@@ -33,11 +36,11 @@ const point = async (req, res) => {
     const nextOperationProcess = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['OPERACAO_PROXIMA'])) || null;
     const employee = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['employee'])) || null;
     const revisao = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['REVISAO'])) || null;
-    const quantidade = req.cookies['quantidade'];
     const updateQtyQuery = [];
     const updateQtyQuery2 = [];
     res.cookie("startRip", Number(new Date()));
-    const finalProdTimer = Number(new Date().getTime() - Number((0, decodeOdf_1.decodedBuffer)(req.cookies['startProd'])) / 1000) || 0;
+    console.log('linha 38');
+    const finalProdTimer = Number(new Date().getTime() - Number((0, decodeOdf_1.decodedBuffer)(String(req.cookies['startProd']))) / 1000) || 0;
     const valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed));
     let faltante = qtdLibMax - valorTotalApontado;
     console.log("linha 56 /point.ts/");
@@ -101,26 +104,39 @@ const point = async (req, res) => {
             return res.json({ message: 'Supervisor não encontrado' });
         }
     }
-    const quantidadePossivelProduzir = Number(req.cookies['quantidade']);
+    let quantidadePossivelProduzir = Number(req.cookies['quantidade']);
+    console.log("linha 141 /point.ts/ qtdLibMax", qtdLibMax);
+    console.log("linha 141 /point.ts /  quantidade possivel", quantidadePossivelProduzir);
     if (valorTotalApontado > quantidadePossivelProduzir) {
         return res.json({ message: 'Algo deu errado' });
     }
+    console.log("linha 139 /point.ts/", condic);
     if (condic === 'P') {
-        if (!codigoFilho) {
-            console.log(["Sem dados dos filhos"]);
+        let codigoFilho;
+        if (!req.cookies['codigoFilho']) {
             return res.json({ message: 'Algo deu errado' });
         }
+        else {
+            codigoFilho = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['codigoFilho']))).split(",") || null;
+            if (!codigoFilho) {
+                console.log(["Sem dados dos filhos"]);
+                return res.json({ message: 'Algo deu errado' });
+            }
+        }
+        console.log("linha 145 /point.ts/");
         try {
-            const diference = qtdLibMax - valorTotalApontado;
-            const returnValueToStorage = diference / 2;
-            console.log("diference", returnValueToStorage);
-            console.log("qtdLibMax", qtdLibMax);
-            console.log("valorTotalApontado", valorTotalApontado);
-            if (valorTotalApontado < quantidade) {
+            const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+            const diferenceBetween = quantidadePossivelProduzir - valorTotalApontado;
+            console.log("apontado", valorTotalApontado);
+            console.log('quantidadePossivel', quantidadePossivelProduzir);
+            console.log('linha 159 /point.ts/', diferenceBetween);
+            if (valorTotalApontado < quantidadePossivelProduzir) {
+                console.log("linha 156 /point.ts/");
                 try {
                     codigoFilho.forEach((codigoFilho) => {
-                        updateQtyQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${returnValueToStorage} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`);
+                        updateQtyQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${diferenceBetween} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`);
                     });
+                    console.log("linha 161");
                     await connection.query(updateQtyQuery.join("\n")).then(result => result.rowsAffected);
                 }
                 catch (error) {
@@ -129,15 +145,19 @@ const point = async (req, res) => {
                 }
             }
             try {
+                console.log("linha 172 /point.ts/");
                 codigoFilho.forEach((element) => {
-                    const updateQuery = `UPDATE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${odfNumberDecrypted}' AND CODIGO_FILHO = '${element}' `;
+                    const updateQuery = `DELETE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${odfNumberDecrypted}' AND CODIGO_FILHO = '${element}' `;
                     updateQtyQuery2.push(updateQuery);
                 });
-                await connection.query(updateQtyQuery.join("\n")).then(result => result.rowsAffected);
+                await connection.query(updateQtyQuery2.join("\n")).then(result => result.rowsAffected);
             }
             catch (error) {
                 console.log("linha 185 /selectHasP/", error);
                 return res.json({ message: 'Algo deu errado' });
+            }
+            finally {
+                await connection.close();
             }
         }
         catch (err) {
@@ -195,9 +215,6 @@ const point = async (req, res) => {
     catch (error) {
         console.log(error);
         return res.json({ message: 'Erro ao apontar' });
-    }
-    finally {
-        await connection.close();
     }
 };
 exports.point = point;

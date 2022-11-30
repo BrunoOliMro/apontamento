@@ -15,7 +15,7 @@ const getPoint = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let NUMERO_ODF = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"]))) || null;
     let qtdBoas = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["qtdBoas"]))) || null;
-    const NUMERO_OPERACAO = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_OPERACAO']))) || null;
+    let NUMERO_OPERACAO = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_OPERACAO']))) || null;
     const CODIGO_MAQUINA = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
     let codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA']))) || null;
     let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['employee']))) || null;
@@ -44,6 +44,8 @@ const getPoint = async (req, res) => {
         }
     }
     const ip = String(Object.entries(results)[0][1]);
+    NUMERO_OPERACAO = "00" + NUMERO_OPERACAO.replaceAll(" ", '0');
+    console.log("linha 46 /NUMERO_OPERACAO/", NUMERO_OPERACAO);
     try {
         if (NUMERO_OPERACAO === "00999") {
             let numeroOp = NUMERO_OPERACAO.replaceAll('0', '');
