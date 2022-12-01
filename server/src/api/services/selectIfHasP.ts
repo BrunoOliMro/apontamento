@@ -1,6 +1,7 @@
 import { select } from './select';
 import mssql from 'mssql';
 import { sqlConfig } from '../../global.config'
+import { update } from './update';
 
 export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, funcionario: string, numeroOperacao: string, codigoPeca: string) => {
     const connection = await mssql.connect(sqlConfig);
@@ -47,10 +48,11 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
             response.condic = selectKnowHasP[0].CONDIC
             response.codigoFilho = codigoFilho
             let quantityToPoint: number;
-            let execut =  Math.max(...selectKnowHasP.map((element: any)=> element.EXECUT))
+            let execut = Math.max(...selectKnowHasP.map((element: any) => element.EXECUT))
 
             // Check to see if it's to make a reservation
             let numeroOperNew = String(numeroOperacao.replaceAll(' ', ''))
+            console.log('linha 55 /numeroOperNew/', numeroOperNew);
             let makeReservation = selectKnowHasP.map((item: any) => item.NUMSEQ).filter((element: string) => element === numeroOperNew)
 
             if (makeReservation.length <= 0) {
@@ -70,7 +72,9 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                 quantityToPoint = numberOfQtd;
             }
 
-            let quantitySetStorage = quantityToPoint * execut 
+            console.log('linha 73', quantityToPoint);
+
+            let quantitySetStorage = quantityToPoint * execut
             response.execut = execut
             response.quantidade = numberOfQtd
 
@@ -90,17 +94,33 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                             try {
                                 if (makeReservation) {
                                     codigoFilho.forEach((codigoFilho: string) => {
-                                        insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES (${dados.numOdf}, ${numeroOperacao}, '${codigoPeca}', '${codigoFilho}', ${quantityToPoint}, 'ADDRESS', NULL, GETDATE(), '${funcionario}')`);
+                                        insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES (${dados.numOdf}, ${numeroOperNew}, '${codigoPeca}', '${codigoFilho}', ${quantityToPoint}, 'ADDRESS', NULL, GETDATE(), '${funcionario}')`);
                                     });
                                     const insertAlocacao = Math.min(...await connection.query(insertAlocaoQuery.join('\n')).then(result => result.rowsAffected));
                                     if (insertAlocacao <= 0) {
+                                        console.log('linha 101');
                                         response.message = 'Algo deu errado'
                                         return response
                                     } else {
-                                        console.log("linha 103", insertAlocacao);
-                                        response.message = 'Valores Reservados'
-                                        response.url = '/#/ferramenta'
-                                        return response
+                                        try {
+                                            let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${quantityToPoint} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${numeroOperNew}`
+                                            const x = await update(y)
+                                            console.log('x linha 108', x);
+                                            if (x === 'Update sucess') {
+                                                console.log("linha 103", insertAlocacao);
+                                                response.message = 'Valores Reservados'
+                                                response.url = '/#/ferramenta'
+                                                return response
+                                            } else {
+                                                console.log('linha 113 /selectHAsP/');
+                                                response.message = 'Algo deu errado'
+                                                return response
+                                            }
+                                        } catch (error) {
+                                            console.log('linha 105 Error on selectHasP', error);
+                                            response.message = 'Algo deu errado'
+                                            return response
+                                        }
                                     }
                                 }
                             } catch (error) {

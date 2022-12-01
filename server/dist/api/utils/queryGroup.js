@@ -8,8 +8,6 @@ const selectedItensFromOdf = async (groupOdf, indexOdf) => {
         nextOdf: '',
         beforeOdf: '',
     };
-    console.log("linha 9 /queryGroup/", indexOdf + 1);
-    console.log("linha 10 /queryGroup/", groupOdf.length);
     if (indexOdf <= 0) {
         response.message = 'Primeira ODF selecionada';
         response.beforeOdf = groupOdf[indexOdf];

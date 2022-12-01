@@ -10,6 +10,9 @@ export const returnedValue: RequestHandler = async (req, res) => {
     const choosenOption = Number(sanitize(req.body["quantity"])) || 0;
     const supervisor = sanitize(req.body["supervisor"]) || null;
     const returnValues = String(sanitize(req.body['returnValueStorage'])) || null;
+    if (!returnValues) {
+        return res.json({ message: 'Não foi indicado boas e ruins' })
+    }
     const funcionario: string = decrypted(String(sanitize(req.cookies['employee']))) || null;
     const barcode = sanitize(req.body["barcodeReturn"]) || null;
     const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`;
@@ -61,28 +64,34 @@ export const returnedValue: RequestHandler = async (req, res) => {
     const lookForOdfData = `SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
     const resourceOdfData = await select(lookForOdfData)
     let quantityPointedbefore = resourceOdfData.map((element: any) => element.QTDE_APONTADA)
-    let numeroOperacao = dados.numOper.replaceAll(' ', '')
+    //let numeroOperacao = dados.numOper.replaceAll(' ', '')
     let index = quantityPointedbefore.findIndex((value: any) => value === 0)
     if (index < 0) {
-        index = resourceOdfData.length - 1
+        index = resourceOdfData.length
     }
+    console.log('linha 72', index);
     let availableToReturn = resourceOdfData[index - 1]
-    console.log('linha 70', availableToReturn);
+    console.log('linha 73', availableToReturn);
+
+    if (!availableToReturn) {
+        availableToReturn = resourceOdfData[index]
+    }
+    // console.log('linha 70', availableToReturn.QTDE_APONTADA);
 
     let valorTotal = boas + ruins
-    console.log('linha 73',"00" + availableToReturn.NUMERO_OPERACAO.replaceAll(' ', '0'));
-    console.log('linha 74', numeroOperacao);
 
-    if ("00" + availableToReturn.NUMERO_OPERACAO.replaceAll(' ', '0') !== numeroOperacao) {
-        console.log('linha 74');
+    console.log('linha 74', dados.numOper);
+    console.log('linha 75', "00" + availableToReturn.NUMERO_OPERACAO.replaceAll(' ', '0'));
+
+    if (availableToReturn.QTDE_APONTADA <= 0) {
+        return res.json({ message: "não ha valor que possa ser devolvido" })
+    } else if ("00" + availableToReturn.NUMERO_OPERACAO.replaceAll(' ', '0') !== dados.numOper) {
         response.message = 'Essa não pode ser estornada'
         return res.json(response)
-    } else if (ruins > 0) {
-        if (!availableToReturn.QTD_REFUGO) {
-            console.log('linha 79');
-            response.message = 'Refugo Inválido'
-            return res.json(response)
-        }
+    } else if (!availableToReturn.QTD_REFUGO && ruins > 0) {
+        console.log('linha 79');
+        response.message = 'Refugo Inválido'
+        return res.json(response)
     } else if (availableToReturn.QTDE_APONTADA < valorTotal) {
         console.log('linha 84');
         response.message = 'Valor acima'

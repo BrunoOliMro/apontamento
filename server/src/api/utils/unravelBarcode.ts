@@ -6,14 +6,9 @@ export function unravelBarcode(barcode: string) {
         message: ''
     }
 
-    console.log("barcode", barcode);
-
-    //console.log("barcode", barcode );
-
     if (barcode === '' || barcode === undefined || barcode === null) {
         return response.message = 'Algo deu errado'
     }
-    //console.log("linha 7 /unravel/", barcode);
 
     //Reatribuiu o codigo caso o cado de barras seja maior
     const dados: any = {
@@ -27,11 +22,6 @@ export function unravelBarcode(barcode: string) {
         dados.numOper = barcode!.slice(0, 5)
         dados.codMaq = barcode!.slice(5, 11)
     }
-
-    //console.log("linha 25", dados);
-
-    //console.log("barcode", barcode);
-    //console.log("dados linha 32", dados);
     return dados
 }
 

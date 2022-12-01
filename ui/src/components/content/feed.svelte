@@ -44,8 +44,7 @@
     async function getOdfData() {
         const res = await fetch(urlString);
         dadosOdf = await res.json();
-        qtdPossivelProducao = dadosOdf.valorMaxdeProducao;
-        console.log("linha 47 /feed.svelte/", qtdPossivelProducao);
+        qtdPossivelProducao = dadosOdf.odfSelecionada.QTDE_LIB
         if (qtdPossivelProducao <= 0) {
             qtdPossivelProducao = 0;
         }

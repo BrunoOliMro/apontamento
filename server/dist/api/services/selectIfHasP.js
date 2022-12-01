@@ -7,6 +7,7 @@ exports.selectToKnowIfHasP = void 0;
 const select_1 = require("./select");
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
+const update_1 = require("./update");
 const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOperacao, codigoPeca) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let response = {
@@ -51,6 +52,7 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
             let quantityToPoint;
             let execut = Math.max(...selectKnowHasP.map((element) => element.EXECUT));
             let numeroOperNew = String(numeroOperacao.replaceAll(' ', ''));
+            console.log('linha 55 /numeroOperNew/', numeroOperNew);
             let makeReservation = selectKnowHasP.map((item) => item.NUMSEQ).filter((element) => element === numeroOperNew);
             if (makeReservation.length <= 0) {
                 response.message = 'Algo deu errado';
@@ -66,6 +68,7 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
             else {
                 quantityToPoint = numberOfQtd;
             }
+            console.log('linha 73', quantityToPoint);
             let quantitySetStorage = quantityToPoint * execut;
             response.execut = execut;
             response.quantidade = numberOfQtd;
@@ -84,18 +87,36 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                             try {
                                 if (makeReservation) {
                                     codigoFilho.forEach((codigoFilho) => {
-                                        insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES (${dados.numOdf}, ${numeroOperacao}, '${codigoPeca}', '${codigoFilho}', ${quantityToPoint}, 'ADDRESS', NULL, GETDATE(), '${funcionario}')`);
+                                        insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES (${dados.numOdf}, ${numeroOperNew}, '${codigoPeca}', '${codigoFilho}', ${quantityToPoint}, 'ADDRESS', NULL, GETDATE(), '${funcionario}')`);
                                     });
                                     const insertAlocacao = Math.min(...await connection.query(insertAlocaoQuery.join('\n')).then(result => result.rowsAffected));
                                     if (insertAlocacao <= 0) {
+                                        console.log('linha 101');
                                         response.message = 'Algo deu errado';
                                         return response;
                                     }
                                     else {
-                                        console.log("linha 103", insertAlocacao);
-                                        response.message = 'Valores Reservados';
-                                        response.url = '/#/ferramenta';
-                                        return response;
+                                        try {
+                                            let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${quantityToPoint} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${numeroOperNew}`;
+                                            const x = await (0, update_1.update)(y);
+                                            console.log('x linha 108', x);
+                                            if (x === 'Update sucess') {
+                                                console.log("linha 103", insertAlocacao);
+                                                response.message = 'Valores Reservados';
+                                                response.url = '/#/ferramenta';
+                                                return response;
+                                            }
+                                            else {
+                                                console.log('linha 113 /selectHAsP/');
+                                                response.message = 'Algo deu errado';
+                                                return response;
+                                            }
+                                        }
+                                        catch (error) {
+                                            console.log('linha 105 Error on selectHasP', error);
+                                            response.message = 'Algo deu errado';
+                                            return response;
+                                        }
                                     }
                                 }
                             }

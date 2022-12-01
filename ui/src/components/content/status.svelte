@@ -25,6 +25,7 @@
     async function getTempo() {
         const res = await fetch(urlString);
         prodTime = await res.json();
+        console.log('LINHA 28 /prodTime/', prodTime);
         tempoMax = prodTime;
 
         if (!tempoMax || tempoMax.message === 'time for execution not found') {

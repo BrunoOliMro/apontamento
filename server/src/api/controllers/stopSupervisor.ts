@@ -5,14 +5,16 @@ import { select } from "../services/select";
 import { decrypted } from "../utils/decryptedOdf";
 
 export const stopSupervisor: RequestHandler = async (req, res) => {
-    const supervisor: string = decrypted(String(sanitize(req.body['superSuperMaqPar']))) || null
+    const supervisor: string | null = String(sanitize(req.body['superSuperMaqPar'])) || null
+    console.log('linha 9 /stopSuper/');
     const numeroOdf: number = decrypted(String(sanitize(req.cookies['NUMERO_ODF']))) || null
     const NUMERO_OPERACAO: string = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
     const CODIGO_MAQUINA: string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
     const qtdLibMax: number = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
-    const funcionario: string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+    const funcionario: string = decrypted(String(sanitize(req.cookies['employee']))) || null
     const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
     const codigoPeca: string = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
+    console.log('linha 16 /stopsuper/');
     const boas = 0
     const faltante = 0
     const retrabalhada = 0
@@ -25,7 +27,7 @@ export const stopSupervisor: RequestHandler = async (req, res) => {
 
     try {
         const resource = await select(lookForSupervisor)
-
+        console.log('linha 28 /stopSupervisor/', resource);
         if (resource) {
             const insertTimerBackTo3 = await insertInto(funcionario, numeroOdf, codigoPeca, revisao, NUMERO_OPERACAO, CODIGO_MAQUINA, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido)
             if(insertTimerBackTo3 === 'insert done'){

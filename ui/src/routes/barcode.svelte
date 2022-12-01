@@ -38,6 +38,8 @@
       if (superSuperMaqPar === "000000") {
         modalMessage = "Crachá inválido";
       }
+      loader = true
+      superParada = false
       doPostSuper();
     }
   };
@@ -146,10 +148,10 @@
     //   window.location.href = "/#/rip";
     // }
 
-    // if (res.message === "codeApont 5 maquina parada") {
-    //   loader = false;
-    //   superParada = true;
-    // }
+    if (res.message === "codeApont 5 maquina parada") {
+      loader = false;
+      superParada = true;
+    }
 
     if (res.message === "codigo de barras vazio") {
       modalMessage = "Código de barras vazio";
@@ -244,10 +246,12 @@
     loader = false;
     console.log('linha 245 -return-', res);
 
-    // barcodeReturn = ''
-    // supervisor = ''
-    // quantity = ''
-    // returnValueStorage = ''
+    barcodeReturn = ''
+    supervisor = ''
+    quantity = ''
+    returnValueStorage = ''
+    showmodal = false;
+
 
     if(res.message === 'Refugo Inválido'){
       modalMessage = 'Não há refugo para estornar'

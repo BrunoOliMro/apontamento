@@ -7,7 +7,7 @@ const sanitize_1 = require("../utils/sanitize");
 const searchBagde = async (req, res) => {
     let matricula = String((0, sanitize_1.sanitize)(req.body["badge"])) || null;
     let start = new Date() || 0;
-    let lookForBadge = `SELECT TOP 1 [MATRIC], [FUNCIONARIO], [CRACHA] FROM FUNCIONARIOS WHERE 1 = 1 AND [CRACHA] = '${matricula}' ORDER BY FUNCIONARIO`;
+    let lookForBadge = `SELECT TOP 1 [FUNCIONARIO], [CRACHA] FROM FUNCIONARIOS WHERE 1 = 1 AND [CRACHA] = '${matricula}' ORDER BY FUNCIONARIO`;
     if (!matricula || matricula === '') {
         return res.json({ message: "Empty badge" });
     }

@@ -9,14 +9,16 @@ const insert_1 = require("../services/insert");
 const select_1 = require("../services/select");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const stopSupervisor = async (req, res) => {
-    const supervisor = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.body['superSuperMaqPar']))) || null;
+    const supervisor = String((0, sanitize_html_1.default)(req.body['superSuperMaqPar'])) || null;
+    console.log('linha 9 /stopSuper/');
     const numeroOdf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_ODF']))) || null;
     const NUMERO_OPERACAO = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_OPERACAO']))) || null;
     const CODIGO_MAQUINA = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
     const qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['qtdLibMax']))) || null;
-    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO']))) || null;
+    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['employee']))) || null;
     const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
     const codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA']))) || null;
+    console.log('linha 16 /stopsuper/');
     const boas = 0;
     const faltante = 0;
     const retrabalhada = 0;
@@ -28,6 +30,7 @@ const stopSupervisor = async (req, res) => {
     const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`;
     try {
         const resource = await (0, select_1.select)(lookForSupervisor);
+        console.log('linha 28 /stopSupervisor/', resource);
         if (resource) {
             const insertTimerBackTo3 = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, NUMERO_OPERACAO, CODIGO_MAQUINA, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido);
             if (insertTimerBackTo3 === 'insert done') {

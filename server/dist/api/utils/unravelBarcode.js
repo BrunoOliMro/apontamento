@@ -7,7 +7,6 @@ function unravelBarcode(barcode) {
     let response = {
         message: ''
     };
-    console.log("barcode", barcode);
     if (barcode === '' || barcode === undefined || barcode === null) {
         return response.message = 'Algo deu errado';
     }

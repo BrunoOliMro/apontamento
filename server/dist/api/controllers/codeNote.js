@@ -11,15 +11,17 @@ const decodeOdf_1 = require("../utils/decodeOdf");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const unravelBarcode_1 = require("../utils/unravelBarcode");
 const codeNote = async (req, res, next) => {
-    let dados = (0, unravelBarcode_1.unravelBarcode)(req.body.codigoBarras);
-    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO']))) || null;
+    let dados = (0, unravelBarcode_1.unravelBarcode)(req.body.barcode);
+    let numeroOper = Number(dados.numOper.replaceAll('000', '')) || 0;
+    let odfNumber = Number(dados.numOdf) || 0;
+    let codMaq = String(dados.codMaq) || null;
+    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['employee']))) || null;
     let codigoPeca = String('' || null);
     if (!funcionario || funcionario === '') {
         console.log("funcionarario /codenote/", funcionario);
         return res.json({ message: 'Acesso negado' });
     }
     if (!dados) {
-        console.log("linha 24");
         const numeroOdfCookies = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_ODF']))) || null;
         const codigoOper = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_OPERACAO']))) || null;
         const codigoMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
@@ -35,8 +37,9 @@ const codeNote = async (req, res, next) => {
         }
     }
     try {
-        const lookForHisaponta = `SELECT TOP 1 USUARIO, ODF, NUMOPE,  ITEM, CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${dados.numOdf} AND NUMOPE = '${dados.numOper}' AND ITEM = '${dados.codMaq} ORDER BY DATAHORA ASC'`;
+        const lookForHisaponta = `SELECT TOP 1 USUARIO, NUMOPE, ITEM, CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${odfNumber} AND NUMOPE = ${numeroOper} AND ITEM = '${codMaq}' ORDER BY DATAHORA DESC`;
         const codIdApontamento = await (0, select_1.select)(lookForHisaponta);
+        console.log('linha 45 /codIdApontamento/', codIdApontamento);
         let lastEmployee = codIdApontamento[0]?.USUARIO;
         let numeroOdfDB = codIdApontamento[0]?.ODF;
         let codigoOperDB = codIdApontamento[0]?.NUMOPE;
@@ -48,7 +51,6 @@ const codeNote = async (req, res, next) => {
             console.log("usuario diferente");
             return res.json({ message: 'usuario diferente' });
         }
-        let numeroOdf = Number(dados.numOdf);
         let tempoDecorrido = 0;
         let revisao = String('' || null);
         let qtdLibMax = 0;
@@ -62,7 +64,6 @@ const codeNote = async (req, res, next) => {
         var obj = {
             message: ''
         };
-        console.log("linha 95 /code note/");
         if (codIdApontamento.length > 0) {
             if (codIdApontamento[0]?.CODAPONTA === 1) {
                 req.body.message = `codeApont 1 setup iniciado`;
@@ -82,21 +83,15 @@ const codeNote = async (req, res, next) => {
                 req.body.message = `codeApont 4 prod finalzado`;
                 next();
             }
-            if (codIdApontamento[0]?.CODAPONTA === 5) {
-                req.body.message = `codeApont 5 maquina parada`;
-                next();
+            if (codIdApontamento[0]?.CODAPONTA === 7) {
                 return res.json({ message: `codeApont 5 maquina parada` });
             }
             if (codIdApontamento[0]?.CODAPONTA === 6) {
                 req.body.message = `codeApont 1 setup iniciado`;
-                const insertResponse = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, dados.numOper, dados.codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido);
+                const insertResponse = await (0, insert_1.insertInto)(funcionario, odfNumber, codigoPeca, revisao, dados.numOper, dados.codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido);
                 if (insertResponse === 'Algo deu errado') {
                     return res.json({ message: 'Algo deu errado' });
                 }
-                next();
-            }
-            if (codIdApontamento[0]?.CODAPONTA === 7) {
-                req.body.message = `codeApont 1 setup iniciado`;
                 next();
             }
             if (lastEmployee !== funcionario && codIdApontamento[0]?.CODAPONTA === 6) {
@@ -105,7 +100,8 @@ const codeNote = async (req, res, next) => {
             }
         }
         if (codIdApontamento.length <= 0) {
-            const resultInsert = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, dados.numOper, dados.codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido);
+            console.log('code note linha 126');
+            const resultInsert = await (0, insert_1.insertInto)(funcionario, odfNumber, codigoPeca, revisao, dados.numOper, dados.codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido);
             if (resultInsert === 'Algo deu errado') {
                 return res.json({ message: 'Algo deu errado' });
             }
@@ -114,8 +110,6 @@ const codeNote = async (req, res, next) => {
     }
     catch (error) {
         return res.json({ message: 'Algo deu errado' });
-    }
-    finally {
     }
 };
 exports.codeNote = codeNote;
