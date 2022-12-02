@@ -11,18 +11,20 @@ export const getPoint: RequestHandler = async (req, res) => {
     const connection = await mssql.connect(sqlConfig);
     let NUMERO_ODF = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
     let qtdBoas: number = decrypted(String(sanitize(req.cookies["qtdBoas"]))) || null;
-    const NUMERO_OPERACAO = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
+    let NUMERO_OPERACAO = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
     const CODIGO_MAQUINA = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
     let codigoPeca = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
     let funcionario = decrypted(String(sanitize(req.cookies['employee']))) || null
-    let qtdProduzir = decrypted(String(sanitize(req.cookies['qtdProduzir']))) || null
+    let qtdProduzir = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
+    //let quantidade: string | null = sanitize(req.cookies['quantidade']) || null
     let revisao = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
     console.log("linha 20 /revisao/", revisao);
     const updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`
     var address;
     var response = {
         message : '',
-        address: ''
+        address: '',
+        url: '',
     }
     const hostname = req.get("host")
     const { networkInterfaces } = require('os');
@@ -40,6 +42,10 @@ export const getPoint: RequestHandler = async (req, res) => {
         }
     }
     const ip = String(Object.entries(results)[0]![1])
+
+    NUMERO_OPERACAO = "00" + NUMERO_OPERACAO.replaceAll(" ", '0')
+
+    console.log("linha 46 /NUMERO_OPERACAO/", NUMERO_OPERACAO );
     try {
         //Caso a operação seja 999 fará baixa no estoque
         if (NUMERO_OPERACAO === "00999") {
@@ -260,7 +266,9 @@ export const getPoint: RequestHandler = async (req, res) => {
                 return res.json({ message: 'Error on locating space' })
             }
         } else {
-            return res.json({ message: 'No address' })
+            response.url = '/#/rip'
+            response.message = 'No address'
+            return res.json(response)
         }
     } catch (error) {
         console.log('linha 185', error);

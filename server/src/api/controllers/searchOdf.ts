@@ -8,11 +8,15 @@ import { encrypted } from '../utils/encryptOdf';
 import { unravelBarcode } from '../utils/unravelBarcode'
 import { odfIndex } from '../utils/odfIndex';
 import { selectedItensFromOdf } from '../utils/queryGroup';
+import { update } from '../services/update';
+import { codeNoteMessage } from '../utils/codeNoteMessage';
 
 export const searchOdf: RequestHandler = async (req, res) => {
     const dados: any = unravelBarcode(req.body.barcode)
     let qtdLibMax: number;
-    const lookForOdfData = `SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
+    const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB,  QTD_REFUGO, CODIGO_PECA  FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
+
+    console.log('linha 18 /searchOdf/', req.body.message);
 
     // Seleciona todos os itens da Odf
     const groupOdf = await select(lookForOdfData)
@@ -29,8 +33,10 @@ export const searchOdf: RequestHandler = async (req, res) => {
 
     const selectedItens: any = await selectedItensFromOdf(groupOdf, indexOdf)
 
+    console.log('linha 33 /searchOdf/', selectedItens.odf);
+
     if (indexOdf === 0) {
-        qtdLibMax = selectedItens.odf.QTDE_ODF
+        qtdLibMax = selectedItens.odf.QTDE_ODF - selectedItens.odf.QTDE_APONTADA
     } else {
         qtdLibMax = selectedItens.beforeOdf.QTDE_APONTADA - selectedItens.odf.QTDE_APONTADA
     }
@@ -38,6 +44,8 @@ export const searchOdf: RequestHandler = async (req, res) => {
     if (qtdLibMax === 0) {
         return res.json({ message: 'não há limite na odf' })
     }
+
+    console.log('liha 45', qtdLibMax);
 
     // Caso seja a primeira Odf, objOdfSelecAnterior vai vir como undefined
     // Tinha o update de 'S' em apontamento liberado
@@ -47,7 +55,9 @@ export const searchOdf: RequestHandler = async (req, res) => {
     // Descriptografa o funcionario dos cookies
     let funcionario = decrypted(String(sanitize(req.cookies['employee'])))
 
+
     if (!funcionario) {
+        console.log("linha 52 /funcionario/", funcionario);
         return res.json({ message: 'Algo deu errado' })
     }
 
@@ -71,7 +81,6 @@ export const searchOdf: RequestHandler = async (req, res) => {
     res.cookie('encodedOdfNumber', encodedOdfNumber, { httpOnly: true })
     res.cookie('encodedOperationNumber', encodedOperationNumber, { httpOnly: true })
     res.cookie('encodedMachineCode', encodedMachineCode, { httpOnly: true })
-    //res.cookie('qtdLibMax', qtdLibString, {httpOnly: true})
     res.cookie('MAQUINA_PROXIMA', encryptedNextMachine, { httpOnly: true })
     res.cookie('OPERACAO_PROXIMA', encryptedNextOperation, { httpOnly: true })
     res.cookie('CODIGO_PECA', encryptedCodePart, { httpOnly: true })
@@ -79,46 +88,73 @@ export const searchOdf: RequestHandler = async (req, res) => {
     res.cookie('NUMERO_OPERACAO', operationNumber, { httpOnly: true })
     res.cookie('REVISAO', encryptedRevision, { httpOnly: true })
 
+    let y = await codeNoteMessage(req.body.message)
+    console.log('linha 92 /y/', y);
+   // let x = await codeNoteMessage(req.body.message)
+
     let lookForChildComponents = await selectToKnowIfHasP(dados, qtdLibMax, funcionario, selectedItens.odf.NUMERO_OPERACAO, selectedItens.odf.CODIGO_PECA)
-
-    if (lookForChildComponents.quantidade) {
-        res.cookie('qtdLibMax', encrypted(String(lookForChildComponents.quantidade)) || qtdLibString, { httpOnly: true })
-    } else {
-        res.cookie('qtdLibMax', qtdLibString, { httpOnly: true })
+    var response = {
+        message: '',
+        url: '',
     }
+    try {
+        let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${lookForChildComponents.quantidade} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${dados.numOper}`
+        const x = await update(y)
+        console.log('lookForChildComponents.quantidade', lookForChildComponents.quantidade);
+        if (x === 'Update sucess') {
+            if (lookForChildComponents.quantidade) {
+                res.cookie('qtdLibMax', encrypted(String(lookForChildComponents.quantidade)))
+            } else {
+                res.cookie('qtdLibMax', qtdLibString)
+            }
 
-    if (lookForChildComponents!.reserved > qtdLibMax) {
-        lookForChildComponents!.reserved = qtdLibMax
-    }
+            if (lookForChildComponents!.reserved > qtdLibMax) {
+                lookForChildComponents!.reserved = qtdLibMax
+            }
 
-    if (lookForChildComponents === 'não é nessa operação que deve ser reservado') {
-        return res.json({ message: 'Valores Reservados' })
-    }
+            if (lookForChildComponents === 'não é nessa operação que deve ser reservado') {
+                return res.json({ message: 'Valores Reservados' })
+            }
 
-    if (!lookForChildComponents || lookForChildComponents === 'Quantidade para reserva inválida') {
-        return res.json({ message: 'Algo deu errado' })
-    }
+            if (!lookForChildComponents || lookForChildComponents === 'Quantidade para reserva inválida') {
+                return res.json({ message: 'Algo deu errado' })
+            }
 
-    if (lookForChildComponents.message === 'Algo deu errado') {
-        return res.json({ message: 'Algo deu errado' })
-    }
+            if (lookForChildComponents.message === 'Algo deu errado') {
+                return res.json({ message: 'Algo deu errado' })
+            }
 
-    if (lookForChildComponents.message === 'Valores Reservados') {
-        res.cookie('reservedItens', encrypted(String(lookForChildComponents!.reserved)))
-        res.cookie('codigoFilho', encrypted(String(lookForChildComponents!.codigoFilho)))
-        res.cookie('condic', encrypted(String(lookForChildComponents!.condic)))
-        res.cookie('quantidade', lookForChildComponents!.quantidade)
-        return res.json({ message: 'Valores Reservados' })
-    }
+            if (lookForChildComponents.message === 'Valores Reservados') {
+                res.cookie('execut', encrypted(String(lookForChildComponents!.execut)))
+                res.cookie('reservedItens', encrypted(String(lookForChildComponents!.reserved)))
+                res.cookie('codigoFilho', encrypted(String(lookForChildComponents!.codigoFilho)))
+                res.cookie('condic', encrypted(String(lookForChildComponents!.condic)))
+                res.cookie('quantidade', lookForChildComponents!.quantidade)
+                return res.json({ message: 'Valores Reservados' })
+            }
 
-    if (lookForChildComponents.message === 'Quantidade para reserva inválida') {
-        return res.json({ message: 'Quantidade para reserva inválida' })
-    }
+            if (lookForChildComponents.message === 'Quantidade para reserva inválida') {
+                return res.json({ message: 'Quantidade para reserva inválida' })
+            }
 
-    if (lookForChildComponents.message === 'Não há item para reservar') {
-        return res.json({ message: 'Não há item para reservar' })
-    }
-    else {
-        return res.json({ message: 'Algo deu errado' })
+            if (lookForChildComponents.message === 'Não há item para reservar') {
+                return res.json({ message: 'Valores Reservados' })
+            }
+            else {
+                return res.json({ message: 'Algo deu errado' })
+            }
+        } else if (x === 'Algo deu errado') {
+            console.log('linha 136 /searchOdf/');
+            response.message = 'Algo deu errado'
+            return response
+        } else {
+            console.log('linha 140 /searchOdf/');
+            response.message = 'Algo deu errado'
+            return response
+        }
+    } catch (error) {
+        console.log('linha 145 Error on selectHasP', error);
+        response.message = 'Algo deu errado'
+        return res.json({ response })
     }
 }

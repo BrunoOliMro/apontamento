@@ -11,11 +11,12 @@ const update = async (query) => {
     let response = {
         message: '',
     };
-    const data = await connection.query(`${query}`).then((result) => result);
+    const data = await connection.query(`${query}`).then((result) => result.rowsAffected);
+    console.log('linha 10 /update Data/', data);
     if (data.length <= 0) {
         return response.message = "Error on update";
     }
-    if (data.length >= 0) {
+    else if (data.length >= 0) {
         return response.message = "Update sucess";
     }
     else {

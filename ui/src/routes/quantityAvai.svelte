@@ -1,25 +1,25 @@
 <script>
     import ModalConfirmation from "../components/modal/modalConfirmation.svelte";
     const imageLoader = "/images/axonLoader.gif";
-    const title = "Quantidade a produzir: ";
+    const title = "Quantidade liberada: ";
     let quantityAvailableProd;
     let dadosOdf = [];
     let odfDataRouter = `/api/v1/odfData`;
     const promiseResult = getOdfData();
-    let errorMessage = ''
+    let errorMessage = "";
 
     async function getOdfData() {
         const res = await fetch(odfDataRouter);
         dadosOdf = await res.json();
-        quantityAvailableProd = dadosOdf.valorMaxdeProducao;
+        quantityAvailableProd = dadosOdf.odfSelecionada.QTDE_LIB
         if (quantityAvailableProd <= 0) {
             quantityAvailableProd = 0;
-            errorMessage = 'Quantidade a produzir inválida'
+            errorMessage = "Quantidade a produzir inválida";
         }
     }
 
-    function close (){
-        errorMessage = ''
+    function close() {
+        errorMessage = "";
         window.location.href = "/#/codigobarras";
     }
 </script>
@@ -33,17 +33,17 @@
 {:then item}
     <div>
         <div class="prod-area">
-                {title}
-                <p>{quantityAvailableProd}</p>
+            {title}
+            <p>{quantityAvailableProd}</p>
         </div>
     </div>
 {/await}
-{#if errorMessage = 'Quantidade a produzir inválida'}
-    <ModalConfirmation on:message={close}/>
+{#if errorMessage === "Quantidade a produzir inválida"}
+    <ModalConfirmation on:message={close} />
 {/if}
 
 <style>
-    p{
+    p {
         width: 50px;
         font-size: 20px;
         font-weight: bold;

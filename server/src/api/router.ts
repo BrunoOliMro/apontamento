@@ -18,7 +18,8 @@ import { point } from "./controllers/point";
 import { searchBagde } from "./controllers/searchBadge";
 import { getPoint } from "./controllers/getPoint";
 import { supervisor } from "./controllers/supervisor";
-//import { codeNote } from "./controllers/codeNote";
+import { codeNote } from "./controllers/codeNote";
+import { stopSupervisor } from "./controllers/stopSupervisor";
 //import { getBefore } from "./controllers/getBefSel";
 
 // /api/v1/
@@ -28,6 +29,7 @@ apiRouter.route("/badge")
     .post(searchBagde)
 
 apiRouter.route("/odf")
+    .post(codeNote)
     .post(searchOdf)
 
 apiRouter.route("/tools")
@@ -66,9 +68,9 @@ apiRouter.route("/returnedValue")
 apiRouter.route("/supervisor")
     .post(supervisor)
 
-// apiRouter.route("/supervisorParada")
-//     //.get(getBefore)
-//     .post(stopSupervisor)
+apiRouter.route("/supervisorParada")
+    //.get(getBefore)
+    .post(stopSupervisor)
 
 apiRouter.route("/stopMotives")
     .get(stopMotives)

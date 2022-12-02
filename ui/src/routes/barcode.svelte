@@ -8,7 +8,7 @@
   let urlS = `/api/v1/odf`;
   let urlBagde = `/api/v1/badge`;
   let supervisorApi = "api/v1/supervisorParada";
-  let badge = "";
+  let badge = "" || null;
   let showmodal = false;
   let showCorr = false;
   let returnedValueApi = `/api/v1/returnedValue`;
@@ -38,6 +38,8 @@
       if (superSuperMaqPar === "000000") {
         modalMessage = "Crachá inválido";
       }
+      loader = true
+      superParada = false
       doPostSuper();
     }
   };
@@ -54,7 +56,7 @@
         superSuperMaqPar: !superSuperMaqPar ? "" : superSuperMaqPar,
       }),
     }).then((res) => res.json());
-    //console.log("linha 54", res);
+    console.log("linha 57 /barcode.svelte/", res);
     if (res.message === "maquina") {
       loader = false;
       window.location.href = "/#/codigobarras";
@@ -76,25 +78,22 @@
   };
 
   function verifyBarcodeBefore(event) {
-
-    if(!barcode && barcode.length > 0){
-      return modalMessage = "Algo deu errado";
+    if (!barcode && barcode.length > 0) {
+      return (modalMessage = "Algo deu errado");
     }
 
     if (event.key === "Enter" && barcode.length >= 16) {
       doPost();
     }
-
   }
 
   const doPost = async () => {
-
-    if(!barcode){
-      return modalMessage = 'Algo deu errado'
+    if (!barcode) {
+      return (modalMessage = "Algo deu errado");
     }
 
-    if(barcode.length <16){
-      return modalMessage = 'Algo deu errado'
+    if (barcode.length < 16) {
+      return (modalMessage = "Algo deu errado");
     }
 
     loader = true;
@@ -109,7 +108,7 @@
     }).then((res) => res.json());
     console.log("linha 89 res /barcode/", res);
 
-    if(res.message === 'Valores Reservados'){
+    if (res.message === "Valores Reservados") {
       window.location.href = "/#/ferramenta";
       location.reload();
     }
@@ -130,24 +129,24 @@
       modalMessage = "Algo deu errado";
     }
 
-    if (res.message === "codeApont 1 setup iniciado") {
-      loader = false;
-      window.location.href = "/#/ferramenta";
-    }
+    // if (res.message === "codeApont 1 setup iniciado") {
+    //   loader = false;
+    //   window.location.href = "/#/ferramenta";
+    // }
 
-    if (res.message === "codeApont 2 setup finalizado") {
-      loader = false;
-      window.location.href = "/#/ferramenta";
-    }
+    // if (res.message === "codeApont 2 setup finalizado") {
+    //   loader = false;
+    //   window.location.href = "/#/ferramenta";
+    // }
 
-    if (res.message === "codeApont 3 prod iniciado") {
-      loader = false;
-      window.location.href = "/#/codigobarras/apontamento";
-    }
+    // if (res.message === "codeApont 3 prod iniciado") {
+    //   loader = false;
+    //   window.location.href = "/#/codigobarras/apontamento";
+    // }
 
-    if (res.message === "codeApont 4 prod finalzado") {
-      window.location.href = "/#/rip";
-    }
+    // if (res.message === "codeApont 4 prod finalzado") {
+    //   window.location.href = "/#/rip";
+    // }
 
     if (res.message === "codeApont 5 maquina parada") {
       loader = false;
@@ -171,11 +170,19 @@
     }
   };
 
-
   function checkBeforeBadge(event) {
     if (badge.length >= 6 && event.key === "Enter") {
-      if(!badge || badge === "000000" || badge === "0" || badge === '0' || badge === '00' || badge === '000' || badge === '0000' || badge === '00000'){
-        modalMessage = 'Crachá inválido'
+      if (
+        !badge ||
+        badge === "000000" ||
+        badge === "0" ||
+        badge === "0" ||
+        badge === "00" ||
+        badge === "000" ||
+        badge === "0000" ||
+        badge === "00000"
+      ) {
+        modalMessage = "Crachá inválido";
       } else {
         checkBagde();
       }
@@ -205,8 +212,8 @@
     if (res.message === "Empty badge") {
       modalMessage = "Crachá vazio";
     }
-    if(res.message === 'Error on searching for badge'){
-      modalMessage = 'Erro ao localizar crachá'
+    if (res.message === "Error on searching for badge") {
+      modalMessage = "Erro ao localizar crachá";
     }
   };
 
@@ -237,17 +244,41 @@
       }),
     }).then((res) => res.json());
     loader = false;
+    console.log('linha 245 -return-', res);
+
+    barcodeReturn = ''
+    supervisor = ''
+    quantity = ''
+    returnValueStorage = ''
+    showmodal = false;
+
+
+    if(res.message === 'Refugo Inválido'){
+      modalMessage = 'Não há refugo para estornar'
+      showmodal = false;
+    }
+
+    if(res.message === 'Valor acima'){
+      modalMessage = 'Valor apontado maior que o possível'
+      showmodal = false;
+    }
+
     if (res.message === "supervisor esta vazio") {
       modalMessage = "Campo supervisor está vazio";
       showSupervisor = true;
       showmodal = false;
       //location.reload();
     }
+    if(res.message === 'Essa não pode ser estornada'){
+      modalMessage = 'Essa não pode ser estornada'
+      showmodal = false
+    }
+
     if (res.message === "estorno feito") {
       modalMessage = "Estorno realizado";
       showmodal = false;
       //showCorr = true;
-      window.location.href = "/#/codigobarras";
+      //window.location.href = "/#/codigobarras";
       //location.reload();
     }
     if (res.message === "erro de estorno") {
@@ -288,7 +319,6 @@
   function closePopCor() {
     barcodeMsg = "";
     paradaMsg = "";
-    //errorReturnValue = false;
     showSupervisor = false;
     quantityModal = "";
     showCorr = false;
@@ -369,6 +399,14 @@
       </div>
     {/if}
 
+    {#if modalMessage === 'Não há refugo para estornar'}
+      <ModalConfirmation title={modalMessage} on:message={closePopCor} />
+    {/if}
+
+    {#if modalMessage === "Essa não pode ser estornada"}
+      <ModalConfirmation title={modalMessage} on:message={closePopCor} />
+    {/if}
+
     {#if modalMessage === "Estorno realizado"}
       <ModalConfirmation title={modalMessage} on:message={closePopCor} />
     {/if}
@@ -391,7 +429,6 @@
 
     {#if modalMessage === "Limite de estorno excedido"}
       <ModalConfirmation on:message={closePopCor} title={modalMessage} />
-
     {/if}
 
     {#if modalMessage === "Não há limite na ODF"}
@@ -497,8 +534,6 @@
           >
             <option>BOAS</option>
             <option>RUINS</option>
-            <!-- <option>PARCIAL</option>
-              <option>FALTANTE</option> -->
           </select>
         </div>
         <h4>Insira a quantidade que deseja estornar</h4>
@@ -541,6 +576,21 @@
 </main>
 
 <style>
+  .header {
+    margin: 0%;
+    padding: 0%;
+    color: white;
+    background-color: black;
+    width: 700px;
+    height: 350px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-radius: 10px;
+    z-index: 9;
+  }
   a {
     color: #252525;
     font-size: 20px;
@@ -680,7 +730,7 @@
     position: fixed;
     top: 0;
     left: 0;
-    background-color: #252525;
+    background-color: rgba(17, 17, 17, 0.618);
     height: 100vh;
     width: 100vw;
     display: flex;

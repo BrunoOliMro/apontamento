@@ -11,23 +11,25 @@
         const res = await fetch(urlString);
         odfData = await res.json();
 
-        if (odfData.message === 'codeApont 5 maquina parada') {
-            message = 'codeApont 5 maquina parada';
-            window.location.href = '/#/codigobarras';
-        }
+        console.log("linha 14 /cod.svelte/", odfData);
 
-        if (odfData.message === 'codeApont 4 prod finalizado') {
-            message = 'codeApont 4 prod finalizado';
-        }
+        // if (odfData.message === 'codeApont 5 maquina parada') {
+        //     message = 'codeApont 5 maquina parada';
+        //     window.location.href = '/#/codigobarras';
+        // }
 
-        if (odfData.message === 'usuario diferente') {
-            message = 'usuario diferente';
+        // if (odfData.message === 'codeApont 4 prod finalizado') {
+        //     message = 'codeApont 4 prod finalizado';
+        // }
 
-        }
+        // if (odfData.message === 'usuario diferente') {
+        //     message = 'usuario diferente';
 
-        if (odfData.message === 'codeApont 3 prod ini') {
-            message = 'codeApont 3 prod ini';
-        }
+        // }
+
+        // if (odfData.message === 'codeApont 3 prod ini') {
+        //     message = 'codeApont 3 prod ini';
+        // }
 
         if(odfData.message === 'Acesso negado'){
             message = 'Acesso Negado'

@@ -1,50 +1,66 @@
 <script>
+    // @ts-nocheck
     const imageLoader = "/images/axonLoader.gif";
-    let back = "/images/icons8-go-back-24.png";
-    export let Subtitle = "DESENHO";
-    let zoomNumber = 400;
+    const back = "images/icons8-go-back-24.png";
+    const Subtitle = "DESENHO";
+    const zoomNumber = 400;
+    const urlString = `/api/v1/drawing`;
+    const resultado = getIMAGEM();
     let rotation = 0;
     let imagemBack = [];
-    let urlString = `/api/v1/drawing`;
-    let imagemMsg = ''
+    let imagemMsg = "";
+    let selected;
+    let ar = []
+
+    function selectPic(e) {
+        selected = e.target.src.split("000")[1];
+        console.log('selected', e.target);
+
+
+        ar.push(selected)
+
+        console.log('linha 22', ar);
+
+        if(selected === e.target.src){
+            console.log('ienurbnubr');
+        }
+    }
 
     async function getIMAGEM() {
         const res = await fetch(urlString);
         imagemBack = await res.json();
-        console.log("linha imagem:", imagemBack);
-        if(imagemBack.message === 'dados não conferem conferidos'){
-            imagemMsg = 'dados não conferem conferidos'
+        if (imagemBack.message === "dados não conferem conferidos") {
+            imagemMsg = "dados não conferem conferidos";
         }
     }
 
-    let resultado = getIMAGEM();
-
     function right() {
+        console.log('linha 27 /rotation/', rotation);
         rotation += 90;
-        document.getElementById("img").style.transition = "all 1s";
-        document.getElementById(
-            "img"
-        ).style.transform = `rotate(${rotation}deg)`;
+        document.getElementById(`${selected}`).style.transition = "all 1s";
+        document.getElementById(`${selected}`).style.transform = `rotate(${rotation}deg)`;
     }
 
     function left() {
+        console.log('linha 34 /rotation/', rotation);
         rotation -= 90;
-        document.getElementById("img").style.transition = "all 1s";
-        document.getElementById(
-            "img"
-        ).style.transform = `rotate(${rotation}deg)`;
+        document.getElementById(`${selected}`).style.transition = "all 1s";
+        document.getElementById(`${selected}`).style.transform = `rotate(${rotation}deg)`;
     }
 
     function zoomIn() {
-        var img = document.getElementById("img");
+        var img = document.getElementById(`${selected}`);
         var width = img.clientWidth;
         img.style.width = width + zoomNumber + "px";
+        console.log('linha 27 /zoom/', img);
     }
 
     function zoomOut() {
-        var img = document.getElementById("img");
+        
+        var img = document.getElementById(`${selected}`);
         var width = img.clientWidth;
         img.style.width = width - zoomNumber + "px";
+        console.log('linha 27 /zoom/', img);
     }
     function print() {
         window.print();
@@ -56,70 +72,88 @@
         <!-- <Breadcrumb /> -->
         <nav class="breadcrumb" aria-label="breadcrumb">
             <ol class="breadcrumb">
-              <li class="breadcrumb-item">
-                <a href="/#/codigobarras/apontamento"><img src={back} alt="">Apontamento</a>
-              </li>
+                <li class="breadcrumb-item">
+                    <a href="/#/codigobarras/apontamento"
+                        ><img src={back} alt="" />Apontamento</a
+                    >
+                </li>
             </ol>
-          </nav>
+        </nav>
     </div>
     <div id="subtitle" class="subtitle">{Subtitle}</div>
     <div id="buttons">
+        <!-- svelte-ignore a11y-positive-tabindex -->
+        <button tabindex="1" type="button" class="sideButton" on:click={right}
+            >DIREITA</button
+        >
         <button
-            tabindex="1"
+            tabindex="2"
             type="button"
             class="sideButton"
-            on:click={right}>DIREITA</button
+            on:click={left}
+            on:keypress={left}>ESQUERDA</button
         >
-        <button tabindex="2" type="button" class="sideButton" on:click={left} on:keypress={left}
-            >ESQUERDA</button
+        <button
+            tabindex="3"
+            type="button"
+            class="sideButton"
+            on:click={zoomIn}
+            on:keypress={left}>ZOOM +</button
         >
-        <button tabindex="3" type="button" class="sideButton" on:click={zoomIn} on:keypress={left}
-            >ZOOM +</button
+        <button
+            tabindex="4"
+            type="button"
+            class="sideButton"
+            on:click={zoomOut}
+            on:keypress={left}>ZOOM -</button
         >
-        <button tabindex="4" type="button" class="sideButton" on:click={zoomOut} on:keypress={left}
-            >ZOOM -</button
-        >
-        <button tabindex="5" type="button" class="sideButton" on:click={print} on:keypress={left}
-            >IMPRIMIR</button
+        <button
+            tabindex="5"
+            type="button"
+            class="sideButton"
+            on:click={print}
+            on:keypress={left}>IMPRIMIR</button
         >
     </div>
 
     <div class="newDiv">
         {#await resultado}
-        <div class="imageLoader">
-            <div class="loader">
-                <img src={imageLoader} alt="" />
+            <div class="imageLoader">
+                <div class="loader">
+                    <img src={imageLoader} alt="" />
+                </div>
             </div>
-        </div>
         {:then item}
             <div class="frame">
-                {#each imagemBack as column}
+                {#each imagemBack as img}
                     {#if imagemBack.length > 0}
-                        <img
-                            media="print"
-                            id="img"
-                            class="img"
-                            src={column}
-                            alt=""
-                        />
+                        <div id={img} on:click|preventDefault={selectPic}>
+                            <img
+                                media="print"
+                                class="img"
+                                src={img}
+                                id={img}
+                                alt=""
+                            />
+                        </div>
                     {/if}
                 {/each}
             </div>
         {/await}
     </div>
 
-    {#if imagemMsg === 'dados não conferem'}
+    {#if imagemMsg === "dados não conferem"}
         <h3>Dados não conferem</h3>
     {/if}
 </main>
 
 <style>
-    a{
-        font-size:20px;
-        color:#252525;
+    a {
+        font-size: 20px;
+        color: #252525;
     }
 
-    a:hover{
+    a:hover {
         opacity: 0.5;
         transition: all 1s;
     }
@@ -156,30 +190,28 @@
         text-align: center;
     }
     .sideButton {
-        margin: 1%;
-        padding: 0%;
-        font-size: 13px;
-        width: 150px;
-        height: 35px;
-        display: flex;
         justify-content: center;
-        text-align: center;
         align-items: center;
-        border-radius: 3px;
-        background-color: transparent;
+        text-align: center;
+        width: 100px;
+        height: 30px;
+        border: none;
+        background-color: white;
+        border-color: #999999;
+        box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
+        letter-spacing: 1px;
+        border-radius: 6px;
+        color: black;
     }
 
     .sideButton:hover {
         outline: none;
-        cursor: pointer;
-        background-color: black;
-        color: white;
-        transition: 1s;
+        opacity: 0.8;
+        transition: all 1s;
+        background-color: white;
+        color: black;
     }
 
-    /* .main {
-        margin: 1%;
-    } */
     .subtitle {
         margin: 0%;
         padding: 0%;

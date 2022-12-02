@@ -2,7 +2,6 @@
     import QuantityAvai from "../../routes/quantityAvai.svelte";
     import HistoricButton from "../buttons/historicButton.svelte";
     import StopButton from "../buttons/stopButton.svelte";
-    import ModalCloseConfirm from "../modal/modalCloseConfirm.svelte";
     import ModalConfirmation from "../modal/modalConfirmation.svelte";
     let apiMotivoParada = "api/v1/stopMotives";
     let title = "APONTAMENTO";
@@ -58,22 +57,22 @@
         window.location.href = `/#/codigobarras`;
     }
 
-    let toolsBreadcrumb = document.cookie
-        .split(";")
-        .map((cookie) => cookie.split("="))
-        .reduce(
-            (accumulator, [key, value]) => ({
-                ...accumulator,
-                [key.trim()]: decodeURIComponent(value),
-            }),
-            {}
-        );
+    // let toolsBreadcrumb = document.cookie
+    //     .split(";")
+    //     .map((cookie) => cookie.split("="))
+    //     .reduce(
+    //         (accumulator, [key, value]) => ({
+    //             ...accumulator,
+    //             [key.trim()]: decodeURIComponent(value),
+    //         }),
+    //         {}
+    //     );
 </script>
 
 {#await result}
     <div>...</div>
 {:then item}
-    {#if toolsBreadcrumb === "true"}
+    <!-- {#if toolsBreadcrumb === "true"}
         <nav class="breadcrumb" aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
@@ -81,7 +80,7 @@
                 </li>
             </ol>
         </nav>
-    {/if}
+    {/if} -->
     <div class="nav-area">
         <ul>
             <li class="fist-item-nav">

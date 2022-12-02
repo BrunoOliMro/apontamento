@@ -16,6 +16,7 @@
   async function ferSelected() {
     const res = await fetch(urlFer);
     fer = await res.json();
+    console.log("linha 19 /fer/", fer);
 
     if (fer.message === "ferramentas selecionadas com successo") {
       window.location.href = "/#/codigobarras/apontamento";
@@ -29,9 +30,15 @@
     tools = await res.json();
     console.log("tools linha 28", tools);
 
+    // if (tools.message === "/images/sem_imagem.gif") {
+    //   window.location.href = "/#/codigobarras";
+    //   location.reload();
+    // }
+
     if (tools.message === "Algo deu errado") {
-      window.location.href = "/#/codigobarras";
-      location.reload();
+      //window.location.href = "/#/codigobarras";
+      //location.reload();
+      ferSelected();
     }
 
     if (tools.message === `codeApont 2 setup finalizado`) {

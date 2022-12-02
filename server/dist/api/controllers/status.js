@@ -10,14 +10,19 @@ const decryptedOdf_1 = require("../utils/decryptedOdf");
 const status = async (req, res) => {
     const numpec = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA']))) || null;
     const maquina = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
-    const lookForTimer = `SELECT TOP 1 EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${numpec}' AND MAQUIN = '${maquina}' ORDER BY REVISAO DESC`;
+    const numeroOperacao = (0, decryptedOdf_1.decrypted)((0, sanitize_html_1.default)(req.cookies['NUMERO_OPERACAO']));
+    const revisao = (0, decryptedOdf_1.decrypted)((0, sanitize_html_1.default)(req.cookies['REVISAO']));
+    const lookForTimer = `SELECT TOP 1 EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${numpec}' AND NUMOPE = ${numeroOperacao} AND MAQUIN = '${maquina}' AND REVISAO = ${revisao} ORDER BY REVISAO DESC`;
     try {
         const resource = await (0, select_1.select)(lookForTimer);
-        const tempoRestante = Number(resource[0].EXECUT * Number((0, decryptedOdf_1.decrypted)((0, sanitize_html_1.default)(String(req.cookies["qtdLibMax"])))) * 1000 - (Number(new Date().getTime() - (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['startSetupTime'])))))) || 0;
+        console.log('linha 15', Number((0, decryptedOdf_1.decrypted)(req.cookies['qtdLibMax'])));
+        let tempoRestante = Number(resource[0].EXECUT * Number((0, decryptedOdf_1.decrypted)((0, sanitize_html_1.default)(String(req.cookies["qtdLibMax"])))) * 1000 - (Number(new Date().getTime() - (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['startSetupTime'])))))) || 0;
+        console.log('LINHA 15/temporestante/', tempoRestante);
         if (tempoRestante > 0) {
             return res.status(200).json(tempoRestante);
         }
         else if (tempoRestante <= 0) {
+            tempoRestante = 0;
             return res.json({ message: 'time for execution not found' });
         }
         else {

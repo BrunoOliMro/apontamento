@@ -12,32 +12,24 @@ const odfIndex_1 = require("../utils/odfIndex");
 const queryGroup_1 = require("../utils/queryGroup");
 const odfData = async (req, res) => {
     const numeroOdf = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"])))) || 0;
-    const numOper = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))) || null;
+    const numOper = "00" + (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))).replaceAll(' ', '0');
     const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['employee']))) || null;
-    const lookForOdfData = `SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${numeroOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
-    let qtdLibMax;
+    const lookForOdfData = `SELECT CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB,  QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${numeroOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
     const response = {
         message: '',
         funcionario: funcionario,
         odfSelecionada: '',
-        valorMaxdeProducao: 0,
     };
     try {
         const data = await (0, select_1.select)(lookForOdfData);
-        res.cookie("qtdLibMax", (0, encryptOdf_1.encrypted)(String(data[0].QTDE_ODF)));
+        let x = (0, encryptOdf_1.encrypted)(String(data[0].QTDE_ODF));
+        res.cookie("qtdLibMax", x);
         if (!funcionario) {
             return res.json({ message: 'Algo deu errado' });
         }
         const indexOdf = await (0, odfIndex_1.odfIndex)(data, numOper);
         const selectedItens = await (0, queryGroup_1.selectedItensFromOdf)(data, indexOdf);
-        if (indexOdf === 0) {
-            qtdLibMax = selectedItens.odf.QTDE_ODF;
-        }
-        else {
-            qtdLibMax = selectedItens.beforeOdf.QTDE_APONTADA - selectedItens.odf.QTDE_APONTADA;
-        }
         response.odfSelecionada = selectedItens.odf;
-        response.valorMaxdeProducao = qtdLibMax;
         if (response.message === 'Algo deu errado') {
             return res.json({ message: 'Algo deu errado' });
         }

@@ -4,14 +4,22 @@ exports.stopMotives = void 0;
 const select_1 = require("../services/select");
 const stopMotives = async (_req, res) => {
     try {
-        const s = `SELECT CODIGO, DESCRICAO FROM APT_PARADA (NOLOCK) ORDER BY DESCRICAO ASC`;
-        let resource = await (0, select_1.select)(s);
-        let resoc = resource.map((e) => e.DESCRICAO);
+        const queryStr = `SELECT CODIGO, DESCRICAO FROM APT_PARADA (NOLOCK) ORDER BY DESCRICAO ASC`;
+        let resource = await (0, select_1.select)(queryStr);
         if (!resource) {
             return res.json({ message: 'erro motivos de parada de maquina' });
         }
+        else if (resource) {
+            let resoc = resource.map((e) => e.DESCRICAO);
+            if (resoc) {
+                return res.status(200).json(resoc);
+            }
+            else {
+                return res.json({ message: 'erro motivos de parada de maquina' });
+            }
+        }
         else {
-            return res.status(200).json(resoc);
+            return res.json({ message: 'erro motivos de parada de maquina' });
         }
     }
     catch (error) {

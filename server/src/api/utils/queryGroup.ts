@@ -12,13 +12,14 @@ export const selectedItensFromOdf = async (groupOdf: any, indexOdf: number) => {
         response.nextOdf = groupOdf[indexOdf + 1]
         response.odf = groupOdf[indexOdf]
         return response;
-    } else if (indexOdf === groupOdf.length - 1) {
+    } else if (indexOdf + 1 === groupOdf.length) {
+        console.log("linha 19 /query/ ultimaOdf");
         response.message = 'Ultima ODF'
-        response.odf = groupOdf[indexOdf - 1]
-        response.nextOdf = groupOdf[indexOdf - 1]
-        response.beforeOdf = groupOdf[indexOdf - 2]
+        response.odf = groupOdf[indexOdf]
+        response.nextOdf = groupOdf[indexOdf]
+        response.beforeOdf = groupOdf[indexOdf - 1]
         return response;
-    } else if (indexOdf > 0 && indexOdf < groupOdf.length - 1) {
+    } else if (indexOdf > 0 && indexOdf < groupOdf.length - 1 ) {
         response.message = 'Alguma ODF no meio'
         response.nextOdf = groupOdf[indexOdf + 1]
         response.beforeOdf = groupOdf[indexOdf - 1]

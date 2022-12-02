@@ -8,6 +8,7 @@ export const rip: RequestHandler = async (req, res) => {
     const numpec: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
     const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
     const codMaq: string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
+    console.log('linha codmaqs', codMaq);
     const codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
     const numeroOdf: number = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
     const numeroOperacao: string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
@@ -40,9 +41,19 @@ export const rip: RequestHandler = async (req, res) => {
         FROM OPERACAO OP (NOLOCK)) AS TBL ON TBL.RECNO_PROCESSO = PROCESSO.R_E_C_N_O_  AND TBL.MAQUIN = QA_CARACTERISTICA.CST_NUMOPE
         WHERE PROCESSO.NUMPEC = '${numpec}' 
         AND PROCESSO.REVISAO = '${revisao}' 
+        AND CST_NUMOPE = '${codMaq}'
         AND NUMCAR < '2999'
         ORDER BY NUMPEC ASC`
     const ripDetails = await select(rip)
+
+    console.log("linha ripDetaisl", ripDetails);
+
+    if(ripDetails.length <= 0){
+        console.log("iewniureb");
+        response.message = 'Não há rip a mostrar'
+        response.url = '/#/codigobarras'
+        return res.json(response)
+    }
 
     let arrayNumope = ripDetails.map((acc: { CST_NUMOPE: string; }) => {
         if (acc.CST_NUMOPE === codMaq) {
