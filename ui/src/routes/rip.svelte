@@ -132,8 +132,7 @@
     }
 
     const check = () => {
-        //loader = true;
-        if (Object.values(setup).length <= 0) {
+        if (Object.values(setup).length <= 0 || Object.values(setup).length < ripTable.length) {
             return (showSuper = true);
         }
 
@@ -162,6 +161,8 @@
                     return value < row["LIE"] || value > row["LSE"];
                 });
         });
+
+        console.log('linha 165 /rip.svelte/', callSupervisor,);
 
         if (callSupervisor === true) {
             loader = false;
