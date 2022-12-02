@@ -18,7 +18,7 @@ const rip = async (req, res) => {
     const numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))) || null;
     const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['employee']))) || null;
     const start = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["startSetupTime"]))) || null;
-    const qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['qtdLibMax']))) || null;
+    const qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['quantidade']))) || null;
     const startTime = Number(new Date(start).getTime()) || 0;
     const response = {
         message: '',

@@ -10,7 +10,7 @@ export const stopPost: RequestHandler = async (req, res) => {
     const revisao = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
     const numeroOperacao = decrypted(String(req.cookies['NUMERO_OPERACAO'])) || null
     const codigoMaq = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
-    const qtdLibMax = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
+    const qtdLibMax = decrypted(String(sanitize(req.cookies['quantidade']))) || null
     const boas = 0
     const faltante = 0
     const retrabalhada = 0
@@ -25,7 +25,7 @@ export const stopPost: RequestHandler = async (req, res) => {
     const final: number = Number(end - start) || 0
     
     try {
-        //Insere O CODAPONTA 5
+        //Insere O CODAPONTA 7 de parada de máquina
         const resour = await insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, final)
         console.log("parada", resour);
 

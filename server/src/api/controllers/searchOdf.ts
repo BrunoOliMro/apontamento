@@ -9,14 +9,14 @@ import { unravelBarcode } from '../utils/unravelBarcode'
 import { odfIndex } from '../utils/odfIndex';
 import { selectedItensFromOdf } from '../utils/queryGroup';
 import { update } from '../services/update';
-import { codeNoteMessage } from '../utils/codeNoteMessage';
+//import { codeNoteMessage } from '../utils/codeNoteMessage';
 
 export const searchOdf: RequestHandler = async (req, res) => {
     const dados: any = unravelBarcode(req.body.barcode)
     let qtdLibMax: number;
     const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB,  QTD_REFUGO, CODIGO_PECA  FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
 
-    console.log('linha 18 /searchOdf/', req.body.message);
+    //console.log('linha 18 /searchOdf/', req.body.message);
 
     // Seleciona todos os itens da Odf
     const groupOdf = await select(lookForOdfData)
@@ -45,7 +45,7 @@ export const searchOdf: RequestHandler = async (req, res) => {
         return res.json({ message: 'não há limite na odf' })
     }
 
-    console.log('liha 45', qtdLibMax);
+    //console.log('liha 45', qtdLibMax);
 
     // Caso seja a primeira Odf, objOdfSelecAnterior vai vir como undefined
     // Tinha o update de 'S' em apontamento liberado
@@ -62,7 +62,7 @@ export const searchOdf: RequestHandler = async (req, res) => {
     }
 
     //Criptografa os dados da ODF
-    let qtdLibString: string = encrypted(String(qtdLibMax))
+   //let qtdLibString: string = encrypted(String(qtdLibMax))
     let encryptedOdfNumber = encrypted(String(selectedItens.odf.NUMERO_ODF))
     const encryptedNextMachine = encrypted(String(selectedItens.nextOdf.CODIGO_MAQUINA))
     const encryptedNextOperation = encrypted(String(selectedItens.nextOdf.NUMERO_OPERACAO))
@@ -88,8 +88,7 @@ export const searchOdf: RequestHandler = async (req, res) => {
     res.cookie('NUMERO_OPERACAO', operationNumber, { httpOnly: true })
     res.cookie('REVISAO', encryptedRevision, { httpOnly: true })
 
-    let y = await codeNoteMessage(req.body.message)
-    console.log('linha 92 /y/', y);
+    //let y = await codeNoteMessage(req.body.message)
    // let x = await codeNoteMessage(req.body.message)
 
     let lookForChildComponents = await selectToKnowIfHasP(dados, qtdLibMax, funcionario, selectedItens.odf.NUMERO_OPERACAO, selectedItens.odf.CODIGO_PECA)
@@ -97,16 +96,20 @@ export const searchOdf: RequestHandler = async (req, res) => {
         message: '',
         url: '',
     }
+
+    console.log('linha 100 /searchOdf /', lookForChildComponents.quantidade);
     try {
         let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${lookForChildComponents.quantidade} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${dados.numOper}`
         const x = await update(y)
-        console.log('lookForChildComponents.quantidade', lookForChildComponents.quantidade);
         if (x === 'Update sucess') {
             if (lookForChildComponents.quantidade) {
-                res.cookie('qtdLibMax', encrypted(String(lookForChildComponents.quantidade)))
-            } else {
-                res.cookie('qtdLibMax', qtdLibString)
-            }
+                console.log('linha 106 /searchOdf/ ', encrypted(String(lookForChildComponents.quantidade)));
+                res.cookie('quantidade', encrypted(String(lookForChildComponents.quantidade)))
+            } 
+            // else {
+            //     console.log('linha 109 /searchOdf/ ');
+            //     res.cookie('quantidade', qtdLibString)
+            // }
 
             if (lookForChildComponents!.reserved > qtdLibMax) {
                 lookForChildComponents!.reserved = qtdLibMax
@@ -129,7 +132,6 @@ export const searchOdf: RequestHandler = async (req, res) => {
                 res.cookie('reservedItens', encrypted(String(lookForChildComponents!.reserved)))
                 res.cookie('codigoFilho', encrypted(String(lookForChildComponents!.codigoFilho)))
                 res.cookie('condic', encrypted(String(lookForChildComponents!.condic)))
-                res.cookie('quantidade', lookForChildComponents!.quantidade)
                 return res.json({ message: 'Valores Reservados' })
             }
 

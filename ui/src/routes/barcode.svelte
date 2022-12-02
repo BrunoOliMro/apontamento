@@ -569,6 +569,14 @@
           >
             Confirmar
           </p>
+
+          <p
+            tabindex="17"
+            on:keypress|preventDefault={closePop}
+            on:click|preventDefault={closePop}
+          >
+            Fechar
+          </p>
         </div>
       </div>
     </div>
@@ -582,7 +590,7 @@
     color: white;
     background-color: black;
     width: 700px;
-    height: 350px;
+    height: 400px;
     display: flex;
     flex-direction: column;
     justify-content: center;

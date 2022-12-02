@@ -14,7 +14,7 @@ export const rip: RequestHandler = async (req, res) => {
     const numeroOperacao: string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
     const funcionario: string = decrypted(String(sanitize(req.cookies['employee']))) || null
     const start: string = decrypted(String(sanitize(req.cookies["startSetupTime"]))) || null
-    const qtdLibMax: number = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
+    const qtdLibMax: number = decrypted(String(sanitize(req.cookies['quantidade']))) || null
     const startTime: number = Number(new Date(start).getTime()) || 0
     const response = {
         message: '',

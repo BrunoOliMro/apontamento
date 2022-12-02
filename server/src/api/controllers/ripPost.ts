@@ -17,7 +17,7 @@ export const ripPost: RequestHandler = async (req, res) => {
     const codigoPeca: string = decrypted(sanitize(req.cookies['CODIGO_PECA'])) || null
     const funcionario: string = decrypted(sanitize(req.cookies['employee'])) || null
     const revisao: string | null = String(decrypted(sanitize(req.cookies['REVISAO'])))
-    const qtdLibMax: number = Number(decrypted(sanitize(req.cookies['qtdLibMax']))) || 0
+    const qtdLibMax: number = Number(decrypted(sanitize(req.cookies['quantidade']))) || 0
     const updateQtyQuery: string[] = [];
     const especif: string[] = (req.cookies['especif']) || null
     const numCar: string[] = (req.cookies['numCar']) || null
@@ -102,6 +102,9 @@ export const ripPost: RequestHandler = async (req, res) => {
             message: "rip enviada, odf finalizada",
             url: '/#/codigobarras'
         }
+        res.clearCookie('NUMERO_ODF')
+        res.clearCookie('NUMERO_OPERACAO')
+
         return res.json(response)
     } catch (error) {
         console.log("linha 75 /ripPost/", error)

@@ -27,7 +27,7 @@ export const point: RequestHandler = async (req, res) => {
     const operationNumber = decrypted(sanitize(req.cookies["NUMERO_OPERACAO"])) || null
     const codigoPeca = decrypted(sanitize(req.cookies['CODIGO_PECA'])) || null
     const machineCode = decrypted(sanitize(req.cookies["CODIGO_MAQUINA"])) || null
-    const qtdLibMax: number = Number(decrypted(sanitize(req.cookies['qtdLibMax']))) || 0
+    const qtdLibMax: number = Number(decrypted(sanitize(req.cookies['quantidade']))) || 0
     const nextMachineProcess = decrypted(sanitize(req.cookies['MAQUINA_PROXIMA'])) || null
     const nextOperationProcess = decrypted(sanitize(req.cookies['OPERACAO_PROXIMA'])) || null
     const employee = decrypted(sanitize(req.cookies['employee'])) || null
@@ -140,7 +140,7 @@ export const point: RequestHandler = async (req, res) => {
     //const quantidadePossivelProduzir = quantidadePossivelProduzir ? Number(req.cookies['quantidade'])
 
     //console.log("linha 136 ", quantidadePossivelProduzir);
-    let quantidadePossivelProduzir = Number(req.cookies['quantidade']);
+    let quantidadePossivelProduzir = Number(String(decrypted(sanitize(req.cookies['quantidade']))));
     //quantidadePossivelProduzir = NaN ? quantidadePossivelProduzir : qtdLibMax;
 
     console.log("linha 141 /point.ts/ qtdLibMax", qtdLibMax);
@@ -170,17 +170,24 @@ export const point: RequestHandler = async (req, res) => {
                 return res.json({ message: 'Algo deu errado' })
             }
         }
-        console.log("linha 145 /point.ts/");
+        //console.log("linha 145 /point.ts/");
         try {
             const connection = await mssql.connect(sqlConfig);
-            const diferenceBetween = quantidadePossivelProduzir! - valorTotalApontado * execut
-            console.log("apontado", valorTotalApontado);
-            console.log('quantidadePossivel', quantidadePossivelProduzir);
-            console.log('linha 159 /point.ts/', diferenceBetween);
+            // console.log('linha 176 /point.ts/', quantidadePossivelProduzir);
+            // console.log('linha 177 /point.ts/', execut);
+            //const diferenceBetween = quantidadePossivelProduzir! - valorTotalApontado * execut
+            let diferenceBetween = execut * quantidadePossivelProduzir - valorTotalApontado * execut
+            //let x = quantidadePossivelProduzir - diferenceBetween
+            // console.log("apontado", valorTotalApontado);
+            // console.log('quantidadePossivel', quantidadePossivelProduzir);
+            //console.log('linha 159 /point.ts/', diferenceBetween);
+
+            // let y = 9 - 2 * 1//7
+            // let w = 9 - 2 * 3//4
 
             // Loop para atualizar o estoque
             if (valorTotalApontado < quantidadePossivelProduzir!) {
-                console.log("linha 156 /point.ts/");
+                //console.log("linha 156 /point.ts/");
                 try {
                     codigoFilho.forEach((codigoFilho: string) => {
                         updateQtyQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${diferenceBetween} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`)

@@ -379,11 +379,11 @@
         justify-content: center;
         align-items: center;
         text-align: center;
-        border-radius: 3px;
+        border-radius: 10px;
     }
     input {
         width: 300px;
-        border-radius: 3px;
+        border-radius: 8px;
     }
 
     .divBtn {

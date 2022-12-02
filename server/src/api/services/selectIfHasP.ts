@@ -52,7 +52,7 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
 
             // Check to see if it's to make a reservation
             let numeroOperNew = String(numeroOperacao.replaceAll(' ', ''))
-            console.log('linha 55 /numeroOperNew/', numeroOperNew);
+            //console.log('linha 55 /numeroOperNew/', numeroOperNew);
             let makeReservation = selectKnowHasP.map((item: any) => item.NUMSEQ).filter((element: string) => element === numeroOperNew)
 
             if (makeReservation.length <= 0) {
@@ -76,7 +76,7 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
 
             let quantitySetStorage = quantityToPoint * execut
             response.execut = execut
-            response.quantidade = numberOfQtd
+            response.quantidade = quantityToPoint
 
             // Loop para atualizar os dados no DB
             try {

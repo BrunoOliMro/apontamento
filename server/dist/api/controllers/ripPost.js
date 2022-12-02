@@ -21,7 +21,7 @@ const ripPost = async (req, res) => {
     const codigoPeca = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])) || null;
     const funcionario = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['employee'])) || null;
     const revisao = String((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['REVISAO'])));
-    const qtdLibMax = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['qtdLibMax']))) || 0;
+    const qtdLibMax = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['quantidade']))) || 0;
     const updateQtyQuery = [];
     const especif = (req.cookies['especif']) || null;
     const numCar = (req.cookies['numCar']) || null;
@@ -96,6 +96,8 @@ const ripPost = async (req, res) => {
             message: "rip enviada, odf finalizada",
             url: '/#/codigobarras'
         };
+        res.clearCookie('NUMERO_ODF');
+        res.clearCookie('NUMERO_OPERACAO');
         return res.json(response);
     }
     catch (error) {

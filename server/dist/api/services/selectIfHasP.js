@@ -52,7 +52,6 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
             let quantityToPoint;
             let execut = Math.max(...selectKnowHasP.map((element) => element.EXECUT));
             let numeroOperNew = String(numeroOperacao.replaceAll(' ', ''));
-            console.log('linha 55 /numeroOperNew/', numeroOperNew);
             let makeReservation = selectKnowHasP.map((item) => item.NUMSEQ).filter((element) => element === numeroOperNew);
             if (makeReservation.length <= 0) {
                 response.message = 'Algo deu errado';
@@ -71,7 +70,7 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
             console.log('linha 73', quantityToPoint);
             let quantitySetStorage = quantityToPoint * execut;
             response.execut = execut;
-            response.quantidade = numberOfQtd;
+            response.quantidade = quantityToPoint;
             try {
                 codigoFilho.forEach((element) => {
                     updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${quantitySetStorage} WHERE 1 = 1 AND CODIGO = '${element}'`);

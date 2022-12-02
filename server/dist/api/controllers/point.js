@@ -31,7 +31,7 @@ const point = async (req, res) => {
     const operationNumber = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"])) || null;
     const codigoPeca = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])) || null;
     const machineCode = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies["CODIGO_MAQUINA"])) || null;
-    const qtdLibMax = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['qtdLibMax']))) || 0;
+    const qtdLibMax = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['quantidade']))) || 0;
     const nextMachineProcess = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['MAQUINA_PROXIMA'])) || null;
     const nextOperationProcess = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['OPERACAO_PROXIMA'])) || null;
     const employee = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['employee'])) || null;
@@ -109,7 +109,7 @@ const point = async (req, res) => {
             return res.json({ message: 'Supervisor não encontrado' });
         }
     }
-    let quantidadePossivelProduzir = Number(req.cookies['quantidade']);
+    let quantidadePossivelProduzir = Number(String((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['quantidade']))));
     console.log("linha 141 /point.ts/ qtdLibMax", qtdLibMax);
     console.log("linha 141 /point.ts /  quantidade possivel", quantidadePossivelProduzir);
     if (valorTotalApontado > quantidadePossivelProduzir) {
@@ -135,15 +135,10 @@ const point = async (req, res) => {
                 return res.json({ message: 'Algo deu errado' });
             }
         }
-        console.log("linha 145 /point.ts/");
         try {
             const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-            const diferenceBetween = quantidadePossivelProduzir - valorTotalApontado * execut;
-            console.log("apontado", valorTotalApontado);
-            console.log('quantidadePossivel', quantidadePossivelProduzir);
-            console.log('linha 159 /point.ts/', diferenceBetween);
+            let diferenceBetween = execut * quantidadePossivelProduzir - valorTotalApontado * execut;
             if (valorTotalApontado < quantidadePossivelProduzir) {
-                console.log("linha 156 /point.ts/");
                 try {
                     codigoFilho.forEach((codigoFilho) => {
                         updateQtyQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${diferenceBetween} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`);

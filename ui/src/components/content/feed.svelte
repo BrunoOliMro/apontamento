@@ -350,7 +350,7 @@
             <div class="fundo">
                 <div class="header">
                     <div class="closed">
-                        <h2>Apontamento com refugo</h2>
+                        <h3>Apontamento com refugo</h3>
                     </div>
                     <select bind:value name="id" id="id">
                         {#each dados as item}
@@ -1051,7 +1051,7 @@
         color: white;
         background-color: #252525;
         width: 550px;
-        height: 250px;
+        height: 375px;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -1078,7 +1078,7 @@
     }
 
     p {
-        font-size: 50px;
+        font-size: 35px;
         width: fit-content;
         height: fit-content;
         margin: 0%;

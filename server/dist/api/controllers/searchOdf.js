@@ -14,12 +14,10 @@ const unravelBarcode_1 = require("../utils/unravelBarcode");
 const odfIndex_1 = require("../utils/odfIndex");
 const queryGroup_1 = require("../utils/queryGroup");
 const update_1 = require("../services/update");
-const codeNoteMessage_1 = require("../utils/codeNoteMessage");
 const searchOdf = async (req, res) => {
     const dados = (0, unravelBarcode_1.unravelBarcode)(req.body.barcode);
     let qtdLibMax;
     const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB,  QTD_REFUGO, CODIGO_PECA  FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
-    console.log('linha 18 /searchOdf/', req.body.message);
     const groupOdf = await (0, select_1.select)(lookForOdfData);
     if (!groupOdf) {
         return res.json({ message: 'odf não encontrada' });
@@ -39,13 +37,11 @@ const searchOdf = async (req, res) => {
     if (qtdLibMax === 0) {
         return res.json({ message: 'não há limite na odf' });
     }
-    console.log('liha 45', qtdLibMax);
     let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['employee'])));
     if (!funcionario) {
         console.log("linha 52 /funcionario/", funcionario);
         return res.json({ message: 'Algo deu errado' });
     }
-    let qtdLibString = (0, encryptOdf_1.encrypted)(String(qtdLibMax));
     let encryptedOdfNumber = (0, encryptOdf_1.encrypted)(String(selectedItens.odf.NUMERO_ODF));
     const encryptedNextMachine = (0, encryptOdf_1.encrypted)(String(selectedItens.nextOdf.CODIGO_MAQUINA));
     const encryptedNextOperation = (0, encryptOdf_1.encrypted)(String(selectedItens.nextOdf.NUMERO_OPERACAO));
@@ -66,23 +62,19 @@ const searchOdf = async (req, res) => {
     res.cookie('CODIGO_MAQUINA', encryptedMachineCode, { httpOnly: true });
     res.cookie('NUMERO_OPERACAO', operationNumber, { httpOnly: true });
     res.cookie('REVISAO', encryptedRevision, { httpOnly: true });
-    let y = await (0, codeNoteMessage_1.codeNoteMessage)(req.body.message);
-    console.log('linha 92 /y/', y);
     let lookForChildComponents = await (0, selectIfHasP_1.selectToKnowIfHasP)(dados, qtdLibMax, funcionario, selectedItens.odf.NUMERO_OPERACAO, selectedItens.odf.CODIGO_PECA);
     var response = {
         message: '',
         url: '',
     };
+    console.log('linha 100 /searchOdf /', lookForChildComponents.quantidade);
     try {
         let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${lookForChildComponents.quantidade} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${dados.numOper}`;
         const x = await (0, update_1.update)(y);
-        console.log('lookForChildComponents.quantidade', lookForChildComponents.quantidade);
         if (x === 'Update sucess') {
             if (lookForChildComponents.quantidade) {
-                res.cookie('qtdLibMax', (0, encryptOdf_1.encrypted)(String(lookForChildComponents.quantidade)));
-            }
-            else {
-                res.cookie('qtdLibMax', qtdLibString);
+                console.log('linha 106 /searchOdf/ ', (0, encryptOdf_1.encrypted)(String(lookForChildComponents.quantidade)));
+                res.cookie('quantidade', (0, encryptOdf_1.encrypted)(String(lookForChildComponents.quantidade)));
             }
             if (lookForChildComponents.reserved > qtdLibMax) {
                 lookForChildComponents.reserved = qtdLibMax;
@@ -101,7 +93,6 @@ const searchOdf = async (req, res) => {
                 res.cookie('reservedItens', (0, encryptOdf_1.encrypted)(String(lookForChildComponents.reserved)));
                 res.cookie('codigoFilho', (0, encryptOdf_1.encrypted)(String(lookForChildComponents.codigoFilho)));
                 res.cookie('condic', (0, encryptOdf_1.encrypted)(String(lookForChildComponents.condic)));
-                res.cookie('quantidade', lookForChildComponents.quantidade);
                 return res.json({ message: 'Valores Reservados' });
             }
             if (lookForChildComponents.message === 'Quantidade para reserva inválida') {

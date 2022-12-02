@@ -22,7 +22,7 @@ export const tools: RequestHandler = async (req, res) => {
     const funcionario: string = decrypted(String(sanitize(req.cookies['employee']))) || null
     const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
     const start: number = Number(decrypted(String(sanitize(req.cookies["startSetupTime"])))) || 0
-    const qtdLibMax: number = Number(decrypted(String(sanitize(req.cookies['qtdLibMax'])))) || 0
+    const qtdLibMax: number = Number(decrypted(String(sanitize(req.cookies['quantidade'])))) || 0
     const ferramenta: string = String("_ferr")
     const boas = 0
     const ruins = 0
@@ -95,7 +95,9 @@ export const selectedTools: RequestHandler = async (req, res) => {
     const codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
     const funcionario: string = decrypted(String(sanitize(req.cookies['employee']))) || null
     const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
-    const qtdLibMax: number = Number(decrypted(String(sanitize(req.cookies['qtdLibMax'])))) || 0
+    const qtdLibMax: number = Number(decrypted(String(sanitize(req.cookies['quantidade'])))) || 0
+
+    console.log('linha 100 /tools/', qtdLibMax);
     const boas = 0
     const ruins = 0
     const codAponta = 2

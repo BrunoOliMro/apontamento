@@ -111,10 +111,6 @@ export const codeNote: RequestHandler = async (req, res, next) => {
                 next()
             }
 
-            // if (codIdApontamento[0]?.CODAPONTA === 6) {
-            //     req.body.message = `codeApont 1 setup iniciado`
-            //     next()
-            // }
 
             if (lastEmployee !== funcionario && codIdApontamento[0]?.CODAPONTA === 6) {
                 console.log("chaamr outra função");
