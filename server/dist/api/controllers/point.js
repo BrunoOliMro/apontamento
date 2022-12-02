@@ -90,11 +90,9 @@ const point = async (req, res) => {
     if (qtdBoas > qtdLibMax || valorTotalApontado > qtdLibMax || badFeed > qtdLibMax || missingFeed > qtdLibMax || reworkFeed > qtdLibMax) {
         return res.json({ message: 'Quantidade excedida' });
     }
-    console.log("linha 99 Boas /point.ts/", qtdBoas);
     if (!missingFeed) {
         faltante = qtdLibMax - valorTotalApontado;
     }
-    console.log("linha 113 Faltante  /point.ts/", faltante);
     if (valorTotalApontado > qtdLibMax) {
         return res.json({ message: 'valor apontado maior que a quantidade liberada' });
     }
@@ -110,8 +108,6 @@ const point = async (req, res) => {
         }
     }
     let quantidadePossivelProduzir = Number(String((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['quantidade']))));
-    console.log("linha 141 /point.ts/ qtdLibMax", qtdLibMax);
-    console.log("linha 141 /point.ts /  quantidade possivel", quantidadePossivelProduzir);
     if (valorTotalApontado > quantidadePossivelProduzir) {
         console.log('linha 145 /não da pra fazer essa operação/');
         response.message = 'Saldo menor que o apontado';
@@ -119,6 +115,7 @@ const point = async (req, res) => {
         console.log('linha 148/response/', response);
         return res.json(response);
     }
+    console.log('linha 147 /searchOdf/', condic);
     if (condic === 'P') {
         if (!req.cookies['execut']) {
             return res.json({ message: 'Algo deu errado' });
@@ -143,7 +140,6 @@ const point = async (req, res) => {
                     codigoFilho.forEach((codigoFilho) => {
                         updateQtyQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${diferenceBetween} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`);
                     });
-                    console.log("linha 161");
                     await connection.query(updateQtyQuery.join("\n")).then(result => result.rowsAffected);
                 }
                 catch (error) {
@@ -152,7 +148,6 @@ const point = async (req, res) => {
                 }
             }
             try {
-                console.log("linha 172 /point.ts/");
                 codigoFilho.forEach((element) => {
                     const updateQuery = `DELETE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${odfNumberDecrypted}' AND CODIGO_FILHO = '${element}' `;
                     updateQtyQuery2.push(updateQuery);
@@ -189,14 +184,12 @@ const point = async (req, res) => {
                 await (0, update_1.update)(updateQtdpointed);
             }
             catch (error) {
-                if (error) {
-                    console.log('cadeeeeeee');
-                }
                 console.log('linha 212 - error - //point.ts', error);
                 return res.json({ message: 'Algo deu errado' });
             }
         }
         try {
+            console.log("linha 228 /point.ts/ Alterando quantidade apontada...");
             const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = ${odfNumberDecrypted} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${operationNumber}' AND CODIGO_MAQUINA = '${machineCode}'`;
             await (0, update_1.update)(updateCol);
         }
@@ -205,7 +198,7 @@ const point = async (req, res) => {
             return res.json({ message: 'Algo deu errado' });
         }
         try {
-            console.log("linha 215 /point.ts/ Inserindo dados de apontamento...");
+            console.log("linha 238 /point.ts/ Inserindo dados de apontamento...");
             const codAponta = 4;
             const descricaoCodigoAponta = 'Fin Prod';
             await (0, insert_1.insertInto)(employee, odfNumberDecrypted, codigoPeca, revisao, operationNumber, machineCode, qtdLibMax, qtdBoas, badFeed, codAponta, descricaoCodigoAponta, motivorefugo, faltante, reworkFeed, finalProdTimer);
@@ -216,7 +209,6 @@ const point = async (req, res) => {
         }
         qtdBoas = (0, encryptOdf_1.encrypted)(String(qtdBoas));
         res.cookie('qtdBoas', qtdBoas);
-        console.log("linha 227 - chegou ao fim /point.ts/", qtdBoas);
         return res.json({ message: 'Sucesso ao apontar' });
     }
     catch (error) {

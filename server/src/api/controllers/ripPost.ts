@@ -41,12 +41,42 @@ export const ripPost: RequestHandler = async (req, res) => {
     // console.log("lirenbierbirebi", new Date().getTime() - req.cookies['startRip']);    // Encerra ao final da Rip
 
     const tempoDecorridoRip = new Date().getTime() - req.cookies['startRip']
-    const finalProdRip = new Date().getTime() - decrypted(req.cookies['startSetupTime'])
+    //const finalProdRip = new Date().getTime() - decrypted(req.cookies['startSetupTime'])
 
-    console.log('linha 47', tempoDecorridoRip);
+    //console.log('linha 47', tempoDecorridoRip);
 
-    console.log('linha 48', finalProdRip);
+    //console.log('linha 48', finalProdRip);
     if (Object.keys(setup).length <= 0) {
+        console.log('Apagando cookies');
+        res.clearCookie('NUMERO_ODF')
+        res.clearCookie('NUMERO_OPERACAO')
+        res.clearCookie('qtdBoas')
+        res.clearCookie('startSetupTime')
+        res.clearCookie('MAQUINA_PROXIMA')
+        res.clearCookie('qtdLibMax')
+        res.clearCookie('OPERACAO_PROXIMA')
+        res.clearCookie('codigoFilho')
+        res.clearCookie('execut')
+        res.clearCookie('condic')
+        res.clearCookie('startRip')
+        res.clearCookie('encodedOperationNumber')
+        res.clearCookie('numCar')
+        res.clearCookie('lie')
+        res.clearCookie('lse')
+        res.clearCookie('quantidade')
+        res.clearCookie('CODIGO_PECA')
+        res.clearCookie('REVISAO')
+        res.clearCookie('descricao')
+        res.clearCookie('instrumento')
+        res.clearCookie('startProd')
+        res.clearCookie('especif')
+        res.clearCookie('employee')
+        res.clearCookie('reservedItens')
+        res.clearCookie('CODIGO_MAQUINA')
+        res.clearCookie('encodedMachineCode')
+        res.clearCookie('cstNumope')
+        res.clearCookie('encodedOdfNumber')
+        res.clearCookie('badge')
         return res.json({ message: "rip vazia" })
     } else {
         for (const [key, value] of Object.entries(setup)) {
@@ -102,9 +132,36 @@ export const ripPost: RequestHandler = async (req, res) => {
             message: "rip enviada, odf finalizada",
             url: '/#/codigobarras'
         }
+        console.log('Apagando cookies');
         res.clearCookie('NUMERO_ODF')
         res.clearCookie('NUMERO_OPERACAO')
-
+        res.clearCookie('qtdBoas')
+        res.clearCookie('startSetupTime')
+        res.clearCookie('MAQUINA_PROXIMA')
+        res.clearCookie('qtdLibMax')
+        res.clearCookie('OPERACAO_PROXIMA')
+        res.clearCookie('codigoFilho')
+        res.clearCookie('execut')
+        res.clearCookie('condic')
+        res.clearCookie('startRip')
+        res.clearCookie('encodedOperationNumber')
+        res.clearCookie('numCar')
+        res.clearCookie('lie')
+        res.clearCookie('lse')
+        res.clearCookie('quantidade')
+        res.clearCookie('CODIGO_PECA')
+        res.clearCookie('REVISAO')
+        res.clearCookie('descricao')
+        res.clearCookie('instrumento')
+        res.clearCookie('startProd')
+        res.clearCookie('especif')
+        res.clearCookie('employee')
+        res.clearCookie('reservedItens')
+        res.clearCookie('CODIGO_MAQUINA')
+        res.clearCookie('encodedMachineCode')
+        res.clearCookie('cstNumope')
+        res.clearCookie('encodedOdfNumber')
+        res.clearCookie('badge')
         return res.json(response)
     } catch (error) {
         console.log("linha 75 /ripPost/", error)

@@ -106,17 +106,9 @@ export const point: RequestHandler = async (req, res) => {
         return res.json({ message: 'Quantidade excedida' })
     }
 
-    console.log("linha 99 Boas /point.ts/", qtdBoas);
-
-    // if (!qtdBoas || !missingFeed || !valorTotalApontado) {
-    //     return res.json({ message: 'Quantidade inválida' })
-    // }
-
     if (!missingFeed) {
         faltante = qtdLibMax - valorTotalApontado
     }
-
-    console.log("linha 113 Faltante  /point.ts/", faltante);
 
     if (valorTotalApontado > qtdLibMax) {
         return res.json({ message: 'valor apontado maior que a quantidade liberada' })
@@ -136,15 +128,7 @@ export const point: RequestHandler = async (req, res) => {
         }
     }
 
-    //let quantidadePossivelProduzir ? Number(req.cookies['quantidade']) : qtdLibMax
-    //const quantidadePossivelProduzir = quantidadePossivelProduzir ? Number(req.cookies['quantidade'])
-
-    //console.log("linha 136 ", quantidadePossivelProduzir);
     let quantidadePossivelProduzir = Number(String(decrypted(sanitize(req.cookies['quantidade']))));
-    //quantidadePossivelProduzir = NaN ? quantidadePossivelProduzir : qtdLibMax;
-
-    console.log("linha 141 /point.ts/ qtdLibMax", qtdLibMax);
-    console.log("linha 141 /point.ts /  quantidade possivel", quantidadePossivelProduzir);
 
     if (valorTotalApontado > quantidadePossivelProduzir!) {
         console.log('linha 145 /não da pra fazer essa operação/');
@@ -154,6 +138,7 @@ export const point: RequestHandler = async (req, res) => {
         return res.json(response)
     }
 
+    console.log('linha 147 /searchOdf/', condic);
     // Caso haja "P" faz update na quantidade de peças dos filhos
     if (condic === 'P') {
         if (!req.cookies['execut']) {
@@ -170,20 +155,9 @@ export const point: RequestHandler = async (req, res) => {
                 return res.json({ message: 'Algo deu errado' })
             }
         }
-        //console.log("linha 145 /point.ts/");
         try {
             const connection = await mssql.connect(sqlConfig);
-            // console.log('linha 176 /point.ts/', quantidadePossivelProduzir);
-            // console.log('linha 177 /point.ts/', execut);
-            //const diferenceBetween = quantidadePossivelProduzir! - valorTotalApontado * execut
             let diferenceBetween = execut * quantidadePossivelProduzir - valorTotalApontado * execut
-            //let x = quantidadePossivelProduzir - diferenceBetween
-            // console.log("apontado", valorTotalApontado);
-            // console.log('quantidadePossivel', quantidadePossivelProduzir);
-            //console.log('linha 159 /point.ts/', diferenceBetween);
-
-            // let y = 9 - 2 * 1//7
-            // let w = 9 - 2 * 3//4
 
             // Loop para atualizar o estoque
             if (valorTotalApontado < quantidadePossivelProduzir!) {
@@ -192,7 +166,6 @@ export const point: RequestHandler = async (req, res) => {
                     codigoFilho.forEach((codigoFilho: string) => {
                         updateQtyQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${diferenceBetween} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`)
                     });
-                    console.log("linha 161");
                     await connection.query(updateQtyQuery.join("\n")).then(result => result.rowsAffected)
                 } catch (error) {
                     console.log("linha 159 /point.ts/", error);
@@ -202,7 +175,6 @@ export const point: RequestHandler = async (req, res) => {
 
             // Loop para desconstar o saldo alocado
             try {
-                console.log("linha 172 /point.ts/");
                 codigoFilho.forEach((element: string) => {
                     const updateQuery: string = `DELETE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${odfNumberDecrypted}' AND CODIGO_FILHO = '${element}' `
                     updateQtyQuery2.push(updateQuery)
@@ -238,9 +210,6 @@ export const point: RequestHandler = async (req, res) => {
                 const updateQtdpointed = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'N' WHERE 1 = 1 AND NUMERO_ODF = ${odfNumberDecrypted} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${operationNumber}' AND CODIGO_MAQUINA = '${machineCode}'`
                 await update(updateQtdpointed)
             } catch (error) {
-                if (error) {
-                    console.log('cadeeeeeee');
-                }
                 console.log('linha 212 - error - //point.ts', error);
                 return res.json({ message: 'Algo deu errado' })
             }
@@ -249,6 +218,7 @@ export const point: RequestHandler = async (req, res) => {
 
         // Seta quantidade apontada da odf para o quanto o usuario diz ser(PCP_PROGRAMACAO_PRODUCAO)
         try {
+            console.log("linha 228 /point.ts/ Alterando quantidade apontada...");
             const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = ${odfNumberDecrypted} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${operationNumber}' AND CODIGO_MAQUINA = '${machineCode}'`
             await update(updateCol)
         } catch (error) {
@@ -258,7 +228,7 @@ export const point: RequestHandler = async (req, res) => {
 
         // Insere codigo de apontamento 4 final de producao
         try {
-            console.log("linha 215 /point.ts/ Inserindo dados de apontamento...");
+            console.log("linha 238 /point.ts/ Inserindo dados de apontamento...");
             const codAponta = 4
             const descricaoCodigoAponta = 'Fin Prod'
             await insertInto(employee, odfNumberDecrypted, codigoPeca, revisao, operationNumber, machineCode, qtdLibMax, qtdBoas, badFeed, codAponta, descricaoCodigoAponta, motivorefugo, faltante, reworkFeed, finalProdTimer)
@@ -269,8 +239,6 @@ export const point: RequestHandler = async (req, res) => {
 
         qtdBoas = encrypted(String(qtdBoas))
         res.cookie('qtdBoas', qtdBoas)
-
-        console.log("linha 227 - chegou ao fim /point.ts/", qtdBoas);
 
         return res.json({ message: 'Sucesso ao apontar' })
     } catch (error) {

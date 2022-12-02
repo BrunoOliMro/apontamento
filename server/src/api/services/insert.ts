@@ -20,7 +20,5 @@ export const insertInto = async (funcionario: string, numeroOdf: number, codigoP
     } catch (err) {
         console.log('linha 22 /Error on insert into/', err);
         return response.message = 'Algo deu errado'
-    // } finally {
-    //     await connection.close()
-    // }
+    }
 }
