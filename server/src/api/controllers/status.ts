@@ -9,13 +9,16 @@ export const status: RequestHandler = async (req, res) => {
     const numeroOperacao = decrypted(sanitize(req.cookies['NUMERO_OPERACAO']))
     const revisao = decrypted(sanitize(req.cookies['REVISAO']))
     const lookForTimer = `SELECT TOP 1 EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${numpec}' AND NUMOPE = ${numeroOperacao} AND MAQUIN = '${maquina}' AND REVISAO = ${revisao} ORDER BY REVISAO DESC`
+    let response ={
+        message : '',
+        temporestante: 0,
+    }
     try {
         const resource = await select(lookForTimer)
-        console.log('linha 15', Number(decrypted(req.cookies['qtdLibMax'])));
-        let tempoRestante = Number(resource[0].EXECUT * Number(decrypted(sanitize(String(req.cookies["qtdLibMax"])))) * 1000 - (Number(new Date().getTime() - decrypted(String(sanitize(req.cookies['startSetupTime'])))))) || 0
-        console.log('LINHA 15/temporestante/', tempoRestante);
+        let tempoRestante = Number(resource[0].EXECUT * Number(decrypted(sanitize(String(req.cookies["QTDE_LIB"])))) * 1000 - (Number(new Date().getTime() - decrypted(String(sanitize(req.cookies['startSetupTime'])))))) || 0
         if (tempoRestante > 0) {
-            return res.status(200).json(tempoRestante)
+            response.temporestante = tempoRestante
+            return res.status(200).json(response)
         } else if (tempoRestante <= 0) {
             tempoRestante = 0
             return res.json({ message: 'time for execution not found' })

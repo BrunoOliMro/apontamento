@@ -5,6 +5,7 @@ import { select } from "../services/select";
 import { decodedBuffer } from "../utils/decodeOdf";
 import { decrypted } from "../utils/decryptedOdf";
 import { encoded } from "../utils/encodedOdf";
+import { encrypted } from "../utils/encryptOdf";
 import { sanitize } from "../utils/sanitize";
 
 //Ferramenta
@@ -14,15 +15,15 @@ export const tools: RequestHandler = async (req, res) => {
         return res.json({ message: 'Algo deu errado' })
     }
 
-    const decodedOdfNumber: number = Number(decodedBuffer(String(sanitize(req.cookies['encodedOdfNumber'])))) || 0
+    //const decodedOdfNumber: number = Number(decodedBuffer(String(sanitize(req.cookies['encodedOdfNumber'])))) || 0
     const numeroOdf: number = Number(decrypted(String(sanitize(req.cookies["NUMERO_ODF"])))) || 0
     const codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
     let numeroOperacao: string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
     const codigoMaq: string = decrypted(String(sanitize(req.cookies["CODIGO_MAQUINA"]))) || null
-    const funcionario: string = decrypted(String(sanitize(req.cookies['employee']))) || null
+    const funcionario: string = decrypted(String(sanitize(req.cookies['CRACHA']))) || null
     const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
     const start: number = Number(decrypted(String(sanitize(req.cookies["startSetupTime"])))) || 0
-    const qtdLibMax: number = Number(decrypted(String(sanitize(req.cookies['quantidade'])))) || 0
+    const qtdLibMax: number = Number(decrypted(String(sanitize(req.cookies['QTDE_LIB'])))) || 0
     const ferramenta: string = String("_ferr")
     const boas = 0
     const ruins = 0
@@ -35,18 +36,9 @@ export const tools: RequestHandler = async (req, res) => {
     let toolsImg;
     const result = [];
 
-    if (numeroOdf !== decodedOdfNumber) {
-        return res.json({ message: 'Erro na ODF' })
-    }
-
-    // console.log("func", funcionario);
-    // console.log("func", numeroOdf);
-    // console.log("func", codigoPeca);
-    // console.log("func", revisao);
-    // console.log("func", codigoMaq);
-    // console.log("func", qtdLibMax);
-
-    console.log("linha 49 /tools/");
+    // if (numeroOdf !== decodedOdfNumber) {
+    //     return res.json({ message: 'Erro na ODF' })
+    // }
 
     try {
         const inserted = await insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, start)
@@ -93,11 +85,11 @@ export const selectedTools: RequestHandler = async (req, res) => {
     const numeroOperacao: string = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
     const codigoMaq: string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
     const codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
-    const funcionario: string = decrypted(String(sanitize(req.cookies['employee']))) || null
+    const funcionario: string = decrypted(String(sanitize(req.cookies['CRACHA']))) || null
     const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
-    const qtdLibMax: number = Number(decrypted(String(sanitize(req.cookies['quantidade'])))) || 0
+    const qtdLibMax: number = Number(decrypted(String(sanitize(req.cookies['QTDE_LIB'])))) || 0
 
-    console.log('linha 100 /tools/', qtdLibMax);
+    console.log('linha 100 /selectedTools/', qtdLibMax);
     const boas = 0
     const ruins = 0
     const codAponta = 2
@@ -112,17 +104,14 @@ export const selectedTools: RequestHandler = async (req, res) => {
 
     //Encerra o primeiro tempo de setup
     const tempoDecorrido = Number(y - x) || 0
-    let z = encoded(String(new Date().getTime()))
-
-    console.log("linha 115");
-
+    let z = await encrypted(String(new Date().getTime()))
 
     //Inicia a produção
     res.cookie("startProd", z)
     try {
         //INSERE EM CODAPONTA 2
         const codApontamentoFinalSetup = await insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, tempoDecorrido)
-        console.log('linha 117',codApontamentoFinalSetup );
+        console.log('linha 117 /selectedTools/',codApontamentoFinalSetup );
         if (codApontamentoFinalSetup === 'Algo deu errado') {
             return res.json({ message: 'Algo deu errado' })
         } else if( codApontamentoFinalSetup === 'insert done') {

@@ -14,7 +14,7 @@ const returnedValue = async (req, res) => {
     if (!returnValues) {
         return res.json({ message: 'Não foi indicado boas e ruins' });
     }
-    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['employee']))) || null;
+    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CRACHA']))) || null;
     const barcode = (0, sanitize_1.sanitize)(req.body["barcodeReturn"]) || null;
     const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`;
     let boas;

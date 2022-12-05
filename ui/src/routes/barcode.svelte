@@ -8,7 +8,7 @@
   let urlS = `/api/v1/odf`;
   let urlBagde = `/api/v1/badge`;
   let supervisorApi = "api/v1/supervisorParada";
-  let badge = "" || null;
+  let badge = "";
   let showmodal = false;
   let showCorr = false;
   let returnedValueApi = `/api/v1/returnedValue`;
@@ -139,18 +139,18 @@
     //   window.location.href = "/#/ferramenta";
     // }
 
-    // if (res.message === "codeApont 3 prod iniciado") {
-    //   loader = false;
-    //   window.location.href = "/#/codigobarras/apontamento";
-    // }
+    if (res.message === "codeApont 3 prod Ini.") {
+      loader = false;
+      window.location.href = "/#/codigobarras/apontamento";
+    }
 
     // if (res.message === "codeApont 4 prod finalzado") {
     //   window.location.href = "/#/rip";
     // }
 
-    if (res.message === "codeApont 5 maquina parada") {
-      loader = false;
-      superParada = true;
+    if (res.message === "codeApont 5 inicio de rip") {
+      window.location.href = "/#/rip";
+      loader = true;
     }
 
     if (res.message === "codigo de barras vazio") {
@@ -171,20 +171,24 @@
   };
 
   function checkBeforeBadge(event) {
-    if (badge.length >= 6 && event.key === "Enter") {
-      if (
-        !badge ||
-        badge === "000000" ||
-        badge === "0" ||
-        badge === "0" ||
-        badge === "00" ||
-        badge === "000" ||
-        badge === "0000" ||
-        badge === "00000"
-      ) {
-        modalMessage = "Crachá inválido";
-      } else {
-        checkBagde();
+    if(!badge){
+      badge = ''
+    } else if(badge){
+      if ( badge.length >= 6 && event.key === "Enter") {
+        if (
+          !badge ||
+          badge === "000000" ||
+          badge === "0" ||
+          badge === "0" ||
+          badge === "00" ||
+          badge === "000" ||
+          badge === "0000" ||
+          badge === "00000"
+        ) {
+          modalMessage = "Crachá inválido";
+        } else {
+          checkBagde();
+        }
       }
     }
   }

@@ -171,6 +171,7 @@
     async function getSpaceFunc() {
         const res = await fetch(urlS);
         getSpace = await res.json();
+        console.log('linha 174 /feed.svelte/ getSpace /', getSpace);
         if (getSpace.message === "No address") {
             loader = false;
             window.location.href = `${getSpace.url}`;

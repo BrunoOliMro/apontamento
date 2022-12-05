@@ -2,8 +2,12 @@ import { RequestHandler } from 'express';
 import sanitize from 'sanitize-html';
 import { insertInto } from '../services/insert';
 import { select } from '../services/select';
-import { decodedBuffer } from '../utils/decodeOdf';
+import { cookieCleaner } from '../utils/clearCookie';
+import { cookieGenerator } from '../utils/cookieGenerator';
+//import { decodedBuffer } from '../utils/decodeOdf';
 import { decrypted } from '../utils/decryptedOdf';
+import { encrypted } from '../utils/encryptOdf';
+//import { encrypted } from '../utils/encryptOdf';
 import { unravelBarcode } from '../utils/unravelBarcode';
 
 export const codeNote: RequestHandler = async (req, res, next) => {
@@ -11,7 +15,7 @@ export const codeNote: RequestHandler = async (req, res, next) => {
     let numeroOper = Number(dados.numOper.replaceAll('000', '')) || 0
     let odfNumber = Number(dados.numOdf) || 0
     let codMaq = String(dados.codMaq) || null
-    const funcionario: string = decrypted(String(sanitize(req.cookies['employee']))) || null
+    const funcionario: string = decrypted(String(sanitize(req.cookies['CRACHA']))) || null
     let codigoPeca = String('' || null)
 
     if (!funcionario || funcionario === '') {
@@ -19,30 +23,29 @@ export const codeNote: RequestHandler = async (req, res, next) => {
         return res.json({ message: 'Acesso negado' })
     }
 
-    if (!dados) {
-        const numeroOdfCookies = decrypted(String(sanitize(req.cookies['NUMERO_ODF']))) || null
-        const codigoOper: string = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
-        const codigoMaq: string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
+    // if (!dados) {
+    //     const numeroOdfCookies = decrypted(String(sanitize(req.cookies['NUMERO_ODF']))) || null
+    //     const codigoOper: string = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
+    //     const codigoMaq: string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
 
-        dados.numOdf = numeroOdfCookies
-        dados.numOper = codigoOper
-        dados.codMaq = codigoMaq
+    //     dados.numOdf = numeroOdfCookies
+    //     dados.numOper = codigoOper
+    //     dados.codMaq = codigoMaq
 
-        //Decodifica numero da odf
-        const encodedOdfString: string = decodedBuffer(String(sanitize(req.cookies['encodedOdfString'])))
+    //     //Decodifica numero da odf
+    //     const encodedOdfString: string = decodedBuffer(String(sanitize(req.cookies['encodedOdfString'])))
 
-        //Compara o Codigo Descodificado e o descriptografado
-        if (encodedOdfString === numeroOdfCookies) {
-            return next()
-        } else {
-            return res.json({ message: 'Acesso negado' })
-        }
-    }
+    //     //Compara o Codigo Descodificado e o descriptografado
+    //     if (encodedOdfString === numeroOdfCookies) {
+    //         return next()
+    //     } else {
+    //         return res.json({ message: 'Acesso negado' })
+    //     }
+    // }
 
     try {
         const lookForHisaponta = `SELECT TOP 1 USUARIO, NUMOPE, ITEM, CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${odfNumber} AND NUMOPE = ${numeroOper} AND ITEM = '${codMaq}' ORDER BY DATAHORA DESC`
         const codIdApontamento = await select(lookForHisaponta)
-        console.log('linha 45 /codIdApontamento/', codIdApontamento);
         let lastEmployee = codIdApontamento[0]?.USUARIO
         let numeroOdfDB = codIdApontamento[0]?.ODF
         let codigoOperDB = codIdApontamento[0]?.NUMOPE
@@ -69,56 +72,54 @@ export const codeNote: RequestHandler = async (req, res, next) => {
         let codAponta = 1
         let descricaoCodAponta = 'Ini Setup.'
         let motivo = String('')
-        var obj = {
-            message: ''
-        }
-
+        // var obj = {
+        //     message: ''
+        // }
+        // console.log('linha 76', dados.numOdf);
+        // console.log('linha 76', dados.numOper);
+        // console.log('linha 76', dados.codMaq);
+        let y = `SELECT TOP 1 * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${numeroOper} AND CODIGO_MAQUINA = '${dados.codMaq}'`;
+        
         if (codIdApontamento.length > 0) {
-            if (codIdApontamento[0]?.CODAPONTA === 1) {
+            const x = await select(y);
+            if (codIdApontamento[0]?.CODAPONTA === 1 || codIdApontamento[0]?.CODAPONTA === 6) {
                 req.body.message = `codeApont 1 setup iniciado`
                 next()
             }
 
             if (codIdApontamento[0]?.CODAPONTA === 2) {
                 console.log("linha 100 /code note/");
-                obj.message = `codeApont 2 setup finalizado`
-                req.body.message = `codeApont 2 setup finalizado`
-                next()
+                let descricaoCodigoAponta3 = ''
+                let codAponta3 = 3
+                await insertInto(funcionario, odfNumber, codigoPeca, revisao, dados.numOper, dados.codMaq, qtdLibMax, boas, ruins, codAponta3, descricaoCodigoAponta3, motivo, faltante, retrabalhada, Number(new Date().getTime() || 0))
+                return res.json({ message: 'ferramentas selecionadas com successo' })
+                //return res.json({ message: `codeApont 2 setup finalizado` })
             }
 
             if (codIdApontamento[0]?.CODAPONTA === 3) {
-                req.body.message = `codeApont 3 prod iniciado`
-                next()
+                const z = await encrypted(String(new Date().getDate()))
+                res.cookie('startProd', z)
+                await cookieGenerator(res, x[0])
+                return res.json({ message: `codeApont 3 prod Ini.` })
             }
 
             if (codIdApontamento[0]?.CODAPONTA === 4) {
-                req.body.message = `codeApont 4 prod finalzado`
-                next()
+                const z = await encrypted(String(new Date().getDate()))
+                res.cookie('startRip', z)
+                await cookieGenerator(res, x[0])
+                return res.json({ message: `codeApont 4 prod finalzado` })
+            }
+
+            if (codIdApontamento[0]?.CODAPONTA === 5) {
+                await cookieGenerator(res, x[0])
+                return res.json({ message: `codeApont 5 inicio de rip` })
             }
 
             if (codIdApontamento[0]?.CODAPONTA === 7) {
-                // req.body.message = `codeApont 5 maquina parada`
-                // next()
-                return res.json({ message: `codeApont 5 maquina parada` })
-            }
-
-            if (codIdApontamento[0]?.CODAPONTA === 6) {
-                req.body.message = `codeApont 1 setup iniciado`
-                const insertResponse = await insertInto(funcionario, odfNumber, codigoPeca, revisao, dados.numOper, dados.codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido)
-                if (insertResponse === 'Algo deu errado') {
-                    return res.json({ message: 'Algo deu errado' })
-                }
-                next()
-            }
-
-
-            if (lastEmployee !== funcionario && codIdApontamento[0]?.CODAPONTA === 6) {
-                console.log("chaamr outra função");
-                req.body.message = `codeApont 1 setup iniciado`
+                return res.json({ message: `codigo de apontamento: 7 = máquina parada` })
             }
         }
         if (codIdApontamento.length <= 0) {
-            console.log('code note linha 126');
             const resultInsert = await insertInto(funcionario, odfNumber, codigoPeca, revisao, dados.numOper, dados.codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido)
             if (resultInsert === 'Algo deu errado') {
                 return res.json({ message: 'Algo deu errado' })

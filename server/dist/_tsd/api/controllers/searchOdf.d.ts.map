@@ -1,1 +1,1 @@
-{"version":3,"file":"searchOdf.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/searchOdf.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAa9C,eAAO,MAAM,SAAS,EAAE,cAoJvB,CAAA"}
+{"version":3,"file":"searchOdf.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/searchOdf.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAc9C,eAAO,MAAM,SAAS,EAAE,cAsIvB,CAAA"}

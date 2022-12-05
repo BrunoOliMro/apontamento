@@ -8,17 +8,19 @@ const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const insert_1 = require("../services/insert");
 const select_1 = require("../services/select");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
+const encryptOdf_1 = require("../utils/encryptOdf");
 const rip = async (req, res) => {
     const numpec = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
     const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
     const codMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
-    console.log('linha codmaqs', codMaq);
     const codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
     const numeroOdf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"]))) || null;
     const numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))) || null;
-    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['employee']))) || null;
+    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CRACHA']))) || null;
     const start = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["startSetupTime"]))) || null;
-    const qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['quantidade']))) || null;
+    const qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['QTDE_LIB']))) || null;
+    let startRip = res.cookie('startRip', (0, encryptOdf_1.encrypted)(String(new Date().getTime())));
+    console.log('linha 19', startRip);
     const startTime = Number(new Date(start).getTime()) || 0;
     const response = {
         message: '',
@@ -49,9 +51,7 @@ const rip = async (req, res) => {
         AND NUMCAR < '2999'
         ORDER BY NUMPEC ASC`;
     const ripDetails = await (0, select_1.select)(rip);
-    console.log("linha ripDetaisl", ripDetails);
     if (ripDetails.length <= 0) {
-        console.log("iewniureb");
         response.message = 'Não há rip a mostrar';
         response.url = '/#/codigobarras';
         return res.json(response);
@@ -65,6 +65,7 @@ const rip = async (req, res) => {
         }
     });
     let numopeFilter = arrayNumope.filter((acc) => acc);
+    console.log('linha 66 /rip.ts/', numopeFilter);
     res.cookie('cstNumope', numopeFilter.map((acc) => acc.CST_NUMOPE));
     res.cookie('numCar', numopeFilter.map((acc) => acc.NUMCAR));
     res.cookie('descricao', numopeFilter.map((acc) => acc.DESCRICAO));

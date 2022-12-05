@@ -5,12 +5,12 @@ import { decrypted } from "../utils/decryptedOdf";
 
 export const stopPost: RequestHandler = async (req, res) => {
     const numeroOdf = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
-    const funcionario = decrypted(String(sanitize(req.cookies['employee']))) || null
+    const funcionario = decrypted(String(sanitize(req.cookies['CRACHA']))) || null
     const codigoPeca = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
     const revisao = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
     const numeroOperacao = decrypted(String(req.cookies['NUMERO_OPERACAO'])) || null
     const codigoMaq = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
-    const qtdLibMax = decrypted(String(sanitize(req.cookies['quantidade']))) || null
+    const qtdLibMax = decrypted(String(sanitize(req.cookies['QTDE_LIB']))) || null
     const boas = 0
     const faltante = 0
     const retrabalhada = 0

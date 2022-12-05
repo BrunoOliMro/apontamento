@@ -2,19 +2,22 @@ import { RequestHandler } from "express";
 import sanitize from "sanitize-html";
 import { insertInto } from "../services/insert";
 import { select } from "../services/select";
+//import { cookieGenerator } from "../utils/cookieGenerator";
 import { decrypted } from "../utils/decryptedOdf";
+import { encrypted } from "../utils/encryptOdf";
 
 export const rip: RequestHandler = async (req, res) => {
     const numpec: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
     const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
     const codMaq: string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
-    console.log('linha codmaqs', codMaq);
     const codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
     const numeroOdf: number = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
     const numeroOperacao: string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
-    const funcionario: string = decrypted(String(sanitize(req.cookies['employee']))) || null
+    const funcionario: string = decrypted(String(sanitize(req.cookies['CRACHA']))) || null
     const start: string = decrypted(String(sanitize(req.cookies["startSetupTime"]))) || null
-    const qtdLibMax: number = decrypted(String(sanitize(req.cookies['quantidade']))) || null
+    const qtdLibMax: number = decrypted(String(sanitize(req.cookies['QTDE_LIB']))) || null
+    let startRip = res.cookie('startRip', encrypted(String(new Date().getTime())));
+    console.log('linha 19', startRip);
     const startTime: number = Number(new Date(start).getTime()) || 0
     const response = {
         message: '',
@@ -46,10 +49,7 @@ export const rip: RequestHandler = async (req, res) => {
         ORDER BY NUMPEC ASC`
     const ripDetails = await select(rip)
 
-    console.log("linha ripDetaisl", ripDetails);
-
     if(ripDetails.length <= 0){
-        console.log("iewniureb");
         response.message = 'Não há rip a mostrar'
         response.url = '/#/codigobarras'
         return res.json(response)
@@ -64,6 +64,7 @@ export const rip: RequestHandler = async (req, res) => {
     })
 
     let numopeFilter = arrayNumope.filter((acc: any) => acc)
+    console.log('linha 66 /rip.ts/', numopeFilter);
     res.cookie('cstNumope', numopeFilter.map((acc: { CST_NUMOPE: string; }) => acc.CST_NUMOPE))
     res.cookie('numCar', numopeFilter.map((acc: { NUMCAR: any; }) => acc.NUMCAR))
     res.cookie('descricao', numopeFilter.map((acc: { DESCRICAO: any; }) => acc.DESCRICAO))
@@ -71,6 +72,7 @@ export const rip: RequestHandler = async (req, res) => {
     res.cookie('instrumento', numopeFilter.map((acc: { INSTRUMENTO: any; }) => acc.INSTRUMENTO))
     res.cookie('lie', numopeFilter.map((acc: { LIE: any; }) => acc.LIE))
     res.cookie('lse', numopeFilter.map((acc: { LSE: any; }) => acc.LSE))
+    //await cookieGenerator(res, numopeFilter)
 
     const descricaoCodAponta = `Rip Ini`
     const boas = 0

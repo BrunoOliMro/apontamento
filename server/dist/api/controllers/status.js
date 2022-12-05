@@ -13,13 +13,16 @@ const status = async (req, res) => {
     const numeroOperacao = (0, decryptedOdf_1.decrypted)((0, sanitize_html_1.default)(req.cookies['NUMERO_OPERACAO']));
     const revisao = (0, decryptedOdf_1.decrypted)((0, sanitize_html_1.default)(req.cookies['REVISAO']));
     const lookForTimer = `SELECT TOP 1 EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${numpec}' AND NUMOPE = ${numeroOperacao} AND MAQUIN = '${maquina}' AND REVISAO = ${revisao} ORDER BY REVISAO DESC`;
+    let response = {
+        message: '',
+        temporestante: 0,
+    };
     try {
         const resource = await (0, select_1.select)(lookForTimer);
-        console.log('linha 15', Number((0, decryptedOdf_1.decrypted)(req.cookies['qtdLibMax'])));
-        let tempoRestante = Number(resource[0].EXECUT * Number((0, decryptedOdf_1.decrypted)((0, sanitize_html_1.default)(String(req.cookies["qtdLibMax"])))) * 1000 - (Number(new Date().getTime() - (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['startSetupTime'])))))) || 0;
-        console.log('LINHA 15/temporestante/', tempoRestante);
+        let tempoRestante = Number(resource[0].EXECUT * Number((0, decryptedOdf_1.decrypted)((0, sanitize_html_1.default)(String(req.cookies["QTDE_LIB"])))) * 1000 - (Number(new Date().getTime() - (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['startSetupTime'])))))) || 0;
         if (tempoRestante > 0) {
-            return res.status(200).json(tempoRestante);
+            response.temporestante = tempoRestante;
+            return res.status(200).json(response);
         }
         else if (tempoRestante <= 0) {
             tempoRestante = 0;

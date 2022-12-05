@@ -10,8 +10,8 @@ export const stopSupervisor: RequestHandler = async (req, res) => {
     const numeroOdf: number = decrypted(String(sanitize(req.cookies['NUMERO_ODF']))) || null
     const NUMERO_OPERACAO: string = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
     const CODIGO_MAQUINA: string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
-    const qtdLibMax: number = decrypted(String(sanitize(req.cookies['quantidade']))) || null
-    const funcionario: string = decrypted(String(sanitize(req.cookies['employee']))) || null
+    const qtdLibMax: number = decrypted(String(sanitize(req.cookies['QTDE_LIB']))) || null
+    const funcionario: string = decrypted(String(sanitize(req.cookies['CRACHA']))) || null
     const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
     const codigoPeca: string = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
     console.log('linha 16 /stopsuper/');
