@@ -14,7 +14,7 @@ export const getPoint: RequestHandler = async (req, res) => {
     let NUMERO_OPERACAO = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
     const CODIGO_MAQUINA = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
     let codigoPeca = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
-    let funcionario = decrypted(String(sanitize(req.cookies['CRACHA']))) || null
+    let funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
     let qtdProduzir = decrypted(String(sanitize(req.cookies['QTDE_LIB']))) || null
     //let quantidade: string | null = sanitize(req.cookies['quantidade']) || null
     let revisao = decrypted(String(sanitize(req.cookies['REVISAO']))) || null

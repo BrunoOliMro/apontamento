@@ -12,6 +12,7 @@
     let dados = [];
     let result = callMotivo();
     let modalTitle = "Máquina parada com sucesso";
+    let modalmessage = "";
 
     function showStop() {
         if (stopModal === false) {
@@ -39,7 +40,13 @@
                 value: value,
             }),
         }).then((res) => res.json());
-        console.log("res", res);
+        console.log("res /title.svelte linha 43/", res);
+
+        if (res.message === "Máquina já parada") {
+            stopModal = false;
+            showMaqPar = false;
+            modalmessage = "Máquina parada";
+        }
         if (res.message === "maquina parada com sucesso") {
             stopModal = false;
             showMaqPar = true;
@@ -54,33 +61,14 @@
     function closeConfirm() {
         showMaqPar = false;
         stopModal = false;
-        window.location.href = `/#/codigobarras`;
+        modalmessage = ''
+        //location.reload();
     }
-
-    // let toolsBreadcrumb = document.cookie
-    //     .split(";")
-    //     .map((cookie) => cookie.split("="))
-    //     .reduce(
-    //         (accumulator, [key, value]) => ({
-    //             ...accumulator,
-    //             [key.trim()]: decodeURIComponent(value),
-    //         }),
-    //         {}
-    //     );
 </script>
 
 {#await result}
     <div>...</div>
 {:then item}
-    <!-- {#if toolsBreadcrumb === "true"}
-        <nav class="breadcrumb" aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="/#/ferramenta">Ferramentas</a>
-                </li>
-            </ol>
-        </nav>
-    {/if} -->
     <div class="nav-area">
         <ul>
             <li class="fist-item-nav">
@@ -117,6 +105,8 @@
             <div class="modalContent">
                 <h2 class="modalTitle">Motivo da Parada</h2>
                 <div class="optionsBar">
+                    <!-- svelte-ignore a11y-positive-tabindex -->
+                    <!-- svelte-ignore a11y-autofocus -->
                     <select autofocus tabindex="10" bind:value>
                         {#each dados as item}
                             <option class="optionsBar">{item}</option>
@@ -138,6 +128,11 @@
             </div>
         </div>
     </div>
+{/if}
+
+{#if modalmessage === "Máquina parada"}
+    <ModalConfirmation title={modalmessage} on:message={closeConfirm} />
+    <input type="text" />
 {/if}
 
 {#if showMaqPar === true}

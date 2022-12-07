@@ -16,17 +16,25 @@ const rip = async (req, res) => {
     const codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
     const numeroOdf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"]))) || null;
     const numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))) || null;
-    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CRACHA']))) || null;
+    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO']))) || null;
     const start = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["startSetupTime"]))) || null;
     const qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['QTDE_LIB']))) || null;
     let startRip = res.cookie('startRip', (0, encryptOdf_1.encrypted)(String(new Date().getTime())));
     console.log('linha 19', startRip);
+    const descricaoCodAponta = `Rip Ini`;
+    const boas = 0;
+    const ruins = 0;
+    const faltante = 0;
+    const retrabalhada = 0;
+    const codAponta = 5;
+    const motivo = ``;
     const startTime = Number(new Date(start).getTime()) || 0;
     const response = {
         message: '',
         url: '',
         object: '',
     };
+    const lookForHisaponta = `SELECT TOP 1 USUARIO, NUMOPE, ITEM, CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${numeroOdf} AND NUMOPE = ${numeroOperacao} AND ITEM = '${codMaq}' ORDER BY DATAHORA DESC`;
     const rip = `
         SELECT  DISTINCT
         PROCESSO.NUMPEC,
@@ -52,9 +60,17 @@ const rip = async (req, res) => {
         ORDER BY NUMPEC ASC`;
     const ripDetails = await (0, select_1.select)(rip);
     if (ripDetails.length <= 0) {
+        console.log('inseringo codigo 5...');
         response.message = 'Não há rip a mostrar';
         response.url = '/#/codigobarras';
-        return res.json(response);
+        const x = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime);
+        if (x) {
+            console.log('linha 60 /rip.svelte/');
+            return res.json(response);
+        }
+        else {
+            return res.json({ message: 'Algo deu errado' });
+        }
     }
     let arrayNumope = ripDetails.map((acc) => {
         if (acc.CST_NUMOPE === codMaq) {
@@ -65,7 +81,6 @@ const rip = async (req, res) => {
         }
     });
     let numopeFilter = arrayNumope.filter((acc) => acc);
-    console.log('linha 66 /rip.ts/', numopeFilter);
     res.cookie('cstNumope', numopeFilter.map((acc) => acc.CST_NUMOPE));
     res.cookie('numCar', numopeFilter.map((acc) => acc.NUMCAR));
     res.cookie('descricao', numopeFilter.map((acc) => acc.DESCRICAO));
@@ -73,23 +88,26 @@ const rip = async (req, res) => {
     res.cookie('instrumento', numopeFilter.map((acc) => acc.INSTRUMENTO));
     res.cookie('lie', numopeFilter.map((acc) => acc.LIE));
     res.cookie('lse', numopeFilter.map((acc) => acc.LSE));
-    const descricaoCodAponta = `Rip Ini`;
-    const boas = 0;
-    const ruins = 0;
-    const faltante = 0;
-    const retrabalhada = 0;
-    const codAponta = 5;
-    const motivo = ``;
     try {
-        const inserted = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime);
-        if (inserted === 'insert done') {
+        const x = await (0, select_1.select)(lookForHisaponta);
+        console.log('linha 90 /x/', x);
+        if (x[0].CODAPONTA === 5) {
             return res.json(numopeFilter);
         }
-        else if (inserted === 'Algo deu errado') {
-            return response.message = 'Algo deu errado';
+        else if (x[0].CODAPONTA === 4) {
+            const inserted = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime);
+            if (inserted === 'insert done') {
+                return res.json(numopeFilter);
+            }
+            else if (inserted === 'Algo deu errado') {
+                return response.message = 'Algo deu errado';
+            }
+            else {
+                return response.message = 'Algo deu errado';
+            }
         }
         else {
-            return response.message = 'Algo deu errado';
+            return res.json({ message: 'Esta tentando acessar uma pagina inválida' });
         }
     }
     catch (error) {

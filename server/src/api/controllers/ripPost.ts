@@ -16,7 +16,7 @@ export const ripPost: RequestHandler = async (req, res) => {
     const NUMERO_OPERACAO: string = decrypted(sanitize(req.cookies['NUMERO_OPERACAO'])) || null
     const CODIGO_MAQUINA: string = decrypted(sanitize(req.cookies['CODIGO_MAQUINA'])) || null
     const codigoPeca: string = decrypted(sanitize(req.cookies['CODIGO_PECA'])) || null
-    const funcionario: string = decrypted(sanitize(req.cookies['CRACHA'])) || null
+    const funcionario: string = decrypted(sanitize(req.cookies['FUNCIONARIO'])) || null
     const revisao: string = String(decrypted(sanitize(req.cookies['REVISAO'])))
     const qtdLibMax: number = Number(decrypted(sanitize(req.cookies['QTDE_LIB']))) || 0
     const updateQtyQuery: string[] = [];
@@ -45,7 +45,12 @@ export const ripPost: RequestHandler = async (req, res) => {
     //const finalProdRip = new Date().getTime() - decrypted(req.cookies['startSetupTime'])
 
     if (Object.keys(setup).length <= 0) {
-        return res.json({ message: "rip vazia" })
+        const x = await insertInto(funcionario, NUMERO_ODF, codigoPeca, revisao, NUMERO_OPERACAO, CODIGO_MAQUINA, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorridoRip)
+        if(x){
+            return res.json({ message: "rip enviada, odf finalizada" })
+        } else {
+            return res.json({message : 'Algo deu errado'})
+        }
     } else {
         for (const [key, value] of Object.entries(setup)) {
             keySan = sanitize(key as string)

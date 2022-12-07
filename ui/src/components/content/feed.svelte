@@ -5,19 +5,18 @@
     import GoodFeed from "../inputs/goodFeed.svelte";
     import Missing from "../inputs/missing.svelte";
     import Rework from "../inputs/rework.svelte";
-    //import ModalConfirmation from "../modal/modalConfirmation.svelte";
     import Cod from "./cod.svelte";
-    //import Container from "./container.svelte";
     import Footer from "./footer.svelte";
     import Status from "./status.svelte";
     let supervisorApi = `/api/v1/supervisor`;
+    let supervisorStop = "api/v1/supervisorParada";
     let imageLoader = "/images/axonLoader.gif";
     let badFeed;
     let missingFeed;
     let reworkFeed;
     let urlS = `/api/v1/point`;
     let motivoUrl = `/api/v1/badFeedMotives`;
-    let dadosOdf = [];
+    let odfData = [];
     let dados = [];
     let showConfirm = false;
     let valorFeed;
@@ -35,40 +34,99 @@
     let loader = false;
     let modalMessage = "";
     let stopModal = false;
-    let showMaqPar = false;
-    //let modalTitle = "Máquina Parada ";
     let urlString = `/api/v1/odfData`;
     let balance;
     getOdfData();
+    let superSuperMaqPar;
+
+    const checkPostSuper = async (event) => {
+    if (!superSuperMaqPar) {
+      superSuperMaqPar = "";
+    } else if (superSuperMaqPar) {
+      if (superSuperMaqPar.length >= 6 && event.key === "Enter") {
+        if (
+          !superSuperMaqPar ||
+          superSuperMaqPar === "0" ||
+          superSuperMaqPar === "00" ||
+          superSuperMaqPar === "000" ||
+          superSuperMaqPar === "0000" ||
+          superSuperMaqPar === "00000" ||
+          superSuperMaqPar === "000000"
+        ) {
+          modalMessage = "Crachá inválido";
+        } else {
+          loader = true;
+          modalMessage = ''
+          doPostSuper();
+        }
+      }
+    }
+  };
+  const doPostSuper = async () => {
+    loader = true;
+    const headers = new Headers();
+    headers.append("Content-Type", "application/json");
+    const res = await fetch(supervisorStop, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        superSuperMaqPar: !superSuperMaqPar ? "" : superSuperMaqPar,
+      }),
+    }).then((res) => res.json());
+    console.log("linha 57 /barcode.svelte/", res)
+
+    if (res.message === "maquina") {
+        loader = true;
+    doPost()    
+      //location.reload();
+      modalMessage = 'Apontamento Liberado'
+    }
+    if (res.message === "supervisor não encontrado") {
+      modalMessage = "Supervisor não encontrado";
+      superParada = false;
+      showmodal = false;
+    }
+
+    if (res.message === "erro na parada de maquina") {
+      modalMessage = "Erro na parada de máquina";
+      showmodal = false;
+      superParada = false;
+    }
+  };
 
     async function getOdfData() {
         const res = await fetch(urlString);
-        dadosOdf = await res.json();
-        qtdPossivelProducao = dadosOdf.odfSelecionada.QTDE_LIB
-        if (qtdPossivelProducao <= 0) {
-            qtdPossivelProducao = 0;
-        }
-    }
-
-    function closePop() {
-        showMaqPar = false;
-        if (stopModal === false) {
-            stopModal = true;
+        odfData = await res.json();
+        if (!odfData) {
+            return (window.location.href = `/#/codigobarras`);
+        } else if (
+            odfData.message === "Esta tentando acessar algo que não pode" ||
+            odfData.message === `codigo de apontamento: 7 = máquina parada` ||
+            odfData.message === `codeApont 2 setup finalizado`
+        ) {
+            return (window.location.href = `/#/codigobarras`);
+        } else if (
+            odfData.message === "codeApont 3 prod Ini." ||
+            odfData.message === "Tudo certo por aqui /OdfData.ts/"
+        ) {
+            loader = false;
+            qtdPossivelProducao = odfData.odfSelecionada.QTDE_LIB;
+            if (qtdPossivelProducao <= 0) {
+                qtdPossivelProducao = 0;
+            }
+        } else if (
+            odfData.message === "codeApont 5 inicio de rip" ||
+            odfData.message === "codeApont 4 prod finalzado"
+        ) {
+            return (window.location.href = `/#/rip`);
         } else {
-            stopModal = false;
+            modalMessage = "Algo deu errado";
         }
-    }
-
-    function closeConfirm() {
-        showMaqPar = false;
-        stopModal = false;
-        window.location.href = `/#/codigobarras`;
     }
 
     async function getRefugodata() {
         const res = await fetch(motivoUrl);
         dados = await res.json();
-        console.log("linha 67", dados);
     }
 
     async function checkForSuper(event) {
@@ -105,8 +163,23 @@
                 supervisor: supervisor,
             }),
         }).then((res) => res.json());
+
+        if (res.message === "Machine stopped") {
+            loader = false;
+            modalMessage = "Machine stopped";
+        }
+
+        if (res.message === "Jumping steps") {
+            window.location.href = `/#/codigobarras`;
+            location.reload();
+        }
+
+        if (res.message === "Already pointed") {
+            loader = false;
+            modalMessage = "Already pointed";
+        }
+
         if (res.message === "Saldo menor que o apontado") {
-            modalMessage = ``;
             modalMessage = "Saldo menor que o apontado";
             balance = res.balance;
             loader = false;
@@ -171,7 +244,6 @@
     async function getSpaceFunc() {
         const res = await fetch(urlS);
         getSpace = await res.json();
-        console.log('linha 174 /feed.svelte/ getSpace /', getSpace);
         if (getSpace.message === "No address") {
             loader = false;
             window.location.href = `${getSpace.url}`;
@@ -195,7 +267,38 @@
         let numberQtdAllowed = Number(qtdPossivelProducao);
         let numberMissing = Number(missingFeed || 0);
         let numberReworkFeed = Number(reworkFeed || 0);
-        //console.log("linha 192", numberQtdAllowed);
+
+        if (
+            numberMissing > 0 &&
+            numberBadFeed + numberGoodFeed + numberReworkFeed === 0
+        ) {
+            return (modalMessage =
+                "Não é possível apontar apenas quantidade de peças faltantes");
+        } else if (
+            numberReworkFeed > 0 &&
+            numberBadFeed + numberGoodFeed + numberMissing === 0
+        ) {
+            return (modalMessage =
+                "Apontando apenas peças retrabalhadas, confirma ?");
+        } else if (
+            numberReworkFeed > 0 &&
+            numberMissing > 0 &&
+            numberBadFeed + numberGoodFeed === 0
+        ) {
+            return (modalMessage =
+                "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?");
+        } else if (
+            (numberMissing > 0 &&
+                numberGoodFeed > 0 &&
+                numberGoodFeed < numberQtdAllowed &&
+                numberBadFeed + numberReworkFeed === 0) ||
+            (numberReworkFeed > 0 &&
+                numberGoodFeed > 0 &&
+                numberGoodFeed < numberQtdAllowed &&
+                numberBadFeed + numberMissing === 0)
+        ) {
+            return (modalMessage = "Apontamento parcial");
+        }
 
         let total =
             numberBadFeed + numberGoodFeed + numberMissing + numberReworkFeed;
@@ -223,12 +326,8 @@
             numberBadFeed + numberMissing + numberReworkFeed === 0 &&
             numberGoodFeed === numberQtdAllowed
         ) {
-            doPost();
             loader = true;
-        }
-
-        if (total > numberQtdAllowed) {
-            showError = true;
+            doPost();
         }
     }
 
@@ -245,26 +344,17 @@
     }
 
     function closeRedirect() {
+        loader = true;
         modalMessage = "";
         showAddress = false;
         window.location.href = `/#/rip`;
     }
 
-    const confirm = async () => {
-        const headers = new Headers();
-        const res = await fetch(postParada, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                value: value,
-            }),
-        }).then((res) => res.json());
-        console.log("linha 261 /feed.svelte/", res);
-        if (res.message === "maquina parada com sucesso") {
-            showMaqPar = true;
-            showmodal = false;
-        }
-    };
+    function closeMachineStopped() {
+        modalMessage = "";
+        showAddress = false;
+        window.location.href = `/#/codigobarras`;
+    }
 
     function handleSS(event) {
         valorFeed = event.detail.goodFeed;
@@ -388,7 +478,7 @@
                     </div>
                     <div class="modalContent">
                         <div class="modalCenter">
-                            <h4>Informe o supervisor: </h4>
+                            <h4>Informe o supervisor:</h4>
                             <div class="input">
                                 <input
                                     on:input={blockForbiddenChars}
@@ -413,46 +503,142 @@
         </div>
     {/if}
 
-    <!-- {#if showMaqPar === true}
-        <ModalConfirmation title={modalTitle} on:message={closeConfirm} />
-    {/if} -->
-    <!-- 
-    {#if stopModal === true}
-        <div class="modalBackground">
-            <div class="itensInsideModal">
-                <div class="closePopDiv">
-                    <button
-                        class="btnPop"
-                        on:keypress={closePop}
-                        on:click={closePop}>FECHAR</button
-                    >
-                </div>
-
-                <div class="modalContent">
-                    <h2 class="modalTitle">Motivo da Parada</h2>
-                    <div class="optionsBar">
-                        <select autofocus tabindex="10" bind:value>
-                            {#each dados as item}
-                                <option>{item}</option>
-                            {/each}
-                        </select>
+    {#if modalMessage === "Apontando apenas peças retrabalhadas, confirma ?"}
+        <div class="fundo">
+            <div class="header">
+                <div class="content-area">
+                    <div class="modalTitle">
+                        <h3>{modalMessage}</h3>
                     </div>
-
-                    <div class="confirmPopDiv">
-                        <button
-                            class="btnPopConfirm"
-                            id="confirmPop"
-                            tabindex="11"
-                            on:keypress={confirm}
-                            on:click={confirm}
+                    <div class="modalContent">
+                        <div class="modalCenter">
+                            <h4>Informe o supervisor:</h4>
+                            <div class="input">
+                                <input
+                                    on:input={blockForbiddenChars}
+                                    on:keypress={checkForSuper}
+                                    bind:value={supervisor}
+                                    autofocus
+                                    class="supervisor"
+                                    type="text"
+                                    name="supervisor"
+                                    id="supervisor"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modalFooter">
+                        <button on:keypress={close} on:click={close}
+                            >Fechar</button
                         >
-                            CONFIRMAR
-                        </button>
                     </div>
                 </div>
             </div>
         </div>
-    {/if} -->
+    {/if}
+
+    {#if modalMessage === "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?"}
+        <div class="fundo">
+            <div class="header">
+                <div class="content-area">
+                    <div class="modalTitle">
+                        <h3>{modalMessage}</h3>
+                    </div>
+                    <div class="modalContent">
+                        <div class="modalCenter">
+                            <h4>Informe o supervisor:</h4>
+                            <div class="input">
+                                <input
+                                    on:input={blockForbiddenChars}
+                                    on:keypress={checkForSuper}
+                                    bind:value={supervisor}
+                                    autofocus
+                                    class="supervisor"
+                                    type="text"
+                                    name="supervisor"
+                                    id="supervisor"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modalFooter">
+                        <button on:keypress={close} on:click={close}
+                            >Fechar</button
+                        >
+                    </div>
+                </div>
+            </div>
+        </div>
+    {/if}
+  
+    {#if  modalMessage === 'Apontamento Liberado'}
+        <div class="fundo">
+            <div class="header">
+                <div class="closed">
+                    <h2>
+                        {modalMessage}
+                    </h2>
+                </div>
+                <button on:click={close} on:keypress={close}>Fechar</button>
+            </div>
+        </div>
+    {/if}
+    {#if modalMessage === "Machine stopped"}
+        <div class="fundo">
+            <div class="header">
+                <div class="closed">
+                    <h2>Máquina parada</h2>
+                </div>
+                <div>
+                    <div>
+                        <p>Chame um supervisor</p>
+                    </div>
+                    <div>
+                        <input
+                            autofocus
+                            tabindex="12"
+                            id="supervisor"
+                            name="supervisor"
+                            type="text"
+                            on:input={blockForbiddenChars}
+                            on:keypress={checkPostSuper}
+                            onkeyup="this.value = this.value.toUpperCase()"
+                            bind:value={superSuperMaqPar}
+                        />
+                    </div>
+                </div>
+                <button on:keypress={close} on:click={close}>fechar</button>
+            </div>
+        </div>
+    {/if}
+
+    {#if modalMessage === "Already pointed"}
+        <div class="fundo">
+            <div class="header">
+                <div class="closed">
+                    <h2>
+                        ODF apontada, finalize o processo para poder apontar
+                        novamente
+                    </h2>
+                </div>
+                <button on:click={close} on:keypress={close}>Fechar</button>
+                <button on:keypress={closeRedirect} on:click={closeRedirect}
+                    >Continuar</button
+                >
+            </div>
+        </div>
+    {/if}
+
+    {#if modalMessage === "Não é possível apontar apenas quantidade de peças faltantes"}
+        <div class="fundo">
+            <div class="header">
+                <div class="closed">
+                    <h2>{modalMessage}</h2>
+                </div>
+                <button on:keypress={close} on:click={close}>fechar</button>
+            </div>
+        </div>
+    {/if}
 
     {#if modalMessage === "Saldo menor que o apontado"}
         <div class="fundo">
@@ -991,7 +1177,7 @@
         }
     }
 
-    .content-area{
+    .content-area {
         width: 100%;
         margin: 0%;
         padding: 0%;

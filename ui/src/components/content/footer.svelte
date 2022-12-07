@@ -23,13 +23,7 @@
   async function getOdfData() {
     const res = await fetch(urlString);
     dadosOdf = await res.json();
-    console.log("linha 26 /footer.svelte/",dadosOdf );
     let odf  = dadosOdf.odfSelecionada
-    console.log("linha 27 /footer.svelte/", odf);
-
-    // Object.keys(odf).forEach(key => {
-    //   odf[key] = odf[key] ?? "";
-    // });
 
     modifyObj(Object.keys(dadosOdf.odfSelecionada), odf)
 

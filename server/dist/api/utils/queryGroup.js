@@ -11,8 +11,8 @@ const selectedItensFromOdf = async (groupOdf, indexOdf) => {
     if (indexOdf <= 0) {
         response.message = 'Primeira ODF selecionada';
         response.beforeOdf = groupOdf[indexOdf];
-        response.nextOdf = groupOdf[indexOdf + 1];
         response.odf = groupOdf[indexOdf];
+        response.nextOdf = groupOdf[indexOdf + 1];
         return response;
     }
     else if (indexOdf + 1 === groupOdf.length) {

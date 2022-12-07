@@ -53,6 +53,9 @@ const cookieCleaner = async (res) => {
         'DATA_ENTREGA_PEDIDO',
         'CRACHA',
         'FUNCIONARIO',
+        'quantidade',
+        'url',
+        'message'
     ].forEach(cookie => {
         res.clearCookie(`${cookie}`);
     });

@@ -20,7 +20,7 @@ const ripPost = async (req, res) => {
     const NUMERO_OPERACAO = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])) || null;
     const CODIGO_MAQUINA = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA'])) || null;
     const codigoPeca = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])) || null;
-    const funcionario = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['CRACHA'])) || null;
+    const funcionario = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])) || null;
     const revisao = String((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['REVISAO'])));
     const qtdLibMax = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB']))) || 0;
     const updateQtyQuery = [];
@@ -40,7 +40,13 @@ const ripPost = async (req, res) => {
     const retrabalhada = 0;
     const tempoDecorridoRip = new Date().getTime() - Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['startRip'])));
     if (Object.keys(setup).length <= 0) {
-        return res.json({ message: "rip vazia" });
+        const x = await (0, insert_1.insertInto)(funcionario, NUMERO_ODF, codigoPeca, revisao, NUMERO_OPERACAO, CODIGO_MAQUINA, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorridoRip);
+        if (x) {
+            return res.json({ message: "rip enviada, odf finalizada" });
+        }
+        else {
+            return res.json({ message: 'Algo deu errado' });
+        }
     }
     else {
         for (const [key, value] of Object.entries(setup)) {

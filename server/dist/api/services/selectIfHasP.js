@@ -13,7 +13,6 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
     let response = {
         message: '',
         quantidade: quantidadeOdf,
-        url: '',
         codigoFilho: [],
         condic: '',
         execut: 0,

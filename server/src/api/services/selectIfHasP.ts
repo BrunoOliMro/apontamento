@@ -8,7 +8,6 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
     let response: any = {
         message: '',
         quantidade: quantidadeOdf,
-        url: '',
         codigoFilho: [],
         condic: '',
         execut: 0,

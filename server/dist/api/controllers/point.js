@@ -26,13 +26,12 @@ const point = async (req, res) => {
     else {
         condic = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['condic']))) || null;
     }
-    console.log('linha 26 /searchOdf/');
     const odfNumber = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))) || 0;
     const operationNumber = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"])) || null;
     const codigoPeca = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])) || null;
     const machineCode = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies["CODIGO_MAQUINA"])) || null;
     const qtdLibMax = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB']))) || 0;
-    const employee = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['CRACHA'])) || null;
+    const employee = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])) || null;
     const revisao = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['REVISAO'])) || null;
     const updateQtyQuery = [];
     const updateQtyQuery2 = [];
@@ -41,13 +40,26 @@ const point = async (req, res) => {
         balance: 0,
         url: '',
     };
-    console.log('lisjbwdvybwr');
     res.cookie("startRip", Number(new Date().getTime()));
-    console.log('linha 38');
     const finalProdTimer = Number(new Date().getTime() - Number((0, decryptedOdf_1.decrypted)(String(req.cookies['startProd']))) / 1000) || 0;
     const valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed));
     let faltante = qtdLibMax - valorTotalApontado;
     console.log("linha 56 /point.ts/");
+    const lookForHisaponta = `SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${odfNumber} AND NUMOPE = ${operationNumber} AND ITEM = '${machineCode}' ORDER BY DATAHORA DESC`;
+    const x = await (0, select_1.select)(lookForHisaponta);
+    console.log('x', x);
+    if (x[0].CODAPONTA === 4 || x[0].CODAPONTA === 5 || x[0].CODAPONTA === 6) {
+        return res.json({ message: 'Already pointed' });
+    }
+    else if (x[0].CODAPONTA === 7) {
+        return res.json({ message: 'Machine stopped' });
+    }
+    else if (x[0].CODAPONTA === 1 || x[0].CODAPONTA === 2) {
+        return res.json({ message: 'Jumping steps' });
+    }
+    else if (x[0].CODAPONTA !== 3) {
+        return res.json({ message: 'Algo deu errado' });
+    }
     if (!valorTotalApontado) {
         return res.json({ message: 'Algo deu errado' });
     }
@@ -92,6 +104,7 @@ const point = async (req, res) => {
         console.log('linha 107 /searchOdf/');
         return res.json({ message: 'Quantidade excedida' });
     }
+    console.log('faltante', faltante);
     if (!missingFeed) {
         faltante = qtdLibMax - valorTotalApontado;
     }
@@ -170,43 +183,27 @@ const point = async (req, res) => {
         }
     }
     try {
-        if (valorTotalApontado === qtdLibMax) {
-            try {
-                const updateQtdpointed = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'N' WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${operationNumber}' AND CODIGO_MAQUINA = '${machineCode}'`;
-                await (0, update_1.update)(updateQtdpointed);
-            }
-            catch (error) {
-                console.log('linha 212 - error - //point.ts', error);
-                return res.json({ message: 'Algo deu errado' });
-            }
-        }
-        try {
-            console.log("linha 228 /point.ts/ Alterando quantidade apontada...");
-            const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${operationNumber}' AND CODIGO_MAQUINA = '${machineCode}'`;
-            await (0, update_1.update)(updateCol);
-        }
-        catch (error) {
-            console.log("linha 209 - error - /point.ts/", error);
-            return res.json({ message: 'Algo deu errado' });
-        }
-        try {
-            console.log("linha 238 /point.ts/ Inserindo dados de apontamento...");
-            const codAponta = 4;
-            const descricaoCodigoAponta = 'Fin Prod';
-            await (0, insert_1.insertInto)(employee, odfNumber, codigoPeca, revisao, operationNumber, machineCode, qtdLibMax, qtdBoas, badFeed, codAponta, descricaoCodigoAponta, motivorefugo, faltante, reworkFeed, finalProdTimer);
-        }
-        catch (error) {
-            console.log("erro ao fazer insert linha 220 /point.ts/", error);
-            return res.json({ message: 'Algo deu errado' });
-        }
-        qtdBoas = (0, encryptOdf_1.encrypted)(String(qtdBoas));
-        res.cookie('qtdBoas', qtdBoas);
-        return res.json({ message: 'Sucesso ao apontar' });
+        console.log("linha 228 /point.ts/ Alterando quantidade apontada...");
+        const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}', QTDE_LIB = QTDE_LIB + ${valorTotalApontado}, QTD_FALTANTE = ${faltante} WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${operationNumber}' AND CODIGO_MAQUINA = '${machineCode}'`;
+        await (0, update_1.update)(updateCol);
     }
     catch (error) {
-        console.log(error);
-        return res.json({ message: 'Erro ao apontar' });
+        console.log("linha 209 - error - /point.ts/", error);
+        return res.json({ message: 'Algo deu errado' });
     }
+    try {
+        console.log("linha 238 /point.ts/ Inserindo dados de apontamento...");
+        const codAponta = 4;
+        const descricaoCodigoAponta = 'Fin Prod';
+        await (0, insert_1.insertInto)(employee, odfNumber, codigoPeca, revisao, operationNumber, machineCode, qtdLibMax, qtdBoas, badFeed, codAponta, descricaoCodigoAponta, motivorefugo, faltante, reworkFeed, finalProdTimer);
+    }
+    catch (error) {
+        console.log("erro ao fazer insert linha 220 /point.ts/", error);
+        return res.json({ message: 'Algo deu errado' });
+    }
+    qtdBoas = (0, encryptOdf_1.encrypted)(String(qtdBoas));
+    res.cookie('qtdBoas', qtdBoas);
+    return res.json({ message: 'Sucesso ao apontar' });
 };
 exports.point = point;
 //# sourceMappingURL=point.js.map

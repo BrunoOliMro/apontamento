@@ -27,7 +27,7 @@ export const cookieCleaner = async (res: any) => {
         'cstNumope',
         'encodedOdfNumber',
         'badge',
-        'DBSYNC_DATE', 
+        'DBSYNC_DATE',
         'TEMPO_APTO_TOTAL',
         'DT_INI_KORP',
         'HORA_FIM',
@@ -40,17 +40,20 @@ export const cookieCleaner = async (res: any) => {
         'QTDE_ODF',
         'DT_FIM_OP',
         'CST_DESENHO',
-        'DT_FIM_KORP', 
+        'DT_FIM_KORP',
         'EMPRESA_RECNO',
         'CODIGO_CLIENTE',
         'DT_ENTREGA_ODF',
-        'QTDE_APONTADA', 
-        'QTD_REFUGO', 
-        'DT_INICIO_OP', 
+        'QTDE_APONTADA',
+        'QTD_REFUGO',
+        'DT_INICIO_OP',
         'DATA_ENTREGA_PEDIDO',
         'CRACHA',
         'FUNCIONARIO',
+        'quantidade',
+        'url',
+        'message'
     ].forEach(cookie => {
-            res.clearCookie(`${cookie}`)
-        });
+        res.clearCookie(`${cookie}`)
+    });
 }

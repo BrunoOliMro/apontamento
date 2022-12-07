@@ -6,10 +6,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.stopPost = void 0;
 const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const insert_1 = require("../services/insert");
+const select_1 = require("../services/select");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const stopPost = async (req, res) => {
     const numeroOdf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"]))) || null;
-    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CRACHA']))) || null;
+    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO']))) || null;
     const codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA']))) || null;
     const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
     const numeroOperacao = (0, decryptedOdf_1.decrypted)(String(req.cookies['NUMERO_OPERACAO'])) || null;
@@ -25,22 +26,30 @@ const stopPost = async (req, res) => {
     const end = new Date().getTime() || 0;
     const start = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["startSetupTime"]))) || 0;
     const final = Number(end - start) || 0;
-    try {
-        const resour = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, final);
-        console.log("parada", resour);
-        if (resour === 'insert done') {
-            return res.status(200).json({ message: 'maquina parada com sucesso' });
-        }
-        else if (resour === 'Algo deu errado') {
-            return res.json({ message: 'erro ao parar a maquina' });
-        }
-        else {
-            return res.json({ message: 'erro ao parar a maquina' });
-        }
+    const y = `SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${numeroOdf} AND NUMOPE = ${numeroOperacao} AND ITEM = '${codigoMaq}' ORDER BY DATAHORA DESC`;
+    const x = await (0, select_1.select)(y);
+    console.log('x', x);
+    if (x[0].CODAPONTA === 7) {
+        return res.json({ message: 'Máquina já parada' });
     }
-    catch (error) {
-        console.log(error);
-        return res.json({ message: "ocorre um erro ao tentar parar a maquina" });
+    else {
+        try {
+            const resour = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, final);
+            console.log("parada", resour);
+            if (resour === 'insert done') {
+                return res.status(200).json({ message: 'maquina parada com sucesso' });
+            }
+            else if (resour === 'Algo deu errado') {
+                return res.json({ message: 'erro ao parar a maquina' });
+            }
+            else {
+                return res.json({ message: 'erro ao parar a maquina' });
+            }
+        }
+        catch (error) {
+            console.log(error);
+            return res.json({ message: "ocorre um erro ao tentar parar a maquina" });
+        }
     }
 };
 exports.stopPost = stopPost;

@@ -11,20 +11,12 @@
     let imagemMsg = "";
     let selected;
     let ar = []
+    let img = `img`
 
-    function selectPic(e) {
-        selected = e.target.src.split("000")[1];
-        console.log('selected', e.target);
-
-
-        ar.push(selected)
-
-        console.log('linha 22', ar);
-
-        if(selected === e.target.src){
-            console.log('ienurbnubr');
-        }
-    }
+    // function selectPic(e) {
+    //     selected = e.target.src.split("000")[1];
+    //     console.log('selected', e.target);
+    // }
 
     async function getIMAGEM() {
         const res = await fetch(urlString);
@@ -37,19 +29,19 @@
     function right() {
         console.log('linha 27 /rotation/', rotation);
         rotation += 90;
-        document.getElementById(`${selected}`).style.transition = "all 1s";
-        document.getElementById(`${selected}`).style.transform = `rotate(${rotation}deg)`;
+        document.getElementById(`img`).style.transition = "all 1s";
+        document.getElementById(`img`).style.transform = `rotate(${rotation}deg)`;
     }
 
     function left() {
         console.log('linha 34 /rotation/', rotation);
         rotation -= 90;
-        document.getElementById(`${selected}`).style.transition = "all 1s";
-        document.getElementById(`${selected}`).style.transform = `rotate(${rotation}deg)`;
+        document.getElementById(`img`).style.transition = "all 1s";
+        document.getElementById(`img`).style.transform = `rotate(${rotation}deg)`;
     }
 
     function zoomIn() {
-        var img = document.getElementById(`${selected}`);
+        var img = document.getElementById(`img`);
         var width = img.clientWidth;
         img.style.width = width + zoomNumber + "px";
         console.log('linha 27 /zoom/', img);
@@ -57,7 +49,7 @@
 
     function zoomOut() {
         
-        var img = document.getElementById(`${selected}`);
+        var img = document.getElementById(`img`);
         var width = img.clientWidth;
         img.style.width = width - zoomNumber + "px";
         console.log('linha 27 /zoom/', img);
@@ -127,12 +119,13 @@
             <div class="frame">
                 {#each imagemBack as img}
                     {#if imagemBack.length > 0}
-                        <div id={img} on:click|preventDefault={selectPic}>
+                    <!-- on:click|preventDefault={selectPic} -->
+                        <div id={img} >
                             <img
                                 media="print"
                                 class="img"
                                 src={img}
-                                id={img}
+                                id='img'
                                 alt=""
                             />
                         </div>

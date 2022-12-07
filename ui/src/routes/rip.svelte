@@ -15,26 +15,30 @@
     let supervisorRouter = `/api/v1/supervisor`;
     let showError = false;
     let showSetup = false;
-    const promiseResult = callRip();
     let lie;
     let lsd;
     let loader = false;
     let odfFinish = false;
     let badgeMessage = "";
     let redirect;
+    let promiseResult =  callRip();
+    let codeNoteUrl = `/api/v1/codeNote`
 
     async function callRip() {
         const res = await fetch(ripRouter);
         ripTable = await res.json();
-
-        if(ripTable.message === 'Não há rip a mostrar'){
-            loader = true;
-            await doPost()
-            return window.location.href = `${ripTable.url}`;
+        if (ripTable) {
+            loader = false;
+            if (ripTable.message === "Não há rip a mostrar") {
+                loader = true;
+                doPost();
+                return (window.location.href = `${ripTable.url}`);
+            }
+            lie = ripTable.map((acc) => acc.LIE);
+            lsd = ripTable.map((acc) => acc.LSE);
+        } else {
+            return badgeMessage = 'Algo deu errado'
         }
-
-        lie = ripTable.map((acc) => acc.LIE);
-        lsd = ripTable.map((acc) => acc.LSE);
     }
 
     function checkSuper(event) {
@@ -61,14 +65,35 @@
         console.log("linha 60 /do post Super/", res);
         if (res.message === "Supervisor encontrado") {
             showSuper = false;
-            await doPost();
-            //odfFinish = true;
-            //window.location.href = "/#/codigobarras";
-            //location.reload();
+            doPost();
         } else if (res.message === "Supervisor não encontrado") {
             showError = true;
         }
     };
+
+    // const checkForCodeNote = async () =>{
+    //     loader = true;
+    //     const headers = new Headers();
+    //     const res = await fetch(codeNoteUrl, {
+    //         method: "POST",
+    //         headers: { "Content-Type": "application/json" },
+    //         body: JSON.stringify({
+    //             setup: setup,
+    //         }),
+    //     }).then((res) => res.json());
+    //     console.log('linha 101 /res.rip/', res);
+    //     if(res){
+    //         if(res.message === ''){
+    //             doPost()
+    //         } else if(res.message === ''){
+    //             window.location.href = "/#/codigobarras";
+    //         } else {
+    //             return badgeMessage = 'Algo deu errado'
+    //         }
+    //     } else {
+    //         return badgeMessage = 'Algo deu errado'
+    //     }
+    // }
 
     const doPost = async () => {
         loader = true;
@@ -82,20 +107,21 @@
         }).then((res) => res.json());
         console.log("linha 84 res. rip", res);
 
-        if (res) {
+        if (res.message === "codeApont 4 prod finalzado") {
             loader = false;
+            console.log("rip ta certo");
         }
 
-        if(res.message === 'Não há rip a mostrar'){
-            return window.location.href =`${res.url}`;
+        if (res.message === "Não há rip a mostrar") {
+            return (window.location.href = `${res.url}`);
         }
         if (res.message === "rip vazia") {
             showErrorEmpty = true;
         }
         if (res.message === "rip enviada, odf finalizada") {
             odfFinish = true;
-            redirect = res.url;
-            //window.location.href = "/#/codigobarras";
+            //redirect = res.url;
+            window.location.href = "/#/codigobarras";
         }
         if (res.message === "ocorreu um erro ao enviar os dados da rip") {
             badgeMessage = "ocorreu um erro ao enviar os dados da rip";
@@ -132,7 +158,10 @@
     }
 
     const check = () => {
-        if (Object.values(setup).length <= 0 || Object.values(setup).length < ripTable.length) {
+        if (
+            Object.values(setup).length <= 0 ||
+            Object.values(setup).length < ripTable.length
+        ) {
             return (showSuper = true);
         }
 
@@ -162,7 +191,7 @@
                 });
         });
 
-        console.log('linha 165 /rip.svelte/', callSupervisor,);
+        console.log("linha 165 /rip.svelte/", callSupervisor);
 
         if (callSupervisor === true) {
             loader = false;

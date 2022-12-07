@@ -7,6 +7,8 @@
   let barcode = "";
   let urlS = `/api/v1/odf`;
   let urlBagde = `/api/v1/badge`;
+  let urlCodeNote = `/api/v1/codeNote`;
+
   let supervisorApi = "api/v1/supervisorParada";
   let badge = "";
   let showmodal = false;
@@ -27,6 +29,7 @@
   let showBreadcrumb = false;
   let loader = false;
   let modalMessage = "";
+  let dataCodeNote;
 
   let badgeMsg = "";
   if (window.location.href.includes("?")) {
@@ -34,13 +37,26 @@
   }
 
   const checkPostSuper = async (event) => {
-    if (superSuperMaqPar.length >= 6 && event.key === "Enter") {
-      if (superSuperMaqPar === "000000") {
-        modalMessage = "Crachá inválido";
+    if (!superSuperMaqPar) {
+      superSuperMaqPar = "";
+    } else if (superSuperMaqPar) {
+      if (superSuperMaqPar.length >= 6 && event.key === "Enter") {
+        if (
+          !superSuperMaqPar ||
+          superSuperMaqPar === "0" ||
+          superSuperMaqPar === "00" ||
+          superSuperMaqPar === "000" ||
+          superSuperMaqPar === "0000" ||
+          superSuperMaqPar === "00000" ||
+          superSuperMaqPar === "000000"
+        ) {
+          modalMessage = "Crachá inválido";
+        } else {
+          loader = true;
+          superParada = false;
+          doPostSuper();
+        }
       }
-      loader = true
-      superParada = false
-      doPostSuper();
     }
   };
 
@@ -65,7 +81,6 @@
     if (res.message === "supervisor não encontrado") {
       modalMessage = "Supervisor não encontrado";
       superParada = false;
-      //paradaMsg = "supervisor não encontrado";
       showmodal = false;
     }
 
@@ -73,7 +88,6 @@
       modalMessage = "Erro na parada de máquina";
       showmodal = false;
       superParada = false;
-      //paradaMsg = "erro na parada de maquina";
     }
   };
 
@@ -95,7 +109,6 @@
     if (barcode.length < 16) {
       return (modalMessage = "Algo deu errado");
     }
-
     loader = true;
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
@@ -106,20 +119,16 @@
         barcode,
       }),
     }).then((res) => res.json());
-    console.log("linha 89 res /barcode/", res);
+    console.log("linha 164 /res.barcode/", res);
 
-    if (res.message === "Valores Reservados") {
-      window.location.href = "/#/ferramenta";
+    if (res.message === "Rip iniciated" || res.message === "Pointed") {
+      loader = true;
+      window.location.href = "/#/rip";
       location.reload();
     }
 
-    if (res.message === "Quantidade para reserva inválida") {
-      modalMessage = "Quantidade para reserva inválida";
-      loader = false;
-    }
-
-    if (res.message === "Não há item para reservar") {
-      modalMessage = "Não há item para reservar";
+    if (res.message === "Proceed with process") {
+      loader = true;
       window.location.href = "/#/ferramenta";
       location.reload();
     }
@@ -129,28 +138,11 @@
       modalMessage = "Algo deu errado";
     }
 
-    // if (res.message === "codeApont 1 setup iniciado") {
-    //   loader = false;
-    //   window.location.href = "/#/ferramenta";
-    // }
-
-    // if (res.message === "codeApont 2 setup finalizado") {
-    //   loader = false;
-    //   window.location.href = "/#/ferramenta";
-    // }
-
-    if (res.message === "codeApont 3 prod Ini.") {
-      loader = false;
-      window.location.href = "/#/codigobarras/apontamento";
-    }
-
-    // if (res.message === "codeApont 4 prod finalzado") {
-    //   window.location.href = "/#/rip";
-    // }
-
-    if (res.message === "codeApont 5 inicio de rip") {
-      window.location.href = "/#/rip";
-      loader = true;
+    if (res.message === "Máquina Parada") {
+      // loader = false;
+      // superParada = true;
+      window.location.href = '/#/codigobarras/apontamento'
+      location.reload
     }
 
     if (res.message === "codigo de barras vazio") {
@@ -171,19 +163,18 @@
   };
 
   function checkBeforeBadge(event) {
-    if(!badge){
-      badge = ''
-    } else if(badge){
-      if ( badge.length >= 6 && event.key === "Enter") {
+    if (!badge) {
+      badge = "";
+    } else if (badge) {
+      if (badge.length >= 6 && event.key === "Enter") {
         if (
           !badge ||
-          badge === "000000" ||
-          badge === "0" ||
           badge === "0" ||
           badge === "00" ||
           badge === "000" ||
           badge === "0000" ||
-          badge === "00000"
+          badge === "00000" ||
+          badge === "000000"
         ) {
           modalMessage = "Crachá inválido";
         } else {
@@ -248,22 +239,21 @@
       }),
     }).then((res) => res.json());
     loader = false;
-    console.log('linha 245 -return-', res);
+    console.log("linha 245 -return-", res);
 
-    barcodeReturn = ''
-    supervisor = ''
-    quantity = ''
-    returnValueStorage = ''
+    barcodeReturn = "";
+    supervisor = "";
+    quantity = "";
+    returnValueStorage = "";
     showmodal = false;
 
-
-    if(res.message === 'Refugo Inválido'){
-      modalMessage = 'Não há refugo para estornar'
+    if (res.message === "Refugo Inválido") {
+      modalMessage = "Não há refugo para estornar";
       showmodal = false;
     }
 
-    if(res.message === 'Valor acima'){
-      modalMessage = 'Valor apontado maior que o possível'
+    if (res.message === "Valor acima") {
+      modalMessage = "Valor apontado maior que o possível";
       showmodal = false;
     }
 
@@ -273,9 +263,9 @@
       showmodal = false;
       //location.reload();
     }
-    if(res.message === 'Essa não pode ser estornada'){
-      modalMessage = 'Essa não pode ser estornada'
-      showmodal = false
+    if (res.message === "Essa não pode ser estornada") {
+      modalMessage = "Essa não pode ser estornada";
+      showmodal = false;
     }
 
     if (res.message === "estorno feito") {
@@ -403,7 +393,7 @@
       </div>
     {/if}
 
-    {#if modalMessage === 'Não há refugo para estornar'}
+    {#if modalMessage === "Não há refugo para estornar"}
       <ModalConfirmation title={modalMessage} on:message={closePopCor} />
     {/if}
 

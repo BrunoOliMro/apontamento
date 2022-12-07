@@ -18,13 +18,11 @@ const point_1 = require("./controllers/point");
 const searchBadge_1 = require("./controllers/searchBadge");
 const getPoint_1 = require("./controllers/getPoint");
 const supervisor_1 = require("./controllers/supervisor");
-const codeNote_1 = require("./controllers/codeNote");
 const stopSupervisor_1 = require("./controllers/stopSupervisor");
 const apiRouter = (0, express_1.Router)();
 apiRouter.route("/badge")
     .post(searchBadge_1.searchBagde);
 apiRouter.route("/odf")
-    .post(codeNote_1.codeNote)
     .post(searchOdf_1.searchOdf);
 apiRouter.route("/tools")
     .get(tools_1.tools);

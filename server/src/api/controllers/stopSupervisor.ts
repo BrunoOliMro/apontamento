@@ -6,15 +6,13 @@ import { decrypted } from "../utils/decryptedOdf";
 
 export const stopSupervisor: RequestHandler = async (req, res) => {
     const supervisor: string | null = String(sanitize(req.body['superSuperMaqPar'])) || null
-    console.log('linha 9 /stopSuper/');
     const numeroOdf: number = decrypted(String(sanitize(req.cookies['NUMERO_ODF']))) || null
     const NUMERO_OPERACAO: string = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
     const CODIGO_MAQUINA: string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
     const qtdLibMax: number = decrypted(String(sanitize(req.cookies['QTDE_LIB']))) || null
-    const funcionario: string = decrypted(String(sanitize(req.cookies['CRACHA']))) || null
+    const funcionario: string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
     const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
     const codigoPeca: string = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
-    console.log('linha 16 /stopsuper/');
     const boas = 0
     const faltante = 0
     const retrabalhada = 0
@@ -24,7 +22,7 @@ export const stopSupervisor: RequestHandler = async (req, res) => {
     const motivo = ''
     const tempoDecorrido = 0
     const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`
-
+    
     try {
         const resource = await select(lookForSupervisor)
         console.log('linha 28 /stopSupervisor/', resource);
