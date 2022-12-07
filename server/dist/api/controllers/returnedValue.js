@@ -61,15 +61,11 @@ const returnedValue = async (req, res) => {
     if (index < 0) {
         index = resourceOdfData.length;
     }
-    console.log('linha 72', index);
     let availableToReturn = resourceOdfData[index - 1];
-    console.log('linha 73', availableToReturn);
     if (!availableToReturn) {
         availableToReturn = resourceOdfData[index];
     }
     let valorTotal = boas + ruins;
-    console.log('linha 74', dados.numOper);
-    console.log('linha 75', "00" + availableToReturn.NUMERO_OPERACAO.replaceAll(' ', '0'));
     if (availableToReturn.QTDE_APONTADA <= 0) {
         return res.json({ message: "não ha valor que possa ser devolvido" });
     }
@@ -111,7 +107,7 @@ const returnedValue = async (req, res) => {
         if (selectSuper.length > 0) {
             try {
                 const insertHisCodReturned = await (0, insert_1.insertInto)(funcionario, dados.numOdf, codigoPeca, revisao, dados.numOper, dados.codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, tempoDecorrido);
-                if (insertHisCodReturned === 'insert done') {
+                if (insertHisCodReturned) {
                     const updateQuery = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA - '${valorTotal}', QTD_REFUGO = QTD_REFUGO - ${ruins} WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'`;
                     const updateValuesOnPcp = await (0, update_1.update)(updateQuery);
                     if (updateValuesOnPcp === 'Update sucess') {

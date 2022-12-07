@@ -10,18 +10,18 @@ const global_config_1 = require("../../global.config");
 const select_1 = require("../services/select");
 const selectAddress_1 = require("../services/selectAddress");
 const update_1 = require("../services/update");
+const codeNote_1 = require("../utils/codeNote");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const getPoint = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let NUMERO_ODF = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"]))) || null;
+    let odfNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"]))) || null;
     let qtdBoas = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["qtdBoas"]))) || null;
-    let NUMERO_OPERACAO = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_OPERACAO']))) || null;
-    const CODIGO_MAQUINA = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
+    let operationNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_OPERACAO']))) || null;
+    const codeMachine = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
     let codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA']))) || null;
     let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO']))) || null;
     let qtdProduzir = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['QTDE_LIB']))) || null;
     let revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
-    console.log("linha 20 /revisao/", revisao);
     const updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`;
     var address;
     var response = {
@@ -44,11 +44,15 @@ const getPoint = async (req, res) => {
         }
     }
     const ip = String(Object.entries(results)[0][1]);
-    NUMERO_OPERACAO = "00" + NUMERO_OPERACAO.replaceAll(" ", '0');
-    console.log("linha 46 /NUMERO_OPERACAO/", NUMERO_OPERACAO);
+    const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine);
+    if (x !== 'Pointed') {
+        return res.json({ message: x });
+    }
+    operationNumber = "00" + operationNumber.replaceAll(" ", '0');
+    console.log("linha 46 /NUMERO_OPERACAO/", operationNumber);
     try {
-        if (NUMERO_OPERACAO === "00999") {
-            let numeroOp = NUMERO_OPERACAO.replaceAll('0', '');
+        if (operationNumber === "00999") {
+            let numeroOp = operationNumber.replaceAll('0', '');
             let y = `SELECT TOP 1 * FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${codigoPeca}' AND NUMOPE = '${numeroOp}' AND REVISAO = ${revisao}`;
             const x = await (0, select_1.select)(y);
             console.log("linha 52", x[0].EXECUT);
@@ -73,7 +77,7 @@ const getPoint = async (req, res) => {
             if (areaCubica < areaCubicaMax) {
                 console.log("passou no terceiro teste ...");
             }
-            if (CODIGO_MAQUINA !== 'EX002') {
+            if (codeMachine !== 'EX002') {
                 let condicional = `= '${codigoPeca}'`;
                 let condicional2 = `IS NULL`;
                 let fisrtSelectAddress = await (0, selectAddress_1.selectAddress)(condicional, 5);
@@ -100,7 +104,7 @@ const getPoint = async (req, res) => {
                     response.address = secondSelectAddress[indice].ENDERECO;
                 }
             }
-            if (CODIGO_MAQUINA === 'EX002') {
+            if (codeMachine === 'EX002') {
                 console.log("linha 119 /getPoint.ts/", codigoPeca);
                 let condicional = `= '${codigoPeca}'`;
                 let condicional2 = `IS NULL`;
@@ -144,7 +148,7 @@ const getPoint = async (req, res) => {
                 INSERT INTO HISREAL
                     (CODIGO, DOCUMEN, DTRECEB, QTRECEB, VALPAGO, FORMA, SALDO, DATA, LOTE, USUARIO, ODF, NOTA, LOCAL_ORIGEM, LOCAL_DESTINO, CUSTO_MEDIO, CUSTO_TOTAL, CUSTO_UNITARIO, CATEGORIA, DESCRICAO, EMPRESA_RECNO, ESTORNADO_APT_PRODUCAO, CST_ENDERECO, VERSAOSISTEMA, CST_SISTEMA,CST_HOSTNAME,CST_IP) 
                 SELECT 
-                    CODIGO, '${NUMERO_ODF}/${codigoPeca}', GETDATE(), ${qtdBoas}, 0 , 'E', ${resultQuery[0].SALDO} + ${qtdBoas}, GETDATE(), '0', '${funcionario}', '${NUMERO_ODF}', '0', '0', '0', 0, 0, 0, '0', 'DESCRI', 1, 'E', '${address}', 1.00, 'APONTAMENTO', '${hostname}', '${ip}'
+                    CODIGO, '${odfNumber}/${codigoPeca}', GETDATE(), ${qtdBoas}, 0 , 'E', ${resultQuery[0].SALDO} + ${qtdBoas}, GETDATE(), '0', '${funcionario}', '${odfNumber}', '0', '0', '0', 0, 0, 0, '0', 'DESCRI', 1, 'E', '${address}', 1.00, 'APONTAMENTO', '${hostname}', '${ip}'
                 FROM ESTOQUE(NOLOCK)
                 WHERE 1 = 1 
                 AND CODIGO = '${codigoPeca}' 
@@ -157,7 +161,7 @@ const getPoint = async (req, res) => {
                 }
                 try {
                     let updateStorage;
-                    if (NUMERO_OPERACAO === "00999") {
+                    if (operationNumber === "00999") {
                         updateStorage = await (0, update_1.update)(updateQuery);
                     }
                     console.log("linha 197 /getPoint.ts/", updateStorage);

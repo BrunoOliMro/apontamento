@@ -4,6 +4,7 @@ exports.selectedTools = exports.tools = void 0;
 const pictures_1 = require("../pictures");
 const insert_1 = require("../services/insert");
 const select_1 = require("../services/select");
+const codeNote_1 = require("../utils/codeNote");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const encryptOdf_1 = require("../utils/encryptOdf");
 const sanitize_1 = require("../utils/sanitize");
@@ -31,17 +32,14 @@ const tools = async (req, res) => {
     let toolsImg;
     const result = [];
     try {
-        const lookForHisaponta = `SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${numeroOdf} AND NUMOPE = ${numeroOperacao} AND ITEM = '${codigoMaq}' ORDER BY DATAHORA DESC`;
-        const pointCode = await (0, select_1.select)(lookForHisaponta);
-        console.log('linha 47 ', pointCode.length);
-        if (pointCode.length <= 0 || pointCode[0].CODAPONTA) {
+        const codeNoteResult = await (0, codeNote_1.codeNote)(numeroOdf, numeroOperacao, codigoMaq);
+        console.log('linha 45 /tools/', codeNoteResult);
+        if (codeNoteResult === 'First time acessing ODF' || codeNoteResult === 'Begin new process') {
             const inserted = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, start);
-            if (inserted === 'Algo deu errado') {
-                return res.json({ message: "Erro ao inserir codapontamento 1" });
-            }
-            else if (inserted === 'insert done') {
+            if (inserted !== 'Algo deu errado') {
                 try {
                     toolsImg = await (0, select_1.select)(lookForTools);
+                    console.log('linha 51 /tools/', toolsImg);
                     if (toolsImg.length <= 0) {
                         return res.json({ message: "/images/sem_imagem.gif" });
                     }
@@ -67,11 +65,11 @@ const tools = async (req, res) => {
                 }
             }
             else {
-                return res.json({ message: 'Data not found' });
+                return res.json({ message: 'Something went wrong' });
             }
         }
         else {
-            return res.json({ message: 'Algo deu errado' });
+            return res.json({ message: codeNoteResult });
         }
     }
     catch (error) {
@@ -81,7 +79,6 @@ const tools = async (req, res) => {
 };
 exports.tools = tools;
 const selectedTools = async (req, res) => {
-    console.log("linha 91 /selectedTools.ts/");
     const numeroOdf = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'])))) || 0;
     const numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO']))) || null;
     const codigoMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
@@ -89,7 +86,6 @@ const selectedTools = async (req, res) => {
     const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
     const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
     const qtdLibMax = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB'])))) || 0;
-    console.log('linha 100 /selectedTools/', qtdLibMax);
     const boas = 0;
     const ruins = 0;
     const codAponta = 2;
@@ -105,46 +101,25 @@ const selectedTools = async (req, res) => {
     let z = await (0, encryptOdf_1.encrypted)(String(new Date().getTime()));
     res.cookie("startProd", z);
     try {
-        const lookForHisaponta = `SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${numeroOdf} AND NUMOPE = ${numeroOperacao} AND ITEM = '${codigoMaq}' ORDER BY DATAHORA DESC`;
-        const x = await (0, select_1.select)(lookForHisaponta);
-        console.log('linha 124 /selectedTools/ /x/', x);
-        if (x[0].CODAPONTA === 1) {
+        const codeNoteResult = await (0, codeNote_1.codeNote)(numeroOdf, numeroOperacao, codigoMaq);
+        console.log('codeNoteResult', codeNoteResult);
+        if (codeNoteResult === 'Pointed Iniciated') {
             const codApontamentoFinalSetup = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, tempoDecorrido);
-            console.log('linha 117 /selectedTools/', codApontamentoFinalSetup);
-            if (codApontamentoFinalSetup === 'Algo deu errado') {
-                return res.json({ message: 'Algo deu errado' });
-            }
-            else if (codApontamentoFinalSetup === 'insert done') {
-                try {
-                    const codApontamentoInicioSetup = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta3, descricaoCodigoAponta3, motivo, faltante, retrabalhada, Number(new Date().getTime() || 0));
-                    console.log("linha 123", codApontamentoInicioSetup);
-                    if (codApontamentoInicioSetup === 'Algo deu errado') {
-                        return res.json({ message: 'Algo deu errado' });
-                    }
-                    else if (codApontamentoInicioSetup === 'insert done') {
-                        console.log("feer selecionadas");
-                        return res.json({ message: 'ferramentas selecionadas com successo' });
-                    }
-                    else {
-                        return res.json({ message: 'Algo deu errado' });
-                    }
-                }
-                catch (error) {
-                    return res.json({ message: 'Algo deu errado' });
+            if (codApontamentoFinalSetup) {
+                const codApontamentoInicioSetup = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta3, descricaoCodigoAponta3, motivo, faltante, retrabalhada, Number(new Date().getTime() || 0));
+                if (codApontamentoInicioSetup) {
+                    return res.json({ message: 'ferramentas selecionadas com successo' });
                 }
             }
-            else {
-                return res.json({ message: 'Algo deu errado' });
+        }
+        else if (codeNoteResult === 'Fin Setup') {
+            const codApontamentoInicioSetup = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta3, descricaoCodigoAponta3, motivo, faltante, retrabalhada, Number(new Date().getTime() || 0));
+            if (codApontamentoInicioSetup) {
+                return res.json({ message: 'ferramentas selecionadas com successo' });
             }
-        }
-        else if (x[0].CODAPONTA === 3) {
-            return res.json({ message: 'ferramentas selecionadas com successo' });
-        }
-        else if (x[0].CODAPONTA === 4) {
-            return res.json({ message: 'Iniciado a produção' });
         }
         else {
-            return res.json({ message: 'Algo deu errado' });
+            return res.json({ message: codeNoteResult });
         }
     }
     catch (error) {

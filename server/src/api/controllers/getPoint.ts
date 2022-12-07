@@ -5,24 +5,24 @@ import { sqlConfig } from "../../global.config";
 import { select } from "../services/select";
 import { selectAddress } from "../services/selectAddress";
 import { update } from "../services/update";
+import { codeNote } from "../utils/codeNote";
 import { decrypted } from "../utils/decryptedOdf";
 
 export const getPoint: RequestHandler = async (req, res) => {
     const connection = await mssql.connect(sqlConfig);
-    let NUMERO_ODF = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
+    let odfNumber = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
     let qtdBoas: number = decrypted(String(sanitize(req.cookies["qtdBoas"]))) || null;
-    let NUMERO_OPERACAO = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
-    const CODIGO_MAQUINA = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
+    let operationNumber = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
+    const codeMachine = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
     let codigoPeca = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
     let funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
     let qtdProduzir = decrypted(String(sanitize(req.cookies['QTDE_LIB']))) || null
     //let quantidade: string | null = sanitize(req.cookies['quantidade']) || null
     let revisao = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
-    console.log("linha 20 /revisao/", revisao);
     const updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`
     var address;
     var response = {
-        message : '',
+        message: '',
         address: '',
         url: '',
     }
@@ -43,54 +43,59 @@ export const getPoint: RequestHandler = async (req, res) => {
     }
     const ip = String(Object.entries(results)[0]![1])
 
-    NUMERO_OPERACAO = "00" + NUMERO_OPERACAO.replaceAll(" ", '0')
+    const x = await codeNote(odfNumber, operationNumber, codeMachine)
+    if (x !== 'Pointed') {
+        return res.json({ message: x })
+    }
 
-    console.log("linha 46 /NUMERO_OPERACAO/", NUMERO_OPERACAO );
+    operationNumber = "00" + operationNumber.replaceAll(" ", '0')
+
+    console.log("linha 46 /NUMERO_OPERACAO/", operationNumber);
     try {
         //Caso a operação seja 999 fará baixa no estoque
-        if (NUMERO_OPERACAO === "00999") {
-                // Verificar onde é possível alocar essas peças
-                // condic === 'M' é peso
-                // condic === 'D' é tempo
-                // Pra fazer essa conta precisa de condic === "M"
-                // Ambos estao na coluna EXECUT
-                let numeroOp = NUMERO_OPERACAO.replaceAll('0', '')
-                //console.log("LINHA 49 /numeroOp/", numeroOp);
-                let y = `SELECT TOP 1 * FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${codigoPeca}' AND NUMOPE = '${numeroOp}' AND REVISAO = ${revisao}`
-                const x = await select(y)
+        if (operationNumber === "00999") {
+            // Verificar onde é possível alocar essas peças
+            // condic === 'M' é peso
+            // condic === 'D' é tempo
+            // Pra fazer essa conta precisa de condic === "M"
+            // Ambos estao na coluna EXECUT
+            let numeroOp = operationNumber.replaceAll('0', '')
+            //console.log("LINHA 49 /numeroOp/", numeroOp);
+            let y = `SELECT TOP 1 * FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${codigoPeca}' AND NUMOPE = '${numeroOp}' AND REVISAO = ${revisao}`
+            const x = await select(y)
 
-                //console.log("linha 52", x);
-                console.log("linha 52", x[0].EXECUT);
-                console.log("linha 52", x[0].COMPRIMENTO);
-                console.log("linha 52", x[0].LARGURA);
+            //console.log("linha 52", x);
+            console.log("linha 52", x[0].EXECUT);
+            console.log("linha 52", x[0].COMPRIMENTO);
+            console.log("linha 52", x[0].LARGURA);
 
 
-                let pesoUnidade = x[0].EXECUT
-                let comprimento = x[0].COMPRIMENTO
-                let largura = x[0].LARGURA
-                let areaCubicaMax = 36000000
-                let areaMax = 800
-                let pesoMax = 25
+            let pesoUnidade = x[0].EXECUT
+            let comprimento = x[0].COMPRIMENTO
+            let largura = x[0].LARGURA
+            let areaCubicaMax = 36000000
+            let areaMax = 800
+            let pesoMax = 25
 
-                let peso = pesoUnidade * qtdProduzir
-                console.log("linha 60 /getPoint.ts/", peso);
-                if (peso < pesoMax) {
-                    console.log("Passou no primeiro teste ...");
-                }
+            let peso = pesoUnidade * qtdProduzir
+            console.log("linha 60 /getPoint.ts/", peso);
+            if (peso < pesoMax) {
+                console.log("Passou no primeiro teste ...");
+            }
 
-                let area = comprimento + largura
-                if(area <= areaMax){
-                    console.log("passou no segundo teste ...");
-                }
+            let area = comprimento + largura
+            if (area <= areaMax) {
+                console.log("passou no segundo teste ...");
+            }
 
-                let areaCubica = comprimento * largura * qtdProduzir
-                if(areaCubica < areaCubicaMax){
-                    console.log("passou no terceiro teste ...");
-                }
+            let areaCubica = comprimento * largura * qtdProduzir
+            if (areaCubica < areaCubicaMax) {
+                console.log("passou no terceiro teste ...");
+            }
 
 
             //Caso seja diferente de "EX"
-            if (CODIGO_MAQUINA !== 'EX002') {
+            if (codeMachine !== 'EX002') {
                 let condicional = `= '${codigoPeca}'`
                 let condicional2 = `IS NULL`
                 let fisrtSelectAddress: any = await selectAddress(condicional, 5)
@@ -144,7 +149,7 @@ export const getPoint: RequestHandler = async (req, res) => {
             }
 
             //Caso seja igual de "EX"
-            if (CODIGO_MAQUINA === 'EX002') {
+            if (codeMachine === 'EX002') {
                 console.log("linha 119 /getPoint.ts/", codigoPeca);
                 let condicional = `= '${codigoPeca}'`
                 let condicional2 = `IS NULL`
@@ -207,7 +212,7 @@ export const getPoint: RequestHandler = async (req, res) => {
                     //     address: secondSelectAddress[indice].ENDERECO
                     // }
                     // address = addressToStorage
-                   // return res.json(addressToStorage)
+                    // return res.json(addressToStorage)
                 }
             }
             try {
@@ -218,7 +223,7 @@ export const getPoint: RequestHandler = async (req, res) => {
                 INSERT INTO HISREAL
                     (CODIGO, DOCUMEN, DTRECEB, QTRECEB, VALPAGO, FORMA, SALDO, DATA, LOTE, USUARIO, ODF, NOTA, LOCAL_ORIGEM, LOCAL_DESTINO, CUSTO_MEDIO, CUSTO_TOTAL, CUSTO_UNITARIO, CATEGORIA, DESCRICAO, EMPRESA_RECNO, ESTORNADO_APT_PRODUCAO, CST_ENDERECO, VERSAOSISTEMA, CST_SISTEMA,CST_HOSTNAME,CST_IP) 
                 SELECT 
-                    CODIGO, '${NUMERO_ODF}/${codigoPeca}', GETDATE(), ${qtdBoas}, 0 , 'E', ${resultQuery[0].SALDO} + ${qtdBoas}, GETDATE(), '0', '${funcionario}', '${NUMERO_ODF}', '0', '0', '0', 0, 0, 0, '0', 'DESCRI', 1, 'E', '${address}', 1.00, 'APONTAMENTO', '${hostname}', '${ip}'
+                    CODIGO, '${odfNumber}/${codigoPeca}', GETDATE(), ${qtdBoas}, 0 , 'E', ${resultQuery[0].SALDO} + ${qtdBoas}, GETDATE(), '0', '${funcionario}', '${odfNumber}', '0', '0', '0', 0, 0, 0, '0', 'DESCRI', 1, 'E', '${address}', 1.00, 'APONTAMENTO', '${hostname}', '${ip}'
                 FROM ESTOQUE(NOLOCK)
                 WHERE 1 = 1 
                 AND CODIGO = '${codigoPeca}' 
@@ -231,14 +236,14 @@ export const getPoint: RequestHandler = async (req, res) => {
 
                 try {
                     let updateStorage;
-                    if (NUMERO_OPERACAO === "00999") {
+                    if (operationNumber === "00999") {
                         updateStorage = await update(updateQuery)
                     }
 
                     console.log("linha 197 /getPoint.ts/", updateStorage);
 
 
-                    if(updateStorage === 'Update sucess' && address === 'No address'){
+                    if (updateStorage === 'Update sucess' && address === 'No address') {
                         console.log("linha 201");
                         return res.json({ message: 'No address' })
                     }
@@ -251,7 +256,7 @@ export const getPoint: RequestHandler = async (req, res) => {
                     if (!response.address) {
                         console.log("linha 210 /getPoint.ts/ ");
                         response.message = 'No address'
-                        return res.json({ response})
+                        return res.json({ response })
                     } else {
                         console.log("linha 214 /getPoint.ts/ ");
                         return res.json(response)

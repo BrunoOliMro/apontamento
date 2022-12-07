@@ -16,7 +16,8 @@ export const searchBagde: RequestHandler = async (req, res) => {
         const selecionarMatricula = await select(lookForBadge)
 
         if (selecionarMatricula) {
-            res.cookie("startSetupTime", encrypted(String(new Date().getTime())))
+            //res.cookie("startSetupTime", encrypted(String(new Date().getTime())))
+            selecionarMatricula[0].startSetupTime = encrypted(String(new Date().getTime()))
             await cookieGenerator(res, selecionarMatricula[0])
             return res.json({ message: 'Badge found' })
         } else if (!selecionarMatricula) {

@@ -1,1 +1,1 @@
-{"version":3,"file":"badFeedMotives.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/badFeedMotives.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAIzC,eAAO,MAAM,cAAc,EAAE,cAiB5B,CAAA"}
+{"version":3,"file":"badFeedMotives.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/badFeedMotives.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAMzC,eAAO,MAAM,cAAc,EAAE,cAsB5B,CAAA"}

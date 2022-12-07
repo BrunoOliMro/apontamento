@@ -119,18 +119,27 @@
         barcode,
       }),
     }).then((res) => res.json());
-    console.log("linha 164 /res.barcode/", res);
+    console.log("linha 164 /res.barcode/", res.message);
 
     if (res.message === "Rip iniciated" || res.message === "Pointed") {
       loader = true;
       window.location.href = "/#/rip";
-      location.reload();
+      //location.reload();
     }
 
-    if (res.message === "Proceed with process") {
+    if (res.message === "Ini Prod") {
+      loader = true;
+      window.location.href = "/#/codigobarras/apontamento";
+      //location.reload();
+    }
+
+    if (
+      res.message === "Begin new process" ||
+      res.message === "Não há item para reservar"
+    ) {
       loader = true;
       window.location.href = "/#/ferramenta";
-      location.reload();
+      //location.reload();
     }
 
     if (res.message === "Algo deu errado") {
@@ -138,11 +147,9 @@
       modalMessage = "Algo deu errado";
     }
 
-    if (res.message === "Máquina Parada") {
-      // loader = false;
-      // superParada = true;
-      window.location.href = '/#/codigobarras/apontamento'
-      location.reload
+    if (res.message === "Machine has stopped") {
+      loader = true;
+      window.location.href = "/#/codigobarras/apontamento";
     }
 
     if (res.message === "codigo de barras vazio") {
@@ -156,7 +163,7 @@
       //barcodeMsg = "odf não encontrada";
     }
 
-    if (res.message === "não há limite na odf") {
+    if (res.message === "Quantidade para reserva inválida" || 'Não há limite na ODF') {
       modalMessage = "Não há limite na ODF";
       loader = false;
     }

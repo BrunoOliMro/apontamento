@@ -14,7 +14,7 @@ const searchBagde = async (req, res) => {
     try {
         const selecionarMatricula = await (0, select_1.select)(lookForBadge);
         if (selecionarMatricula) {
-            res.cookie("startSetupTime", (0, encryptOdf_1.encrypted)(String(new Date().getTime())));
+            selecionarMatricula[0].startSetupTime = (0, encryptOdf_1.encrypted)(String(new Date().getTime()));
             await (0, cookieGenerator_1.cookieGenerator)(res, selecionarMatricula[0]);
             return res.json({ message: 'Badge found' });
         }

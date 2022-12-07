@@ -1,29 +1,37 @@
 import { RequestHandler } from "express";
-import sanitize from "sanitize-html";
 import { select } from "../services/select";
+import { codeNote } from "../utils/codeNote";
 import { decrypted } from "../utils/decryptedOdf";
+import { sanitize } from "../utils/sanitize";
 
 export const status: RequestHandler = async (req, res) => {
     const numpec = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
-    const maquina = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
-    const numeroOperacao = decrypted(sanitize(req.cookies['NUMERO_OPERACAO']))
+    const codeMachine = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
+    const operationNumber = decrypted(sanitize(req.cookies['NUMERO_OPERACAO']))
+    let odfNumber = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
     const revisao = decrypted(sanitize(req.cookies['REVISAO']))
-    const lookForTimer = `SELECT TOP 1 EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${numpec}' AND NUMOPE = ${numeroOperacao} AND MAQUIN = '${maquina}' AND REVISAO = ${revisao} ORDER BY REVISAO DESC`
-    let response ={
-        message : '',
+    const lookForTimer = `SELECT TOP 1 EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${numpec}' AND NUMOPE = ${operationNumber} AND MAQUIN = '${codeMachine}' AND REVISAO = ${revisao} ORDER BY REVISAO DESC`
+    let response = {
+        message: '',
         temporestante: 0,
     }
     try {
-        const resource = await select(lookForTimer)
-        let tempoRestante = Number(resource[0].EXECUT * Number(decrypted(sanitize(String(req.cookies["QTDE_LIB"])))) * 1000 - (Number(new Date().getTime() - decrypted(String(sanitize(req.cookies['startSetupTime'])))))) || 0
-        if (tempoRestante > 0) {
-            response.temporestante = tempoRestante
-            return res.status(200).json(response)
-        } else if (tempoRestante <= 0) {
-            tempoRestante = 0
-            return res.json({ message: 'time for execution not found' })
+
+        const x = await codeNote(odfNumber, operationNumber, codeMachine)
+        if (x === 'Ini Prod' || x === 'Pointed' || x === 'Rip iniciated') {
+            const resource = await select(lookForTimer)
+            let tempoRestante = Number(resource[0].EXECUT * Number(decrypted(sanitize(String(req.cookies["QTDE_LIB"])))) * 1000 - (Number(new Date().getTime() - decrypted(String(sanitize(req.cookies['startSetupTime'])))))) || 0
+            if (tempoRestante > 0) {
+                response.temporestante = tempoRestante
+                return res.status(200).json(response)
+            } else if (tempoRestante <= 0) {
+                tempoRestante = 0
+                return res.json({ message: 'time for execution not found' })
+            } else {
+                return res.json({ message: 'Algo deu errado' })
+            }
         } else {
-            return res.json({ message: 'Algo deu errado' })
+            return res.json({ message: x })
         }
     } catch (error) {
         console.log('linha 29 - Status.ts -', error)

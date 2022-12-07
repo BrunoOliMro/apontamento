@@ -350,11 +350,11 @@
         window.location.href = `/#/rip`;
     }
 
-    function closeMachineStopped() {
-        modalMessage = "";
-        showAddress = false;
-        window.location.href = `/#/codigobarras`;
-    }
+    // function closeMachineStopped() {
+    //     modalMessage = "";
+    //     showAddress = false;
+    //     window.location.href = `/#/codigobarras`;
+    // }
 
     function handleSS(event) {
         valorFeed = event.detail.goodFeed;

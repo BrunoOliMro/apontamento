@@ -22,7 +22,6 @@
     let badgeMessage = "";
     let redirect;
     let promiseResult =  callRip();
-    let codeNoteUrl = `/api/v1/codeNote`
 
     async function callRip() {
         const res = await fetch(ripRouter);
@@ -71,30 +70,6 @@
         }
     };
 
-    // const checkForCodeNote = async () =>{
-    //     loader = true;
-    //     const headers = new Headers();
-    //     const res = await fetch(codeNoteUrl, {
-    //         method: "POST",
-    //         headers: { "Content-Type": "application/json" },
-    //         body: JSON.stringify({
-    //             setup: setup,
-    //         }),
-    //     }).then((res) => res.json());
-    //     console.log('linha 101 /res.rip/', res);
-    //     if(res){
-    //         if(res.message === ''){
-    //             doPost()
-    //         } else if(res.message === ''){
-    //             window.location.href = "/#/codigobarras";
-    //         } else {
-    //             return badgeMessage = 'Algo deu errado'
-    //         }
-    //     } else {
-    //         return badgeMessage = 'Algo deu errado'
-    //     }
-    // }
-
     const doPost = async () => {
         loader = true;
         const headers = new Headers();
@@ -120,12 +95,11 @@
         }
         if (res.message === "rip enviada, odf finalizada") {
             odfFinish = true;
-            //redirect = res.url;
             window.location.href = "/#/codigobarras";
+            location.reload()
         }
         if (res.message === "ocorreu um erro ao enviar os dados da rip") {
             badgeMessage = "ocorreu um erro ao enviar os dados da rip";
-            //window.location.href = "/#/codigobarras";
         }
     };
 

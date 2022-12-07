@@ -30,38 +30,13 @@
     tools = await res.json();
     console.log("tools linha 28", tools);
 
-    // if (tools.message === "/images/sem_imagem.gif") {
-    //   window.location.href = "/#/codigobarras";
-    //   location.reload();
-    // }
+    if(tools.message === 'Já passou aqui'){
+      ferSelected();
+    }
 
     if (tools.message === "Algo deu errado") {
-      //window.location.href = "/#/codigobarras";
-      //location.reload();
       ferSelected();
     }
-
-    if (tools.message === `codeApont 2 setup finalizado`) {
-      message = `codeApont 2 setup finalizado`;
-      ferSelected();
-    }
-
-    // if (tools.message === `codeApont 3 prod iniciado`) {
-    //   message = `codeApont 3 prod iniciado`;
-    //   window.location.href = "/#/codigobarras/apontamento";
-    // }
-
-    // if (tools.message === "codeApont 5 maquina parada") {
-    //   message = "codeApont 5 maquina parada";
-    //   window.location.href = "/#/codigobarras";
-    //   location.reload();
-    // }
-
-    // if (tools.message === `codeApont 6 processo finalizado`) {
-    //   message = `codeApont 6 processo finalizado`;
-    //   window.location.href = "/#/codigobarras";
-    //   location.reload();
-    // }
 
     if(tools.message === 'Data not found'){
       window.location.href = "/#/codigobarras/apontamento";

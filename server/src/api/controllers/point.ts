@@ -17,6 +17,7 @@ export const point: RequestHandler = async (req, res) => {
     const missingFeed = Number(sanitize(req.body["missingFeed"])) || 0;
     const reworkFeed = Number(sanitize(req.body["reworkFeed"])) || 0;
     let condic: string | null;
+    console.log('linha 20 /point.ts/');
     if (!req.cookies['condic']) {
         condic = null
     } else {
@@ -27,10 +28,13 @@ export const point: RequestHandler = async (req, res) => {
     const codigoPeca = decrypted(sanitize(req.cookies['CODIGO_PECA'])) || null
     const machineCode = decrypted(sanitize(req.cookies["CODIGO_MAQUINA"])) || null
     const qtdLibMax: number = Number(decrypted(sanitize(req.cookies['QTDE_LIB']))) || 0
+    console.log('linha 31 /point.ts/');
+
     //const nextMachineProcess = decrypted(sanitize(req.cookies['MAQUINA_PROXIMA'])) || null
     //const nextOperationProcess = decrypted(sanitize(req.cookies['OPERACAO_PROXIMA'])) || null
     const employee = decrypted(sanitize(req.cookies['FUNCIONARIO'])) || null
     const revisao = decrypted(sanitize(req.cookies['REVISAO'])) || null
+    const lookForHisaponta = `SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${odfNumber} AND NUMOPE = ${operationNumber} AND ITEM = '${machineCode}' ORDER BY DATAHORA DESC`
     const updateQtyQuery: string[] = [];
     const updateQtyQuery2: string[] = [];
     var response = {
@@ -50,7 +54,6 @@ export const point: RequestHandler = async (req, res) => {
 
     console.log("linha 56 /point.ts/");
 
-    const lookForHisaponta = `SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${odfNumber} AND NUMOPE = ${operationNumber} AND ITEM = '${machineCode}' ORDER BY DATAHORA DESC`
     const x = await select(lookForHisaponta)
     console.log('x', x);
     if (x[0].CODAPONTA === 4 || x[0].CODAPONTA === 5 || x[0].CODAPONTA === 6) {
@@ -191,11 +194,15 @@ export const point: RequestHandler = async (req, res) => {
 
             // Loop para desconstar o saldo alocado
             try {
+                let a: any = []
                 codigoFilho.forEach((element: string) => {
                     const updateQuery: string = `DELETE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${odfNumber}' AND CODIGO_FILHO = '${element}' `
+                    const s = `UPDATE OPERACAO SET STATUS_RESERVA = NULL WHERE 1 = 1 AND NUMPEC =  TRIM('${codigoPeca}') AND NUMITE = '${element}' AND REVISAO = ${revisao}`
+                    a.push(s)
                     updateQtyQuery2.push(updateQuery)
                 });
                 await connection.query(updateQtyQuery2.join("\n")).then(result => result.rowsAffected)
+                await connection.query(a.join("\n")).then(result => result.rowsAffected)
             } catch (error) {
                 console.log("linha 185 /selectHasP/", error);
                 return res.json({ message: 'Algo deu errado' })
@@ -234,7 +241,9 @@ export const point: RequestHandler = async (req, res) => {
     // Seta quantidade apontada da odf para o quanto o usuario diz ser(PCP_PROGRAMACAO_PRODUCAO)
     try {
         console.log("linha 228 /point.ts/ Alterando quantidade apontada...");
-        const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}', QTDE_LIB = QTDE_LIB + ${valorTotalApontado}, QTD_FALTANTE = ${faltante} WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${operationNumber}' AND CODIGO_MAQUINA = '${machineCode}'`
+        let d = valorTotalApontado - qtdLibMax
+        console.log('d', d);
+        const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}', QTDE_LIB = QTDE_LIB - ${d}, QTD_FALTANTE = ${faltante} WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${operationNumber}' AND CODIGO_MAQUINA = '${machineCode}'`
         await update(updateCol)
     } catch (error) {
         console.log("linha 209 - error - /point.ts/", error);

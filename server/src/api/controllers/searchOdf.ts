@@ -1,23 +1,22 @@
-import type { RequestHandler } from 'express';
-import sanitize from 'sanitize-html';
+import { RequestHandler } from 'express';
 import { select } from '../services/select';
 import { selectToKnowIfHasP } from '../services/selectIfHasP';
 import { decrypted } from '../utils/decryptedOdf';
 //import { encoded } from '../utils/encodedOdf';
-import { encrypted } from '../utils/encryptOdf';
 import { unravelBarcode } from '../utils/unravelBarcode'
 import { odfIndex } from '../utils/odfIndex';
 import { selectedItensFromOdf } from '../utils/queryGroup';
 import { update } from '../services/update';
 import { cookieGenerator } from '../utils/cookieGenerator';
-//import { codeNoteMessage } from '../utils/codeNoteMessage';
+import { sanitize } from '../utils/sanitize';
+import { cookieCleaner } from '../utils/clearCookie';
+import { codeNote } from '../utils/codeNote';
 
 export const searchOdf: RequestHandler = async (req, res) => {
     const dados: any = unravelBarcode(req.body.barcode)
     let qtdLibMax: number;
     let funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))
     const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA  FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
-    const lookForHisaponta = `SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${dados.numOdf} AND NUMOPE = ${dados.numOper} AND ITEM = '${dados.codMaq}' ORDER BY DATAHORA DESC`
 
     // Descriptografa o funcionario dos cookies
     if (!funcionario) {
@@ -47,38 +46,41 @@ export const searchOdf: RequestHandler = async (req, res) => {
     }
 
     if (qtdLibMax === 0) {
-        return res.json({ message: 'não há limite na odf' })
+        return res.json({ message: 'Não há limite na ODF' })
     }
-
-    let lookForChildComponents = await selectToKnowIfHasP(dados, qtdLibMax, funcionario, selectedItens.odf.NUMERO_OPERACAO, selectedItens.odf.CODIGO_PECA)
-    if(lookForChildComponents.quantidade > qtdLibMax){
-        selectedItens.odf.QTDE_LIB = qtdLibMax
-    } else {
-        selectedItens.odf.QTDE_LIB = lookForChildComponents.quantidade
-    }
+    selectedItens.odf.QTDE_LIB = qtdLibMax
 
     // Generate cookie that is gonna be used later;
-    await cookieGenerator(res, selectedItens.odf)
-    await cookieGenerator(res, lookForChildComponents)
-    //res.cookie('QTDE_LIB', encrypted(String(qtdLibMax)))
-    
-    const x = await select(lookForHisaponta)
-    if (x.length > 0) {
-        if (x[0]!.CODAPONTA === 1 || x[0]!.CODAPONTA === 2 || x[0]!.CODAPONTA === 3) {
-            return res.json({ message: 'Proceed with process' })
-        } else if (x[0]!.CODAPONTA === 4) {
-            return res.json({ message: 'Pointed' })
-        } else if (x[0]!.CODAPONTA === 5) {
-            return res.json({ message: 'Rip iniciated' })
-        } else if (x[0]!.CODAPONTA === 6) {
-            return res.json({ message: 'Proceed with process' })
-        } else if (x[0].CODAPONTA === 7) {
-            return res.json({ message: 'Máquina Parada' })
-        } else {
-            return res.json({ message: 'Algo deu errado' })
-        }
+    let lookForChildComponents = await selectToKnowIfHasP(dados, qtdLibMax, funcionario, selectedItens.odf.NUMERO_OPERACAO, selectedItens.odf.CODIGO_PECA, selectedItens.odf.REVISAO)
+
+    if (lookForChildComponents.message === 'Quantidade para reserva inválida') {
+        await cookieCleaner(res)
+        return res.json({ message: 'Quantidade para reserva inválida' })
     }
 
-    let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${lookForChildComponents.quantidade} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${dados.numOper}`
-    await update(y)
+    console.log('linha 60 /quantidade/', lookForChildComponents.quantidade);
+    console.log('linha 60 /qtdLibMax/', qtdLibMax);
+
+
+    if (lookForChildComponents.quantidade < qtdLibMax) {
+        selectedItens.odf.QTDE_LIB = lookForChildComponents.quantidade
+        let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${lookForChildComponents.quantidade} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${dados.numOper}`
+        await update(y)
+    } else {
+        let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${qtdLibMax} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${dados.numOper}`
+        await update(y)
+    }
+
+    selectedItens.odf.condic = lookForChildComponents.condic
+    selectedItens.odf.execut = lookForChildComponents.execut
+    selectedItens.odf.codigoFilho = lookForChildComponents.codigoFilho
+    selectedItens.odf.startProd = new Date().getTime()
+    await cookieGenerator(res, selectedItens.odf)
+
+    const x = await codeNote(dados.numOdf, dados.numOper, dados.codMaq)
+    return res.json({ message: x })
+
+    // if (lookForChildComponents.message === 'Não há item para reservar') {
+    //     return res.json({ message: 'Não há item para reservar' })
+    // 
 }

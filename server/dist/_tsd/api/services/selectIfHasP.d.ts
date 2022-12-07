@@ -1,2 +1,2 @@
-export declare const selectToKnowIfHasP: (dados: any, quantidadeOdf: number, funcionario: string, numeroOperacao: string, codigoPeca: string) => Promise<any>;
+export declare const selectToKnowIfHasP: (dados: any, quantidadeOdf: number, funcionario: string, numeroOperacao: string, codigoPeca: string, revisao: number) => Promise<any>;
 //# sourceMappingURL=selectIfHasP.d.ts.map

@@ -7,20 +7,20 @@ exports.rip = void 0;
 const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const insert_1 = require("../services/insert");
 const select_1 = require("../services/select");
+const codeNote_1 = require("../utils/codeNote");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const encryptOdf_1 = require("../utils/encryptOdf");
 const rip = async (req, res) => {
     const numpec = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
     const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
-    const codMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
+    const codeMachine = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
     const codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
-    const numeroOdf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"]))) || null;
-    const numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))) || null;
+    const odfNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"]))) || null;
+    const operationNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))) || null;
     const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO']))) || null;
     const start = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["startSetupTime"]))) || null;
     const qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['QTDE_LIB']))) || null;
-    let startRip = res.cookie('startRip', (0, encryptOdf_1.encrypted)(String(new Date().getTime())));
-    console.log('linha 19', startRip);
+    res.cookie('startRip', (0, encryptOdf_1.encrypted)(String(new Date().getDate())));
     const descricaoCodAponta = `Rip Ini`;
     const boas = 0;
     const ruins = 0;
@@ -34,7 +34,6 @@ const rip = async (req, res) => {
         url: '',
         object: '',
     };
-    const lookForHisaponta = `SELECT TOP 1 USUARIO, NUMOPE, ITEM, CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${numeroOdf} AND NUMOPE = ${numeroOperacao} AND ITEM = '${codMaq}' ORDER BY DATAHORA DESC`;
     const rip = `
         SELECT  DISTINCT
         PROCESSO.NUMPEC,
@@ -55,7 +54,7 @@ const rip = async (req, res) => {
         FROM OPERACAO OP (NOLOCK)) AS TBL ON TBL.RECNO_PROCESSO = PROCESSO.R_E_C_N_O_  AND TBL.MAQUIN = QA_CARACTERISTICA.CST_NUMOPE
         WHERE PROCESSO.NUMPEC = '${numpec}' 
         AND PROCESSO.REVISAO = '${revisao}' 
-        AND CST_NUMOPE = '${codMaq}'
+        AND CST_NUMOPE = '${codeMachine}'
         AND NUMCAR < '2999'
         ORDER BY NUMPEC ASC`;
     const ripDetails = await (0, select_1.select)(rip);
@@ -63,7 +62,7 @@ const rip = async (req, res) => {
         console.log('inseringo codigo 5...');
         response.message = 'Não há rip a mostrar';
         response.url = '/#/codigobarras';
-        const x = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime);
+        const x = await (0, insert_1.insertInto)(funcionario, odfNumber, codigoPeca, revisao, operationNumber, codeMachine, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime);
         if (x) {
             console.log('linha 60 /rip.svelte/');
             return res.json(response);
@@ -73,7 +72,7 @@ const rip = async (req, res) => {
         }
     }
     let arrayNumope = ripDetails.map((acc) => {
-        if (acc.CST_NUMOPE === codMaq) {
+        if (acc.CST_NUMOPE === codeMachine) {
             return acc;
         }
         else {
@@ -89,25 +88,27 @@ const rip = async (req, res) => {
     res.cookie('lie', numopeFilter.map((acc) => acc.LIE));
     res.cookie('lse', numopeFilter.map((acc) => acc.LSE));
     try {
-        const x = await (0, select_1.select)(lookForHisaponta);
-        console.log('linha 90 /x/', x);
-        if (x[0].CODAPONTA === 5) {
+        const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine);
+        if (x === 'Pointed') {
+            try {
+                const inserted = await (0, insert_1.insertInto)(funcionario, odfNumber, codigoPeca, revisao, operationNumber, codeMachine, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime);
+                if (inserted) {
+                    return res.json(numopeFilter);
+                }
+                else {
+                    return response.message = 'Algo deu errado';
+                }
+            }
+            catch (error) {
+                console.log('linha 98 /eror/', error);
+                return response.message = 'Algo deu errado';
+            }
+        }
+        else if (x === 'Rip iniciated') {
             return res.json(numopeFilter);
         }
-        else if (x[0].CODAPONTA === 4) {
-            const inserted = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime);
-            if (inserted === 'insert done') {
-                return res.json(numopeFilter);
-            }
-            else if (inserted === 'Algo deu errado') {
-                return response.message = 'Algo deu errado';
-            }
-            else {
-                return response.message = 'Algo deu errado';
-            }
-        }
         else {
-            return res.json({ message: 'Esta tentando acessar uma pagina inválida' });
+            return res.json({ message: x });
         }
     }
     catch (error) {
