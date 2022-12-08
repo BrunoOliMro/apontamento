@@ -164,7 +164,7 @@
             }),
         }).then((res) => res.json());
 
-        if (res.message === "Machine stopped") {
+        if (res.message === "Machine has stopped") {
             loader = false;
             modalMessage = "Machine stopped";
         }

@@ -15,7 +15,7 @@ export const drawing: RequestHandler = async (req, res) => {
     const lookForImages = `SELECT DISTINCT [NUMPEC], [IMAGEM] FROM QA_LAYOUT (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${numpec}' AND REVISAO = ${revisao} AND IMAGEM IS NOT NULL`
     try {
         const x = await codeNote(odfNumber, operationNumber, codeMachine)
-        if (x === 'Ini Prod' || x === 'Pointed' || x === 'Rip iniciated') {
+        if (x === 'Ini Prod' || x === 'Pointed' || x === 'Rip iniciated' || x === 'Machine has stopped') {
             const resource: any = await select(lookForImages)
             let imgResult = [];
             for await (let [i, record] of resource.entries()) {

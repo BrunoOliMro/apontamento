@@ -13,11 +13,11 @@ const stopPost = async (req, res) => {
     const operationNumber = (0, decryptedOdf_1.decrypted)(String(req.cookies['NUMERO_OPERACAO'])) || null;
     const machineCode = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
     const qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB']))) || null;
-    const boas = 0;
-    const faltante = 0;
-    const retrabalhada = 0;
+    const boas = null;
+    const faltante = null;
+    const retrabalhada = null;
     const codAponta = 7;
-    const ruins = 0;
+    const ruins = null;
     const motivo = '';
     const descricaoCodAponta = 'Parada';
     const end = new Date().getTime() || 0;

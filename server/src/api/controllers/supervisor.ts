@@ -6,11 +6,8 @@ export const supervisor: RequestHandler = async (req, res) => {
     let supervisor: string = String(sanitize(req.body['supervisor']))
     let lookForBadge = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`
 
-    if (!supervisor) {
-        return res.json({ message: 'supervisor não encontrado inválido' })
-    }
-
     if (
+        !supervisor ||
         supervisor === '' ||
         supervisor === '0' ||
         supervisor === '00' ||
@@ -18,16 +15,13 @@ export const supervisor: RequestHandler = async (req, res) => {
         supervisor === '0000' ||
         supervisor === '00000' ||
         supervisor === '000000') {
-        return res.json({ message: 'supervisor inválido' })
+        return res.json({ message: 'Supervisor não encontrado' })
     }
 
     try {
         const resource = await select(lookForBadge)
-
         if (resource) {
             return res.json({ message: 'Supervisor encontrado' })
-        } else if (!resource) {
-            return res.json({ message: 'Supervisor não encontrado' })
         } else {
             return res.json({ message: 'Supervisor não encontrado' })
         }

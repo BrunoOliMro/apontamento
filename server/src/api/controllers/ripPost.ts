@@ -12,13 +12,13 @@ export const ripPost: RequestHandler = async (req, res) => {
     const setup: any = (req.body['setup'])
     let keySan: any
     let valueSan: any;
-    const odfNumber: number = Number(decrypted(sanitize(req.cookies['NUMERO_ODF']))) || 0
+    const odfNumber: number | null = Number(decrypted(sanitize(req.cookies['NUMERO_ODF']))) || null
     const operationNumber = decrypted(sanitize(req.cookies['NUMERO_OPERACAO'])) || null
     const codeMachine: string = decrypted(sanitize(req.cookies['CODIGO_MAQUINA'])) || null
     const codigoPeca: string = decrypted(sanitize(req.cookies['CODIGO_PECA'])) || null
     const funcionario: string = decrypted(sanitize(req.cookies['FUNCIONARIO'])) || null
     const revisao: string = String(decrypted(sanitize(req.cookies['REVISAO'])))
-    const qtdLibMax: number = Number(decrypted(sanitize(req.cookies['QTDE_LIB']))) || 0
+    const qtdLibMax: number | null = Number(decrypted(sanitize(req.cookies['QTDE_LIB']))) || null
     const updateQtyQuery: string[] = [];
     const especif: string[] = (req.cookies['especif']) || null
     const numCar: string[] = (req.cookies['numCar']) || null
@@ -27,13 +27,14 @@ export const ripPost: RequestHandler = async (req, res) => {
     const instrumento: string[] = (req.cookies['instrumento']) || null
     const descricao: string[] = (req.cookies['descricao']) || null
     var objectSanitized: { [k: string]: any; } = {}
-    const boas = 0
-    const ruins = 0
+    const boas = null
+    const ruins = null
     const codAponta = 6
     const descricaoCodAponta = 'Rip Fin'
     const motivo = null
-    const faltante = 0
-    const retrabalhada = 0
+    const faltante = null
+    const retrabalhada = null
+    const updatePcpProg = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${codeMachine}'`
 
     //const start = Number(req.cookies["starterBarcode"]) || 0
     //const end = Number(new Date().getTime()) || 0;
@@ -51,7 +52,12 @@ export const ripPost: RequestHandler = async (req, res) => {
     if (Object.keys(setup).length <= 0) {
         const x = await insertInto(funcionario, odfNumber, codigoPeca, revisao, operationNumber, codeMachine, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorridoRip)
         if (x) {
-            return res.json({ message: "rip enviada, odf finalizada" })
+            const y = await update(updatePcpProg)
+            if (y === 'Update sucess') {
+                return res.json({ message: "rip enviada, odf finalizada" })
+            } else {
+                return res.json({ message: 'Algo deu errado' })
+            }
         } else {
             return res.json({ message: 'Algo deu errado' })
         }
@@ -70,7 +76,6 @@ export const ripPost: RequestHandler = async (req, res) => {
             return res.json({ message: 'Algo deu errado' })
         } else if (x) {
             try {
-                const updatePcpProg = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${codeMachine}'`
                 const y = await update(updatePcpProg)
                 if (y !== 'Update sucess') {
                     return res.json({ message: 'Algo deu errado' })

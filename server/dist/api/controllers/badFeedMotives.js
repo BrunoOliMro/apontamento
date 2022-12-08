@@ -12,7 +12,7 @@ const badFeedMotives = async (req, res) => {
     const codeMachine = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
     try {
         const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine);
-        if (x === 'Ini Prod' || x === 'Pointed' || x === 'Rip iniciated') {
+        if (x === 'Ini Prod' || x === 'Pointed' || x === 'Rip iniciated' || x === 'Machine has stopped') {
             let resource = await (0, select_1.select)(y);
             let resoc = resource.map((e) => e.DESCRICAO);
             if (resource.length > 0) {

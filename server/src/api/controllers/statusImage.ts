@@ -18,7 +18,7 @@ export const statusImage: RequestHandler = async (req, res) => {
     try {
 
         const x = await codeNote(odfNumber, operationNumber, codeMachine)
-        if (x === 'Ini Prod' || x === 'Pointed' || x === 'Rip iniciated') {
+        if (x === 'Ini Prod' || x === 'Pointed' || x === 'Rip iniciated' || x === 'Machine has stopped') {
             const resource = await select(lookOnProcess)
             if (resource.length > 0) {
                 try {

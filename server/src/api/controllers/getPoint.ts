@@ -9,7 +9,6 @@ import { decrypted } from "../utils/decryptedOdf";
 import { sanitize } from "../utils/sanitize";
 
 export const getPoint: RequestHandler = async (req, res) => {
-    const connection = await mssql.connect(sqlConfig);
     let odfNumber = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
     let qtdBoas: number = decrypted(String(sanitize(req.cookies["qtdBoas"]))) || null;
     let operationNumber = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
@@ -218,6 +217,10 @@ export const getPoint: RequestHandler = async (req, res) => {
             try {
                 const lookForHisReal = `SELECT TOP 1  * FROM HISREAL  WHERE 1 = 1 AND CODIGO = '${codigoPeca}' ORDER BY DATA DESC`
                 const resultQuery = await select(lookForHisReal)
+                if(!resultQuery){
+                    return res.json({message : 'Algo deu errado'})
+                }
+                const connection = await mssql.connect(sqlConfig);
                 try {
                     const insertHisReal = await connection.query(`
                 INSERT INTO HISREAL

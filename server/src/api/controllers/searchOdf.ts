@@ -13,57 +13,62 @@ import { codeNote } from '../utils/codeNote';
 import { encoded } from '../utils/encodedOdf';
 
 export const searchOdf: RequestHandler = async (req, res) => {
-    const dados: any = unravelBarcode(req.body.barcode)
-    let qtdLibMax: number;
-    let funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))
-    const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA  FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
-
+    const dados: any = unravelBarcode(req.body.barcode) || null
+    console.log('dados', dados);
     // Descriptografa o funcionario dos cookies
-    if (!funcionario) {
-        return res.json({ message: 'Algo deu errado' })
+    let funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+    const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
+
+    // Barcode inválido
+    if (dados.message === 'Código de barras inválido') {
+        return res.json({ message: 'Código de barras inválido' })
+    } else if (dados.message === 'Código de barras está vazio') {
+        return res.json({ message: 'Código de barras está vazio' })
+    } else if (!funcionario) {
+        return res.json({ message: 'Funcionario inválido' })
     }
 
     // Seleciona todos os itens da Odf
     const groupOdf = await select(lookForOdfData)
-
-    if (!groupOdf) {
-        return res.json({ message: 'odf não encontrada' })
+    console.log('linha 33 /group/', groupOdf);
+    if (!groupOdf || groupOdf.length <= 0) {
+        return res.json({ message: 'ODF não encontrada' })
     }
 
-    let indexOdf: number = await odfIndex(groupOdf, dados.numOper)
-
     // Não pode pegar o 0 como erro pois, temos o index = 0 na ODF
+    let indexOdf: number = await odfIndex(groupOdf, dados.numOper)
     if (indexOdf === undefined || indexOdf === null) {
         return res.json({ message: 'Algo deu errado' })
     }
 
+    // Seleciona a ODF anterior e a ODF do processo presente
     const selectedItens: any = await selectedItensFromOdf(groupOdf, indexOdf)
-
-    if (indexOdf === 0) {
-        qtdLibMax = selectedItens.odf.QTDE_ODF - selectedItens.odf.QTDE_APONTADA
-    } else {
-        qtdLibMax = selectedItens.beforeOdf.QTDE_APONTADA - selectedItens.odf.QTDE_APONTADA
-    }
-
-    if (qtdLibMax === 0) {
+    console.log('linha 45', selectedItens.odf);
+    if (selectedItens.odf.QTDE_ODF - selectedItens.odf.QTDE_APONTADA === 0) {
         return res.json({ message: 'Não há limite na ODF' })
+    } else if (indexOdf === 0) {
+        selectedItens.odf.QTDE_LIB = selectedItens.odf.QTDE_ODF - selectedItens.odf.QTDE_APONTADA
+    } else {
+        if (selectedItens.beforeOdf.QTDE_APONTADA - selectedItens.odf.QTDE_APONTADA === 0) {
+            return res.json({ message: 'Não há limite na ODF' })
+        } else {
+            selectedItens.odf.QTDE_LIB = selectedItens.beforeOdf.QTDE_APONTADA - selectedItens.odf.QTDE_APONTADA
+        }
     }
-    selectedItens.odf.QTDE_LIB = qtdLibMax
 
     // Generate cookie that is gonna be used later;
-    let lookForChildComponents = await selectToKnowIfHasP(dados, qtdLibMax, funcionario, selectedItens.odf.NUMERO_OPERACAO, selectedItens.odf.CODIGO_PECA, selectedItens.odf.REVISAO)
-
+    let lookForChildComponents = await selectToKnowIfHasP(dados, selectedItens.odf.QTDE_LIB, funcionario, selectedItens.odf.NUMERO_OPERACAO, selectedItens.odf.CODIGO_PECA, selectedItens.odf.REVISAO)
     if (lookForChildComponents.message === 'Quantidade para reserva inválida') {
         await cookieCleaner(res)
         return res.json({ message: 'Quantidade para reserva inválida' })
     }
 
-    if (lookForChildComponents.quantidade < qtdLibMax) {
+    if (lookForChildComponents.quantidade < selectedItens.odf.QTDE_LIB) {
         selectedItens.odf.QTDE_LIB = lookForChildComponents.quantidade
         let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${lookForChildComponents.quantidade} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${dados.numOper}`
         await update(y)
     } else {
-        let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${qtdLibMax} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${dados.numOper}`
+        let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${selectedItens.odf.QTDE_LIB} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${dados.numOper}`
         await update(y)
     }
 
@@ -72,7 +77,7 @@ export const searchOdf: RequestHandler = async (req, res) => {
     selectedItens.odf.codigoFilho = lookForChildComponents.codigoFilho
     selectedItens.odf.startProd = new Date().getTime()
     await cookieGenerator(res, selectedItens.odf)
-    res.cookie('encodedOdfNumber', encoded(String(selectedItens.odf.NUMERO_ODF)), {httpOnly: true})
-    const x = await codeNote(dados.numOdf, dados.numOper, dados.codMaq)
-    return res.json({ message: x })
+    res.cookie('encodedOdfNumber', encoded(String(selectedItens.odf.NUMERO_ODF)), { httpOnly: true })
+    const pointCode = await codeNote(dados.numOdf, dados.numOper, dados.codMaq)
+    return res.json({ message: pointCode })
 }

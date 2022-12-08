@@ -4,37 +4,32 @@ import { sqlConfig } from "../../global.config";
 import { insertInto } from "../services/insert";
 import { select } from "../services/select";
 import { update } from "../services/update";
+import { codeNote } from "../utils/codeNote";
 //import { decodedBuffer } from "../utils/decodeOdf";
 import { decrypted } from "../utils/decryptedOdf";
 import { encrypted } from "../utils/encryptOdf";
 import { sanitize } from "../utils/sanitize";
 
 export const point: RequestHandler = async (req, res) => {
-    let qtdBoas = Number(sanitize(req.body["valorFeed"])) || 0;
+    let qtdBoas = Number(sanitize(req.body["valorFeed"])) || null;
     let supervisor: string = sanitize(req.body["supervisor"]) || null
     const motivorefugo: string | null = sanitize(req.body["value"]) || null
-    const badFeed = Number(sanitize(req.body["badFeed"])) || 0;
-    const missingFeed = Number(sanitize(req.body["missingFeed"])) || 0;
-    const reworkFeed = Number(sanitize(req.body["reworkFeed"])) || 0;
+    const badFeed = Number(sanitize(req.body["badFeed"])) || null;
+    const missingFeed = Number(sanitize(req.body["missingFeed"])) || null;
+    const reworkFeed = Number(sanitize(req.body["reworkFeed"])) || null;
     let condic: string | null;
-    console.log('linha 20 /point.ts/');
     if (!req.cookies['condic']) {
         condic = null
     } else {
         condic = decrypted(String(sanitize(req.cookies['condic']))) || null
     }
-    const odfNumber: number = Number(decrypted(sanitize(req.cookies["NUMERO_ODF"]))) || 0
+    const odfNumber: number | null = Number(decrypted(sanitize(req.cookies["NUMERO_ODF"]))) || null
     const operationNumber = decrypted(sanitize(req.cookies["NUMERO_OPERACAO"])) || null
     const codigoPeca = decrypted(sanitize(req.cookies['CODIGO_PECA'])) || null
     const machineCode = decrypted(sanitize(req.cookies["CODIGO_MAQUINA"])) || null
-    const qtdLibMax: number = Number(decrypted(sanitize(req.cookies['QTDE_LIB']))) || 0
-    console.log('linha 31 /point.ts/');
-
-    //const nextMachineProcess = decrypted(sanitize(req.cookies['MAQUINA_PROXIMA'])) || null
-    //const nextOperationProcess = decrypted(sanitize(req.cookies['OPERACAO_PROXIMA'])) || null
+    const qtdLibMax: number | null = Number(decrypted(sanitize(req.cookies['QTDE_LIB']))) || null
     const employee = decrypted(sanitize(req.cookies['FUNCIONARIO'])) || null
     const revisao = decrypted(sanitize(req.cookies['REVISAO'])) || null
-    const lookForHisaponta = `SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${odfNumber} AND NUMOPE = ${operationNumber} AND ITEM = '${machineCode}' ORDER BY DATAHORA DESC`
     const updateQtyQuery: string[] = [];
     const updateQtyQuery2: string[] = [];
     var response = {
@@ -50,20 +45,14 @@ export const point: RequestHandler = async (req, res) => {
 
     // Varial que guarda o valor total dos apontamentos
     const valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed)) //+ Number(parcialFeed))
-    let faltante = qtdLibMax - valorTotalApontado
+    let faltante = qtdLibMax! - valorTotalApontado
 
     console.log("linha 56 /point.ts/");
 
-    const x = await select(lookForHisaponta)
-    console.log('x', x);
-    if (x[0].CODAPONTA === 4 || x[0].CODAPONTA === 5 || x[0].CODAPONTA === 6) {
-        return res.json({ message: 'Already pointed' })
-    } else if (x[0].CODAPONTA === 7) {
-        return res.json({ message: 'Machine stopped' })
-    } else if (x[0].CODAPONTA === 1 || x[0].CODAPONTA === 2) {
-        return res.json({ message: 'Jumping steps' })
-    } else if (x[0].CODAPONTA !== 3) {
-        return res.json({ message: 'Algo deu errado' })
+
+    const x = await codeNote(odfNumber, operationNumber, machineCode)
+    if (x !== 'Ini Prod') {
+        return res.json({ message: x })
     }
 
     if (!valorTotalApontado) {
@@ -71,7 +60,7 @@ export const point: RequestHandler = async (req, res) => {
     }
 
     if (!supervisor || supervisor === '' && valorTotalApontado === qtdLibMax) {
-        if (badFeed > 0) {
+        if (badFeed! > 0) {
             return res.json({ message: 'Supervisor inválido' })
         } else {
             supervisor = '004067'
@@ -118,7 +107,7 @@ export const point: RequestHandler = async (req, res) => {
         return res.json({ message: 'Funcionário Inválido' })
     }
 
-    if (qtdBoas > qtdLibMax || valorTotalApontado > qtdLibMax || badFeed > qtdLibMax || missingFeed > qtdLibMax || reworkFeed > qtdLibMax) {
+    if (qtdBoas! > qtdLibMax || valorTotalApontado > qtdLibMax || badFeed! > qtdLibMax || missingFeed! > qtdLibMax || reworkFeed! > qtdLibMax) {
         console.log('linha 107 /searchOdf/');
         return res.json({ message: 'Quantidade excedida' })
     }
@@ -134,7 +123,7 @@ export const point: RequestHandler = async (req, res) => {
     }
 
     // Se houver refugo, verifica se o supervisor esta correto
-    if (badFeed > 0) {
+    if (badFeed! > 0) {
         if (!motivorefugo) {
             console.log(["Não foi dado motivo para o refugo"]);
             return res.json({ message: 'Algo deu errado' })
@@ -246,7 +235,7 @@ export const point: RequestHandler = async (req, res) => {
         console.log('faltante', faltante);
         console.log('valorTotalApontado', valorTotalApontado);
 
-        const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + ${valorTotalApontado}, QTDE_LIB = QTDE_LIB - ${faltante}, QTD_FALTANTE = ${faltante} WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`
+        const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + ${qtdBoas}, QTD_REFUGO = ${badFeed}, QTDE_LIB = QTDE_LIB - ${faltante}, QTD_FALTANTE = ${faltante} WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`
         await update(updateCol)
     } catch (error) {
         console.log("linha 209 - error - /point.ts/", error);
@@ -258,7 +247,7 @@ export const point: RequestHandler = async (req, res) => {
         console.log("linha 238 /point.ts/ Inserindo dados de apontamento...");
         const codAponta = 4
         const descricaoCodigoAponta = 'Fin Prod'
-        await insertInto(employee, odfNumber, codigoPeca, revisao, operationNumber, machineCode, qtdLibMax, qtdBoas, badFeed, codAponta, descricaoCodigoAponta, motivorefugo, faltante, reworkFeed, finalProdTimer)
+        await insertInto(employee, odfNumber, codigoPeca, revisao, operationNumber, machineCode, qtdLibMax, qtdBoas!, badFeed!, codAponta, descricaoCodigoAponta, motivorefugo, faltante, reworkFeed!, finalProdTimer)
     } catch (error) {
         console.log("erro ao fazer insert linha 220 /point.ts/", error);
         return res.json({ message: 'Algo deu errado' })

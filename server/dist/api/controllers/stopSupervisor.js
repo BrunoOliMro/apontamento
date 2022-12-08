@@ -15,13 +15,13 @@ const stopSupervisor = async (req, res) => {
     const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
     const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
     const codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA']))) || null;
-    const boas = 0;
-    const faltante = 0;
-    const retrabalhada = 0;
-    const ruins = 0;
+    const boas = null;
+    const faltante = null;
+    const retrabalhada = null;
+    const ruins = null;
     const codAponta = 3;
     const descricaoCodAponta = `Ini Prod.`;
-    const motivo = '';
+    const motivo = null;
     const tempoDecorrido = 0;
     const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`;
     try {

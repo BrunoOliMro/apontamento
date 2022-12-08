@@ -9,33 +9,31 @@ const global_config_1 = require("../../global.config");
 const insert_1 = require("../services/insert");
 const select_1 = require("../services/select");
 const update_1 = require("../services/update");
+const codeNote_1 = require("../utils/codeNote");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const encryptOdf_1 = require("../utils/encryptOdf");
 const sanitize_1 = require("../utils/sanitize");
 const point = async (req, res) => {
-    let qtdBoas = Number((0, sanitize_1.sanitize)(req.body["valorFeed"])) || 0;
+    let qtdBoas = Number((0, sanitize_1.sanitize)(req.body["valorFeed"])) || null;
     let supervisor = (0, sanitize_1.sanitize)(req.body["supervisor"]) || null;
     const motivorefugo = (0, sanitize_1.sanitize)(req.body["value"]) || null;
-    const badFeed = Number((0, sanitize_1.sanitize)(req.body["badFeed"])) || 0;
-    const missingFeed = Number((0, sanitize_1.sanitize)(req.body["missingFeed"])) || 0;
-    const reworkFeed = Number((0, sanitize_1.sanitize)(req.body["reworkFeed"])) || 0;
+    const badFeed = Number((0, sanitize_1.sanitize)(req.body["badFeed"])) || null;
+    const missingFeed = Number((0, sanitize_1.sanitize)(req.body["missingFeed"])) || null;
+    const reworkFeed = Number((0, sanitize_1.sanitize)(req.body["reworkFeed"])) || null;
     let condic;
-    console.log('linha 20 /point.ts/');
     if (!req.cookies['condic']) {
         condic = null;
     }
     else {
         condic = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['condic']))) || null;
     }
-    const odfNumber = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))) || 0;
+    const odfNumber = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))) || null;
     const operationNumber = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"])) || null;
     const codigoPeca = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])) || null;
     const machineCode = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies["CODIGO_MAQUINA"])) || null;
-    const qtdLibMax = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB']))) || 0;
-    console.log('linha 31 /point.ts/');
+    const qtdLibMax = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB']))) || null;
     const employee = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])) || null;
     const revisao = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['REVISAO'])) || null;
-    const lookForHisaponta = `SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${odfNumber} AND NUMOPE = ${operationNumber} AND ITEM = '${machineCode}' ORDER BY DATAHORA DESC`;
     const updateQtyQuery = [];
     const updateQtyQuery2 = [];
     var response = {
@@ -48,19 +46,9 @@ const point = async (req, res) => {
     const valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed));
     let faltante = qtdLibMax - valorTotalApontado;
     console.log("linha 56 /point.ts/");
-    const x = await (0, select_1.select)(lookForHisaponta);
-    console.log('x', x);
-    if (x[0].CODAPONTA === 4 || x[0].CODAPONTA === 5 || x[0].CODAPONTA === 6) {
-        return res.json({ message: 'Already pointed' });
-    }
-    else if (x[0].CODAPONTA === 7) {
-        return res.json({ message: 'Machine stopped' });
-    }
-    else if (x[0].CODAPONTA === 1 || x[0].CODAPONTA === 2) {
-        return res.json({ message: 'Jumping steps' });
-    }
-    else if (x[0].CODAPONTA !== 3) {
-        return res.json({ message: 'Algo deu errado' });
+    const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, machineCode);
+    if (x !== 'Ini Prod') {
+        return res.json({ message: x });
     }
     if (!valorTotalApontado) {
         return res.json({ message: 'Algo deu errado' });
@@ -194,7 +182,7 @@ const point = async (req, res) => {
         console.log('d', d);
         console.log('faltante', faltante);
         console.log('valorTotalApontado', valorTotalApontado);
-        const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + ${valorTotalApontado}, QTDE_LIB = QTDE_LIB - ${faltante}, QTD_FALTANTE = ${faltante} WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`;
+        const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + ${qtdBoas}, QTD_REFUGO = ${badFeed}, QTDE_LIB = QTDE_LIB - ${faltante}, QTD_FALTANTE = ${faltante} WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`;
         await (0, update_1.update)(updateCol);
     }
     catch (error) {

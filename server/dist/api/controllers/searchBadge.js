@@ -8,18 +8,19 @@ const sanitize_1 = require("../utils/sanitize");
 const searchBagde = async (req, res) => {
     let matricula = String((0, sanitize_1.sanitize)(req.body["badge"])) || null;
     let lookForBadge = `SELECT TOP 1 [FUNCIONARIO], [CRACHA] FROM FUNCIONARIOS WHERE 1 = 1 AND [CRACHA] = '${matricula}' ORDER BY FUNCIONARIO`;
-    if (!matricula || matricula === '') {
+    if (!matricula) {
         return res.json({ message: "Empty badge" });
     }
     try {
         const selecionarMatricula = await (0, select_1.select)(lookForBadge);
-        if (selecionarMatricula) {
-            selecionarMatricula[0].startSetupTime = (0, encryptOdf_1.encrypted)(String(new Date().getTime()));
+        if (selecionarMatricula.length <= 0) {
+            return res.json({ message: 'Badge not found' });
+        }
+        else if (selecionarMatricula.length >= 0) {
+            let startSetupTime = (0, encryptOdf_1.encrypted)(String(new Date().getTime()));
+            res.cookie('startSetupTime', startSetupTime, { httpOnly: true });
             await (0, cookieGenerator_1.cookieGenerator)(res, selecionarMatricula[0]);
             return res.json({ message: 'Badge found' });
-        }
-        else if (!selecionarMatricula) {
-            return res.json({ message: 'Badge not found' });
         }
         else {
             return res.json({ message: 'Badge not found' });
@@ -27,7 +28,7 @@ const searchBagde = async (req, res) => {
     }
     catch (error) {
         console.log(error);
-        return res.json({ message: 'Error on searching for badge' });
+        return res.json({ message: 'Badge not found' });
     }
 };
 exports.searchBagde = searchBagde;

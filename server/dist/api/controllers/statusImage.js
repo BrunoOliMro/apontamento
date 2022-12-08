@@ -17,7 +17,7 @@ const statusImage = async (req, res) => {
     let imgResult = [];
     try {
         const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine);
-        if (x === 'Ini Prod' || x === 'Pointed' || x === 'Rip iniciated') {
+        if (x === 'Ini Prod' || x === 'Pointed' || x === 'Rip iniciated' || x === 'Machine has stopped') {
             const resource = await (0, select_1.select)(lookOnProcess);
             if (resource.length > 0) {
                 try {

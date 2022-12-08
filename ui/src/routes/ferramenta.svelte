@@ -10,19 +10,22 @@
   let fer = [];
   let adicionados = 0;
   let arrayComp = [];
-  export let breadFer;
+  let breadFer;
   let message = "";
 
   async function ferSelected() {
+    loader = true;
     const res = await fetch(urlFer);
     fer = await res.json();
-    console.log("linha 19 /fer/", fer);
+    console.log("linha 19 /ferSelected/", fer);
+    if (fer.message === "Algo deu errado") {
+      message = "Algo deu errado";
+    }
 
     if (fer.message === "ferramentas selecionadas com successo") {
       window.location.href = "/#/codigobarras/apontamento";
-      location.reload(); 
+      location.reload();
     }
-    
   }
 
   async function getTools() {
@@ -30,15 +33,17 @@
     tools = await res.json();
     console.log("tools linha 28", tools);
 
-    if(tools.message === 'Já passou aqui'){
+    if (
+      tools.message == "Pointed Iniciated" ||
+      tools.message === "Fin Setup" ||
+      tools.message === "/images/sem_imagem.gif"
+    ) {
+      loader = true;
       ferSelected();
     }
 
-    if (tools.message === "Algo deu errado") {
-      ferSelected();
-    }
-
-    if(tools.message === 'Data not found'){
+    if (tools.message === "Data not found") {
+      loader = true;
       window.location.href = "/#/codigobarras/apontamento";
       location.reload();
       ferSelected();
@@ -49,14 +54,6 @@
       location.reload();
       loader = false;
     }
-
-    if (tools.message === "/images/sem_imagem.gif") {
-      ferSelected();
-    }
-
-    // if (tools.length > 0) {
-    //   loader = false;
-    // }
   }
 
   function checkIfclicked(column, imgId) {
@@ -73,11 +70,9 @@
   }
 
   function close() {
-    //loader = true
     window.location.href = "/#/codigobarras";
     location.reload();
   }
-  //let resultPromises = getTools();
 </script>
 
 {#if breadFer === true}
@@ -122,6 +117,10 @@
 {/await}
 
 {#if message === "Erro ao tentar acessar as fotos de ferramentas"}
+  <ModalConfirmation on:message={close} />
+{/if}
+
+{#if message === "Algo deu errado"}
   <ModalConfirmation on:message={close} />
 {/if}
 

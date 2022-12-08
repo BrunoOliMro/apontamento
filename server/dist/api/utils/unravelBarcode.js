@@ -7,8 +7,11 @@ function unravelBarcode(barcode) {
     let response = {
         message: ''
     };
-    if (barcode === '' || barcode === undefined || barcode === null) {
-        return response.message = 'Algo deu errado';
+    if (!barcode) {
+        return response.message = 'Código de barras está vazio';
+    }
+    if (barcode.length <= 16) {
+        return response.message = 'Código de barras inválido';
     }
     const dados = {
         numOdf: String(barcode.slice(10)),

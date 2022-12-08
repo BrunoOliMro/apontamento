@@ -13,6 +13,8 @@
     let result = callMotivo();
     let modalTitle = "Máquina parada com sucesso";
     let modalmessage = "";
+    let loader = false;
+    let imageLoader = "/images/axonLoader.gif";
 
     function showStop() {
         if (stopModal === false) {
@@ -32,6 +34,7 @@
     }
 
     const confirm = async () => {
+        loader = true;
         const headers = new Headers();
         const res = await fetch(postParada, {
             method: "POST",
@@ -41,15 +44,17 @@
             }),
         }).then((res) => res.json());
         console.log("res /title.svelte linha 43/", res);
-
-        if (res.message === "Máquina já parada") {
-            stopModal = false;
-            showMaqPar = false;
-            modalmessage = "Máquina parada";
-        }
-        if (res.message === "maquina parada com sucesso") {
-            stopModal = false;
-            showMaqPar = true;
+        if (res) {
+            loader = false;
+            if (res.message === "Máquina já parada") {
+                stopModal = false;
+                showMaqPar = false;
+                modalmessage = "Máquina parada";
+            }
+            if (res.message === "maquina parada com sucesso") {
+                stopModal = false;
+                showMaqPar = true;
+            }
         }
     };
 
@@ -61,10 +66,18 @@
     function closeConfirm() {
         showMaqPar = false;
         stopModal = false;
-        modalmessage = ''
+        modalmessage = "";
         //location.reload();
     }
 </script>
+
+{#if loader === true}
+    <div class="imageLoader">
+        <div class="loader">
+            <img src={imageLoader} alt="" />
+        </div>
+    </div>
+{/if}
 
 {#await result}
     <div>...</div>
@@ -140,6 +153,29 @@
 {/if}
 
 <style>
+    .loader {
+        margin: 0%;
+        position: relative;
+        width: 10vw;
+        height: 5vw;
+        padding: 1.5vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .imageLoader {
+        margin: 0%;
+        padding: 0%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: black;
+        height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
     .fist-item-nav {
         margin: 0%;
         padding: 0%;

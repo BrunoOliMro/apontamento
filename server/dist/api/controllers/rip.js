@@ -22,12 +22,12 @@ const rip = async (req, res) => {
     const qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['QTDE_LIB']))) || null;
     res.cookie('startRip', (0, encryptOdf_1.encrypted)(String(new Date().getDate())));
     const descricaoCodAponta = `Rip Ini`;
-    const boas = 0;
-    const ruins = 0;
-    const faltante = 0;
-    const retrabalhada = 0;
+    const boas = null;
+    const ruins = null;
+    const faltante = null;
+    const retrabalhada = null;
     const codAponta = 5;
-    const motivo = ``;
+    const motivo = null;
     const startTime = Number(new Date(start).getTime()) || 0;
     const response = {
         message: '',

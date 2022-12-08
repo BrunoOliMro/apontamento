@@ -13,7 +13,6 @@ const codeNote_1 = require("../utils/codeNote");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const sanitize_1 = require("../utils/sanitize");
 const getPoint = async (req, res) => {
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let odfNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))) || null;
     let qtdBoas = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["qtdBoas"]))) || null;
     let operationNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO']))) || null;
@@ -143,6 +142,10 @@ const getPoint = async (req, res) => {
             try {
                 const lookForHisReal = `SELECT TOP 1  * FROM HISREAL  WHERE 1 = 1 AND CODIGO = '${codigoPeca}' ORDER BY DATA DESC`;
                 const resultQuery = await (0, select_1.select)(lookForHisReal);
+                if (!resultQuery) {
+                    return res.json({ message: 'Algo deu errado' });
+                }
+                const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
                 try {
                     const insertHisReal = await connection.query(`
                 INSERT INTO HISREAL

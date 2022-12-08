@@ -38,7 +38,6 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
            AND OP.NUMSEQ = ${numeroOperacao}`;
     try {
         const selectKnowHasP = await (0, select_1.select)(queryStorageFund);
-        console.log('lrkgnbuiretbeuitrbn uetr', selectKnowHasP);
         if (selectKnowHasP.length <= 0) {
             response.message = "Não há item para reservar";
             return response;
@@ -56,9 +55,6 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                     return response;
                 }
             }
-            else {
-                console.log('nao foi reservado');
-            }
         }
         if (selectKnowHasP.length > 0) {
             const qtdLibProd = selectKnowHasP.map((element) => element.QTD_LIBERADA_PRODUZIR);
@@ -74,7 +70,6 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
             let execut = Math.max(...selectKnowHasP.map((element) => element.EXECUT));
             let numeroOperNew = String(numeroOperacao.replaceAll(' ', ''));
             let makeReservation = selectKnowHasP.map((item) => item.NUMSEQ).filter((element) => element === numeroOperNew);
-            console.log('linha 66 /makeReservation/', makeReservation);
             if (makeReservation.length <= 0) {
                 response.message = 'Algo deu errado';
                 return response;
@@ -85,7 +80,6 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
             else {
                 quantityToPoint = numberOfQtd;
             }
-            console.log('linha 79 /quantity/', quantityToPoint);
             if (quantityToPoint <= 0) {
                 response.message = 'Quantidade para reserva inválida';
                 return response;
@@ -105,7 +99,6 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                             updateAlocacaoQuery.push(`UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${quantityToPoint} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho}'`);
                         });
                         const updateAlocacao = Math.min(...await connection.query(updateAlocacaoQuery.join('\n')).then(result => result.rowsAffected));
-                        console.log('linha 94 /updateAloca/', updateAlocacao);
                         if (updateAlocacao <= 0) {
                             try {
                                 if (makeReservation) {
@@ -127,7 +120,6 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                                                     p.push(z);
                                                 });
                                                 const w = await connection.query(p.join('\n')).then(result => result.rowsAffected);
-                                                console.log('w', w);
                                                 if (w) {
                                                     response.message = 'Valores Reservados';
                                                     response.url = '/#/ferramenta';
@@ -165,7 +157,6 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                                         p.push(z);
                                     });
                                     const w = await connection.query(p.join('\n')).then(result => result.rowsAffected);
-                                    console.log('w', w);
                                     if (w) {
                                         response.message = 'Valores Reservados';
                                         response.url = '/#/ferramenta';
@@ -199,13 +190,6 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                 console.log("linha 145 /selectHasP/", error);
                 return response.message = 'Algo deu errado';
             }
-        }
-        else if (selectKnowHasP.length <= 0) {
-            response.message = "Não há item para reservar";
-            return response;
-        }
-        else {
-            return response.message = "Algo deu errado";
         }
     }
     catch (error) {

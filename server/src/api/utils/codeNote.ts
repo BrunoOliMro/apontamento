@@ -1,12 +1,13 @@
 import { select } from "../services/select"
 
-export const codeNote = async (odfNumber: number, operationNumber: number, codeMachine: string) => {
+export const codeNote = async (odfNumber: number |  null, operationNumber: number | null, codeMachine: string | null) => {
     const lookForHisaponta = `SELECT TOP 1 CODAPONTA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${odfNumber} AND NUMOPE = ${operationNumber} AND ITEM = '${codeMachine}' ORDER BY DATAHORA DESC`
     let codigoDeApontamento;
     var response = {
         message: '',
     }
     codigoDeApontamento = await select(lookForHisaponta)
+    console.log('linha 10 /CodigoDeApontamento/', codigoDeApontamento);
     if (codigoDeApontamento.length > 0) {
         if (codigoDeApontamento[0].hasOwnProperty('CODAPONTA')) {
             if (codigoDeApontamento[0].CODAPONTA === 1) {

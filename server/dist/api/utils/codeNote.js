@@ -9,6 +9,7 @@ const codeNote = async (odfNumber, operationNumber, codeMachine) => {
         message: '',
     };
     codigoDeApontamento = await (0, select_1.select)(lookForHisaponta);
+    console.log('linha 10 /CodigoDeApontamento/', codigoDeApontamento);
     if (codigoDeApontamento.length > 0) {
         if (codigoDeApontamento[0].hasOwnProperty('CODAPONTA')) {
             if (codigoDeApontamento[0].CODAPONTA === 1) {

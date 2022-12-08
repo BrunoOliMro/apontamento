@@ -34,28 +34,23 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
 
     try {
         const selectKnowHasP = await select(queryStorageFund)
-        console.log('lrkgnbuiretbeuitrbn uetr', selectKnowHasP)
-        if(selectKnowHasP.length <= 0 ){
+        if (selectKnowHasP.length <= 0) {
             response.message = "Não há item para reservar"
             return response
-        } else if(selectKnowHasP.length > 0) {
-            if(selectKnowHasP[0].hasOwnProperty('STATUS_RESERVA')){
-                if(selectKnowHasP[0].STATUS_RESERVA === 'R'){
+        } else if (selectKnowHasP.length > 0) {
+            if (selectKnowHasP[0].hasOwnProperty('STATUS_RESERVA')) {
+                if (selectKnowHasP[0].STATUS_RESERVA === 'R') {
                     const codigoFilho = selectKnowHasP.map((element: any) => element.NUMITE)
-                let execut = Math.max(...selectKnowHasP.map((element: any) => element.EXECUT))
-                response.quantidade = selectKnowHasP[0].saldo_alocado
-                response.codigoFilho = codigoFilho
-                response.execut = execut
-                response.condic = 'P'
-                response.message = 'Pegar cookies'
-                return response
+                    let execut = Math.max(...selectKnowHasP.map((element: any) => element.EXECUT))
+                    response.quantidade = selectKnowHasP[0].saldo_alocado
+                    response.codigoFilho = codigoFilho
+                    response.execut = execut
+                    response.condic = 'P'
+                    response.message = 'Pegar cookies'
+                    return response
                 }
-            } else {
-                console.log('nao foi reservado');
             }
         }
-
-
 
         if (selectKnowHasP.length > 0) {
             const qtdLibProd: number[] = selectKnowHasP.map((element: any) => element.QTD_LIBERADA_PRODUZIR)
@@ -73,7 +68,6 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
             // Check to see if it's to make a reservation
             let numeroOperNew = String(numeroOperacao.replaceAll(' ', ''))
             let makeReservation = selectKnowHasP.map((item: any) => item.NUMSEQ).filter((element: string) => element === numeroOperNew)
-            console.log('linha 66 /makeReservation/', makeReservation);
             if (makeReservation.length <= 0) {
                 response.message = 'Algo deu errado'
                 return response
@@ -86,7 +80,6 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                 quantityToPoint = numberOfQtd;
             }
 
-            console.log('linha 79 /quantity/', quantityToPoint  );
             if (quantityToPoint <= 0) {
                 response.message = 'Quantidade para reserva inválida'
                 return response
@@ -109,7 +102,6 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                             updateAlocacaoQuery.push(`UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${quantityToPoint} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho}'`);
                         });
                         const updateAlocacao = Math.min(...await connection.query(updateAlocacaoQuery.join('\n')).then(result => result.rowsAffected));
-                        console.log('linha 94 /updateAloca/', updateAlocacao);
                         if (updateAlocacao <= 0) {
                             try {
                                 if (makeReservation) {
@@ -130,7 +122,6 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                                                     p.push(z)
                                                 });
                                                 const w = await connection.query(p.join('\n')).then(result => result.rowsAffected)
-                                                console.log('w', w);
                                                 if (w) {
                                                     response.message = 'Valores Reservados'
                                                     response.url = '/#/ferramenta'
@@ -163,7 +154,6 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                                         p.push(z)
                                     });
                                     const w = await connection.query(p.join('\n')).then(result => result.rowsAffected)
-                                    console.log('w', w);
                                     if (w) {
                                         response.message = 'Valores Reservados'
                                         response.url = '/#/ferramenta'
@@ -191,11 +181,6 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                 console.log("linha 145 /selectHasP/", error);
                 return response.message = 'Algo deu errado'
             }
-        } else if (selectKnowHasP.length <= 0) {
-            response.message = "Não há item para reservar"
-            return response
-        } else {
-            return response.message = "Algo deu errado"
         }
     } catch (error) {
         console.log('linha 154 /error: selectHasP/: ', error);

@@ -16,13 +16,13 @@ const ripPost = async (req, res) => {
     const setup = (req.body['setup']);
     let keySan;
     let valueSan;
-    const odfNumber = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF']))) || 0;
+    const odfNumber = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF']))) || null;
     const operationNumber = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])) || null;
     const codeMachine = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA'])) || null;
     const codigoPeca = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])) || null;
     const funcionario = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])) || null;
     const revisao = String((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['REVISAO'])));
-    const qtdLibMax = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB']))) || 0;
+    const qtdLibMax = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB']))) || null;
     const updateQtyQuery = [];
     const especif = (req.cookies['especif']) || null;
     const numCar = (req.cookies['numCar']) || null;
@@ -31,13 +31,14 @@ const ripPost = async (req, res) => {
     const instrumento = (req.cookies['instrumento']) || null;
     const descricao = (req.cookies['descricao']) || null;
     var objectSanitized = {};
-    const boas = 0;
-    const ruins = 0;
+    const boas = null;
+    const ruins = null;
     const codAponta = 6;
     const descricaoCodAponta = 'Rip Fin';
     const motivo = null;
-    const faltante = 0;
-    const retrabalhada = 0;
+    const faltante = null;
+    const retrabalhada = null;
+    const updatePcpProg = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${codeMachine}'`;
     const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine);
     if (x !== 'Rip iniciated') {
         return res.json({ message: x });
@@ -46,7 +47,13 @@ const ripPost = async (req, res) => {
     if (Object.keys(setup).length <= 0) {
         const x = await (0, insert_1.insertInto)(funcionario, odfNumber, codigoPeca, revisao, operationNumber, codeMachine, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorridoRip);
         if (x) {
-            return res.json({ message: "rip enviada, odf finalizada" });
+            const y = await (0, update_1.update)(updatePcpProg);
+            if (y === 'Update sucess') {
+                return res.json({ message: "rip enviada, odf finalizada" });
+            }
+            else {
+                return res.json({ message: 'Algo deu errado' });
+            }
         }
         else {
             return res.json({ message: 'Algo deu errado' });
@@ -66,7 +73,6 @@ const ripPost = async (req, res) => {
         }
         else if (x) {
             try {
-                const updatePcpProg = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${codeMachine}'`;
                 const y = await (0, update_1.update)(updatePcpProg);
                 if (y !== 'Update sucess') {
                     return res.json({ message: 'Algo deu errado' });

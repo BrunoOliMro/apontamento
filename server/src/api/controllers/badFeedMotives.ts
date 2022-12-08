@@ -11,7 +11,7 @@ export const badFeedMotives: RequestHandler = async (req, res) => {
     const codeMachine = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
     try {
         const x = await codeNote(odfNumber, operationNumber, codeMachine)
-        if (x === 'Ini Prod' || x === 'Pointed' || x === 'Rip iniciated') {
+        if (x === 'Ini Prod' || x === 'Pointed' || x === 'Rip iniciated' || x === 'Machine has stopped') {
             let resource = await select(y)
             let resoc = resource.map((e: any) => e.DESCRICAO)
             if (resource.length > 0) {

@@ -12,11 +12,11 @@ export const stopPost: RequestHandler = async (req, res) => {
     const operationNumber = decrypted(String(req.cookies['NUMERO_OPERACAO'])) || null
     const machineCode = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
     const qtdLibMax = decrypted(String(sanitize(req.cookies['QTDE_LIB']))) || null
-    const boas = 0
-    const faltante = 0
-    const retrabalhada = 0
+    const boas = null
+    const faltante = null
+    const retrabalhada = null
     const codAponta = 7
-    const ruins = 0
+    const ruins = null
     const motivo = ''
     const descricaoCodAponta = 'Parada'
 

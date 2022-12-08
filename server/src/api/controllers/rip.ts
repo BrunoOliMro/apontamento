@@ -21,12 +21,12 @@ export const rip: RequestHandler = async (req, res) => {
     const qtdLibMax: number = decrypted(String(sanitize(req.cookies['QTDE_LIB']))) || null
     res.cookie('startRip', encrypted(String(new Date().getDate())));
     const descricaoCodAponta = `Rip Ini`
-    const boas = 0
-    const ruins = 0
-    const faltante = 0
-    const retrabalhada = 0
+    const boas = null
+    const ruins = null
+    const faltante = null
+    const retrabalhada = null
     const codAponta = 5
-    const motivo = ``
+    const motivo = null
     const startTime: number = Number(new Date(start).getTime()) || 0
     const response = {
         message: '',

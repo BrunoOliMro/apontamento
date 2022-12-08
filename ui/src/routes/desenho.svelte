@@ -27,14 +27,12 @@
     }
 
     function right() {
-        console.log('linha 27 /rotation/', rotation);
         rotation += 90;
         document.getElementById(`img`).style.transition = "all 1s";
         document.getElementById(`img`).style.transform = `rotate(${rotation}deg)`;
     }
 
     function left() {
-        console.log('linha 34 /rotation/', rotation);
         rotation -= 90;
         document.getElementById(`img`).style.transition = "all 1s";
         document.getElementById(`img`).style.transform = `rotate(${rotation}deg)`;
@@ -44,7 +42,6 @@
         var img = document.getElementById(`img`);
         var width = img.clientWidth;
         img.style.width = width + zoomNumber + "px";
-        console.log('linha 27 /zoom/', img);
     }
 
     function zoomOut() {
@@ -52,7 +49,6 @@
         var img = document.getElementById(`img`);
         var width = img.clientWidth;
         img.style.width = width - zoomNumber + "px";
-        console.log('linha 27 /zoom/', img);
     }
     function print() {
         window.print();
@@ -222,10 +218,18 @@
     }
     .img {
         display: flex;
-        min-width: 10%;
-        max-width: 90%;
+        min-width: 50%;
+        /* max-width: 90%; */
         border-radius: 3px;
-        margin: 1%;
+        margin: 10px;
+        padding: 0%;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        flex-direction: row;
+    }
+    #img{
+        margin: 0%;
         padding: 0%;
     }
 
@@ -246,6 +250,11 @@
         margin: 1%;
     }
     @media print {
+        *{
+            background: transparent;
+            color: white;
+        }
+
         #buttons {
             display: none;
         }
@@ -256,6 +265,8 @@
             display: none;
         }
         .img {
+            display: block;
+            min-width: 100%;
             max-width: 100%;
         }
     }
