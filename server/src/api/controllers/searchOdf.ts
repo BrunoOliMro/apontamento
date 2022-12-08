@@ -2,7 +2,6 @@ import { RequestHandler } from 'express';
 import { select } from '../services/select';
 import { selectToKnowIfHasP } from '../services/selectIfHasP';
 import { decrypted } from '../utils/decryptedOdf';
-//import { encoded } from '../utils/encodedOdf';
 import { unravelBarcode } from '../utils/unravelBarcode'
 import { odfIndex } from '../utils/odfIndex';
 import { selectedItensFromOdf } from '../utils/queryGroup';
@@ -11,6 +10,7 @@ import { cookieGenerator } from '../utils/cookieGenerator';
 import { sanitize } from '../utils/sanitize';
 import { cookieCleaner } from '../utils/clearCookie';
 import { codeNote } from '../utils/codeNote';
+import { encoded } from '../utils/encodedOdf';
 
 export const searchOdf: RequestHandler = async (req, res) => {
     const dados: any = unravelBarcode(req.body.barcode)
@@ -58,10 +58,6 @@ export const searchOdf: RequestHandler = async (req, res) => {
         return res.json({ message: 'Quantidade para reserva inválida' })
     }
 
-    console.log('linha 60 /quantidade/', lookForChildComponents.quantidade);
-    console.log('linha 60 /qtdLibMax/', qtdLibMax);
-
-
     if (lookForChildComponents.quantidade < qtdLibMax) {
         selectedItens.odf.QTDE_LIB = lookForChildComponents.quantidade
         let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${lookForChildComponents.quantidade} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${dados.numOper}`
@@ -76,11 +72,7 @@ export const searchOdf: RequestHandler = async (req, res) => {
     selectedItens.odf.codigoFilho = lookForChildComponents.codigoFilho
     selectedItens.odf.startProd = new Date().getTime()
     await cookieGenerator(res, selectedItens.odf)
-
+    res.cookie('encodedOdfNumber', encoded(String(selectedItens.odf.NUMERO_ODF)), {httpOnly: true})
     const x = await codeNote(dados.numOdf, dados.numOper, dados.codMaq)
     return res.json({ message: x })
-
-    // if (lookForChildComponents.message === 'Não há item para reservar') {
-    //     return res.json({ message: 'Não há item para reservar' })
-    // 
 }

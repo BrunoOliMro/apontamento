@@ -5,23 +5,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getPoint = void 0;
 const mssql_1 = __importDefault(require("mssql"));
-const sanitize_html_1 = __importDefault(require("sanitize-html"));
 const global_config_1 = require("../../global.config");
 const select_1 = require("../services/select");
 const selectAddress_1 = require("../services/selectAddress");
 const update_1 = require("../services/update");
 const codeNote_1 = require("../utils/codeNote");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
+const sanitize_1 = require("../utils/sanitize");
 const getPoint = async (req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    let odfNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"]))) || null;
-    let qtdBoas = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["qtdBoas"]))) || null;
-    let operationNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_OPERACAO']))) || null;
-    const codeMachine = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
-    let codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA']))) || null;
-    let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO']))) || null;
-    let qtdProduzir = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['QTDE_LIB']))) || null;
-    let revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
+    let odfNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))) || null;
+    let qtdBoas = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["qtdBoas"]))) || null;
+    let operationNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO']))) || null;
+    const codeMachine = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
+    let codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA']))) || null;
+    let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
+    let qtdProduzir = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB']))) || null;
+    let revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
     const updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`;
     var address;
     var response = {

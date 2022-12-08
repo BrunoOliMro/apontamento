@@ -11,16 +11,16 @@ export const badFeedMotives: RequestHandler = async (req, res) => {
     const codeMachine = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
     try {
         const x = await codeNote(odfNumber, operationNumber, codeMachine)
-        if (x !== 'Pointed') {
-            return res.json({ message: x })
-        }
-
-        let resource = await select(y)
-        let resoc = resource.map((e: any) => e.DESCRICAO)
-        if (resource.length > 0) {
-            return res.status(200).json(resoc)
+        if (x === 'Ini Prod' || x === 'Pointed' || x === 'Rip iniciated') {
+            let resource = await select(y)
+            let resoc = resource.map((e: any) => e.DESCRICAO)
+            if (resource.length > 0) {
+                return res.status(200).json(resoc)
+            } else {
+                return res.json({ message: 'erro em motivos do refugo' })
+            }
         } else {
-            return res.json({ message: 'erro em motivos do refugo' })
+            return res.json({ message: x })
         }
     } catch (error) {
         console.log(error)

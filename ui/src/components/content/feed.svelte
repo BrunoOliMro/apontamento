@@ -349,13 +349,7 @@
         showAddress = false;
         window.location.href = `/#/rip`;
     }
-
-    // function closeMachineStopped() {
-    //     modalMessage = "";
-    //     showAddress = false;
-    //     window.location.href = `/#/codigobarras`;
-    // }
-
+    
     function handleSS(event) {
         valorFeed = event.detail.goodFeed;
     }
@@ -762,7 +756,7 @@
                     </h2>
                 </div>
                 <button on:keypress={closeRedirect} on:click={closeRedirect}
-                    >fechar</button
+                    >Continuar</button
                 >
             </div>
         </div>

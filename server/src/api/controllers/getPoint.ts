@@ -1,12 +1,12 @@
 import { RequestHandler } from "express";
 import mssql from "mssql";
-import sanitize from "sanitize-html";
 import { sqlConfig } from "../../global.config";
 import { select } from "../services/select";
 import { selectAddress } from "../services/selectAddress";
 import { update } from "../services/update";
 import { codeNote } from "../utils/codeNote";
 import { decrypted } from "../utils/decryptedOdf";
+import { sanitize } from "../utils/sanitize";
 
 export const getPoint: RequestHandler = async (req, res) => {
     const connection = await mssql.connect(sqlConfig);

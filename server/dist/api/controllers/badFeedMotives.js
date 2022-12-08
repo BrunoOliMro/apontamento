@@ -12,16 +12,18 @@ const badFeedMotives = async (req, res) => {
     const codeMachine = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
     try {
         const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine);
-        if (x !== 'Pointed') {
-            return res.json({ message: x });
-        }
-        let resource = await (0, select_1.select)(y);
-        let resoc = resource.map((e) => e.DESCRICAO);
-        if (resource.length > 0) {
-            return res.status(200).json(resoc);
+        if (x === 'Ini Prod' || x === 'Pointed' || x === 'Rip iniciated') {
+            let resource = await (0, select_1.select)(y);
+            let resoc = resource.map((e) => e.DESCRICAO);
+            if (resource.length > 0) {
+                return res.status(200).json(resoc);
+            }
+            else {
+                return res.json({ message: 'erro em motivos do refugo' });
+            }
         }
         else {
-            return res.json({ message: 'erro em motivos do refugo' });
+            return res.json({ message: x });
         }
     }
     catch (error) {

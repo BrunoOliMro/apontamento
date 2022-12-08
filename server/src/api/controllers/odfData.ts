@@ -27,13 +27,10 @@ export const odfData: RequestHandler = async (req, res) => {
             if (!funcionario) {
                 return res.json({ message: 'Algo deu errado' })
             }
-    
+
             const indexOdf = await odfIndex(data, numOper)
-    
             const selectedItens: any = await selectedItensFromOdf(data, indexOdf)
-    
             response.odfSelecionada = selectedItens.odf;
-    
             if (response.message === 'Algo deu errado') {
                 return res.json({ message: 'Algo deu errado' });
             } else {
@@ -43,7 +40,6 @@ export const odfData: RequestHandler = async (req, res) => {
         } else {
             return res.json({ message: x })
         }
-
     } catch (error) {
         console.log(error);
         return res.json({ message: "Algo deu errado" });

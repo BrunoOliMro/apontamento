@@ -54,9 +54,9 @@
       ferSelected();
     }
 
-    if (tools.length > 0) {
-      loader = false;
-    }
+    // if (tools.length > 0) {
+    //   loader = false;
+    // }
   }
 
   function checkIfclicked(column, imgId) {

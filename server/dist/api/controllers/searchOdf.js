@@ -12,6 +12,7 @@ const cookieGenerator_1 = require("../utils/cookieGenerator");
 const sanitize_1 = require("../utils/sanitize");
 const clearCookie_1 = require("../utils/clearCookie");
 const codeNote_1 = require("../utils/codeNote");
+const encodedOdf_1 = require("../utils/encodedOdf");
 const searchOdf = async (req, res) => {
     const dados = (0, unravelBarcode_1.unravelBarcode)(req.body.barcode);
     let qtdLibMax;
@@ -44,8 +45,6 @@ const searchOdf = async (req, res) => {
         await (0, clearCookie_1.cookieCleaner)(res);
         return res.json({ message: 'Quantidade para reserva inválida' });
     }
-    console.log('linha 60 /quantidade/', lookForChildComponents.quantidade);
-    console.log('linha 60 /qtdLibMax/', qtdLibMax);
     if (lookForChildComponents.quantidade < qtdLibMax) {
         selectedItens.odf.QTDE_LIB = lookForChildComponents.quantidade;
         let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${lookForChildComponents.quantidade} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${dados.numOper}`;
@@ -60,6 +59,7 @@ const searchOdf = async (req, res) => {
     selectedItens.odf.codigoFilho = lookForChildComponents.codigoFilho;
     selectedItens.odf.startProd = new Date().getTime();
     await (0, cookieGenerator_1.cookieGenerator)(res, selectedItens.odf);
+    res.cookie('encodedOdfNumber', (0, encodedOdf_1.encoded)(String(selectedItens.odf.NUMERO_ODF)), { httpOnly: true });
     const x = await (0, codeNote_1.codeNote)(dados.numOdf, dados.numOper, dados.codMaq);
     return res.json({ message: x });
 };

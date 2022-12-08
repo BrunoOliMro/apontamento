@@ -243,7 +243,10 @@ export const point: RequestHandler = async (req, res) => {
         console.log("linha 228 /point.ts/ Alterando quantidade apontada...");
         let d = valorTotalApontado - qtdLibMax
         console.log('d', d);
-        const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}', QTDE_LIB = QTDE_LIB - ${d}, QTD_FALTANTE = ${faltante} WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${operationNumber}' AND CODIGO_MAQUINA = '${machineCode}'`
+        console.log('faltante', faltante);
+        console.log('valorTotalApontado', valorTotalApontado);
+
+        const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + ${valorTotalApontado}, QTDE_LIB = QTDE_LIB - ${faltante}, QTD_FALTANTE = ${faltante} WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`
         await update(updateCol)
     } catch (error) {
         console.log("linha 209 - error - /point.ts/", error);

@@ -21,7 +21,7 @@
     let odfFinish = false;
     let badgeMessage = "";
     let redirect;
-    let promiseResult =  callRip();
+    let promiseResult = callRip();
 
     async function callRip() {
         const res = await fetch(ripRouter);
@@ -36,7 +36,7 @@
             lie = ripTable.map((acc) => acc.LIE);
             lsd = ripTable.map((acc) => acc.LSE);
         } else {
-            return badgeMessage = 'Algo deu errado'
+            return (badgeMessage = "Algo deu errado");
         }
     }
 
@@ -96,7 +96,7 @@
         if (res.message === "rip enviada, odf finalizada") {
             odfFinish = true;
             window.location.href = "/#/codigobarras";
-            location.reload()
+            //location.reload();
         }
         if (res.message === "ocorreu um erro ao enviar os dados da rip") {
             badgeMessage = "ocorreu um erro ao enviar os dados da rip";
@@ -109,28 +109,19 @@
     }
 
     function createCol() {
-        const quantityReleased = Object.values(setup).length - ripTable.length;
-        const amountTotalToSend = extraColumns.length * ripTable.length;
+        const quantityReleased =
+            Object.values(setup).length - ripTable.length * extraColumns.length;
 
-        let arrayToAddCol = ripTable.reduce((acc, int) => {
-            if (acc.values === undefined) {
-                return false;
-            } else if (acc.values >= 0 && int.values >= 0) {
-                return true;
+        if (quantityReleased - ripTable.length === 0) {
+            if (extraColumns.length < 13) {
+                extraColumns = [...extraColumns, extraColumns.length + 2];
             }
-        });
-
-        if (amountTotalToSend === quantityReleased) {
-            if (arrayToAddCol === true) {
-                if (extraColumns.length < 13) {
-                    extraColumns = [...extraColumns, extraColumns.length + 2];
-                }
-            }
-        } else if (amountTotalToSend !== quantityReleased) {
+        } else {
             showSetup = true;
         }
     }
 
+    // Erro ao tentar enviar mais de uma coluna
     const check = () => {
         if (
             Object.values(setup).length <= 0 ||
@@ -139,40 +130,46 @@
             return (showSuper = true);
         }
 
-        const rows = Object.keys(setup).reduce((acc, key, i) => {
-            if (ripTable[i].LSE === null && ripTable[i].LIE === null) {
-                ripTable[i].LSE = "OK";
-                ripTable[i].LIE = "OK";
+        let s = extraColumns;
+        let x = [];
+        if (extraColumns.length === 1) {
+            x.push(s + 1);
+        }
+
+        const quantityReleased =
+            ripTable.length * x.length - Object.values(setup).length;
+
+        if (quantityReleased === 0) {
+            const rows = Object.keys(setup).reduce((acc, iterator) => {
+                // if (ripTable[i].LSE === null && ripTable[i].LIE === null) {
+                //     ripTable[i].LSE = "OK";
+                //     ripTable[i].LIE = "OK";
+                // }
+                const [col, lin] = iterator.split("-");
+                if (acc[lin] === undefined) acc[lin] = {};
+                acc[lin][col] = setup[iterator];
+                return acc;
+            }, {});
+
+            const callSupervisor = Object.values(rows).some((row) => {
+                return Object.keys(row)
+                    .filter((key) => key !== "LIE" && key !== "LSE")
+                    .some((key) => {
+                        let value = row[key];
+                        return value < row["LIE"] || value > row["LSE"];
+                    });
+            });
+
+            if (callSupervisor === true) {
+                loader = false;
+                showSuper = true;
+            } else if (callSupervisor === false) {
+                loader = true;
+                doPost();
             }
-
-            const [col, lin] = key.split("-");
-            if (acc[lin] === undefined) acc[lin] = {};
-            acc[lin][col] = setup[key];
-            if (!acc[lin]["LIE"]) acc[lin]["LIE"] = ripTable[i].LIE;
-            if (!acc[lin]["LSE"]) acc[lin]["LSE"] = ripTable[i].LSE;
-            return acc;
-        }, {});
-
-        const callSupervisor = Object.values(rows).some((row) => {
-            return Object.keys(row)
-                .filter((key) => key !== "LIE" && key !== "LSE")
-                .some((key) => {
-                    let value = row[key];
-                    if (value === "ok") {
-                        value = false;
-                    }
-                    return value < row["LIE"] || value > row["LSE"];
-                });
-        });
-
-        console.log("linha 165 /rip.svelte/", callSupervisor);
-
-        if (callSupervisor === true) {
+        } else if (quantityReleased !== 0) {
             loader = false;
-            showSuper = true;
-        } else if (callSupervisor === false) {
-            loader = true;
-            doPost();
+            return (showSuper = true);
         }
     };
 
