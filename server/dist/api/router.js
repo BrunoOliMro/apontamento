@@ -19,7 +19,10 @@ const searchBadge_1 = require("./controllers/searchBadge");
 const getPoint_1 = require("./controllers/getPoint");
 const supervisor_1 = require("./controllers/supervisor");
 const stopSupervisor_1 = require("./controllers/stopSupervisor");
+const clear_1 = require("./controllers/clear");
 const apiRouter = (0, express_1.Router)();
+apiRouter.route('/clearAll')
+    .get(clear_1.clear);
 apiRouter.route("/badge")
     .post(searchBadge_1.searchBagde);
 apiRouter.route("/odf")

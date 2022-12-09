@@ -17,7 +17,7 @@ export const searchOdf: RequestHandler = async (req, res) => {
     console.log('dados', dados);
     // Descriptografa o funcionario dos cookies
     let funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
-    const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
+    const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, CODIGO_PECA, QTD_BOAS FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
 
     // Barcode inválido
     if (dados.message === 'Código de barras inválido') {
@@ -30,7 +30,7 @@ export const searchOdf: RequestHandler = async (req, res) => {
 
     // Seleciona todos os itens da Odf
     const groupOdf = await select(lookForOdfData)
-    console.log('linha 33 /group/', groupOdf);
+    //console.log('linha 33 /group/', groupOdf);
     if (!groupOdf || groupOdf.length <= 0) {
         return res.json({ message: 'ODF não encontrada' })
     }
@@ -43,16 +43,16 @@ export const searchOdf: RequestHandler = async (req, res) => {
 
     // Seleciona a ODF anterior e a ODF do processo presente
     const selectedItens: any = await selectedItensFromOdf(groupOdf, indexOdf)
-    console.log('linha 45', selectedItens.odf);
+    //console.log('linha 45', selectedItens.odf);
     if (selectedItens.odf.QTDE_ODF - selectedItens.odf.QTDE_APONTADA === 0) {
         return res.json({ message: 'Não há limite na ODF' })
     } else if (indexOdf === 0) {
-        selectedItens.odf.QTDE_LIB = selectedItens.odf.QTDE_ODF - selectedItens.odf.QTDE_APONTADA
+        selectedItens.odf.QTDE_LIB = selectedItens.odf.QTDE_ODF - selectedItens.odf.QTD_BOAS
     } else {
-        if (selectedItens.beforeOdf.QTDE_APONTADA - selectedItens.odf.QTDE_APONTADA === 0) {
+        if (selectedItens.beforeOdf.QTD_BOAS - selectedItens.odf.QTD_BOAS === 0) {
             return res.json({ message: 'Não há limite na ODF' })
         } else {
-            selectedItens.odf.QTDE_LIB = selectedItens.beforeOdf.QTDE_APONTADA - selectedItens.odf.QTDE_APONTADA
+            selectedItens.odf.QTDE_LIB = selectedItens.beforeOdf.QTD_BOAS - selectedItens.odf.QTD_BOAS
         }
     }
 
@@ -63,11 +63,26 @@ export const searchOdf: RequestHandler = async (req, res) => {
         return res.json({ message: 'Quantidade para reserva inválida' })
     }
 
+    selectedItens.odf.QTDE_LIB = selectedItens.odf.QTDE_APONTADA - selectedItens.odf.QTD_BOAS
+
+    if (!selectedItens.odf.QTDE_APONTADA && !selectedItens.odf.QTD_BOAS) {
+        console.log('Caso as quantidade estejam vazias ou seja na primeira vez que passar');
+        selectedItens.odf.QTDE_LIB = selectedItens.odf.QTDE_ODF
+    }
+
+    if (indexOdf === 0) {
+        console.log('Se for a primeira odf ele mira na propria quantidade e a quantidade apontada dela mesmo');
+        selectedItens.odf.QTDE_LIB = selectedItens.odf.QTDE_ODF - selectedItens.odf.QTDE_APONTADA
+    }
+
     if (lookForChildComponents.quantidade < selectedItens.odf.QTDE_LIB) {
+        console.log('executando update com base na reserva...');
+
         selectedItens.odf.QTDE_LIB = lookForChildComponents.quantidade
         let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${lookForChildComponents.quantidade} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${dados.numOper}`
         await update(y)
     } else {
+        console.log('executando update...');
         let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${selectedItens.odf.QTDE_LIB} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${dados.numOper}`
         await update(y)
     }

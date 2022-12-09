@@ -1,14 +1,14 @@
 <script>
   // @ts-nocheck
-  import ModalConfirmation from '../../src/components/modal/modalConfirmation.svelte';
-  import blockForbiddenChars from '../routes/presanitize';
-  let imageLoader = '/images/axonLoader.gif';
-  let barcodeReturn = '';
-  let barcode = '';
+  import ModalConfirmation from "../../src/components/modal/modalConfirmation.svelte";
+  import blockForbiddenChars from "../routes/presanitize";
+  let imageLoader = "/images/axonLoader.gif";
+  let barcodeReturn = "";
+  let barcode = "";
   let urlS = `/api/v1/odf`;
   let urlBagde = `/api/v1/badge`;
-  let supervisorApi = 'api/v1/supervisorParada';
-  let badge = '';
+  let supervisorApi = "api/v1/supervisorParada";
+  let badge = "";
   let showmodal = false;
   let showCorr = false;
   let returnedValueApi = `/api/v1/returnedValue`;
@@ -20,13 +20,13 @@
   let showBadge = true;
   let showBarcode = false;
   let showSupervisor = false;
-  let quantityModal = '';
+  let quantityModal = "";
   let returnValueAvailable;
-  let paradaMsg = '';
-  let barcodeMsg = '';
+  let paradaMsg = "";
+  let barcodeMsg = "";
   let showBreadcrumb = false;
   let loader = false;
-  let modalMessage = '';
+  let modalMessage = "";
 
   // let badgeMsg = '';
   // if (window.location.href.includes('?')) {
@@ -35,19 +35,19 @@
 
   const checkPostSuper = async (event) => {
     if (!superSuperMaqPar) {
-      superSuperMaqPar = '';
+      superSuperMaqPar = "";
     } else if (superSuperMaqPar) {
-      if (superSuperMaqPar.length >= 6 && event.key === 'Enter') {
+      if (superSuperMaqPar.length >= 6 && event.key === "Enter") {
         if (
           !superSuperMaqPar ||
-          superSuperMaqPar === '0' ||
-          superSuperMaqPar === '00' ||
-          superSuperMaqPar === '000' ||
-          superSuperMaqPar === '0000' ||
-          superSuperMaqPar === '00000' ||
-          superSuperMaqPar === '000000'
+          superSuperMaqPar === "0" ||
+          superSuperMaqPar === "00" ||
+          superSuperMaqPar === "000" ||
+          superSuperMaqPar === "0000" ||
+          superSuperMaqPar === "00000" ||
+          superSuperMaqPar === "000000"
         ) {
-          modalMessage = 'Crachá inválido';
+          modalMessage = "Crachá inválido";
         } else {
           loader = true;
           superParada = false;
@@ -58,130 +58,114 @@
   };
 
   const doPostSuper = async () => {
-    console.log('linha 37', superSuperMaqPar);
+    console.log("linha 37", superSuperMaqPar);
     loader = true;
     const headers = new Headers();
-    headers.append('Content-Type', 'application/json');
+    headers.append("Content-Type", "application/json");
     const res = await fetch(supervisorApi, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        superSuperMaqPar: !superSuperMaqPar ? '' : superSuperMaqPar,
+        superSuperMaqPar: !superSuperMaqPar ? "" : superSuperMaqPar,
       }),
     }).then((res) => res.json());
-    console.log('linha 57 /barcode.svelte/', res);
-    // if (res.message === 'maquina') {
-    //   loader = false;
-    //   window.location.href = '/#/codigobarras';
-    //   location.reload();
-    // }
-    if (res.message === 'Supervisor não encontrado') {
-      modalMessage = 'Supervisor não encontrado';
-      superParada = false;
-      showmodal = false;
-    }
+    console.log("linha 57 /barcode.svelte/", res);
 
-    if (res.message === 'Erro ao parar a máquina') {
-      modalMessage = 'Erro ao parar a máquina';
+    if (res.message !== "") {
       showmodal = false;
+      modalMessage = res.message;
       superParada = false;
+      showmodal = false;
     }
   };
 
   function verifyBarcodeBefore(event) {
     if (!barcode && barcode.length > 0) {
-      return (modalMessage = 'Algo deu errado');
+      return (modalMessage = "Algo deu errado");
     }
 
-    if (event.key === 'Enter' && barcode.length >= 16) {
+    if (event.key === "Enter" && barcode.length >= 16) {
       doPost();
     }
   }
 
   const doPost = async () => {
     if (!barcode) {
-      return (modalMessage = 'Algo deu errado');
+      return (modalMessage = "Algo deu errado");
     }
 
     if (barcode.length < 16) {
-      return (modalMessage = 'Algo deu errado');
+      return (modalMessage = "Algo deu errado");
     }
     loader = true;
     const headers = new Headers();
-    headers.append('Content-Type', 'application/json');
+    headers.append("Content-Type", "application/json");
     const res = await fetch(urlS, {
-      method: 'POST',
+      method: "POST",
       headers: headers,
       body: JSON.stringify({
         barcode,
       }),
     }).then((res) => res.json());
-    if (res.message === 'Rip iniciated' || res.message === 'Pointed') {
-      loader = true;
-      window.location.href = '/#/rip';
-    }
+    console.log("res", res);
 
-    if (res.message === 'Ini Prod') {
-      loader = true;
-      window.location.href = '/#/codigobarras/apontamento';
-    }
+    if (res) {
+      if (res.message !== "") {
+        if (res.message === "Rip iniciated" || res.message === "Pointed") {
+          loader = true;
+          window.location.href = "/#/rip";
+        }
 
-    if (
-      res.message === 'Begin new process' ||
-      res.message === 'Pointed Iniciated' || 
-      res.message === 'A value was returned'
-    ) {
-      loader = true;
-      window.location.href = '/#/ferramenta';
-    }
+        if (res.message === "Ini Prod") {
+          loader = true;
+          window.location.href = "/#/codigobarras/apontamento";
+        }
 
-    if (res.message === 'Algo deu errado') {
-      modalMessage = 'Algo deu errado';
-      loader = false;
-    }
+        if (
+          res.message === "Begin new process" ||
+          res.message === "Pointed Iniciated" ||
+          res.message === "Fin Setup" ||
+          res.message === "A value was returned"
+        ) {
+          loader = true;
+          window.location.href = "/#/ferramenta";
+        }
 
-    if (res.message === 'Machine has stopped') {
-      loader = true;
-      window.location.href = '/#/codigobarras/apontamento';
-    }
+        if (res.message === "Machine has stopped") {
+          loader = true;
+          window.location.href = "/#/codigobarras/apontamento";
+        }
 
-    if (res.message === 'Código de barras está vazio') {
-      modalMessage = 'Código de barras está vazio';
-    }
-
-    if (res.message === 'Código de barras inválido') {
-      modalMessage = 'Código de barras inválido';
-    }
-
-    if (res.message === 'ODF não encontrada') {
-      modalMessage = 'ODF não encontrada';
-      loader = false;
-    }
-
-    if (
-      res.message === 'Quantidade para reserva inválida' ||
-      'Não há limite na ODF'
-    ) {
-      modalMessage = 'Não há limite na ODF';
-      loader = false;
+        if (
+          res.message === "Quantidade para reserva inválida" ||
+          "Não há limite na ODF"
+        ) {
+          modalMessage = "Não há limite na ODF";
+          loader = false;
+        } else {
+          loader = false;
+          showmodal = false;
+          modalMessage = res.message;
+        }
+      }
     }
   };
 
   function checkBeforeBadge(event) {
     if (!badge) {
-      badge = '';
+      badge = "";
     } else if (badge) {
-      if (badge.length >= 6 && event.key === 'Enter') {
+      if (badge.length >= 6 && event.key === "Enter") {
         if (
           !badge ||
-          badge === '0' ||
-          badge === '00' ||
-          badge === '000' ||
-          badge === '0000' ||
-          badge === '00000' ||
-          badge === '000000'
+          badge === "0" ||
+          badge === "00" ||
+          badge === "000" ||
+          badge === "0000" ||
+          badge === "00000" ||
+          badge === "000000"
         ) {
-          modalMessage = 'Crachá inválido';
+          modalMessage = "Crachá inválido";
         } else {
           checkBagde();
         }
@@ -192,42 +176,32 @@
   const checkBagde = async () => {
     loader = true;
     const headers = new Headers();
-    headers.append('Content-Type', 'application/json');
+    headers.append("Content-Type", "application/json");
     const res = await fetch(urlBagde, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({
         badge,
       }),
       headers,
     }).then((res) => res.json());
-
-    console.log('linha 196 ', res);
-
     loader = false;
-
-    if (res.message === 'Badge found') {
-      showBarcode = true;
-      showBadge = false;
-      showBreadcrumb = true;
-    }
-
-    if (res.message === 'Badge not found') {
-      modalMessage = 'Crachá não encontrado';
-    }
-
-    if (res.message === 'Empty badge') {
-      modalMessage = 'Crachá vazio';
-    }
-
-    if (res.message === 'Error on searching for badge') {
-      modalMessage = 'Erro ao localizar crachá';
+    if (res) {
+      if (res.message !== "") {
+        if (res.message === "Badge found") {
+          showBarcode = true;
+          showBadge = false;
+          showBreadcrumb = true;
+        } else {
+          showmodal = false;
+          modalMessage = res.message;
+        }
+      }
     }
   };
 
   function closePop() {
-    modalMessage = '';
-    //document.getElementById('s').style.display = 'none';
-    window.location.href = '/#/codigobarras';
+    modalMessage = "";
+    window.location.href = "/#/codigobarras";
     location.reload();
   }
 
@@ -241,81 +215,87 @@
   async function doReturn() {
     loader = true;
     const res = await fetch(returnedValueApi, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         returnValueStorage: returnValueStorage,
         supervisor: supervisor,
         quantity: quantity,
-        barcodeReturn: !barcodeReturn ? '' : barcodeReturn,
+        barcodeReturn: !barcodeReturn ? "" : barcodeReturn,
       }),
     }).then((res) => res.json());
     loader = false;
-    console.log('linha 245 -return-', res);
+    console.log("linha 245 -return-", res);
 
-    barcodeReturn = '';
-    supervisor = '';
-    quantity = '';
-    returnValueStorage = '';
+    barcodeReturn = "";
+    supervisor = "";
+    quantity = "";
+    returnValueStorage = "";
     showmodal = false;
 
-    if(res.message === 'Not possible to return'){
-      modalMessage = 'Processo em aberto, Não é possível fazer estorno';
-      loader = false
+    if (res.message !== "") {
+      loader = false;
       showmodal = false;
+      modalMessage = res.message;
     }
 
-    if (res.message === 'Refugo Inválido') {
-      modalMessage = 'Não há refugo para estornar';
-      showmodal = false;
-    }
+    // if (res.message === "Not possible to return") {
+    //   modalMessage = "Processo em aberto, Não é possível fazer estorno";
+    //   loader = false;
+    //   showmodal = false;
+    // }
 
-    if (res.message === 'Crachá de supervisor inválido') {
-      modalMessage = 'Crachá de supervisor inválido';
-      showSupervisor = true;
-      showmodal = false;
-      //location.reload();
-    }
-    if (res.message === 'Essa não pode ser estornada') {
-      modalMessage = 'Essa não pode ser estornada';
-      showmodal = false;
-    }
+    // if (res.message === "Refugo Inválido") {
+    //   modalMessage = "Não há refugo para estornar";
+    //   showmodal = false;
+    // }
 
-    if (res.message === 'Returned values done') {
-      modalMessage = 'Estorno realizado';
-      showmodal = false;
-    }
-    if (res.message === 'erro de estorno') {
-      modalMessage === 'Erro ao fazer estorno';
-      showmodal = false;
-    }
-    if (res.message === 'quantidade esta vazio') {
-      modalMessage = 'Quantidade esta vazia';
-      quantityModal = 'quantidade esta vazio';
-      showmodal = false;
-    }
-    if (res.message === 'Código de barras está vazio') {
-      modalMessage === 'Código de barras está vazio';
-      showmodal = false;
-    }
-    if (res.message === 'ODF não encontrada') {
-      modalMessage === 'ODF não encontrada';
-      showmodal = false;
-    }
-    if (res.message === 'No limit') {
-      modalMessage = 'Não há valor a ser devolvido';
-      showmodal = false;
-    }
+    // if (res.message === "Crachá de supervisor inválido") {
+    //   modalMessage = "Crachá de supervisor inválido";
+    //   showSupervisor = true;
+    //   showmodal = false;
+    //   //location.reload();
+    // }
+    // if (res.message === "Essa não pode ser estornada") {
+    //   modalMessage = "Essa não pode ser estornada";
+    //   showmodal = false;
+    // }
+
+    // if (res.message === "Returned values done") {
+    //   modalMessage = "Estorno realizado";
+    //   showmodal = false;
+    // }
+    // if (res.message === "erro de estorno") {
+    //   modalMessage === "Erro ao fazer estorno";
+    //   showmodal = false;
+    // }
+    // if (res.message === "quantidade esta vazio") {
+    //   modalMessage = "Quantidade esta vazia";
+    //   quantityModal = "quantidade esta vazio";
+    //   showmodal = false;
+    // }
+    // if (res.message === "Código de barras está vazio") {
+    //   modalMessage === "Código de barras está vazio";
+    //   showmodal = false;
+    // }
+    // if (res.message === "ODF não encontrada") {
+    //   modalMessage === "ODF não encontrada";
+    //   showmodal = false;
+    // }
+    // if (res.message === "No limit") {
+    //   modalMessage = "Não há valor a ser devolvido";
+    //   showmodal = false;
+    // }
   }
 
   function closePopCor() {
-    barcodeMsg = '';
-    paradaMsg = '';
+    barcodeMsg = "";
+    paradaMsg = "";
     showSupervisor = false;
-    quantityModal = '';
+    quantityModal = "";
     showCorr = false;
     showmodal = false;
-    modalMessage = '';
+    modalMessage = "";
     location.reload();
   }
 
@@ -323,21 +303,21 @@
     showBreadcrumb = false;
     showBarcode = false;
     showBadge = true;
-    badge = '';
-    barcode = '';
-    modalMessage = '';
+    badge = "";
+    barcode = "";
+    modalMessage = "";
   }
-  let back = '/images/icons8-go-back-24.png';
-  export let title = 'APONTAMENTO';
+  let back = "/images/icons8-go-back-24.png";
+  export let title = "APONTAMENTO";
 </script>
 
 <main>
   {#if showBreadcrumb === true}
-    <nav class='breadcrumb' aria-label='breadcrumb'>
-      <ol class='breadcrumb'>
-        <li class='breadcrumb-item'>
-          <a href='/#/codigobarras' on:click={goBack}>
-            <img src={back} alt='' />Colaborador</a
+    <nav class="breadcrumb" aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+          <a href="/#/codigobarras" on:click={goBack}>
+            <img src={back} alt="" />Colaborador</a
           >
         </li>
       </ol>
@@ -347,24 +327,24 @@
   <div>
     <div>
       <!-- <Title /> -->
-      <div class='titleDiv'>
-        <h1 class='title'>{title}</h1>
+      <div class="titleDiv">
+        <h1 class="title">{title}</h1>
       </div>
 
       {#if loader === true}
-        <div class='imageLoader'>
-          <div class='loader'>
-            <img src={imageLoader} alt='' />
+        <div class="imageLoader">
+          <div class="loader">
+            <img src={imageLoader} alt="" />
           </div>
         </div>
       {/if}
 
       {#if showBarcode === true}
-        <div class='return'>
+        <div class="return">
           <button
             on:keypress={returnValue}
             on:click={returnValue}
-            class='sideButton'
+            class="sideButton"
           >
             Estornar Valores
           </button>
@@ -373,18 +353,18 @@
     </div>
 
     {#if superParada === true}
-      <div class='modalBackground'>
-        <div class='confirmationModal'>
+      <div class="modalBackground">
+        <div class="confirmationModal">
           <h5>Máquina parada selecione um supervisor</h5>
           <input
             autofocus
-            tabindex='12'
-            id='supervisor'
-            name='supervisor'
-            type='text'
+            tabindex="12"
+            id="supervisor"
+            name="supervisor"
+            type="text"
             on:input={blockForbiddenChars}
             on:keypress={checkPostSuper}
-            onkeyup='this.value = this.value.toUpperCase()'
+            onkeyup="this.value = this.value.toUpperCase()"
             bind:value={superSuperMaqPar}
           />
         </div>
@@ -392,68 +372,68 @@
     {/if}
 
     {#if showBarcode === true}
-      <div class='form'>
-        <div id='popUpCracha'>
-          <div id='title'>CÓDIGO DE BARRAS DA ODF</div>
+      <div class="form">
+        <div id="popUpCracha">
+          <div id="title">CÓDIGO DE BARRAS DA ODF</div>
           <input
-            autocomplete='off'
+            autocomplete="off"
             autofocus
             on:keypress={verifyBarcodeBefore}
             on:input|preventDefault={blockForbiddenChars}
             bind:value={barcode}
-            onkeyup='this.value = this.value.toUpperCase()'
-            name='MATRIC'
-            id='MATRIC'
-            type='text'
+            onkeyup="this.value = this.value.toUpperCase()"
+            name="MATRIC"
+            id="MATRIC"
+            type="text"
           />
         </div>
       </div>
     {/if}
 
     {#if showBadge === true}
-      <div class='form'>
-        <div id='popUpCracha'>
-          <div id='title'>COLABORADOR</div>
+      <div class="form">
+        <div id="popUpCracha">
+          <div id="title">COLABORADOR</div>
           <input
-            autocomplete='off'
+            autocomplete="off"
             autofocus
             on:keypress={checkBeforeBadge}
             on:input|preventDefault={blockForbiddenChars}
             bind:value={badge}
-            onkeyup='this.value = this.value.toUpperCase()'
-            name='MATRIC'
-            id='MATRIC'
-            type='text'
+            onkeyup="this.value = this.value.toUpperCase()"
+            name="MATRIC"
+            id="MATRIC"
+            type="text"
           />
         </div>
       </div>
     {/if}
   </div>
   {#if showmodal === true}
-    <div class='fundo'>
-      <div class='header'>
-        <div class='close'>
+    <div class="fundo">
+      <div class="header">
+        <div class="close">
           <h4>Codigo do Supervisor</h4>
         </div>
         <input
-          autocomplete='off'
+          autocomplete="off"
           autofocus
-          tabindex='14'
+          tabindex="14"
           bind:value={supervisor}
-          class='returnInput'
+          class="returnInput"
           on:input={blockForbiddenChars}
-          onkeyup='this.value = this.value.toUpperCase()'
-          type='text'
-          name='supervisor'
-          id='supervisor'
+          onkeyup="this.value = this.value.toUpperCase()"
+          type="text"
+          name="supervisor"
+          id="supervisor"
         />
         <h4>Qual irá retornar</h4>
-        <div class='options'>
+        <div class="options">
           <select
-            tabindex='15'
+            tabindex="15"
             bind:value={returnValueStorage}
-            name='id'
-            id='id'
+            name="id"
+            id="id"
           >
             <option>BOAS</option>
             <option>RUINS</option>
@@ -461,32 +441,32 @@
         </div>
         <h4>Insira a quantidade que deseja estornar</h4>
         <input
-          tabindex='15'
+          tabindex="15"
           on:input={blockForbiddenChars}
-          autocomplete='off'
-          class='returnInput'
-          onkeyup='this.value = this.value.toUpperCase()'
+          autocomplete="off"
+          class="returnInput"
+          onkeyup="this.value = this.value.toUpperCase()"
           bind:value={quantity}
-          type='text'
-          name='returnValueStorage'
+          type="text"
+          name="returnValueStorage"
         />
 
         <h4>CÓDIGO DE BARRAS DA ODF</h4>
         <input
-          tabindex='16'
+          tabindex="16"
           on:input={blockForbiddenChars}
-          autocomplete='off'
-          class='returnInput'
-          onkeyup='this.value = this.value.toUpperCase()'
+          autocomplete="off"
+          class="returnInput"
+          onkeyup="this.value = this.value.toUpperCase()"
           bind:value={barcodeReturn}
-          id='barcode'
-          name='barcode'
-          type='text'
+          id="barcode"
+          name="barcode"
+          type="text"
         />
 
         <div>
           <p
-            tabindex='17'
+            tabindex="17"
             on:keypress|preventDefault={doReturn}
             on:click|preventDefault={doReturn}
           >
@@ -494,7 +474,7 @@
           </p>
 
           <p
-            tabindex='17'
+            tabindex="17"
             on:keypress|preventDefault={closePop}
             on:click|preventDefault={closePop}
           >
@@ -505,82 +485,86 @@
     </div>
   {/if}
 
-  {#if modalMessage === 'Processo em aberto, Não é possível fazer estorno'}
+  {#if modalMessage !== ""}
     <ModalConfirmation title={modalMessage} on:message={closePopCor} />
   {/if}
 
-  {#if modalMessage === 'Não há refugo para estornar'}
+  <!-- {#if modalMessage === "Processo em aberto, Não é possível fazer estorno"}
     <ModalConfirmation title={modalMessage} on:message={closePopCor} />
   {/if}
 
-  {#if modalMessage === 'Essa não pode ser estornada'}
+  {#if modalMessage === "Não há refugo para estornar"}
     <ModalConfirmation title={modalMessage} on:message={closePopCor} />
   {/if}
 
-  {#if modalMessage === 'Estorno realizado'}
+  {#if modalMessage === "Essa não pode ser estornada"}
     <ModalConfirmation title={modalMessage} on:message={closePopCor} />
   {/if}
 
-  {#if modalMessage === 'Quantidade para reserva inválida'}
+  {#if modalMessage === "Estorno realizado"}
+    <ModalConfirmation title={modalMessage} on:message={closePopCor} />
+  {/if}
+
+  {#if modalMessage === "Quantidade para reserva inválida"}
     <ModalConfirmation on:message={closePopCor} title={modalMessage} />
   {/if}
 
-  {#if modalMessage === 'Erro ao fazer estorno'}
+  {#if modalMessage === "Erro ao fazer estorno"}
     <ModalConfirmation on:message={closePopCor} title={modalMessage} />
   {/if}
 
-  {#if modalMessage === 'Não há valor a ser devolvido'}
+  {#if modalMessage === "Não há valor a ser devolvido"}
     <ModalConfirmation on:message={closePopCor} title={modalMessage} />
   {/if}
 
-  {#if modalMessage === 'Supervisor não encontrado'}
+  {#if modalMessage === "Supervisor não encontrado"}
     <ModalConfirmation on:message={closePopCor} title={modalMessage} />
   {/if}
 
-  {#if modalMessage === 'Limite de estorno excedido'}
+  {#if modalMessage === "Limite de estorno excedido"}
     <ModalConfirmation on:message={closePopCor} title={modalMessage} />
   {/if}
 
-  {#if modalMessage === 'Não há limite na ODF'}
+  {#if modalMessage === "Não há limite na ODF"}
     <ModalConfirmation on:message={closePop} title={modalMessage} />
   {/if}
 
-  {#if modalMessage === 'ODF não encontrada'}
+  {#if modalMessage === "ODF não encontrada"}
     <ModalConfirmation on:message={closePop} title={modalMessage} />
   {/if}
 
-  {#if modalMessage === 'Código de barras inválido'}
+  {#if modalMessage === "Código de barras inválido"}
     <ModalConfirmation on:message={closePop} title={modalMessage} />
   {/if}
 
-  {#if modalMessage === 'Código de barras está vazio'}
+  {#if modalMessage === "Código de barras está vazio"}
     <ModalConfirmation on:message={closePop} title={modalMessage} />
   {/if}
 
-  {#if modalMessage === 'Crachá não encontrado'}
+  {#if modalMessage === "Crachá não encontrado"}
     <ModalConfirmation on:message={closePop} title={modalMessage} />
   {/if}
 
-  {#if modalMessage === 'Crachá vazio'}
+  {#if modalMessage === "Crachá vazio"}
     // bagdeEmpty === true
     <ModalConfirmation on:message={closePop} title={modalMessage} />
   {/if}
 
-  {#if modalMessage === 'Quantidade está vazia'}
+  {#if modalMessage === "Quantidade está vazia"}
     <ModalConfirmation on:message={closePop} title={modalMessage} />
   {/if}
 
-  {#if modalMessage === 'Crachá de supervisor inválido'}
+  {#if modalMessage === "Crachá de supervisor inválido"}
     <ModalConfirmation on:message={closePop} title={modalMessage} />
   {/if}
 
-  {#if modalMessage === 'Crachá inválido'}
+  {#if modalMessage === "Crachá inválido"}
     <ModalConfirmation on:message={closePopCor} title={modalMessage} />
   {/if}
 
-  {#if modalMessage === 'Algo deu errado'}
+  {#if modalMessage === "Algo deu errado"}
     <ModalConfirmation on:message={closePopCor} title={modalMessage} />
-  {/if}
+  {/if} -->
 </main>
 
 <style>

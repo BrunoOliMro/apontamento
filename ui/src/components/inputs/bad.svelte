@@ -28,7 +28,6 @@
                 on:input={disa}
                 on:input={blockForbiddenChars}
                 tabindex="2"
-                autofocus
                 type="text"
             />
         </div>

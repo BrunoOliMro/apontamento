@@ -20,6 +20,7 @@ import { getPoint } from "./controllers/getPoint";
 import { supervisor } from "./controllers/supervisor";
 //import { codeNote } from "./controllers/codeNote";
 import { stopSupervisor } from "./controllers/stopSupervisor";
+import { clear } from "./controllers/clear";
 //import { getBefore } from "./controllers/getBefSel";
 
 // /api/v1/
@@ -27,6 +28,9 @@ const apiRouter = Router();
 
 // apiRouter.route("/codeNote")
 //     .post(codeNote)
+
+apiRouter.route('/clearAll')
+    .get(clear)
 
 apiRouter.route("/badge")
     .post(searchBagde)

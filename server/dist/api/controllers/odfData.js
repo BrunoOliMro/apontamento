@@ -16,7 +16,7 @@ const odfData = async (req, res) => {
     let codeMachine = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_MAQUINA"]))) || null;
     const numOper = "00" + (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))).replaceAll(' ', '0') || null;
     const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['FUNCIONARIO']))) || null;
-    const lookForOdfData = `SELECT CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB,  QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
+    const lookForOdfData = `SELECT CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB,  QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
     const response = {
         message: '',
         funcionario: funcionario,
@@ -32,6 +32,7 @@ const odfData = async (req, res) => {
             const indexOdf = await (0, odfIndex_1.odfIndex)(data, numOper);
             const selectedItens = await (0, queryGroup_1.selectedItensFromOdf)(data, indexOdf);
             response.odfSelecionada = selectedItens.odf;
+            console.log('LINHA 33 /ODFDATA/ - QTD-LIB- ', selectedItens.odf.QTDE_LIB);
             if (response.message === 'Algo deu errado') {
                 return res.json({ message: 'Algo deu errado' });
             }

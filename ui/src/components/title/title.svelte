@@ -44,8 +44,8 @@
             }),
         }).then((res) => res.json());
         console.log("res /title.svelte linha 43/", res);
+        loader = false;
         if (res) {
-            loader = false;
             if (res.message === "Máquina já parada") {
                 stopModal = false;
                 showMaqPar = false;
@@ -143,9 +143,8 @@
     </div>
 {/if}
 
-{#if modalmessage === "Máquina parada"}
+{#if modalmessage !== ""}
     <ModalConfirmation title={modalmessage} on:message={closeConfirm} />
-    <input type="text" />
 {/if}
 
 {#if showMaqPar === true}
@@ -175,6 +174,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        z-index: 999999999999999999999;
     }
     .fist-item-nav {
         margin: 0%;

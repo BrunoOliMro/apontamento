@@ -10,8 +10,8 @@
     let imagemBack = [];
     let imagemMsg = "";
     let selected;
-    let ar = []
-    let img = `img`
+    let ar = [];
+    let img = `img`;
 
     // function selectPic(e) {
     //     selected = e.target.src.split("000")[1];
@@ -29,13 +29,17 @@
     function right() {
         rotation += 90;
         document.getElementById(`img`).style.transition = "all 1s";
-        document.getElementById(`img`).style.transform = `rotate(${rotation}deg)`;
+        document.getElementById(
+            `img`
+        ).style.transform = `rotate(${rotation}deg)`;
     }
 
     function left() {
         rotation -= 90;
         document.getElementById(`img`).style.transition = "all 1s";
-        document.getElementById(`img`).style.transform = `rotate(${rotation}deg)`;
+        document.getElementById(
+            `img`
+        ).style.transform = `rotate(${rotation}deg)`;
     }
 
     function zoomIn() {
@@ -45,7 +49,6 @@
     }
 
     function zoomOut() {
-        
         var img = document.getElementById(`img`);
         var width = img.clientWidth;
         img.style.width = width - zoomNumber + "px";
@@ -115,13 +118,13 @@
             <div class="frame">
                 {#each imagemBack as img}
                     {#if imagemBack.length > 0}
-                    <!-- on:click|preventDefault={selectPic} -->
-                        <div id={img} >
+                        <!-- on:click|preventDefault={selectPic} -->
+                        <div id={img}>
                             <img
                                 media="print"
                                 class="img"
                                 src={img}
-                                id='img'
+                                id="img"
                                 alt=""
                             />
                         </div>
@@ -131,9 +134,13 @@
         {/await}
     </div>
 
-    {#if imagemMsg === "dados não conferem"}
-        <h3>Dados não conferem</h3>
+    {#if imagemMsg !== ""}
+        <h3>{imagemMsg}</h3>
     {/if}
+
+    <!-- {#if imagemMsg === "dados não conferem"}
+        <h3>Dados não conferem</h3>
+    {/if} -->
 </main>
 
 <style>
@@ -228,7 +235,7 @@
         text-align: center;
         flex-direction: row;
     }
-    #img{
+    #img {
         margin: 0%;
         padding: 0%;
     }
@@ -250,7 +257,7 @@
         margin: 1%;
     }
     @media print {
-        *{
+        * {
             background: transparent;
             color: white;
         }

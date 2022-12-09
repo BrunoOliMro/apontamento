@@ -8,10 +8,15 @@
     }
 </script>
 
-<button type="button" class="sideButton" on:click={messageDispatch} on:keypress={messageDispatch}>
+<button
+    tabindex="6"
+    type="button"
+    class="sideButton"
+    on:click={messageDispatch}
+    on:keypress={messageDispatch}
+>
     Parada
 </button>
-
 
 <style>
     .sideButton {
@@ -26,7 +31,7 @@
         text-align: center;
         align-items: center;
         border-radius: 6px;
-        background-color: white; 
+        background-color: white;
         border: none;
         color: black;
         border-color: #999999;

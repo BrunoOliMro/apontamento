@@ -17,14 +17,14 @@
     loader = true;
     const res = await fetch(urlFer);
     fer = await res.json();
-    console.log("linha 19 /ferSelected/", fer);
-    if (fer.message === "Algo deu errado") {
-      message = "Algo deu errado";
-    }
 
-    if (fer.message === "ferramentas selecionadas com successo") {
-      window.location.href = "/#/codigobarras/apontamento";
-      location.reload();
+    if (res) {
+      if (fer.message === "ferramentas selecionadas com successo") {
+        window.location.href = "/#/codigobarras/apontamento";
+        location.reload();
+      } else if (fer.message !== "") {
+        message = fer.message;
+      }
     }
   }
 
@@ -36,6 +36,7 @@
     if (
       tools.message == "Pointed Iniciated" ||
       tools.message === "Fin Setup" ||
+      tools.message === '' ||
       tools.message === "/images/sem_imagem.gif"
     ) {
       loader = true;
@@ -120,7 +121,11 @@
   <ModalConfirmation on:message={close} />
 {/if}
 
-{#if message === "Algo deu errado"}
+<!-- {#if message === "Algo deu errado"}
+  <ModalConfirmation on:message={close} />
+{/if} -->
+
+{#if message !== ""}
   <ModalConfirmation on:message={close} />
 {/if}
 

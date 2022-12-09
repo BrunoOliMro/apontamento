@@ -1,5 +1,5 @@
 <a class="out" href="/#/historico/"
-    ><button type="button" class="sideButton">
+    ><button tabindex="7" type="button" class="sideButton">
         <p>Histórico de apontamento</p>
     </button>
 </a>

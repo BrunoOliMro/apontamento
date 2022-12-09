@@ -17,7 +17,7 @@ const searchOdf = async (req, res) => {
     const dados = (0, unravelBarcode_1.unravelBarcode)(req.body.barcode) || null;
     console.log('dados', dados);
     let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
-    const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
+    const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, CODIGO_PECA, QTD_BOAS FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
     if (dados.message === 'Código de barras inválido') {
         return res.json({ message: 'Código de barras inválido' });
     }
@@ -28,7 +28,6 @@ const searchOdf = async (req, res) => {
         return res.json({ message: 'Funcionario inválido' });
     }
     const groupOdf = await (0, select_1.select)(lookForOdfData);
-    console.log('linha 33 /group/', groupOdf);
     if (!groupOdf || groupOdf.length <= 0) {
         return res.json({ message: 'ODF não encontrada' });
     }
@@ -37,19 +36,18 @@ const searchOdf = async (req, res) => {
         return res.json({ message: 'Algo deu errado' });
     }
     const selectedItens = await (0, queryGroup_1.selectedItensFromOdf)(groupOdf, indexOdf);
-    console.log('linha 45', selectedItens.odf);
     if (selectedItens.odf.QTDE_ODF - selectedItens.odf.QTDE_APONTADA === 0) {
         return res.json({ message: 'Não há limite na ODF' });
     }
     else if (indexOdf === 0) {
-        selectedItens.odf.QTDE_LIB = selectedItens.odf.QTDE_ODF - selectedItens.odf.QTDE_APONTADA;
+        selectedItens.odf.QTDE_LIB = selectedItens.odf.QTDE_ODF - selectedItens.odf.QTD_BOAS;
     }
     else {
-        if (selectedItens.beforeOdf.QTDE_APONTADA - selectedItens.odf.QTDE_APONTADA === 0) {
+        if (selectedItens.beforeOdf.QTD_BOAS - selectedItens.odf.QTD_BOAS === 0) {
             return res.json({ message: 'Não há limite na ODF' });
         }
         else {
-            selectedItens.odf.QTDE_LIB = selectedItens.beforeOdf.QTDE_APONTADA - selectedItens.odf.QTDE_APONTADA;
+            selectedItens.odf.QTDE_LIB = selectedItens.beforeOdf.QTD_BOAS - selectedItens.odf.QTD_BOAS;
         }
     }
     let lookForChildComponents = await (0, selectIfHasP_1.selectToKnowIfHasP)(dados, selectedItens.odf.QTDE_LIB, funcionario, selectedItens.odf.NUMERO_OPERACAO, selectedItens.odf.CODIGO_PECA, selectedItens.odf.REVISAO);
@@ -57,12 +55,23 @@ const searchOdf = async (req, res) => {
         await (0, clearCookie_1.cookieCleaner)(res);
         return res.json({ message: 'Quantidade para reserva inválida' });
     }
+    selectedItens.odf.QTDE_LIB = selectedItens.odf.QTDE_APONTADA - selectedItens.odf.QTD_BOAS;
+    if (!selectedItens.odf.QTDE_APONTADA && !selectedItens.odf.QTD_BOAS) {
+        console.log('Caso as quantidade estejam vazias ou seja na primeira vez que passar');
+        selectedItens.odf.QTDE_LIB = selectedItens.odf.QTDE_ODF;
+    }
+    if (indexOdf === 0) {
+        console.log('Se for a primeira odf ele mira na propria quantidade e a quantidade apontada dela mesmo');
+        selectedItens.odf.QTDE_LIB = selectedItens.odf.QTDE_ODF - selectedItens.odf.QTDE_APONTADA;
+    }
     if (lookForChildComponents.quantidade < selectedItens.odf.QTDE_LIB) {
+        console.log('executando update com base na reserva...');
         selectedItens.odf.QTDE_LIB = lookForChildComponents.quantidade;
         let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${lookForChildComponents.quantidade} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${dados.numOper}`;
         await (0, update_1.update)(y);
     }
     else {
+        console.log('executando update...');
         let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${selectedItens.odf.QTDE_LIB} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${dados.numOper}`;
         await (0, update_1.update)(y);
     }

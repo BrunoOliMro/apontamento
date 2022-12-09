@@ -38,8 +38,9 @@
         </div>
     </div>
 {/await}
-{#if errorMessage === "Quantidade a produzir inválida"}
-    <ModalConfirmation on:message={close} />
+
+{#if errorMessage !== ""}
+    <ModalConfirmation on:message={close} title={errorMessage} />
 {/if}
 
 <style>

@@ -13,7 +13,7 @@ export const odfData: RequestHandler = async (req, res) => {
     let codeMachine = decrypted(String(sanitize(req.cookies["CODIGO_MAQUINA"]))) || null
     const numOper: string | null = "00" + decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))).replaceAll(' ', '0') || null
     const funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
-    const lookForOdfData = `SELECT CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB,  QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
+    const lookForOdfData = `SELECT CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB,  QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
     const response = {
         message: '',
         funcionario: funcionario,
@@ -30,6 +30,7 @@ export const odfData: RequestHandler = async (req, res) => {
             const indexOdf = await odfIndex(data, numOper)
             const selectedItens: any = await selectedItensFromOdf(data, indexOdf)
             response.odfSelecionada = selectedItens.odf;
+            console.log('LINHA 33 /ODFDATA/ - QTD-LIB- ', selectedItens.odf.QTDE_LIB);
             if (response.message === 'Algo deu errado') {
                 return res.json({ message: 'Algo deu errado' });
             } else {

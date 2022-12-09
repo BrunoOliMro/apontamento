@@ -26,7 +26,6 @@
             bind:value={missingFeed}
             on:input={blockForbiddenChars}
             on:input={disa}
-            autofocus
             tabindex="3"
             type="text"
         />

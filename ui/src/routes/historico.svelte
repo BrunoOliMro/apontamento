@@ -15,18 +15,9 @@
   async function getHistorico() {
     const res = await fetch(urlString);
     historicData = await res.json();
-    console.log("his", historicData);
 
-    if (historicData.message === "Não há histórico a exibir") {
-      message = "Não há histórico a exibir";
-    }
-
-    if (historicData.message === "Exibir histórico") {
-      message = "Exibir histórico";
-    }
-
-    if (historicData.message === "Error ao localizar o histórico") {
-      message = "Error ao localizar o histórico";
+    if (historicData.message !== "") {
+      message = historicData.message;
     }
   }
 
@@ -103,15 +94,9 @@
       </div>
     {/if}
 
-    {#if message === "Não há histórico a exibir"}
+    {#if message !== "" && message !== "Exibir histórico"}
       <div class="message">
-        <h3>Não há histórico a exibir</h3>
-      </div>
-    {/if}
-
-    {#if message === "Error ao localizar o histórico"}
-      <div class="message">
-        <h3>Erro ao solicitar o histórico</h3>
+        <h3>{message}</h3>
       </div>
     {/if}
   {/await}

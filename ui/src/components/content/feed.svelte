@@ -18,6 +18,7 @@
     let motivoUrl = `/api/v1/badFeedMotives`;
     let odfData = [];
     let dados = [];
+    let dataRedirect = [];
     let showConfirm = false;
     let valorFeed;
     let value;
@@ -38,61 +39,58 @@
     let balance;
     getOdfData();
     let superSuperMaqPar;
+    // let back = "/images/icons8-go-back-24.png";
 
     const checkPostSuper = async (event) => {
-    if (!superSuperMaqPar) {
-      superSuperMaqPar = "";
-    } else if (superSuperMaqPar) {
-      if (superSuperMaqPar.length >= 6 && event.key === "Enter") {
-        if (
-          !superSuperMaqPar ||
-          superSuperMaqPar === "0" ||
-          superSuperMaqPar === "00" ||
-          superSuperMaqPar === "000" ||
-          superSuperMaqPar === "0000" ||
-          superSuperMaqPar === "00000" ||
-          superSuperMaqPar === "000000"
-        ) {
-          modalMessage = "Crachá inválido";
-        } else {
-          loader = true;
-          modalMessage = ''
-          doPostSuper();
+        if (!superSuperMaqPar) {
+            superSuperMaqPar = "";
+        } else if (superSuperMaqPar) {
+            if (superSuperMaqPar.length >= 6 && event.key === "Enter") {
+                if (
+                    !superSuperMaqPar ||
+                    superSuperMaqPar === "0" ||
+                    superSuperMaqPar === "00" ||
+                    superSuperMaqPar === "000" ||
+                    superSuperMaqPar === "0000" ||
+                    superSuperMaqPar === "00000" ||
+                    superSuperMaqPar === "000000"
+                ) {
+                    modalMessage = "Crachá inválido";
+                } else {
+                    loader = true;
+                    modalMessage = "";
+                    doPostSuper();
+                }
+            }
         }
-      }
-    }
-  };
-  const doPostSuper = async () => {
-    loader = true;
-    const headers = new Headers();
-    headers.append("Content-Type", "application/json");
-    const res = await fetch(supervisorStop, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        superSuperMaqPar: !superSuperMaqPar ? "" : superSuperMaqPar,
-      }),
-    }).then((res) => res.json());
-    console.log("linha 57 /barcode.svelte/", res)
-
-    if (res.message === "maquina") {
+    };
+    const doPostSuper = async () => {
         loader = true;
-    doPost()    
-      //location.reload();
-      modalMessage = 'Apontamento Liberado'
-    }
-    if (res.message === "supervisor não encontrado") {
-      modalMessage = "Supervisor não encontrado";
-      superParada = false;
-      showmodal = false;
-    }
+        const headers = new Headers();
+        headers.append("Content-Type", "application/json");
+        const res = await fetch(supervisorStop, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                superSuperMaqPar: !superSuperMaqPar ? "" : superSuperMaqPar,
+            }),
+        }).then((res) => res.json());
+        console.log("linha 57 /barcode.svelte/", res);
 
-    if (res.message === "erro na parada de maquina") {
-      modalMessage = "Erro na parada de máquina";
-      showmodal = false;
-      superParada = false;
-    }
-  };
+        if (res) {
+            if (res.message === "maquina") {
+                loader = true;
+                doPost();
+                modalMessage = "Apontamento Liberado";
+            }
+            if (res.message !== "") {
+                modalMessage = res.message;
+                superParada = false;
+                showmodal = false;
+                loader = false;
+            }
+        }
+    };
 
     async function getOdfData() {
         const res = await fetch(urlString);
@@ -164,80 +162,32 @@
             }),
         }).then((res) => res.json());
 
-        if (res.message === "Machine has stopped") {
-            loader = false;
-            modalMessage = "Machine stopped";
-        }
-
-        if (res.message === "Jumping steps") {
-            window.location.href = `/#/codigobarras`;
-            location.reload();
-        }
-
-        if (res.message === "Already pointed") {
-            loader = false;
-            modalMessage = "Already pointed";
-        }
-
-        if (res.message === "Saldo menor que o apontado") {
-            modalMessage = "Saldo menor que o apontado";
-            balance = res.balance;
-            loader = false;
-        }
-        if (res.message === "Algo deu errado") {
-            location.reload();
-        }
-
-        if (res.message === "Supervisor inválido") {
-            modalMessage = "Supervisor inválido";
-            loader = false;
-        }
-        if (res.message === "supervisor não encontrado") {
-            modalMessage = "Supervisor não encontrado";
-            loader = false;
-        }
-        if (res.message === "Quantidade inválida") {
-            modalMessage = "Quantidade inválida";
-            loader = false;
-        }
-        if (res.message === "Código máquina inválido") {
-            modalMessage = "Número operação inválido";
-            loader = false;
-        }
-        if (res.message === "Código de peça inválido") {
-            modalMessage = "Código de peça inválido";
-            loader = false;
-        }
-
-        if (res.message === "Número operação inválido") {
-            modalMessage = "Número operação inválido";
-            loader = false;
-        }
-
-        if (res.message === "Número odf inválido") {
-            modalMessage = "Número ODF inválido";
-            loader = false;
-        }
-        if (res.message === "Funcionário Inválido") {
-            modalMessage = "Funcionário Inválido";
-            loader = false;
-        }
-        if (res.message === "Quantidade excedida") {
-            modalMessage = "Quantidade excedida";
-            loader = false;
-        }
-        if (res.message === "Quantidade inválida") {
-            modalMessage = "Quantidade inválida";
-            loader = false;
-        }
-        if (res.message === "Erro ao apontar") {
-            modalMessage = "Erro ao apontar";
-            loader = false;
-        }
-        if (res.message === "Sucesso ao apontar") {
-            getSpaceFunc();
-            modalMessage = "";
-            showConfirm = false;
+        if (res) {
+            if (res.message === "Apontamento parcial") {
+                modalMessage = "Apontamento parcial";
+            } else if (res.message === "Pointed") {
+                window.location.href = `/#/rip`;
+                location.reload();
+            } else if (res.message === "Machine has stopped") {
+                loader = false;
+                modalMessage = "Machine stopped";
+            } else if (res.message === "Jumping steps") {
+                window.location.href = `/#/codigobarras`;
+                location.reload();
+            } else if (res.message === "Saldo menor que o apontado") {
+                modalMessage = "Saldo menor que o apontado";
+                balance = res.balance;
+                loader = false;
+            } else if (res.message === "Sucesso ao apontar") {
+                getSpaceFunc();
+                modalMessage = "";
+                showConfirm = false;
+            } else if (res.message !== "") {
+                modalMessage = res.message;
+                loader = false;
+            }
+        } else {
+            modalMessage = res.message;
         }
     };
 
@@ -349,9 +299,13 @@
         showAddress = false;
         window.location.href = `/#/rip`;
     }
-    
+
     function handleSS(event) {
+        console.log("linha 377", event);
         valorFeed = event.detail.goodFeed;
+        if (event.key === "Enter") {
+            doCallPost();
+        }
     }
 
     function handll(event) {
@@ -394,7 +348,12 @@
             </div>
             <div class="feed-area">
                 <div class="feed-area-div">
-                    <GoodFeed tabindex="1" autofocus on:message={handleSS} />
+                    <GoodFeed
+                        autofocus
+                        tabindex="1"
+                        on:keypress={handleSS}
+                        on:message={handleSS}
+                    />
                 </div>
                 <div class="feed-area-div">
                     <Bad tabindex="2" on:message={handll} />
@@ -564,19 +523,7 @@
             </div>
         </div>
     {/if}
-  
-    {#if  modalMessage === 'Apontamento Liberado'}
-        <div class="fundo">
-            <div class="header">
-                <div class="closed">
-                    <h2>
-                        {modalMessage}
-                    </h2>
-                </div>
-                <button on:click={close} on:keypress={close}>Fechar</button>
-            </div>
-        </div>
-    {/if}
+
     {#if modalMessage === "Machine stopped"}
         <div class="fundo">
             <div class="header">
@@ -623,118 +570,7 @@
         </div>
     {/if}
 
-    {#if modalMessage === "Não é possível apontar apenas quantidade de peças faltantes"}
-        <div class="fundo">
-            <div class="header">
-                <div class="closed">
-                    <h2>{modalMessage}</h2>
-                </div>
-                <button on:keypress={close} on:click={close}>fechar</button>
-            </div>
-        </div>
-    {/if}
-
-    {#if modalMessage === "Saldo menor que o apontado"}
-        <div class="fundo">
-            <div class="header">
-                <div class="closed">
-                    <h2>{modalMessage}</h2>
-                    <h4>Dispónivel para apontameto: {balance}</h4>
-                </div>
-                <button on:keypress={close} on:click={close}>fechar</button>
-            </div>
-        </div>
-    {/if}
-
-    {#if modalMessage === "Quantidade excedida"}
-        <div class="fundo">
-            <div class="header">
-                <div class="closed">
-                    <h2>{modalMessage}</h2>
-                </div>
-                <button on:keypress={close} on:click={close}>fechar</button>
-            </div>
-        </div>
-    {/if}
-
-    {#if modalMessage === "Funcionário Inválido"}
-        <div class="fundo">
-            <div class="header">
-                <div class="closed">
-                    <h2>{modalMessage}</h2>
-                </div>
-                <button on:keypress={close} on:click={close}>fechar</button>
-            </div>
-        </div>
-    {/if}
-
-    {#if modalMessage === "Número ODF inválido"}
-        <div class="fundo">
-            <div class="header">
-                <div class="closed">
-                    <h2>{modalMessage}</h2>
-                </div>
-                <button on:keypress={close} on:click={close}>fechar</button>
-            </div>
-        </div>
-    {/if}
-
-    {#if modalMessage === "Crachá inválido"}
-        <div class="fundo">
-            <div class="header">
-                <div class="closed">
-                    <h2>{modalMessage}</h2>
-                </div>
-                <button on:keypress={close} on:click={close}>fechar</button>
-            </div>
-        </div>
-    {/if}
-
-    {#if modalMessage === "Erro ao apontar"}
-        <div class="fundo">
-            <div class="header">
-                <div class="closed">
-                    <h2>{modalMessage}</h2>
-                </div>
-                <button on:keypress={close} on:click={close}>fechar</button>
-            </div>
-        </div>
-    {/if}
-
-    {#if modalMessage === "Supervisor inválido"}
-        <div class="fundo">
-            <div class="header">
-                <div class="closed">
-                    <h2>{modalMessage}</h2>
-                </div>
-                <button on:keypress={close} on:click={close}>fechar</button>
-            </div>
-        </div>
-    {/if}
-
-    {#if modalMessage === "Número operação inválido"}
-        <div class="fundo">
-            <div class="header">
-                <div class="closed">
-                    <h2>{modalMessage}</h2>
-                </div>
-                <button on:keypress={close} on:click={close}>fechar</button>
-            </div>
-        </div>
-    {/if}
-
-    {#if modalMessage === "Apontamento vazio"}
-        <div class="fundo">
-            <div class="header">
-                <div class="closed">
-                    <h2>{modalMessage}</h2>
-                </div>
-                <button on:keypress={close} on:click={close}>fechar</button>
-            </div>
-        </div>
-    {/if}
-
-    {#if modalMessage === "Supervisor não encontrado"}
+    {#if modalMessage !== "" && modalMessage !== "Apontamento parcial" && modalMessage !== "Already pointed" && modalMessage !== "Machine stopped" && modalMessage !== "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?" && modalMessage !== "Apontando apenas peças retrabalhadas, confirma ?"}
         <div class="fundo">
             <div class="header">
                 <div class="closed">

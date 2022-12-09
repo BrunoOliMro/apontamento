@@ -61,7 +61,6 @@
             }),
         }).then((res) => res.json());
         loader = false;
-        console.log("linha 60 /do post Super/", res);
         if (res.message === "Supervisor encontrado") {
             showSuper = false;
             doPost();
@@ -82,25 +81,41 @@
         }).then((res) => res.json());
         console.log("linha 84 res. rip", res);
 
-        if (res.message === "codeApont 4 prod finalzado") {
-            loader = false;
-            console.log("rip ta certo");
+        if (res) {
+            if (res.message === "rip enviada, odf finalizada") {
+                odfFinish = true;
+                window.location.href = "/#/codigobarras";
+                location.reload();
+            } else if (res.message === "rip vazia") {
+                showErrorEmpty = true;
+            } else if (res.message === "Não há rip a mostrar") {
+                return (window.location.href = `${res.url}`);
+            } else if (res.message !== "") {
+                badgeMessage = res.message;
+            }
+        } else {
+            badgeMessage = 'Algo deu errado'
         }
 
-        if (res.message === "Não há rip a mostrar") {
-            return (window.location.href = `${res.url}`);
-        }
-        if (res.message === "rip vazia") {
-            showErrorEmpty = true;
-        }
-        if (res.message === "rip enviada, odf finalizada") {
-            odfFinish = true;
-            window.location.href = "/#/codigobarras";
-            //location.reload();
-        }
-        if (res.message === "ocorreu um erro ao enviar os dados da rip") {
-            badgeMessage = "ocorreu um erro ao enviar os dados da rip";
-        }
+        // if (res.message === "codeApont 4 prod finalzado") {
+        //     loader = false;
+        //     console.log("rip ta certo");
+        // }
+
+        // if (res.message === "Não há rip a mostrar") {
+        //     return (window.location.href = `${res.url}`);
+        // }
+        // if (res.message === "rip vazia") {
+        //     showErrorEmpty = true;
+        // }
+        // if (res.message === "rip enviada, odf finalizada") {
+        //     odfFinish = true;
+        //     window.location.href = "/#/codigobarras";
+        //     //location.reload();
+        // }
+        // if (res.message === "ocorreu um erro ao enviar os dados da rip") {
+        //     badgeMessage = "ocorreu um erro ao enviar os dados da rip";
+        // }
     };
 
     function callFinish() {
