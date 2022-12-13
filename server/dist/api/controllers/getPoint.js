@@ -43,8 +43,8 @@ const getPoint = async (req, res) => {
         }
     }
     const ip = String(Object.entries(results)[0][1]);
-    const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine);
-    if (x !== 'Pointed') {
+    const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine, funcionario);
+    if (x.message !== 'Pointed') {
         return res.json({ message: x });
     }
     operationNumber = "00" + operationNumber.replaceAll(" ", '0');

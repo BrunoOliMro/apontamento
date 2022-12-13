@@ -10,9 +10,10 @@ const badFeedMotives = async (req, res) => {
     let odfNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))) || null;
     let operationNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO']))) || null;
     const codeMachine = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
+    const employee = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
     try {
-        const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine);
-        if (x === 'Ini Prod' || x === 'Pointed' || x === 'Rip iniciated' || x === 'Machine has stopped') {
+        const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine, employee);
+        if (x.message === 'Ini Prod' || x.message === 'Pointed' || x.message === 'Rip iniciated' || x.message === 'Machine has stopped') {
             let resource = await (0, select_1.select)(y);
             let resoc = resource.map((e) => e.DESCRICAO);
             if (resource.length > 0) {
@@ -23,7 +24,7 @@ const badFeedMotives = async (req, res) => {
             }
         }
         else {
-            return res.json({ message: x });
+            return res.json({ message: x.message });
         }
     }
     catch (error) {

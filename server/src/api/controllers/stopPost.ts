@@ -25,8 +25,8 @@ export const stopPost: RequestHandler = async (req, res) => {
     const start = decrypted(String(sanitize(req.cookies["startSetupTime"]))) || 0
     const final: number = Number(end - start) || 0
 
-    const x = await codeNote(odfNumber, operationNumber, machineCode)
-    if (x === 'Machine has stopped') {
+    const x = await codeNote(odfNumber, operationNumber, machineCode, funcionario)
+    if (x.message === 'Machine has stopped') {
         return res.json({ message: 'Máquina já parada' })
     } else {
         try {

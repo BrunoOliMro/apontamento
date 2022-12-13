@@ -89,8 +89,8 @@ export const rip: RequestHandler = async (req, res) => {
     res.cookie('lse', numopeFilter.map((acc: { LSE: any; }) => acc.LSE))
 
     try {
-        const x = await codeNote(odfNumber, operationNumber, codeMachine)
-        if (x === 'Pointed') {
+        const x = await codeNote(odfNumber, operationNumber, codeMachine, funcionario)
+        if (x.message === 'Pointed') {
             try {
                 const inserted = await insertInto(funcionario, odfNumber, codigoPeca, revisao, operationNumber, codeMachine, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime)
                 if (inserted) {
@@ -102,10 +102,10 @@ export const rip: RequestHandler = async (req, res) => {
                 console.log('linha 98 /eror/', error);
                 return response.message = 'Algo deu errado'
             }
-        } else if (x === 'Rip iniciated') {
+        } else if (x.message === 'Rip iniciated') {
             return res.json(numopeFilter)
         } else {
-            return res.json({ message: x })
+            return res.json({ message: x.message })
         }
     } catch (error) {
         response.url = '/#/codigobarras/'

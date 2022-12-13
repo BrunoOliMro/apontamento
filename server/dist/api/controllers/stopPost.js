@@ -23,8 +23,8 @@ const stopPost = async (req, res) => {
     const end = new Date().getTime() || 0;
     const start = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["startSetupTime"]))) || 0;
     const final = Number(end - start) || 0;
-    const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, machineCode);
-    if (x === 'Machine has stopped') {
+    const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, machineCode, funcionario);
+    if (x.message === 'Machine has stopped') {
         return res.json({ message: 'Máquina já parada' });
     }
     else {

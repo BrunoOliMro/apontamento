@@ -146,8 +146,11 @@
         }
     }
 
-    const doPost = async () => {
+    const doPost = async (e) => {
+        console.log('linha e', e);
         loader = true;
+        close()
+
         const headers = new Headers();
         const res = await fetch(urlS, {
             method: "POST",
@@ -182,6 +185,11 @@
                 getSpaceFunc();
                 modalMessage = "";
                 showConfirm = false;
+            } else if(res.message === 'Rip iniciated'){
+                window.location.href = `/#/rip`;
+                location.reload();
+            } else if(res.message === 'Algo deu errado'){
+                modalMessage = res.message;
             } else if (res.message !== "") {
                 modalMessage = res.message;
                 loader = false;
@@ -211,7 +219,8 @@
         }
     }
 
-    async function doCallPost() {
+    async function doCallPost(event) {
+        console.log('linha 222 /event/', event);
         let numberBadFeed = Number(badFeed || 0);
         let numberGoodFeed = Number(valorFeed || 0);
         let numberQtdAllowed = Number(qtdPossivelProducao);
@@ -293,6 +302,13 @@
         modalMessage = "";
     }
 
+    function closeRedirectBarcode(){
+        loader = true;
+        modalMessage = "";
+        showAddress = false;
+        window.location.href = `/#/codigoBarras`;
+    }
+
     function closeRedirect() {
         loader = true;
         modalMessage = "";
@@ -369,8 +385,8 @@
                 <a
                     tabindex="5"
                     id="apontar"
-                    on:keypress={doCallPost}
-                    on:click={doCallPost}
+                    on:keypress|once={doCallPost}
+                    on:click|once={doCallPost}
                     type="submit"
                 >
                     <span />
@@ -581,6 +597,19 @@
                 >
             </div>
         </div>
+    {/if}
+
+    {#if modalMessage === 'Algo deu errado'}
+    <div class="fundo">
+        <div class="header">
+            <div class="closed">
+                <h2>{modalMessage}</h2>
+            </div>
+            <button tabindex="7" on:keypress={closeRedirectBarcode} on:click={closeRedirectBarcode}
+                >fechar</button
+            >
+        </div>
+    </div>
     {/if}
 
     {#if showAddress === true}

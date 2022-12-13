@@ -8,14 +8,15 @@ export const historic: RequestHandler = async (req, res) => {
     let odfNumber = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
     let operationNumber = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
     let codeMachine = decrypted(String(sanitize(req.cookies["CODIGO_MAQUINA"]))) || null
+    let employee = decrypted(String(sanitize(req.body['FUNCIONARIO']))) || null
 
     const lookForDetail = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO_DETALHADO WHERE 1 = 1 AND ODF = '${odfNumber}' ORDER BY DATAHORA DESC`
     const lookforGeneric = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO WHERE 1 = 1 AND ODF = '${odfNumber}' ORDER BY OP ASC`
     let obj = []
     try {
 
-        const x = await codeNote(odfNumber, operationNumber, codeMachine)
-        if (x === 'Ini Prod' || x === 'Pointed' || x === 'Rip iniciated' || x === 'Machine has stopped') {
+        const x = await codeNote(odfNumber, operationNumber, codeMachine, employee)
+        if (x.message === 'Ini Prod' || x.message === 'Pointed' || x.message === 'Rip iniciated' || x.message === 'Machine has stopped') {
             const detailHistoric = await select(lookForDetail)
 
             if (!detailHistoric) {

@@ -25,8 +25,8 @@ export const stopSupervisor: RequestHandler = async (req, res) => {
     const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`
 
     try {
-        const x = await codeNote(odfNumber, operationNumber, machineCode)
-        if (x === 'Machine has stopped') {
+        const x = await codeNote(odfNumber, operationNumber, machineCode, funcionario)
+        if (x.message === 'Machine has stopped') {
             const resource = await select(lookForSupervisor)
             if (resource) {
                 const insertTimerBackTo3 = await insertInto(funcionario, odfNumber, codigoPeca, revisao, operationNumber, machineCode, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido)

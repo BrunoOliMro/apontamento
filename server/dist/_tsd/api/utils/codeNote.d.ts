@@ -1,2 +1,5 @@
-export declare const codeNote: (odfNumber: number | null, operationNumber: number | null, codeMachine: string | null) => Promise<"Pointed Iniciated" | "Fin Setup" | "Ini Prod" | "Pointed" | "Rip iniciated" | "Begin new process" | "Machine has stopped" | "A value was returned" | "Something went wrong" | "First time acessing ODF">;
+export declare const codeNote: (odfNumber: number | null, operationNumber: number | null, codeMachine: string | null, funcionario: string) => Promise<{
+    funcionario: string;
+    message: string;
+}>;
 //# sourceMappingURL=codeNote.d.ts.map

@@ -82,6 +82,10 @@
         console.log("linha 84 res. rip", res);
 
         if (res) {
+            if(res.message === 'Pointed'){
+                window.location.href = "/#/rip";
+                location.reload();
+            }
             if (res.message === "rip enviada, odf finalizada") {
                 odfFinish = true;
                 window.location.href = "/#/codigobarras";

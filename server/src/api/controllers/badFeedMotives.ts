@@ -9,9 +9,10 @@ export const badFeedMotives: RequestHandler = async (req, res) => {
     let odfNumber = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
     let operationNumber = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
     const codeMachine = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
+    const employee = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
     try {
-        const x = await codeNote(odfNumber, operationNumber, codeMachine)
-        if (x === 'Ini Prod' || x === 'Pointed' || x === 'Rip iniciated' || x === 'Machine has stopped') {
+        const x = await codeNote(odfNumber, operationNumber, codeMachine, employee)
+        if (x.message === 'Ini Prod' || x.message === 'Pointed' || x.message === 'Rip iniciated' || x.message === 'Machine has stopped') {
             let resource = await select(y)
             let resoc = resource.map((e: any) => e.DESCRICAO)
             if (resource.length > 0) {
@@ -20,7 +21,7 @@ export const badFeedMotives: RequestHandler = async (req, res) => {
                 return res.json({ message: 'erro em motivos do refugo' })
             }
         } else {
-            return res.json({ message: x })
+            return res.json({ message: x.message })
         }
     } catch (error) {
         console.log(error)

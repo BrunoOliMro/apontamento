@@ -39,8 +39,8 @@ const ripPost = async (req, res) => {
     const faltante = null;
     const retrabalhada = null;
     const updatePcpProg = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${codeMachine}'`;
-    const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine);
-    if (x !== 'Rip iniciated') {
+    const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine, funcionario);
+    if (x.message !== 'Rip iniciated') {
         return res.json({ message: x });
     }
     const tempoDecorridoRip = new Date().getTime() - Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['startRip'])));
@@ -49,6 +49,7 @@ const ripPost = async (req, res) => {
         if (x) {
             const y = await (0, update_1.update)(updatePcpProg);
             if (y === 'Update sucess') {
+                await (0, clearCookie_1.cookieCleaner)(res);
                 return res.json({ message: "rip enviada, odf finalizada" });
             }
             else {

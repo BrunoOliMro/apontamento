@@ -12,13 +12,13 @@ export const statusImage: RequestHandler = async (req, res) => {
     const codeMachine = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
     const operationNumber = decrypted(sanitize(req.cookies['NUMERO_OPERACAO']))
     let odfNumber = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
-
+    let employee = decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))
     const lookOnProcess = `SELECT TOP 1 [NUMPEC], [IMAGEM] FROM PROCESSO (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${numpec}' AND REVISAO = '${revisao}' AND IMAGEM IS NOT NULL`
     let imgResult: string[] = [];
     try {
 
-        const x = await codeNote(odfNumber, operationNumber, codeMachine)
-        if (x === 'Ini Prod' || x === 'Pointed' || x === 'Rip iniciated' || x === 'Machine has stopped') {
+        const x = await codeNote(odfNumber, operationNumber, codeMachine, employee)
+        if (x.message === 'Ini Prod' || x.message === 'Pointed' || x.message === 'Rip iniciated' || x.message === 'Machine has stopped') {
             const resource = await select(lookOnProcess)
             if (resource.length > 0) {
                 try {
@@ -36,7 +36,7 @@ export const statusImage: RequestHandler = async (req, res) => {
                 return res.json({ message: 'Status image not found' })
             }
         } else {
-            return res.json({ message: x })
+            return res.json({ message: x.message })
         }
     } catch (error) {
         console.log(error)

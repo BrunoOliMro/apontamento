@@ -13,6 +13,10 @@ import { encrypted } from "../utils/encryptOdf";
 import { sanitize } from "../utils/sanitize";
 
 export const point: RequestHandler = async (req, res) => {
+    // console.log('linha 2000', req);
+    let ticket = req
+    console.log('linha 18 /req/', ticket);
+
     let qtdBoas = Number(sanitize(req.body["valorFeed"])) || 0;
     let supervisor: string | null = sanitize(req.body["supervisor"]) || null
     const motivorefugo: string | null = sanitize(req.body["value"]) || null
@@ -39,28 +43,44 @@ export const point: RequestHandler = async (req, res) => {
         balance: 0,
         url: '',
     }
+    //const lookForOdfData = `SELECT TOP 1 CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS, APONTAMENTO_LIBERADO FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND NUMERO_OPERACAO = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}' AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
+    //const valuesFromBack = await select(lookForOdfData)
 
     let decodedOdfNumber = Number(decodedBuffer(String(req.cookies['encodedOdfNumber'])))
-    if(decodedOdfNumber !== odfNumber){
+    let decodedOperationNumber = Number(decodedBuffer(String(req.cookies['encodedOperationNuber'])))
+    let decodedMachineCode = String(decodedBuffer(String(req.cookies['encodedMachineCode'])))
+
+    if (decodedOdfNumber !== odfNumber || decodedOperationNumber !== operationNumber || decodedMachineCode !== machineCode) {
         console.log('cookies alterados');
-        return res.json({message : 'ODF criptografada e decodificada não coincidem'})
+        return res.json({ message: 'ODF criptografada e decodificada não coincidem' })
     }
+
+    // if (valuesFromBack[0].APONTAMENTO_LIBERADO === 'N') {
+    //     const y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`
+    //     const x = await update(y)
+    //     console.log('linha x', x);
+    // } else if (valuesFromBack[0].APONTAMENTO_LIBERADO === 'S') {
+    //     console.log('nao pode apontar');
+    //     return res.json({ message: 'Algo deu errado' })
+    // }
 
     //Inicia tempo de Rip
     res.cookie("startRip", Number(new Date().getTime()))
 
     // Variavel que guarda o valor total dos apontamentos
-    const valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed)) 
+    const valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed))
     let faltante = qtdLibMax! - valorTotalApontado
-
 
     // Tempo final de produção
     const finalProdTimer = Number(new Date().getTime() - Number(decrypted(String(req.cookies['startProd']))) / 1000) || 0
 
+    const pointCode = await codeNote(odfNumber, operationNumber, machineCode, employee)
+    if (pointCode.message !== 'Ini Prod') {
+        return res.json({ message: pointCode.message })
+    }
 
-    const x = await codeNote(odfNumber, operationNumber, machineCode)
-    if (x !== 'Ini Prod') {
-        return res.json({ message: x })
+    if (pointCode.funcionario !== employee) {
+        return res.json({ message: 'Funcionario diferente' })
     }
 
     if (!valorTotalApontado) {
@@ -74,12 +94,6 @@ export const point: RequestHandler = async (req, res) => {
             supervisor = '004067'
         }
     }
-
-    if (!supervisor || supervisor === '000000' || supervisor === '0' || supervisor === '00' || supervisor === '000' || supervisor === '0000' || supervisor === '00000') {
-        console.log("linha 64");
-        return res.json({ message: 'Supervisor inválido' })
-    }
-
     if (!qtdLibMax) {
         console.log("linha 68 /point.ts/ qtdLibMax /", qtdLibMax);
         return res.json({ message: 'Quantidade inválida' })
@@ -153,9 +167,9 @@ export const point: RequestHandler = async (req, res) => {
             }
         }
         try {
-            const connection = await mssql.connect(sqlConfig);
             let diferenceBetween = execut * qtdLibMax - valorTotalApontado * execut
-
+            console.log('diference', diferenceBetween);
+            const connection = await mssql.connect(sqlConfig);
             // Loop para atualizar o estoque
             if (valorTotalApontado < qtdLibMax!) {
                 try {
@@ -181,7 +195,7 @@ export const point: RequestHandler = async (req, res) => {
                 await connection.query(updateQtyQuery2.join("\n")).then(result => result.rowsAffected)
                 await connection.query(a.join("\n")).then(result => result.rowsAffected)
             } catch (error) {
-                console.log("linha 185 /selectHasP/", error);
+                console.log("linha 185 /Point.ts/", error);
                 return res.json({ message: 'Algo deu errado' })
             } finally {
                 await connection.close()
@@ -195,11 +209,7 @@ export const point: RequestHandler = async (req, res) => {
     try {
         console.log("linha 228 /point.ts/ Alterando quantidade apontada...");
         const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + ${valorTotalApontado}, QTD_REFUGO = COALESCE(QTD_REFUGO, 0) + ${badFeed}, QTDE_LIB = ${faltante}, QTD_FALTANTE = ${faltante}, QTD_BOAS = COALESCE(QTD_BOAS, 0) + ${qtdBoas} WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`
-        // const x =
-         await update(updateCol)
-        // if (x === 'Error on update') {
-        //     return res.json({ message: 'Erro ao atualizar o saldo' })
-        // }
+        await update(updateCol)
     } catch (error) {
         console.log("linha 209 - error - /point.ts/", error);
         return res.json({ message: 'Algo deu errado' })

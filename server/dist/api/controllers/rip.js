@@ -88,8 +88,8 @@ const rip = async (req, res) => {
     res.cookie('lie', numopeFilter.map((acc) => acc.LIE));
     res.cookie('lse', numopeFilter.map((acc) => acc.LSE));
     try {
-        const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine);
-        if (x === 'Pointed') {
+        const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine, funcionario);
+        if (x.message === 'Pointed') {
             try {
                 const inserted = await (0, insert_1.insertInto)(funcionario, odfNumber, codigoPeca, revisao, operationNumber, codeMachine, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime);
                 if (inserted) {
@@ -104,11 +104,11 @@ const rip = async (req, res) => {
                 return response.message = 'Algo deu errado';
             }
         }
-        else if (x === 'Rip iniciated') {
+        else if (x.message === 'Rip iniciated') {
             return res.json(numopeFilter);
         }
         else {
-            return res.json({ message: x });
+            return res.json({ message: x.message });
         }
     }
     catch (error) {

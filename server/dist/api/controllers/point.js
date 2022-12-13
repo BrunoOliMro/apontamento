@@ -15,6 +15,8 @@ const decryptedOdf_1 = require("../utils/decryptedOdf");
 const encryptOdf_1 = require("../utils/encryptOdf");
 const sanitize_1 = require("../utils/sanitize");
 const point = async (req, res) => {
+    let ticket = req;
+    console.log('linha 18 /req/', ticket);
     let qtdBoas = Number((0, sanitize_1.sanitize)(req.body["valorFeed"])) || 0;
     let supervisor = (0, sanitize_1.sanitize)(req.body["supervisor"]) || null;
     const motivorefugo = (0, sanitize_1.sanitize)(req.body["value"]) || null;
@@ -43,7 +45,9 @@ const point = async (req, res) => {
         url: '',
     };
     let decodedOdfNumber = Number((0, decodeOdf_1.decodedBuffer)(String(req.cookies['encodedOdfNumber'])));
-    if (decodedOdfNumber !== odfNumber) {
+    let decodedOperationNumber = Number((0, decodeOdf_1.decodedBuffer)(String(req.cookies['encodedOperationNuber'])));
+    let decodedMachineCode = String((0, decodeOdf_1.decodedBuffer)(String(req.cookies['encodedMachineCode'])));
+    if (decodedOdfNumber !== odfNumber || decodedOperationNumber !== operationNumber || decodedMachineCode !== machineCode) {
         console.log('cookies alterados');
         return res.json({ message: 'ODF criptografada e decodificada não coincidem' });
     }
@@ -51,9 +55,12 @@ const point = async (req, res) => {
     const valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed));
     let faltante = qtdLibMax - valorTotalApontado;
     const finalProdTimer = Number(new Date().getTime() - Number((0, decryptedOdf_1.decrypted)(String(req.cookies['startProd']))) / 1000) || 0;
-    const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, machineCode);
-    if (x !== 'Ini Prod') {
-        return res.json({ message: x });
+    const pointCode = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, machineCode, employee);
+    if (pointCode.message !== 'Ini Prod') {
+        return res.json({ message: pointCode.message });
+    }
+    if (pointCode.funcionario !== employee) {
+        return res.json({ message: 'Funcionario diferente' });
     }
     if (!valorTotalApontado) {
         return res.json({ message: 'Algo deu errado' });
@@ -65,10 +72,6 @@ const point = async (req, res) => {
         else {
             supervisor = '004067';
         }
-    }
-    if (!supervisor || supervisor === '000000' || supervisor === '0' || supervisor === '00' || supervisor === '000' || supervisor === '0000' || supervisor === '00000') {
-        console.log("linha 64");
-        return res.json({ message: 'Supervisor inválido' });
     }
     if (!qtdLibMax) {
         console.log("linha 68 /point.ts/ qtdLibMax /", qtdLibMax);
@@ -132,8 +135,9 @@ const point = async (req, res) => {
             }
         }
         try {
-            const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
             let diferenceBetween = execut * qtdLibMax - valorTotalApontado * execut;
+            console.log('diference', diferenceBetween);
+            const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
             if (valorTotalApontado < qtdLibMax) {
                 try {
                     codigoFilho.forEach((codigoFilho) => {
@@ -158,7 +162,7 @@ const point = async (req, res) => {
                 await connection.query(a.join("\n")).then(result => result.rowsAffected);
             }
             catch (error) {
-                console.log("linha 185 /selectHasP/", error);
+                console.log("linha 185 /Point.ts/", error);
                 return res.json({ message: 'Algo deu errado' });
             }
             finally {

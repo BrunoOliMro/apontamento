@@ -25,8 +25,8 @@ const stopSupervisor = async (req, res) => {
     const tempoDecorrido = 0;
     const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`;
     try {
-        const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, machineCode);
-        if (x === 'Machine has stopped') {
+        const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, machineCode, funcionario);
+        if (x.message === 'Machine has stopped') {
             const resource = await (0, select_1.select)(lookForSupervisor);
             if (resource) {
                 const insertTimerBackTo3 = await (0, insert_1.insertInto)(funcionario, odfNumber, codigoPeca, revisao, operationNumber, machineCode, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido);

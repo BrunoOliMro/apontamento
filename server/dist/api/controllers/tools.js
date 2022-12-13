@@ -15,7 +15,7 @@ const tools = async (req, res) => {
     }
     const numeroOdf = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"])))) || null;
     const codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_PECA"]))) || null;
-    let numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"]))) || null;
+    const numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"]))) || null;
     const codigoMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_MAQUINA"]))) || null;
     const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
     const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
@@ -37,8 +37,9 @@ const tools = async (req, res) => {
         return res.json({ message: 'Erro na ODF' });
     }
     try {
-        const codeNoteResult = await (0, codeNote_1.codeNote)(numeroOdf, numeroOperacao, codigoMaq);
-        if (codeNoteResult === 'First time acessing ODF' || codeNoteResult === 'Begin new process') {
+        const codeNoteResult = await (0, codeNote_1.codeNote)(numeroOdf, numeroOperacao, codigoMaq, funcionario);
+        console.log('linha 43 ', codeNoteResult);
+        if (codeNoteResult.message === 'First time acessing ODF' || codeNoteResult.message === 'Begin new process') {
             const inserted = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, start);
             if (inserted !== 'Algo deu errado') {
                 try {
@@ -72,7 +73,7 @@ const tools = async (req, res) => {
             }
         }
         else {
-            return res.json({ message: codeNoteResult });
+            return res.json({ message: codeNoteResult.message });
         }
     }
     catch (error) {
@@ -104,8 +105,8 @@ const selectedTools = async (req, res) => {
     let z = await (0, encryptOdf_1.encrypted)(String(new Date().getTime()));
     res.cookie("startProd", z);
     try {
-        const codeNoteResult = await (0, codeNote_1.codeNote)(numeroOdf, numeroOperacao, codigoMaq);
-        if (codeNoteResult === 'Pointed Iniciated') {
+        const codeNoteResult = await (0, codeNote_1.codeNote)(numeroOdf, numeroOperacao, codigoMaq, funcionario);
+        if (codeNoteResult.message === 'Pointed Iniciated') {
             const codApontamentoFinalSetup = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, tempoDecorrido);
             if (codApontamentoFinalSetup !== 'Algo deu errado') {
                 const codApontamentoInicioSetup = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta3, descricaoCodigoAponta3, motivo, faltante, retrabalhada, Number(new Date().getTime() || null));
@@ -120,7 +121,7 @@ const selectedTools = async (req, res) => {
                 return res.json({ message: 'Algo deu errado' });
             }
         }
-        else if (codeNoteResult === 'Fin Setup') {
+        else if (codeNoteResult.message === 'Fin Setup') {
             const codApontamentoInicioSetup = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta3, descricaoCodigoAponta3, motivo, faltante, retrabalhada, Number(new Date().getTime() || null));
             if (codApontamentoInicioSetup) {
                 return res.json({ message: 'ferramentas selecionadas com successo' });
@@ -130,7 +131,7 @@ const selectedTools = async (req, res) => {
             }
         }
         else {
-            return res.json({ message: codeNoteResult });
+            return res.json({ message: codeNoteResult.message });
         }
     }
     catch (error) {

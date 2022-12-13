@@ -57,9 +57,9 @@ const returnedValue = async (req, res) => {
     if (!ruins) {
         ruins = 0;
     }
-    const codeNoteResult = await (0, codeNote_1.codeNote)(data.numOdf, data.numOper, data.codMaq);
+    const codeNoteResult = await (0, codeNote_1.codeNote)(data.numOdf, data.numOper, data.codMaq, funcionario);
     console.log('linha 68 /return/', codeNoteResult);
-    if (codeNoteResult !== 'Begin new process') {
+    if (codeNoteResult.message !== 'Begin new process') {
         return res.json({ message: 'Not possible to return' });
     }
     let valorTotal = boas + ruins;

@@ -11,6 +11,11 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
         condic: '',
         execut: 0,
     }
+    let quantityToPoint: number;
+    let numeroOperNew = String(numeroOperacao.replaceAll(' ', ''))
+    const updateStorageQuery: any = [];
+    let updateAlocacaoQuery: any = [];
+    const insertAlocaoQuery: any = [];
     const queryStorageFund = `SELECT DISTINCT  
     OP.STATUS_RESERVA,
     OP.NUMITE,
@@ -20,7 +25,7 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
            CONDIC,       
            CAST(E.SALDOREAL AS INT) AS SALDOREAL,                 
            CAST(((E.SALDOREAL - ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO AND CA.ODF = PCP.NUMERO_ODF),0)) / ISNULL(OP.EXECUT,0)) AS INT) AS QTD_LIBERADA_PRODUZIR,
-           ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO),0) as saldo_alocado
+           ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO),0) as RESERVADO
            FROM PROCESSO PRO (NOLOCK)                  
            INNER JOIN OPERACAO OP (NOLOCK) ON OP.RECNO_PROCESSO = PRO.R_E_C_N_O_                  
            INNER JOIN ESTOQUE E (NOLOCK) ON E.CODIGO = OP.NUMITE                
@@ -34,60 +39,51 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
 
     try {
         const selectKnowHasP = await select(queryStorageFund)
+
         if (selectKnowHasP.length <= 0) {
-            response.message = "Não há item para reservar"
-            return response
+            return response.message = "Não há item para reservar"
         } else if (selectKnowHasP.length > 0) {
+            let execut = Math.max(...selectKnowHasP.map((element: any) => element.EXECUT))
+            const codigoFilho: any = selectKnowHasP.map((item: any) => item.NUMITE)
+            const numberOfQtd: number = Math.min(...selectKnowHasP.map((element: any) => element.QTD_LIBERADA_PRODUZIR))
+            const makeReservation = selectKnowHasP.map((item: any) => item.NUMSEQ).filter((element: string) => element === numeroOperNew)
+
+            // Check to see if it's to make a reservation
+            if (makeReservation.length <= 0) {
+                return response.message = 'Não há item para reservar'
+            }
+
             if (selectKnowHasP[0].hasOwnProperty('STATUS_RESERVA')) {
                 if (selectKnowHasP[0].STATUS_RESERVA === 'R') {
-                    const codigoFilho = selectKnowHasP.map((element: any) => element.NUMITE)
-                    let execut = Math.max(...selectKnowHasP.map((element: any) => element.EXECUT))
-                    response.quantidade = selectKnowHasP[0].saldo_alocado
+                    response.quantidade = selectKnowHasP[0].RESERVADO
                     response.codigoFilho = codigoFilho
                     response.execut = execut
                     response.condic = 'P'
-                    response.message = 'Pegar cookies'
+                    response.message = 'Gerar cookies'
                     return response
                 }
             }
-        }
 
-        if (selectKnowHasP.length > 0) {
-            const qtdLibProd: number[] = selectKnowHasP.map((element: any) => element.QTD_LIBERADA_PRODUZIR)
-            const numberOfQtd = Math.min(...qtdLibProd)
-            console.log('linha 53 quanti', numberOfQtd);
-            const codigoFilho: any = selectKnowHasP.map((item: any) => item.NUMITE)
-            const updateStorageQuery: any = [];
-            let updateAlocacaoQuery: any = [];
-            const insertAlocaoQuery: any = [];
-            response.condic = selectKnowHasP[0].CONDIC
-            response.codigoFilho = codigoFilho
-            let quantityToPoint: number;
-            let execut = Math.max(...selectKnowHasP.map((element: any) => element.EXECUT))
 
-            // Check to see if it's to make a reservation
-            let numeroOperNew = String(numeroOperacao.replaceAll(' ', ''))
-            let makeReservation = selectKnowHasP.map((item: any) => item.NUMSEQ).filter((element: string) => element === numeroOperNew)
-            if (makeReservation.length <= 0) {
-                response.message = 'Algo deu errado'
-                return response
-            }
+            console.log('linha 68 /SelectHas/', numberOfQtd);
+            console.log('linha 68 /SelectHas/', quantidadeOdf);
 
             // Caso a quantidade liberada para odf seja maior ou menor que a quantidade a produzir
-            if (quantidadeOdf < numberOfQtd) {
+            if (quantidadeOdf <= 0) {
+                return response.message = 'Quantidade para reserva inválida'
+            } else if (numberOfQtd <= 0) {
+                return response.message = 'Quantidade para reserva inválida'
+            } else if (quantidadeOdf < numberOfQtd) {
                 quantityToPoint = quantidadeOdf;
             } else {
                 quantityToPoint = numberOfQtd;
             }
 
-            if (quantityToPoint <= 0) {
-                response.message = 'Quantidade para reserva inválida'
-                return response
-            }
-
-            let quantitySetStorage = quantityToPoint * execut
-            response.execut = execut
+            const quantitySetStorage = quantityToPoint * execut
             response.quantidade = quantityToPoint
+            response.condic = selectKnowHasP[0].CONDIC
+            response.codigoFilho = codigoFilho
+            response.execut = execut
 
             // Loop para atualizar os dados no DB
             try {
@@ -181,6 +177,8 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                 console.log("linha 145 /selectHasP/", error);
                 return response.message = 'Algo deu errado'
             }
+        } else {
+            return response.message = 'Algo deu errado'
         }
     } catch (error) {
         console.log('linha 154 /error: selectHasP/: ', error);

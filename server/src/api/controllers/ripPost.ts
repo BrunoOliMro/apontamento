@@ -41,8 +41,8 @@ export const ripPost: RequestHandler = async (req, res) => {
     // const tempoDecorrido = Number(new Date(start).getTime()) || 0
     //const final = Number(tempoDecorrido - end) || 0 // Errp em type numeric
     // console.log("lirenbierbirebi", new Date().getTime() - req.cookies['startRip']);    // Encerra ao final da Rip
-    const x = await codeNote(odfNumber, operationNumber, codeMachine)
-    if (x !== 'Rip iniciated') {
+    const x = await codeNote(odfNumber, operationNumber, codeMachine, funcionario)
+    if (x.message !== 'Rip iniciated') {
         return res.json({ message: x })
     }
 
@@ -54,6 +54,7 @@ export const ripPost: RequestHandler = async (req, res) => {
         if (x) {
             const y = await update(updatePcpProg)
             if (y === 'Update sucess') {
+                await cookieCleaner(res)
                 return res.json({ message: "rip enviada, odf finalizada" })
             } else {
                 return res.json({ message: 'Algo deu errado' })

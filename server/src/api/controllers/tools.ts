@@ -15,7 +15,7 @@ export const tools: RequestHandler = async (req, res) => {
     }
     const numeroOdf: number | null = Number(decrypted(String(sanitize(req.cookies["NUMERO_ODF"])))) || null
     const codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
-    let numeroOperacao = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
+    const numeroOperacao = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
     const codigoMaq: string = decrypted(String(sanitize(req.cookies["CODIGO_MAQUINA"]))) || null
     const funcionario: string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
     const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
@@ -39,8 +39,9 @@ export const tools: RequestHandler = async (req, res) => {
     }
 
     try {  
-        const codeNoteResult = await codeNote(numeroOdf, numeroOperacao, codigoMaq)
-        if (codeNoteResult === 'First time acessing ODF' || codeNoteResult === 'Begin new process') {
+        const codeNoteResult = await codeNote(numeroOdf, numeroOperacao, codigoMaq, funcionario)
+        console.log('linha 43 ', codeNoteResult);
+        if (codeNoteResult.message === 'First time acessing ODF' || codeNoteResult.message === 'Begin new process') {
             const inserted = await insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, start)
             if (inserted !== 'Algo deu errado') {
                 try {
@@ -70,7 +71,7 @@ export const tools: RequestHandler = async (req, res) => {
                 return res.json({ message: 'Something went wrong' })
             }
         } else {
-            return res.json({ message: codeNoteResult })
+            return res.json({ message: codeNoteResult.message })
         }
     } catch (error) {
         console.log(error);
@@ -106,8 +107,8 @@ export const selectedTools: RequestHandler = async (req, res) => {
     //Inicia a produção
     res.cookie("startProd", z)
     try {
-        const codeNoteResult = await codeNote(numeroOdf, numeroOperacao, codigoMaq)
-        if (codeNoteResult === 'Pointed Iniciated') {
+        const codeNoteResult = await codeNote(numeroOdf, numeroOperacao, codigoMaq, funcionario)
+        if (codeNoteResult.message === 'Pointed Iniciated') {
             //INSERE EM CODAPONTA 2
             const codApontamentoFinalSetup = await insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, tempoDecorrido)
             if (codApontamentoFinalSetup !== 'Algo deu errado') {
@@ -122,7 +123,7 @@ export const selectedTools: RequestHandler = async (req, res) => {
             else {
                 return res.json({ message: 'Algo deu errado' })
             }
-        } else if (codeNoteResult === 'Fin Setup') {
+        } else if (codeNoteResult.message === 'Fin Setup') {
             //INSERE EM CODAPONTA 3
             const codApontamentoInicioSetup = await insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta3, descricaoCodigoAponta3, motivo, faltante, retrabalhada, Number(new Date().getTime() || null))
             if (codApontamentoInicioSetup) {
@@ -131,7 +132,7 @@ export const selectedTools: RequestHandler = async (req, res) => {
                 return res.json({ message: 'Algo deu errado' })
             }
         } else {
-            return res.json({ message: codeNoteResult })
+            return res.json({ message: codeNoteResult.message })
         }
     } catch (error) {
         return res.json({ message: 'Algo deu errado' })

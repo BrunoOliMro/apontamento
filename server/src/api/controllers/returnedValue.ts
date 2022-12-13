@@ -64,9 +64,9 @@ export const returnedValue: RequestHandler = async (req, res) => {
         ruins = 0
     }
 
-    const codeNoteResult = await codeNote(data.numOdf, data.numOper, data.codMaq)
+    const codeNoteResult = await codeNote(data.numOdf, data.numOper, data.codMaq, funcionario)
     console.log('linha 68 /return/', codeNoteResult);
-    if (codeNoteResult !== 'Begin new process') {
+    if (codeNoteResult.message !== 'Begin new process') {
         return res.json({ message: 'Not possible to return' })
     }
 

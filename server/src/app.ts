@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 import apiRouter from "./api/router";
 
 const app = express();
-
+app.use(express.json({ limit: '0.20kb' })); // Here input body limit is 20 kb
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
