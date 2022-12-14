@@ -15,7 +15,7 @@ const encodedOdf_1 = require("../utils/encodedOdf");
 const searchOdf = async (req, res) => {
     const dados = (0, unravelBarcode_1.unravelBarcode)(req.body.barcode) || null;
     let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
-    const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, CODIGO_PECA, QTD_BOAS, QTD_REFUGO FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
+    const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, CODIGO_PECA, QTD_BOAS, QTD_REFUGO, QTD_FALTANTE, QTD_RETRABALHADA FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
     if (dados.message === 'Código de barras inválido' || !dados) {
         return res.json({ message: 'Código de barras inválido' });
     }
@@ -36,7 +36,26 @@ const searchOdf = async (req, res) => {
         }
     }
     else if (i > 0) {
-        odf[i].QTDE_LIB = odf[i - 1].QTDE_APONTADA - odf[i - 1].QTD_REFUGO - odf[i].QTD_REFUGO - odf[i].QTD_BOAS;
+        if (!odf[i].QTD_BOAS) {
+            odf[i].QTD_BOAS = 0;
+        }
+        if (!odf[i].QTD_REFUGO) {
+            odf[i].QTD_REFUGO = 0;
+        }
+        if (!odf[i].QTD_RETRABALHADA) {
+            odf[i].QTD_RETRABALHADA = 0;
+        }
+        if (!odf[i].QTD_FALTANTE) {
+            odf[i].QTD_FALTANTE = 0;
+        }
+        let x;
+        let allValue = odf[i].QTD_BOAS + odf[i].QTD_REFUGO + odf[i].QTD_FALTANTE + odf[i].QTD_RETRABALHADA;
+        if (allValue >= odf[i].QTDE_APONTADA) {
+            console.log('quantidade excede');
+            odf[i].QTDE_LIB = null;
+        }
+        odf[i].QTDE_LIB = odf[i - 1].QTD_BOAS - odf[i].QTD_BOAS;
+        console.log('linha 73 ', odf[i].QTDE_LIB);
     }
     else {
         return odf[i].QTDE_LIB = null;
@@ -44,7 +63,6 @@ const searchOdf = async (req, res) => {
     if (!odf[i].QTDE_LIB || odf[i].QTDE_LIB <= 0) {
         return res.json({ message: 'Não há limite na ODF' });
     }
-    console.log('linha 50 ', odf[i].QTDE_LIB);
     let lookForChildComponents = await (0, selectIfHasP_1.selectToKnowIfHasP)(dados, odf[i].QTDE_LIB, funcionario, odf[i].NUMERO_OPERACAO, odf[i].CODIGO_PECA, odf[i].REVISAO);
     if (lookForChildComponents.message === 'Valores Reservados') {
         if (lookForChildComponents.quantidade < odf[i].QTDE_LIB) {

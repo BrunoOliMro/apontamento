@@ -30,34 +30,12 @@ export const odfData: RequestHandler = async (req, res) => {
         }
 
         const x = await codeNote(odfNumber, operationNumber, codeMachine, funcionario)
-        console.log('linha 29 /odfData/', x);
+        // console.log('linha 29 /odfData/', x);
         if (x.message === 'Ini Prod' || x.message === 'Pointed' || x.message === 'Rip iniciated' || x.message === 'Machine has stopped') {
             const data = await select(lookForOdfData)
             const i = await odfIndex(data, numOper)
             response.odfSelecionada = data[i]
-
-
-            // if (indexOdf <= 0) {
-            //     data[indexOdf].QTDE_LIB = data[indexOdf].QTDE_ODF - data[indexOdf].QTDE_APONTADA
-            // } else if (indexOdf > 0) {
-            //     data[indexOdf].QTDE_LIB = data[indexOdf - 1].QTD_BOAS - data[indexOdf].QTDE_APONTADA
-            //     console.log('caiu auqi',  data[indexOdf].QTDE_LIB );
-            // }
-
-            // if(data[indexOdf].QTDE_LIB !== qtdeLib){
-            //     console.log('linha 47 /OdfData/', qtdeLib);
-            // }
             
-            
-            // // Caso seja a primeira vez inicia a odf
-            // if (!data[indexOdf].QTDE_LIB && !data[indexOdf].QTD_BOAS && !data[indexOdf].QTDE_LIB) {
-            //     data[indexOdf].QTDE_LIB = data[indexOdf].QTDE_ODF
-            // }
-            
-            // data[indexOdf].QTDE_LIB = qtdeLib
-            // console.log('data linha 35 ', data[indexOdf].QTDE_LIB);
-
-
             if (response.message === 'Algo deu errado') {
                 return res.json({ message: 'Algo deu errado' });
             } else {

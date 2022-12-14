@@ -27,7 +27,6 @@ const odfData = async (req, res) => {
             return res.json({ message: 'Algo deu errado' });
         }
         const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine, funcionario);
-        console.log('linha 29 /odfData/', x);
         if (x.message === 'Ini Prod' || x.message === 'Pointed' || x.message === 'Rip iniciated' || x.message === 'Machine has stopped') {
             const data = await (0, select_1.select)(lookForOdfData);
             const i = await (0, odfIndex_1.odfIndex)(data, numOper);

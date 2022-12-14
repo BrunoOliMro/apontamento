@@ -38,7 +38,7 @@ export const tools: RequestHandler = async (req, res) => {
         return res.json({ message: 'Erro na ODF' })
     }
 
-    try {  
+    try {
         const codeNoteResult = await codeNote(numeroOdf, numeroOperacao, codigoMaq, funcionario)
         console.log('linha 43 ', codeNoteResult);
         if (codeNoteResult.message === 'First time acessing ODF' || codeNoteResult.message === 'Begin new process') {
@@ -55,11 +55,10 @@ export const tools: RequestHandler = async (req, res) => {
                             const path = await pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], ferramenta, String(i));
                             result.push(path);
                         }
-                        const obj = {
-                            message: 'codeApont 1 inserido',
-                            result: result,
-                        }
-                        return res.json(obj)
+                        // const obj = {
+                        //     result: result,
+                        // }
+                        return res.json(result)
                     } else {
                         return res.json({ message: "/images/sem_imagem.gif" });
                     }

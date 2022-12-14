@@ -17,7 +17,7 @@ export const codeNote = async (odfNumber: number | null, operationNumber: number
         response.funcionario = codigoDeApontamento[0].USUARIO
     }
 
-    console.log('linha 10 /CodigoDeApontamento/', codigoDeApontamento);
+    // console.log('linha 10 /CodigoDeApontamento/', codigoDeApontamento);
     if (codigoDeApontamento.length > 0) {
         if (codigoDeApontamento[0].hasOwnProperty('CODAPONTA')) {
             if (codigoDeApontamento[0].CODAPONTA === 1) {
@@ -28,7 +28,7 @@ export const codeNote = async (odfNumber: number | null, operationNumber: number
                 return response
             } else if (codigoDeApontamento[0].CODAPONTA === 3) {
                 response.message = 'Ini Prod'
-                console.log('response', response);
+                // console.log('response', response);
                 return response
             } else if (codigoDeApontamento[0].CODAPONTA === 4) {
                 response.message = 'Pointed'

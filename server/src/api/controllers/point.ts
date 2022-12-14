@@ -14,8 +14,8 @@ import { sanitize } from "../utils/sanitize";
 
 export const point: RequestHandler = async (req, res) => {
     // console.log('linha 2000', req);
-    let ticket = req
-    console.log('linha 18 /req/', ticket);
+    // let ticket = req
+    // console.log('linha 18 /req/', ticket);
 
     let qtdBoas = Number(sanitize(req.body["valorFeed"])) || 0;
     let supervisor: string | null = sanitize(req.body["supervisor"]) || null
@@ -43,8 +43,8 @@ export const point: RequestHandler = async (req, res) => {
         balance: 0,
         url: '',
     }
-    //const lookForOdfData = `SELECT TOP 1 CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS, APONTAMENTO_LIBERADO FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND NUMERO_OPERACAO = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}' AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
-    //const valuesFromBack = await select(lookForOdfData)
+    const lookForOdfData = `SELECT TOP 1 CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS, APONTAMENTO_LIBERADO FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND NUMERO_OPERACAO = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}' AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
+    const valuesFromBack = await select(lookForOdfData)
 
     let decodedOdfNumber = Number(decodedBuffer(String(req.cookies['encodedOdfNumber'])))
     let decodedOperationNumber = Number(decodedBuffer(String(req.cookies['encodedOperationNuber'])))
@@ -69,6 +69,7 @@ export const point: RequestHandler = async (req, res) => {
 
     // Variavel que guarda o valor total dos apontamentos
     const valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed))
+    // const valorTotalApontado = (Number(qtdBoas) + Number(badFeed)  + Number(reworkFeed))
     let faltante = qtdLibMax! - valorTotalApontado
 
     // Tempo final de produção
@@ -77,6 +78,10 @@ export const point: RequestHandler = async (req, res) => {
     const pointCode = await codeNote(odfNumber, operationNumber, machineCode, employee)
     if (pointCode.message !== 'Ini Prod') {
         return res.json({ message: pointCode.message })
+    }
+
+    if (reworkFeed > 0) {
+
     }
 
     if (pointCode.funcionario !== employee) {
@@ -205,10 +210,28 @@ export const point: RequestHandler = async (req, res) => {
             return res.json({ message: 'erro ao efetivar estoque das peças filhas' })
         }
     }
+    //let lib = valorTotalApontado -
+    if(reworkFeed > 0){
+        if(reworkFeed > valuesFromBack[0].QTD_REFUGO){
+            console.log('Limite pra refugo inválido');
+        }
+    } 
+    console.log('linha 218 /Point.ts/', valuesFromBack[0].QTD_FALTANTE );
+    console.log('linha 219 /Point.ts/', valuesFromBack[0].QTD_REFUGO );
+
+    // valuesFromBack[0].QTD_FALTANTE
+    if(missingFeed > 0){
+        faltante = missingFeed
+    }
+
+    const lib = qtdLibMax - valorTotalApontado
+    console.log('badFeed', badFeed);
+    console.log('missing', faltante);
+    console.log('missing', reworkFeed);
 
     try {
         console.log("linha 228 /point.ts/ Alterando quantidade apontada...");
-        const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + ${valorTotalApontado}, QTD_REFUGO = COALESCE(QTD_REFUGO, 0) + ${badFeed}, QTDE_LIB = ${faltante}, QTD_FALTANTE = ${faltante}, QTD_BOAS = COALESCE(QTD_BOAS, 0) + ${qtdBoas} WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`
+        const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + ${valorTotalApontado}, QTD_REFUGO = COALESCE(QTD_REFUGO, 0) + ${badFeed}, QTDE_LIB = ${lib}, QTD_FALTANTE = ${faltante}, QTD_BOAS = COALESCE(QTD_BOAS, 0) + ${qtdBoas}, QTD_RETRABALHADA = COALESCE(QTD_RETRABALHADA, 0) + ${reworkFeed} WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`
         await update(updateCol)
     } catch (error) {
         console.log("linha 209 - error - /point.ts/", error);

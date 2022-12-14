@@ -15,8 +15,6 @@ const decryptedOdf_1 = require("../utils/decryptedOdf");
 const encryptOdf_1 = require("../utils/encryptOdf");
 const sanitize_1 = require("../utils/sanitize");
 const point = async (req, res) => {
-    let ticket = req;
-    console.log('linha 18 /req/', ticket);
     let qtdBoas = Number((0, sanitize_1.sanitize)(req.body["valorFeed"])) || 0;
     let supervisor = (0, sanitize_1.sanitize)(req.body["supervisor"]) || null;
     const motivorefugo = (0, sanitize_1.sanitize)(req.body["value"]) || null;
@@ -44,6 +42,8 @@ const point = async (req, res) => {
         balance: 0,
         url: '',
     };
+    const lookForOdfData = `SELECT TOP 1 CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS, APONTAMENTO_LIBERADO FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND NUMERO_OPERACAO = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}' AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
+    const valuesFromBack = await (0, select_1.select)(lookForOdfData);
     let decodedOdfNumber = Number((0, decodeOdf_1.decodedBuffer)(String(req.cookies['encodedOdfNumber'])));
     let decodedOperationNumber = Number((0, decodeOdf_1.decodedBuffer)(String(req.cookies['encodedOperationNuber'])));
     let decodedMachineCode = String((0, decodeOdf_1.decodedBuffer)(String(req.cookies['encodedMachineCode'])));
@@ -58,6 +58,8 @@ const point = async (req, res) => {
     const pointCode = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, machineCode, employee);
     if (pointCode.message !== 'Ini Prod') {
         return res.json({ message: pointCode.message });
+    }
+    if (reworkFeed > 0) {
     }
     if (pointCode.funcionario !== employee) {
         return res.json({ message: 'Funcionario diferente' });
@@ -174,9 +176,23 @@ const point = async (req, res) => {
             return res.json({ message: 'erro ao efetivar estoque das peças filhas' });
         }
     }
+    if (reworkFeed > 0) {
+        if (reworkFeed > valuesFromBack[0].QTD_REFUGO) {
+            console.log('Limite pra refugo inválido');
+        }
+    }
+    console.log('linha 218 /Point.ts/', valuesFromBack[0].QTD_FALTANTE);
+    console.log('linha 219 /Point.ts/', valuesFromBack[0].QTD_REFUGO);
+    if (missingFeed > 0) {
+        faltante = missingFeed;
+    }
+    const lib = qtdLibMax - valorTotalApontado;
+    console.log('badFeed', badFeed);
+    console.log('missing', faltante);
+    console.log('missing', reworkFeed);
     try {
         console.log("linha 228 /point.ts/ Alterando quantidade apontada...");
-        const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + ${valorTotalApontado}, QTD_REFUGO = COALESCE(QTD_REFUGO, 0) + ${badFeed}, QTDE_LIB = ${faltante}, QTD_FALTANTE = ${faltante}, QTD_BOAS = COALESCE(QTD_BOAS, 0) + ${qtdBoas} WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`;
+        const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + ${valorTotalApontado}, QTD_REFUGO = COALESCE(QTD_REFUGO, 0) + ${badFeed}, QTDE_LIB = ${lib}, QTD_FALTANTE = ${faltante}, QTD_BOAS = COALESCE(QTD_BOAS, 0) + ${qtdBoas}, QTD_RETRABALHADA = COALESCE(QTD_RETRABALHADA, 0) + ${reworkFeed} WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`;
         await (0, update_1.update)(updateCol);
     }
     catch (error) {

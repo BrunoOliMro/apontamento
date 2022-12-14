@@ -53,11 +53,7 @@ const tools = async (req, res) => {
                             const path = await pictures_1.pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], ferramenta, String(i));
                             result.push(path);
                         }
-                        const obj = {
-                            message: 'codeApont 1 inserido',
-                            result: result,
-                        };
-                        return res.json(obj);
+                        return res.json(result);
                     }
                     else {
                         return res.json({ message: "/images/sem_imagem.gif" });

@@ -33,27 +33,32 @@
     tools = await res.json();
     console.log("tools linha 28", tools);
 
-    if (
-      tools.message == "Pointed Iniciated" ||
-      tools.message === "Fin Setup" ||
-      tools.message === '' ||
-      tools.message === "/images/sem_imagem.gif"
-    ) {
-      loader = true;
-      ferSelected();
-    }
-
-    if (tools.message === "Data not found") {
-      loader = true;
-      window.location.href = "/#/codigobarras/apontamento";
-      location.reload();
-      ferSelected();
-    }
-
-    if (tools.message === "Erro ao tentar acessar as fotos de ferramentas") {
-      window.location.href = "/#/codigobarras/apontamento";
-      location.reload();
+    if (tools) {
       loader = false;
+      if (
+        tools.message == "Pointed Iniciated" ||
+        tools.message === "Fin Setup" ||
+        tools.message === "" ||
+        tools.message === "/images/sem_imagem.gif"
+      ) {
+        loader = true;
+        ferSelected();
+      }
+
+      if (tools.message === "Data not found") {
+        loader = true;
+        window.location.href = "/#/codigobarras/apontamento";
+        location.reload();
+        ferSelected();
+      }
+
+      if (tools.message === "Erro ao tentar acessar as fotos de ferramentas") {
+        window.location.href = "/#/codigobarras/apontamento";
+        location.reload();
+        loader = false;
+      }
+    } else {
+      message = "Algo deu errado";
     }
   }
 

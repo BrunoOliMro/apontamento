@@ -16,7 +16,6 @@ const codeNote = async (odfNumber, operationNumber, codeMachine, funcionario) =>
         }
         response.funcionario = codigoDeApontamento[0].USUARIO;
     }
-    console.log('linha 10 /CodigoDeApontamento/', codigoDeApontamento);
     if (codigoDeApontamento.length > 0) {
         if (codigoDeApontamento[0].hasOwnProperty('CODAPONTA')) {
             if (codigoDeApontamento[0].CODAPONTA === 1) {
@@ -29,7 +28,6 @@ const codeNote = async (odfNumber, operationNumber, codeMachine, funcionario) =>
             }
             else if (codigoDeApontamento[0].CODAPONTA === 3) {
                 response.message = 'Ini Prod';
-                console.log('response', response);
                 return response;
             }
             else if (codigoDeApontamento[0].CODAPONTA === 4) {
