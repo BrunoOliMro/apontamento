@@ -61,13 +61,19 @@
     async function callMotivo() {
         const res = await fetch(apiMotivoParada);
         dados = await res.json();
+        if (dados) {
+            if (dados.message) {
+                if (dados.message !== "" && dados.message !== 'Tudo certo por aqui /OdfData.ts/' ) {
+                    modalmessage = dados.message;
+                }
+            }
+        }
     }
 
     function closeConfirm() {
         showMaqPar = false;
         stopModal = false;
         modalmessage = "";
-        //location.reload();
     }
 </script>
 

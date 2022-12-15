@@ -5,10 +5,15 @@ import { decrypted } from "../utils/decryptedOdf";
 import { sanitize } from "../utils/sanitize";
 
 export const historic: RequestHandler = async (req, res) => {
-    let odfNumber = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
-    let operationNumber = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
-    let codeMachine = decrypted(String(sanitize(req.cookies["CODIGO_MAQUINA"]))) || null
-    let employee = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+    try {
+        var odfNumber = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
+        var operationNumber = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
+        var codeMachine = decrypted(String(sanitize(req.cookies["CODIGO_MAQUINA"]))) || null
+        var employee = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+    } catch (error) {
+        console.log('error on cookies', error);
+        return res.json({ message: 'Algo deu errado' })
+    }
 
     const lookForDetail = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO_DETALHADO WHERE 1 = 1 AND ODF = '${odfNumber}' ORDER BY DATAHORA DESC`
     const lookforGeneric = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO WHERE 1 = 1 AND ODF = '${odfNumber}' ORDER BY OP ASC`

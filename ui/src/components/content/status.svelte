@@ -1,7 +1,7 @@
 <script>
     // @ts-nocheck
     // import Sanitize from '../../routes/sanitize.JS'
-    //import ModalConfirmation from "../modal/modalConfirmation.svelte";
+    import ModalConfirmation from "../modal/modalConfirmation.svelte";
     import blockForbiddenChars from "../../routes/presanitize";
     let searchIcon = `/images/search.png`;
     let imageLoader = `/images/axonLoader.gif`;
@@ -25,10 +25,13 @@
     async function getTempo() {
         const res = await fetch(urlString);
         prodTime = await res.json();
-        console.log('LINHA 28 /prodTime/', prodTime);
+        console.log("LINHA 28 /prodTime/", prodTime);
+        if (prodTime.message === "Algo deu errrado") {
+            modalMessage = "Algo deu errado";
+        }
         tempoMax = prodTime;
 
-        if (!tempoMax || tempoMax.message === 'time for execution not found') {
+        if (!tempoMax || tempoMax.message === "time for execution not found") {
             tempoMax = 600000;
         }
     }
@@ -129,7 +132,6 @@
     function close() {
         modalMessage = "";
     }
-
 </script>
 
 {#if shwowSuper === true}
@@ -158,8 +160,11 @@
     </div>
 {/if}
 
-<!-- {#if modalMessage === "Supervisor não encontrado" || modalMessage === "Erro ao localizar supervisor"}
+{#if modalMessage !== ""}
     <ModalConfirmation on:message={close} title={modalMessage} />
+{/if}
+
+<!-- {#if modalMessage === "Supervisor não encontrado" || modalMessage === "Erro ao localizar supervisor"}
 {/if} -->
 
 {#await resultPromises}
@@ -189,7 +194,7 @@
 {/await}
 
 <style>
-    .containerIcon{
+    .containerIcon {
         position: relative;
         display: flex;
         justify-content: left;
@@ -198,7 +203,7 @@
         margin: 0%;
         padding: 0%;
     }
-    .iconSearch{
+    .iconSearch {
         width: 25px;
         height: 25px;
         display: block;
@@ -208,7 +213,7 @@
         position: absolute;
         z-index: 999999999999;
     }
-    .img{
+    .img {
         height: 474px;
         width: 460px;
         z-index: 1;
@@ -221,7 +226,7 @@
         justify-content: left;
         margin: 0%;
         padding: 0%;
-        height: 400px
+        height: 400px;
     }
 
     .green {

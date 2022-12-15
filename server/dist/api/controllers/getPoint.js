@@ -13,25 +13,31 @@ const codeNote_1 = require("../utils/codeNote");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const sanitize_1 = require("../utils/sanitize");
 const getPoint = async (req, res) => {
-    let odfNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))) || null;
-    let qtdBoas = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["qtdBoas"]))) || null;
-    let operationNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO']))) || null;
-    const codeMachine = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
-    let codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA']))) || null;
-    let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
-    let qtdProduzir = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB']))) || null;
-    let revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
-    const updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`;
-    var address;
-    var response = {
-        message: '',
-        address: '',
-        url: '',
-    };
-    const hostname = req.get("host");
-    const { networkInterfaces } = require('os');
-    const nets = networkInterfaces();
-    const results = {};
+    try {
+        var odfNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))) || null;
+        var qtdBoas = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["qtdBoas"]))) || null;
+        var operationNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO']))) || null;
+        var codeMachine = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
+        var codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA']))) || null;
+        var funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
+        var qtdProduzir = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB']))) || null;
+        var revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
+        var updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`;
+        var address;
+        var response = {
+            message: '',
+            address: '',
+            url: '',
+        };
+        var hostname = req.get("host");
+        var { networkInterfaces } = require('os');
+        var nets = networkInterfaces();
+        var results = {};
+    }
+    catch (error) {
+        console.log('Error on GetPoint', error);
+        return res.json({ message: 'Algo deu errado' });
+    }
     for (const name of Object.keys(nets)) {
         for (const net of nets[name]) {
             if (net.family === 'IPv4' && !net.internal) {
@@ -47,9 +53,8 @@ const getPoint = async (req, res) => {
     if (x.message !== 'Pointed') {
         return res.json({ message: x });
     }
-    operationNumber = "00" + operationNumber.replaceAll(" ", '0');
-    console.log("linha 46 /NUMERO_OPERACAO/", operationNumber);
     try {
+        operationNumber = "00" + operationNumber.replaceAll(" ", '0');
         if (operationNumber === "00999") {
             let numeroOp = operationNumber.replaceAll('0', '');
             let y = `SELECT TOP 1 * FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${codigoPeca}' AND NUMOPE = '${numeroOp}' AND REVISAO = ${revisao}`;

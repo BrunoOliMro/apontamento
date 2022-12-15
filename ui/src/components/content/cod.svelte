@@ -6,30 +6,32 @@
     let odfData;
     let message = '';
     let resultOdf = getOdfData();
+    let numeroOdf;
+    let codigoPeca;
+    let codigoCliente;
+    let machineCode;
+    let qtdeOdf;
+    let funcionario;
+    let operationNumber;
 
     async function getOdfData() {
         const res = await fetch(urlString);
         odfData = await res.json();
 
-        console.log("linha 14 /cod.svelte/", odfData);
+        console.log("linha 14 /cod.svelte////////////////////", odfData);
 
-        // if (odfData.message === 'codeApont 5 maquina parada') {
-        //     message = 'codeApont 5 maquina parada';
-        //     window.location.href = '/#/codigobarras';
-        // }
+        if(odfData.message === 'Algo deu errado'){
+            message = 'Algo deu errado'
+        } else {
+            numeroOdf = odfData.odfSelecionada.NUMERO_ODF
+            codigoPeca = odfData.odfSelecionada.CODIGO_PECA
+            codigoCliente = odfData.odfSelecionada.CODIGO_CLIENTE
+            machineCode = odfData.odfSelecionada.CODIGO_MAQUINA
+            qtdeOdf = odfData.odfSelecionada.QTDE_ODF
+            funcionario = odfData.funcionario
+            operationNumber = odfData.odfSelecionada.NUMERO_OPERACAO
+        }
 
-        // if (odfData.message === 'codeApont 4 prod finalizado') {
-        //     message = 'codeApont 4 prod finalizado';
-        // }
-
-        // if (odfData.message === 'usuario diferente') {
-        //     message = 'usuario diferente';
-
-        // }
-
-        // if (odfData.message === 'codeApont 3 prod ini') {
-        //     message = 'codeApont 3 prod ini';
-        // }
 
         if(odfData.message === 'Acesso negado'){
             message = 'Acesso Negado'
@@ -70,10 +72,10 @@
             <div class='odf-area'>
                 <p class='odf'>ODF:</p>
                 <p class='bold'>
-                    {odfData.odfSelecionada.NUMERO_ODF === null ||
-                    !odfData.odfSelecionada.NUMERO_ODF
+                    {numeroOdf === null ||
+                    !numeroOdf
                         ? 'S/I'
-                        : odfData.odfSelecionada.NUMERO_ODF}
+                        : numeroOdf}
                 </p>
             </div>
 
@@ -82,10 +84,10 @@
             <div class='odf-area'>
                 <p class='odf'>Cód. Interno:</p>
                 <p class='bold'>
-                    {odfData.odfSelecionada.CODIGO_PECA === null ||
-                    !odfData.odfSelecionada.CODIGO_PECA
+                    {codigoPeca === null ||
+                    !codigoPeca
                         ? 'S/I'
-                        : odfData.odfSelecionada.CODIGO_PECA}
+                        : codigoPeca}
                 </p>
             </div>
 
@@ -93,37 +95,37 @@
             <div class='odf-area'>
                 <p class='odf'>Cód. do Cliente:</p>
                 <p class='bold'>
-                    {odfData.odfSelecionada.CODIGO_CLIENTE === null ||
-                    !odfData.odfSelecionada.CODIGO_CLIENTE
+                    {codigoCliente === null ||
+                    !codigoCliente
                         ? 'S/I'
-                        : odfData.odfSelecionada.CODIGO_CLIENTE}
+                        : codigoCliente}
                 </p>
             </div>
             <hr>
             <div class='odf-area'>
                 <p class='odf'>OP:</p>
                 <p class='bold'>
-                    {odfData.odfSelecionada.NUMERO_OPERACAO === null ||
-                    !odfData.odfSelecionada.NUMERO_OPERACAO
+                    {operationNumber === null ||
+                    !operationNumber
                         ? 'S/I'
-                        : odfData.odfSelecionada.NUMERO_OPERACAO} -
-                    {odfData.odfSelecionada.CODIGO_MAQUINA === null ||
-                    !odfData.odfSelecionada.CODIGO_MAQUINA
+                        : operationNumber} -
+                    {machineCode === null ||
+                    !machineCode
                         ? 'S/I'
-                        : odfData.odfSelecionada.CODIGO_MAQUINA} -
-                    {odfData.odfSelecionada.QTDE_ODF === null ||
-                    !odfData.odfSelecionada.QTDE_ODF
+                        : machineCode} -
+                    {qtdeOdf === null ||
+                    !qtdeOdf
                         ? 'S/I'
-                        : odfData.odfSelecionada.QTDE_ODF}
+                        : qtdeOdf}
                 </p>
             </div>
             <hr>
             <div class='odf-area'>
                 <p class='odf'>Operador:</p>
                 <p class='bold'>
-                    {odfData.funcionario === null || !odfData.funcionario
+                    {funcionario === null || !funcionario
                         ? 'S/I'
-                        : odfData.funcionario}
+                        : funcionario}
                 </p>
             </div>
         </div>

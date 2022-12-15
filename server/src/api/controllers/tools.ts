@@ -10,37 +10,38 @@ import { sanitize } from "../utils/sanitize";
 
 //Ferramenta
 export const tools: RequestHandler = async (req, res) => {
-    if (!Number(decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))))) {
+    try {
+        var numeroOdf: number | null = Number(decrypted(String(sanitize(req.cookies["NUMERO_ODF"])))) || null
+        var codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
+        var numeroOperacao = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
+        var codigoMaq: string = decrypted(String(sanitize(req.cookies["CODIGO_MAQUINA"]))) || null
+        var funcionario: string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+        var revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
+        var start: number | null = Number(decrypted(String(sanitize(req.cookies["startSetupTime"])))) || null
+        var qtdLibMax: number | null = Number(decrypted(String(sanitize(req.cookies['QTDE_LIB'])))) || null
+        var ferramenta: string = String("_ferr")
+        var boas = null
+        var ruins = null
+        var codAponta = 1
+        var descricaoCodigoAponta = 'Ini Setup.'
+        var faltante = null
+        var retrabalhada = null
+        var motivo = null
+        var lookForTools = `SELECT [CODIGO], [IMAGEM] FROM VIEW_APTO_FERRAMENTAL WHERE 1 = 1 AND IMAGEM IS NOT NULL AND CODIGO = '${codigoPeca}'`
+        var toolsImg;
+        var result = [];
+        if (numeroOdf !== Number(decodedBuffer(String(sanitize(req.cookies['encodedOdfNumber']))))) {
+            console.log('ODF Verificada com falha');
+            return res.json({ message: 'Erro na ODF' })
+        }
+    } catch (error) {
+        console.log('Error on Tools --cookies', error);
         return res.json({ message: 'Algo deu errado' })
     }
-    const numeroOdf: number | null = Number(decrypted(String(sanitize(req.cookies["NUMERO_ODF"])))) || null
-    const codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
-    const numeroOperacao = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
-    const codigoMaq: string = decrypted(String(sanitize(req.cookies["CODIGO_MAQUINA"]))) || null
-    const funcionario: string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
-    const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
-    const start: number | null = Number(decrypted(String(sanitize(req.cookies["startSetupTime"])))) || null
-    const qtdLibMax: number | null = Number(decrypted(String(sanitize(req.cookies['QTDE_LIB'])))) || null
-    const ferramenta: string = String("_ferr")
-    const boas = null
-    const ruins = null
-    const codAponta = 1
-    const descricaoCodigoAponta = 'Ini Setup.'
-    const faltante = null
-    const retrabalhada = null
-    const motivo = null
-    const lookForTools = `SELECT [CODIGO], [IMAGEM] FROM VIEW_APTO_FERRAMENTAL WHERE 1 = 1 AND IMAGEM IS NOT NULL AND CODIGO = '${codigoPeca}'`
-    let toolsImg;
-    const result = [];
 
-    if (numeroOdf !== Number(decodedBuffer(String(sanitize(req.cookies['encodedOdfNumber']))))) {
-        console.log('ODF Verificada com falha');
-        return res.json({ message: 'Erro na ODF' })
-    }
 
     try {
         const codeNoteResult = await codeNote(numeroOdf, numeroOperacao, codigoMaq, funcionario)
-        console.log('linha 43 ', codeNoteResult);
         if (codeNoteResult.message === 'First time acessing ODF' || codeNoteResult.message === 'Begin new process') {
             const inserted = await insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, start)
             if (inserted !== 'Algo deu errado') {
@@ -80,31 +81,35 @@ export const tools: RequestHandler = async (req, res) => {
 
 //Ferramentas Selecionadas
 export const selectedTools: RequestHandler = async (req, res) => {
-    const numeroOdf: number | null = Number(decrypted(String(sanitize(req.cookies['NUMERO_ODF'])))) || null
-    const numeroOperacao: any = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
-    const codigoMaq: string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
-    const codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
-    const funcionario: string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
-    const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
-    const qtdLibMax: number | null = Number(decrypted(String(sanitize(req.cookies['QTDE_LIB'])))) || null
-    const boas = null
-    const ruins = null
-    const codAponta = 2
-    const codAponta3 = 3
-    const descricaoCodigoAponta = 'Fin Setup.'
-    const descricaoCodigoAponta3 = 'Ini Prod.'
-    const faltante = null
-    const retrabalhada = null
-    const motivo = null
-    let x = decrypted(sanitize(req.cookies['startSetupTime'])) || null
-    let y = Number(new Date().getTime())
+    try {
+        var numeroOdf: number | null = Number(decrypted(String(sanitize(req.cookies['NUMERO_ODF'])))) || null
+        var numeroOperacao: any = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
+        var codigoMaq: string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
+        var codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
+        var funcionario: string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+        var revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
+        var qtdLibMax: number | null = Number(decrypted(String(sanitize(req.cookies['QTDE_LIB'])))) || null
+        var boas = null
+        var ruins = null
+        var codAponta = 2
+        var codAponta3 = 3
+        var descricaoCodigoAponta = 'Fin Setup.'
+        var descricaoCodigoAponta3 = 'Ini Prod.'
+        var faltante = null
+        var retrabalhada = null
+        var motivo = null
+        var startSetupTime = decrypted(sanitize(req.cookies['startSetupTime'])) || null
+    } catch (error) {
+        console.log('Error on SelectedTools --cookies--', error);
+        return res.json({ message: 'Algo deu errado' })
+    }
 
     //Encerra o primeiro tempo de setup
-    const tempoDecorrido = Number(y - x) || 0
-    let z = await encrypted(String(new Date().getTime()))
+    const tempoDecorrido = Number(Number(new Date().getTime()) - startSetupTime) || 0
+    let startProd = await encrypted(String(new Date().getTime()))
 
     //Inicia a produção
-    res.cookie("startProd", z)
+    res.cookie("startProd", startProd)
     try {
         const codeNoteResult = await codeNote(numeroOdf, numeroOperacao, codigoMaq, funcionario)
         if (codeNoteResult.message === 'Pointed Iniciated') {

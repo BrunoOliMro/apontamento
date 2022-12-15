@@ -11,40 +11,31 @@ const queryGroup_1 = require("../utils/queryGroup");
 const sanitize_1 = require("../utils/sanitize");
 const unravelBarcode_1 = require("../utils/unravelBarcode");
 const returnedValue = async (req, res) => {
-    const choosenOption = Number((0, sanitize_1.sanitize)(req.body["quantity"])) || null;
-    const supervisor = (0, sanitize_1.sanitize)(req.body["supervisor"]) || null;
-    const returnValues = String((0, sanitize_1.sanitize)(req.body['returnValueStorage'])) || null;
-    if (!returnValues) {
-        return res.json({ message: 'Não foi indicado boas e ruins' });
+    try {
+        var choosenOption = Number((0, sanitize_1.sanitize)(req.body["quantity"])) || null;
+        var supervisor = (0, sanitize_1.sanitize)(req.body["supervisor"]) || null;
+        var returnValues = String((0, sanitize_1.sanitize)(req.body['returnValueStorage'])) || null;
+        if (!returnValues) {
+            return res.json({ message: 'Não foi indicado boas e ruins' });
+        }
+        var funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CRACHA']))) || null;
+        var data = (0, unravelBarcode_1.unravelBarcode)((0, sanitize_1.sanitize)(req.body["barcodeReturn"])) || null;
+        var lookForOdfData = `SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${data.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
+        var lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`;
+        var boas = null;
+        var ruins = null;
+        var codAponta = 8;
+        var descricaoCodigoAponta = null;
+        var motivo = null;
+        var tempoDecorrido = null;
     }
-    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CRACHA']))) || null;
-    const data = (0, unravelBarcode_1.unravelBarcode)((0, sanitize_1.sanitize)(req.body["barcodeReturn"])) || null;
-    const lookForOdfData = `SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${data.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
-    const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`;
-    let boas = null;
-    let ruins = null;
-    const codAponta = 8;
-    let descricaoCodigoAponta = null;
-    let motivo = null;
-    let tempoDecorrido = null;
+    catch (error) {
+        console.log('Error on returning values --cookies--', error);
+        return res.json({ message: 'Algo deu errado' });
+    }
     var response = {
         message: '',
     };
-    if (!funcionario) {
-        return res.json({ message: 'Funcionário inválido' });
-    }
-    if (!data && !choosenOption && !supervisor) {
-        return res.json({ message: "ODF não encontrada" });
-    }
-    if (!data) {
-        return res.json({ message: "Código de barras vazio" });
-    }
-    if (!supervisor) {
-        return res.json({ message: 'Crachá de supervisor inválido' });
-    }
-    if (!choosenOption) {
-        return res.json({ message: "Categoria de peças não foi apontado" });
-    }
     if (returnValues === 'BOAS') {
         boas = choosenOption;
     }

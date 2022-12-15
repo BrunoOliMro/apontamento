@@ -20,16 +20,6 @@
                 >
             </div>
 
-            <!-- <div class="modalContent">
-                <h2 class="modalTitle">Motivo da Parada</h2>
-                <div class="optionsBar">
-                    <select autofocus tabindex="10" bind:value>
-                        {#each dados as item}
-                            <option>{item}</option>
-                        {/each}
-                    </select>
-                </div> -->
-
             <div class="confirmPopDiv">
                 <button
                     autofocus

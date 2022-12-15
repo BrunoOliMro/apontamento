@@ -14,7 +14,17 @@ const codeNote_1 = require("../utils/codeNote");
 const encodedOdf_1 = require("../utils/encodedOdf");
 const searchOdf = async (req, res) => {
     const dados = (0, unravelBarcode_1.unravelBarcode)(req.body.barcode) || null;
-    let funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
+    console.log('dados', dados);
+    if (!dados.numOdf || !dados.numOper || !dados.codMaq) {
+        return res.json({ message: 'ODF não encontrada' });
+    }
+    let funcionario;
+    if (req.cookies['FUNCIONARIO']) {
+        funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
+    }
+    else {
+        return res.json({ message: 'Algo deu errado' });
+    }
     const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, CODIGO_PECA, QTD_BOAS, QTD_REFUGO, QTD_FALTANTE, QTD_RETRABALHADA FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
     if (dados.message === 'Código de barras inválido' || !dados) {
         return res.json({ message: 'Código de barras inválido' });
@@ -26,6 +36,10 @@ const searchOdf = async (req, res) => {
         return res.json({ message: 'Funcionário inválido' });
     }
     const odf = await (0, select_1.select)(lookForOdfData);
+    if (odf.length <= 0) {
+        return res.json({ message: 'Algo deu errado' });
+    }
+    console.log('odf', odf);
     let i = await (0, odfIndex_1.odfIndex)(odf, dados.numOper);
     if (i <= 0) {
         if (!odf[i].QTDE_APONTADA) {
@@ -48,14 +62,21 @@ const searchOdf = async (req, res) => {
         if (!odf[i].QTD_FALTANTE) {
             odf[i].QTD_FALTANTE = 0;
         }
-        let x;
-        let allValue = odf[i].QTD_BOAS + odf[i].QTD_REFUGO + odf[i].QTD_FALTANTE + odf[i].QTD_RETRABALHADA;
-        if (allValue >= odf[i].QTDE_APONTADA) {
-            console.log('quantidade excede');
+        let valuesPointed = odf[i - 1].QTDE_APONTADA - odf[i].QTDE_APONTADA;
+        let diferenceBetweenGoodAndBad = odf[i - 1].QTD_BOAS - odf[i].QTD_BOAS;
+        if (diferenceBetweenGoodAndBad <= 0 || valuesPointed <= 0) {
             odf[i].QTDE_LIB = null;
+            return res.json({ message: 'Não há limite na ODF' });
         }
-        odf[i].QTDE_LIB = odf[i - 1].QTD_BOAS - odf[i].QTD_BOAS;
-        console.log('linha 73 ', odf[i].QTDE_LIB);
+        if (odf[i].QTDE_APONTADA >= odf[i - 1].QTD_BOAS) {
+            return res.json({ message: 'Não há limite na ODF' });
+        }
+        if (odf[i].QTDE_APONTADA > odf[i].QTD_BOAS) {
+            odf[i].QTDE_LIB = odf[i - 1].QTD_BOAS - odf[i].QTDE_APONTADA;
+        }
+        else {
+            odf[i].QTDE_LIB = diferenceBetweenGoodAndBad;
+        }
     }
     else {
         return odf[i].QTDE_LIB = null;

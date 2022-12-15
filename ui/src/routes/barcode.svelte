@@ -111,6 +111,13 @@
 
     if (res) {
       if (res.message !== "") {
+
+        if(res.message === 'Algo deu errado'){
+          console.log('rinbirbreebr', res.message);
+          modalMessage = 'Algo deu errado'
+          loader = false
+        }
+
         if (res.message === "Rip iniciated" || res.message === "Pointed") {
           loader = true;
           window.location.href = "/#/rip";
@@ -148,6 +155,8 @@
           modalMessage = res.message;
         }
       }
+    } else {
+      modalMessage = res.message
     }
   };
 

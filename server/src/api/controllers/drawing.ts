@@ -6,17 +6,22 @@ import { decrypted } from "../utils/decryptedOdf";
 import { sanitize } from "../utils/sanitize";
 
 export const drawing: RequestHandler = async (req, res) => {
-    const odfNumber = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
-    const operationNumber = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
-    const codeMachine = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
-    const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
-    const numpec: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
-    const desenho = String("_desenho")
-    const employee = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
-    const lookForImages = `SELECT DISTINCT [NUMPEC], [IMAGEM] FROM QA_LAYOUT (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${numpec}' AND REVISAO = ${revisao} AND IMAGEM IS NOT NULL`
     try {
-        const x = await codeNote(odfNumber, operationNumber, codeMachine, employee)
-        if (x.message === 'Ini Prod' || x.message === 'Pointed' || x.message === 'Rip iniciated' || x.message === 'Machine has stopped') {
+        var odfNumber = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
+        var operationNumber = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
+        var codeMachine = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
+        var revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
+        var numpec: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
+        var desenho = String("_desenho")
+        var employee = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+        var lookForImages = `SELECT DISTINCT [NUMPEC], [IMAGEM] FROM QA_LAYOUT (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${numpec}' AND REVISAO = ${revisao} AND IMAGEM IS NOT NULL`
+    } catch (error) {
+        console.log('Error on Drawing --cookies--', error);
+        return res.json({ message: 'Algo deu errado' })
+    }
+    try {
+        const pointedCode = await codeNote(odfNumber, operationNumber, codeMachine, employee)
+        if (pointedCode.message === 'Ini Prod' || pointedCode.message === 'Pointed' || pointedCode.message === 'Rip iniciated' || pointedCode.message === 'Machine has stopped') {
             const resource: any = await select(lookForImages)
             const imgResult = [];
             for await (const [i, record] of resource.entries()) {
@@ -26,7 +31,7 @@ export const drawing: RequestHandler = async (req, res) => {
             }
             return res.status(200).json(imgResult);
         } else {
-            return res.json({ message: x.message })
+            return res.json({ message: pointedCode.message })
         }
     } catch (error) {
         console.log(error)

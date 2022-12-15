@@ -5,28 +5,38 @@ import { decrypted } from "../utils/decryptedOdf";
 import { sanitize } from "../utils/sanitize";
 
 export const stopPost: RequestHandler = async (req, res) => {
-    const odfNumber = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
-    const funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
-    const codigoPeca = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
-    const revisao = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
-    const operationNumber = decrypted(String(req.cookies['NUMERO_OPERACAO'])) || null
-    const machineCode = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
-    const qtdLibMax = decrypted(String(sanitize(req.cookies['QTDE_LIB']))) || null
-    const boas = null
-    const faltante = null
-    const retrabalhada = null
-    const codAponta = 7
-    const ruins = null
-    const motivo = ''
-    const descricaoCodAponta = 'Parada'
+    try {
+        var odfNumber = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
+        var funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+        var codigoPeca = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
+        var revisao = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
+        var operationNumber = decrypted(String(req.cookies['NUMERO_OPERACAO'])) || null
+        var machineCode = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
+        var qtdLibMax = decrypted(String(sanitize(req.cookies['QTDE_LIB']))) || null
+        var boas = null
+        var faltante = null
+        var retrabalhada = null
+        var codAponta = 7
+        var ruins = null
+        var motivo = ''
+        var descricaoCodAponta = 'Parada'
 
-    //Encerra o processo todo
-    const end = new Date().getTime() || 0;
-    const start = decrypted(String(sanitize(req.cookies["startSetupTime"]))) || 0
-    const final: number = Number(end - start) || 0
+        //Encerra o processo todo
+        var end = new Date().getTime() || 0;
+        var start = decrypted(String(sanitize(req.cookies["startSetupTime"]))) || 0
+        var final: number = Number(end - start) || 0
+    } catch (error) {
+        console.log('Error on stopPost --cookies--', error);
+        return res.json({ message: 'Algo deu errado' })
+    }
 
-    const x = await codeNote(odfNumber, operationNumber, machineCode, funcionario)
-    if (x.message === 'Machine has stopped') {
+    try {
+        var pointedCode = await codeNote(odfNumber, operationNumber, machineCode, funcionario)
+    } catch (error) {
+        console.log('Error on StopPost --cookies--', error);
+        return res.json({ message: 'Algo deu errado' })
+    }
+    if (pointedCode.message === 'Machine has stopped') {
         return res.json({ message: 'Máquina já parada' })
     } else {
         try {

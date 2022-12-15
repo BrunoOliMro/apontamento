@@ -8,34 +8,30 @@ import { sanitize } from "../utils/sanitize";
 //import { selectedItensFromOdf } from "../utils/queryGroup";
 
 export const odfData: RequestHandler = async (req, res) => {
-    const odfNumber: number | null = Number(decrypted(String(sanitize(req.cookies["NUMERO_ODF"])))) || null
-    let operationNumber = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
-    let codeMachine = decrypted(String(sanitize(req.cookies["CODIGO_MAQUINA"]))) || null
-    const numOper: string | null = "00" + decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))).replaceAll(' ', '0') || null
-    const funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
-    const lookForOdfData = `SELECT CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB,  QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
-    const qtdeLib = Number(decrypted(req.cookies['QTDE_LIB']))
     const response = {
         message: '',
         funcionario: funcionario,
         odfSelecionada: '',
     }
     try {
-        if (!funcionario) {
-            return res.json({ message: 'Algo deu errado' })
-        }
-
-        if(!qtdeLib){
-            return res.json({ message: 'Algo deu errado' })
-        }
-
-        const x = await codeNote(odfNumber, operationNumber, codeMachine, funcionario)
-        // console.log('linha 29 /odfData/', x);
-        if (x.message === 'Ini Prod' || x.message === 'Pointed' || x.message === 'Rip iniciated' || x.message === 'Machine has stopped') {
+        var odfNumber: number | null = Number(decrypted(String(sanitize(req.cookies["NUMERO_ODF"])))) || null
+        var operationNumber = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
+        var codeMachine = decrypted(String(sanitize(req.cookies["CODIGO_MAQUINA"]))) || null
+        var numOper: string | null = "00" + decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))).replaceAll(' ', '0') || null
+        var funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+        var lookForOdfData = `SELECT CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB,  QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
+    } catch (error) {
+        console.log('error on cookies', error);
+        return res.json({ message: 'Algo deu errado' })
+    }
+    try {
+        const pointedCode = await codeNote(odfNumber, operationNumber, codeMachine, funcionario)
+        if (pointedCode.message === 'Ini Prod' || pointedCode.message === 'Pointed' || pointedCode.message === 'Rip iniciated' || pointedCode.message === 'Machine has stopped') {
             const data = await select(lookForOdfData)
             const i = await odfIndex(data, numOper)
             response.odfSelecionada = data[i]
-            
+            response.funcionario = funcionario
+
             if (response.message === 'Algo deu errado') {
                 return res.json({ message: 'Algo deu errado' });
             } else {
@@ -43,7 +39,7 @@ export const odfData: RequestHandler = async (req, res) => {
                 return res.status(200).json(response);
             }
         } else {
-            return res.json({ message: x })
+            return res.json({ message: pointedCode })
         }
     } catch (error) {
         console.log(error);

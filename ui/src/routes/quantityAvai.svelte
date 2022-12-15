@@ -11,10 +11,15 @@
     async function getOdfData() {
         const res = await fetch(odfDataRouter);
         dadosOdf = await res.json();
-        quantityAvailableProd = dadosOdf.odfSelecionada.QTDE_LIB
-        if (quantityAvailableProd <= 0) {
-            quantityAvailableProd = 0;
-            errorMessage = "Quantidade a produzir inválida";
+        console.log('dados linha 14 /Quantity.svekte/', dadosOdf);
+        if (dadosOdf) {
+            if (dadosOdf.odfSelecionada.QTDE_LIB > 0 && dadosOdf.message === 'Tudo certo por aqui /OdfData.ts/') {
+                quantityAvailableProd = dadosOdf.odfSelecionada.QTDE_LIB;
+            } else if (dadosOdf.message !== "") {
+                errorMessage = dadosOdf.message;
+            } else {
+                return (errorMessage = "Algo deu errado");
+            }
         }
     }
 
@@ -39,7 +44,7 @@
     </div>
 {/await}
 
-{#if errorMessage !== ""}
+{#if errorMessage !== "" && errorMessage !== "Tudo certo por aqui /OdfData.ts/"}
     <ModalConfirmation on:message={close} title={errorMessage} />
 {/if}
 

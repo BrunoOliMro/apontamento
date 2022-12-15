@@ -21,6 +21,12 @@
     async function getIMAGEM() {
         const res = await fetch(urlString);
         imagemBack = await res.json();
+        if(imagemBack){
+            if(imagemBack.message !== ''){
+                imagemMsg = imagemBack.message
+            }
+        }
+        console.log('linha 24 /Desenho/', imagemBack);
         if (imagemBack.message === "dados não conferem conferidos") {
             imagemMsg = "dados não conferem conferidos";
         }

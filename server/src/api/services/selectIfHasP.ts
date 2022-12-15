@@ -17,6 +17,7 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
     let updateAlocacaoQuery: any = [];
     const insertAlocaoQuery: any = [];
     const queryStorageFund = `SELECT DISTINCT  
+    PCP.NUMERO_ODF,
     OP.STATUS_RESERVA,
     OP.NUMITE,
     OP.NUMSEQ,
@@ -54,7 +55,7 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
             }
 
             if (selectKnowHasP[0].hasOwnProperty('STATUS_RESERVA')) {
-                if (selectKnowHasP[0].STATUS_RESERVA === 'R') {
+                if (selectKnowHasP[0].STATUS_RESERVA === `${dados.numOdf}`) {
                     response.quantidade = selectKnowHasP[0].RESERVADO
                     response.codigoFilho = codigoFilho
                     response.execut = execut

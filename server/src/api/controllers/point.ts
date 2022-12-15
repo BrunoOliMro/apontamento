@@ -13,59 +13,50 @@ import { encrypted } from "../utils/encryptOdf";
 import { sanitize } from "../utils/sanitize";
 
 export const point: RequestHandler = async (req, res) => {
-    // console.log('linha 2000', req);
-    // let ticket = req
-    // console.log('linha 18 /req/', ticket);
-
-    let qtdBoas = Number(sanitize(req.body["valorFeed"])) || 0;
-    let supervisor: string | null = sanitize(req.body["supervisor"]) || null
-    const motivorefugo: string | null = sanitize(req.body["value"]) || null
-    const badFeed = Number(sanitize(req.body["badFeed"])) || 0;
-    const missingFeed = Number(sanitize(req.body["missingFeed"])) || 0;
-    const reworkFeed = Number(sanitize(req.body["reworkFeed"])) || 0;
-    let condic: string | null;
-    if (!req.cookies['condic']) {
-        condic = null
-    } else {
-        condic = decrypted(String(sanitize(req.cookies['condic']))) || null
+    try {
+        var qtdBoas = Number(sanitize(req.body["valorFeed"])) || 0;
+        var supervisor: string | null = sanitize(req.body["supervisor"]) || null
+        var motivorefugo: string | null = sanitize(req.body["value"]) || null
+        var badFeed = Number(sanitize(req.body["badFeed"])) || 0;
+        var missingFeed = Number(sanitize(req.body["missingFeed"])) || 0;
+        var reworkFeed = Number(sanitize(req.body["reworkFeed"])) || 0;
+        var condic: string | null;
+        if (!req.cookies['condic']) {
+            condic = null
+        } else {
+            condic = decrypted(String(sanitize(req.cookies['condic']))) || null
+        }
+        var odfNumber: number | null = Number(decrypted(sanitize(req.cookies["NUMERO_ODF"]))) || null
+        var operationNumber = Number(decrypted(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
+        var codigoPeca = String(decrypted(sanitize(req.cookies['CODIGO_PECA']))) || null
+        var machineCode = String(decrypted(sanitize(req.cookies["CODIGO_MAQUINA"]))) || null
+        var qtdLibMax: number | null = Number(decrypted(sanitize(req.cookies['QTDE_LIB']))) || null
+        var employee = decrypted(sanitize(req.cookies['FUNCIONARIO'])) || null
+        var revisao = decrypted(sanitize(req.cookies['REVISAO'])) || null
+        var updateQtyQuery: string[] = [];
+        var updateQtyQuery2: string[] = [];
+        var decodedOdfNumber = Number(decodedBuffer(String(req.cookies['encodedOdfNumber'])))
+        var decodedOperationNumber = Number(decodedBuffer(String(req.cookies['encodedOperationNuber'])))
+        var decodedMachineCode = String(decodedBuffer(String(req.cookies['encodedMachineCode'])))
+        //Inicia tempo de Rip
+        res.cookie("startRip", Number(new Date().getTime()))
+        // var lookForOdfData = `SELECT TOP 1 CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS, APONTAMENTO_LIBERADO FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND NUMERO_OPERACAO = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}' AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
+        // const valuesFromBack = await select(lookForOdfData)
+    } catch (error) {
+        console.log('Error on point.ts --cookies--', error);
+        return res.json({ message: 'Algo deu errado' })
     }
-    const odfNumber: number | null = Number(decrypted(sanitize(req.cookies["NUMERO_ODF"]))) || null
-    const operationNumber = Number(decrypted(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
-    const codigoPeca = String(decrypted(sanitize(req.cookies['CODIGO_PECA']))) || null
-    const machineCode = String(decrypted(sanitize(req.cookies["CODIGO_MAQUINA"]))) || null
-    const qtdLibMax: number | null = Number(decrypted(sanitize(req.cookies['QTDE_LIB']))) || null
-    const employee = decrypted(sanitize(req.cookies['FUNCIONARIO'])) || null
-    const revisao = decrypted(sanitize(req.cookies['REVISAO'])) || null
-    const updateQtyQuery: string[] = [];
-    const updateQtyQuery2: string[] = [];
+
     var response = {
         message: '',
         balance: 0,
         url: '',
     }
-    const lookForOdfData = `SELECT TOP 1 CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS, APONTAMENTO_LIBERADO FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND NUMERO_OPERACAO = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}' AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
-    const valuesFromBack = await select(lookForOdfData)
-
-    let decodedOdfNumber = Number(decodedBuffer(String(req.cookies['encodedOdfNumber'])))
-    let decodedOperationNumber = Number(decodedBuffer(String(req.cookies['encodedOperationNuber'])))
-    let decodedMachineCode = String(decodedBuffer(String(req.cookies['encodedMachineCode'])))
 
     if (decodedOdfNumber !== odfNumber || decodedOperationNumber !== operationNumber || decodedMachineCode !== machineCode) {
         console.log('cookies alterados');
         return res.json({ message: 'ODF criptografada e decodificada não coincidem' })
     }
-
-    // if (valuesFromBack[0].APONTAMENTO_LIBERADO === 'N') {
-    //     const y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`
-    //     const x = await update(y)
-    //     console.log('linha x', x);
-    // } else if (valuesFromBack[0].APONTAMENTO_LIBERADO === 'S') {
-    //     console.log('nao pode apontar');
-    //     return res.json({ message: 'Algo deu errado' })
-    // }
-
-    //Inicia tempo de Rip
-    res.cookie("startRip", Number(new Date().getTime()))
 
     // Variavel que guarda o valor total dos apontamentos
     const valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed))
@@ -78,10 +69,6 @@ export const point: RequestHandler = async (req, res) => {
     const pointCode = await codeNote(odfNumber, operationNumber, machineCode, employee)
     if (pointCode.message !== 'Ini Prod') {
         return res.json({ message: pointCode.message })
-    }
-
-    if (reworkFeed > 0) {
-
     }
 
     if (pointCode.funcionario !== employee) {
@@ -211,16 +198,16 @@ export const point: RequestHandler = async (req, res) => {
         }
     }
     //let lib = valorTotalApontado -
-    if(reworkFeed > 0){
-        if(reworkFeed > valuesFromBack[0].QTD_REFUGO){
-            console.log('Limite pra refugo inválido');
-        }
-    } 
-    console.log('linha 218 /Point.ts/', valuesFromBack[0].QTD_FALTANTE );
-    console.log('linha 219 /Point.ts/', valuesFromBack[0].QTD_REFUGO );
+    // if (reworkFeed > 0) {
+    //     if (reworkFeed > valuesFromBack[0].QTD_REFUGO) {
+    //         console.log('Limite pra refugo inválido');
+    //     }
+    // }
+    // console.log('linha 218 /Point.ts/', valuesFromBack[0].QTD_FALTANTE);
+    // console.log('linha 219 /Point.ts/', valuesFromBack[0].QTD_REFUGO);
 
     // valuesFromBack[0].QTD_FALTANTE
-    if(missingFeed > 0){
+    if (missingFeed > 0) {
         faltante = missingFeed
     }
 

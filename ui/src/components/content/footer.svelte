@@ -13,6 +13,8 @@
   let meioFim = "";
   let anoFim = "";
 
+  var errorMessage = ''
+
   //Takes an array and modify undefined and null values
   function modifyObj (array, x){
     array.forEach(key => {
@@ -23,6 +25,13 @@
   async function getOdfData() {
     const res = await fetch(urlString);
     dadosOdf = await res.json();
+    if(dadosOdf){
+      if(dadosOdf.message){
+        if(dadosOdf.message !== '' && dadosOdf.message !== 'Tudo certo por aqui /OdfData.ts/'){
+          errorMessage = dadosOdf.message
+        }
+      }
+    }
     let odf  = dadosOdf.odfSelecionada
 
     modifyObj(Object.keys(dadosOdf.odfSelecionada), odf)
@@ -71,6 +80,10 @@
     </div>
   </main>
 {/await}
+
+{#if errorMessage !== ''}
+  <h1>{errorMessage}</h1>
+{/if}
 
 <style>
   .data-time {

@@ -33,6 +33,10 @@
                 doPost();
                 return (window.location.href = `${ripTable.url}`);
             }
+            if (ripTable.message !== "") {
+                badgeMessage = ripTable.message;
+            }
+
             lie = ripTable.map((acc) => acc.LIE);
             lsd = ripTable.map((acc) => acc.LSE);
         } else {
@@ -82,7 +86,7 @@
         console.log("linha 84 res. rip", res);
 
         if (res) {
-            if(res.message === 'Pointed'){
+            if (res.message === "Pointed") {
                 window.location.href = "/#/rip";
                 location.reload();
             }
@@ -98,7 +102,7 @@
                 badgeMessage = res.message;
             }
         } else {
-            badgeMessage = 'Algo deu errado'
+            badgeMessage = "Algo deu errado";
         }
 
         // if (res.message === "codeApont 4 prod finalzado") {

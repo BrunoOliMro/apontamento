@@ -6,23 +6,27 @@ import { decrypted } from "../utils/decryptedOdf";
 import { sanitize } from "../utils/sanitize";
 
 export const statusImage: RequestHandler = async (req, res) => {
-    const numpec: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
-    const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
-    const statusImg: string = String("_status")
-    const codeMachine = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
-    const operationNumber = decrypted(sanitize(req.cookies['NUMERO_OPERACAO']))
-    let odfNumber = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
-    let employee = decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))
-    const lookOnProcess = `SELECT TOP 1 [NUMPEC], [IMAGEM] FROM PROCESSO (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${numpec}' AND REVISAO = '${revisao}' AND IMAGEM IS NOT NULL`
-    let imgResult: string[] = [];
     try {
-
+        var numpec: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
+        var revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
+        var statusImg: string = String("_status")
+        var codeMachine = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
+        var operationNumber = decrypted(sanitize(req.cookies['NUMERO_OPERACAO']))
+        var odfNumber = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
+        var employee = decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))
+        var lookOnProcess = `SELECT TOP 1 [NUMPEC], [IMAGEM] FROM PROCESSO (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${numpec}' AND REVISAO = '${revisao}' AND IMAGEM IS NOT NULL`
+        var imgResult: string[] = [];
+    } catch (error) {
+        console.log('Error on StatusImage --cookies--', error);
+        return res.json({ message: 'Algo deu errado' })
+    }
+    try {
         const x = await codeNote(odfNumber, operationNumber, codeMachine, employee)
         if (x.message === 'Ini Prod' || x.message === 'Pointed' || x.message === 'Rip iniciated' || x.message === 'Machine has stopped') {
             const resource = await select(lookOnProcess)
             if (resource.length > 0) {
                 try {
-                    for await (let [i, record] of resource.entries()) {
+                    for await (const [i, record] of resource.entries()) {
                         const rec = await record;
                         const path = await pictures.getPicturePath(rec["NUMPEC"], rec["IMAGEM"], statusImg, String(i));
                         imgResult.push(path);

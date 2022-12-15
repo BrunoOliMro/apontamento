@@ -10,35 +10,37 @@ const decryptedOdf_1 = require("../utils/decryptedOdf");
 const encryptOdf_1 = require("../utils/encryptOdf");
 const sanitize_1 = require("../utils/sanitize");
 const tools = async (req, res) => {
-    if (!Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))))) {
-        return res.json({ message: 'Algo deu errado' });
+    try {
+        var numeroOdf = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"])))) || null;
+        var codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_PECA"]))) || null;
+        var numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"]))) || null;
+        var codigoMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_MAQUINA"]))) || null;
+        var funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
+        var revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
+        var start = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["startSetupTime"])))) || null;
+        var qtdLibMax = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB'])))) || null;
+        var ferramenta = String("_ferr");
+        var boas = null;
+        var ruins = null;
+        var codAponta = 1;
+        var descricaoCodigoAponta = 'Ini Setup.';
+        var faltante = null;
+        var retrabalhada = null;
+        var motivo = null;
+        var lookForTools = `SELECT [CODIGO], [IMAGEM] FROM VIEW_APTO_FERRAMENTAL WHERE 1 = 1 AND IMAGEM IS NOT NULL AND CODIGO = '${codigoPeca}'`;
+        var toolsImg;
+        var result = [];
+        if (numeroOdf !== Number((0, decodeOdf_1.decodedBuffer)(String((0, sanitize_1.sanitize)(req.cookies['encodedOdfNumber']))))) {
+            console.log('ODF Verificada com falha');
+            return res.json({ message: 'Erro na ODF' });
+        }
     }
-    const numeroOdf = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"])))) || null;
-    const codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_PECA"]))) || null;
-    const numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"]))) || null;
-    const codigoMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_MAQUINA"]))) || null;
-    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
-    const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
-    const start = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["startSetupTime"])))) || null;
-    const qtdLibMax = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB'])))) || null;
-    const ferramenta = String("_ferr");
-    const boas = null;
-    const ruins = null;
-    const codAponta = 1;
-    const descricaoCodigoAponta = 'Ini Setup.';
-    const faltante = null;
-    const retrabalhada = null;
-    const motivo = null;
-    const lookForTools = `SELECT [CODIGO], [IMAGEM] FROM VIEW_APTO_FERRAMENTAL WHERE 1 = 1 AND IMAGEM IS NOT NULL AND CODIGO = '${codigoPeca}'`;
-    let toolsImg;
-    const result = [];
-    if (numeroOdf !== Number((0, decodeOdf_1.decodedBuffer)(String((0, sanitize_1.sanitize)(req.cookies['encodedOdfNumber']))))) {
-        console.log('ODF Verificada com falha');
-        return res.json({ message: 'Erro na ODF' });
+    catch (error) {
+        console.log('Error on Tools --cookies', error);
+        return res.json({ message: 'Algo deu errado' });
     }
     try {
         const codeNoteResult = await (0, codeNote_1.codeNote)(numeroOdf, numeroOperacao, codigoMaq, funcionario);
-        console.log('linha 43 ', codeNoteResult);
         if (codeNoteResult.message === 'First time acessing ODF' || codeNoteResult.message === 'Begin new process') {
             const inserted = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, start);
             if (inserted !== 'Algo deu errado') {
@@ -79,27 +81,32 @@ const tools = async (req, res) => {
 };
 exports.tools = tools;
 const selectedTools = async (req, res) => {
-    const numeroOdf = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'])))) || null;
-    const numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO']))) || null;
-    const codigoMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
-    const codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_PECA"]))) || null;
-    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
-    const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
-    const qtdLibMax = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB'])))) || null;
-    const boas = null;
-    const ruins = null;
-    const codAponta = 2;
-    const codAponta3 = 3;
-    const descricaoCodigoAponta = 'Fin Setup.';
-    const descricaoCodigoAponta3 = 'Ini Prod.';
-    const faltante = null;
-    const retrabalhada = null;
-    const motivo = null;
-    let x = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['startSetupTime'])) || null;
-    let y = Number(new Date().getTime());
-    const tempoDecorrido = Number(y - x) || 0;
-    let z = await (0, encryptOdf_1.encrypted)(String(new Date().getTime()));
-    res.cookie("startProd", z);
+    try {
+        var numeroOdf = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'])))) || null;
+        var numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO']))) || null;
+        var codigoMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
+        var codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_PECA"]))) || null;
+        var funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
+        var revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
+        var qtdLibMax = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB'])))) || null;
+        var boas = null;
+        var ruins = null;
+        var codAponta = 2;
+        var codAponta3 = 3;
+        var descricaoCodigoAponta = 'Fin Setup.';
+        var descricaoCodigoAponta3 = 'Ini Prod.';
+        var faltante = null;
+        var retrabalhada = null;
+        var motivo = null;
+        var startSetupTime = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['startSetupTime'])) || null;
+    }
+    catch (error) {
+        console.log('Error on SelectedTools --cookies--', error);
+        return res.json({ message: 'Algo deu errado' });
+    }
+    const tempoDecorrido = Number(Number(new Date().getTime()) - startSetupTime) || 0;
+    let startProd = await (0, encryptOdf_1.encrypted)(String(new Date().getTime()));
+    res.cookie("startProd", startProd);
     try {
         const codeNoteResult = await (0, codeNote_1.codeNote)(numeroOdf, numeroOperacao, codigoMaq, funcionario);
         if (codeNoteResult.message === 'Pointed Iniciated') {

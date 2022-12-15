@@ -125,6 +125,14 @@
     async function getRefugodata() {
         const res = await fetch(motivoUrl);
         dados = await res.json();
+        console.log('dados GetRefugoData', dados);
+        if(dados){
+            if(dados.message){
+                if(dados.message !== ''){
+                    modalMessage = dados.message
+                }
+            }
+        }
     }
 
     async function checkForSuper(event) {

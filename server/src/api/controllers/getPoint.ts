@@ -9,26 +9,31 @@ import { decrypted } from "../utils/decryptedOdf";
 import { sanitize } from "../utils/sanitize";
 
 export const getPoint: RequestHandler = async (req, res) => {
-    let odfNumber = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
-    let qtdBoas: number = decrypted(String(sanitize(req.cookies["qtdBoas"]))) || null;
-    let operationNumber = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
-    const codeMachine = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
-    let codigoPeca = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
-    let funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
-    let qtdProduzir = decrypted(String(sanitize(req.cookies['QTDE_LIB']))) || null
-    //let quantidade: string | null = sanitize(req.cookies['quantidade']) || null
-    let revisao = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
-    const updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`
-    var address;
-    var response = {
-        message: '',
-        address: '',
-        url: '',
+    try {
+        var odfNumber = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
+        var qtdBoas: number = decrypted(String(sanitize(req.cookies["qtdBoas"]))) || null;
+        var operationNumber = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
+        var codeMachine = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
+        var codigoPeca = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
+        var funcionario = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+        var qtdProduzir = decrypted(String(sanitize(req.cookies['QTDE_LIB']))) || null
+        //var quantidade: string | null = sanitize(req.cookies['quantidade']) || null
+        var revisao = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
+        var updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`
+        var address;
+        var response = {
+            message: '',
+            address: '',
+            url: '',
+        }
+        var hostname = req.get("host")
+        var { networkInterfaces } = require('os');
+        var nets = networkInterfaces();
+        var results: any = {}; // Or just '{}', an empty object
+    } catch (error) {
+        console.log('Error on GetPoint', error);
+        return res.json({ message: 'Algo deu errado' })
     }
-    const hostname = req.get("host")
-    const { networkInterfaces } = require('os');
-    const nets = networkInterfaces();
-    const results: any = {}; // Or just '{}', an empty object
     for (const name of Object.keys(nets)) {
         for (const net of nets[name]) {
             // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
@@ -47,10 +52,8 @@ export const getPoint: RequestHandler = async (req, res) => {
         return res.json({ message: x })
     }
 
-    operationNumber = "00" + operationNumber.replaceAll(" ", '0')
-
-    console.log("linha 46 /NUMERO_OPERACAO/", operationNumber);
     try {
+        operationNumber = "00" + operationNumber.replaceAll(" ", '0')
         //Caso a operação seja 999 fará baixa no estoque
         if (operationNumber === "00999") {
             // Verificar onde é possível alocar essas peças
@@ -217,8 +220,8 @@ export const getPoint: RequestHandler = async (req, res) => {
             try {
                 const lookForHisReal = `SELECT TOP 1  * FROM HISREAL  WHERE 1 = 1 AND CODIGO = '${codigoPeca}' ORDER BY DATA DESC`
                 const resultQuery = await select(lookForHisReal)
-                if(!resultQuery){
-                    return res.json({message : 'Algo deu errado'})
+                if (!resultQuery) {
+                    return res.json({ message: 'Algo deu errado' })
                 }
                 const connection = await mssql.connect(sqlConfig);
                 try {

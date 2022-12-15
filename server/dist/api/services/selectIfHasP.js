@@ -22,6 +22,7 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
     let updateAlocacaoQuery = [];
     const insertAlocaoQuery = [];
     const queryStorageFund = `SELECT DISTINCT  
+    PCP.NUMERO_ODF,
     OP.STATUS_RESERVA,
     OP.NUMITE,
     OP.NUMSEQ,
@@ -55,7 +56,7 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                 return response.message = 'Não há item para reservar';
             }
             if (selectKnowHasP[0].hasOwnProperty('STATUS_RESERVA')) {
-                if (selectKnowHasP[0].STATUS_RESERVA === 'R') {
+                if (selectKnowHasP[0].STATUS_RESERVA === `${dados.numOdf}`) {
                     response.quantidade = selectKnowHasP[0].RESERVADO;
                     response.codigoFilho = codigoFilho;
                     response.execut = execut;
