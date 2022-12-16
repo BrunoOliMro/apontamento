@@ -39,7 +39,9 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
            AND OP.NUMSEQ = ${numeroOperacao}`
 
     try {
-        const selectKnowHasP = await select(queryStorageFund)
+        const y = `SELECT QUANTIDADE FROM CST_ALOCACAO WHERE 1 = 1 AND ODF = ${dados.numOdf} ORDER BY CODIGO ASC`
+        const selectKnowHasP: any = await select(queryStorageFund)
+        // const selectAlocasdo = await select(y)
 
         if (selectKnowHasP.length <= 0) {
             return response.message = "Não há item para reservar"
@@ -54,9 +56,15 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                 return response.message = 'Não há item para reservar'
             }
 
-            if (selectKnowHasP[0].hasOwnProperty('STATUS_RESERVA')) {
-                if (selectKnowHasP[0].STATUS_RESERVA === `${dados.numOdf}`) {
-                    response.quantidade = selectKnowHasP[0].RESERVADO
+
+            const y = `SELECT QUANTIDADE FROM CST_ALOCACAO WHERE 1 = 1 AND ODF = ${dados.numOdf} ORDER BY CODIGO ASC`
+            const selectAlocado = await select(y)
+
+            // If there a values reserved
+            if (selectAlocado.length > 0) {
+                if (selectAlocado[0].QUANTIDADE > 0) {
+                    console.log('Alocacao encontrada');
+                    response.quantidade = selectAlocado[0].QUANTIDADE
                     response.codigoFilho = codigoFilho
                     response.execut = execut
                     response.condic = 'P'
@@ -64,10 +72,6 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                     return response
                 }
             }
-
-
-            console.log('linha 68 /SelectHas/', numberOfQtd);
-            console.log('linha 68 /SelectHas/', quantidadeOdf);
 
             // Caso a quantidade liberada para odf seja maior ou menor que a quantidade a produzir
             if (quantidadeOdf <= 0) {
@@ -80,7 +84,8 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                 quantityToPoint = numberOfQtd;
             }
 
-            const quantitySetStorage = quantityToPoint * execut
+            const quantitySetStorage = Number(quantityToPoint * execut)
+
             response.quantidade = quantityToPoint
             response.condic = selectKnowHasP[0].CONDIC
             response.codigoFilho = codigoFilho
@@ -113,19 +118,9 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                                             let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${quantityToPoint} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${numeroOperNew}`
                                             const x = await update(y)
                                             if (x === 'Update sucess') {
-                                                let p: any = []
-                                                codigoFilho.forEach((element: any) => {
-                                                    const z = `UPDATE OPERACAO SET STATUS_RESERVA = TRIM('R') WHERE 1 = 1 AND NUMPEC = TRIM('${codigoPeca}') AND NUMITE = '${element}' AND REVISAO = ${revisao}`
-                                                    p.push(z)
-                                                });
-                                                const w = await connection.query(p.join('\n')).then(result => result.rowsAffected)
-                                                if (w) {
-                                                    response.message = 'Valores Reservados'
-                                                    response.url = '/#/ferramenta'
-                                                    return response
-                                                } else {
-                                                    return response.message = 'Status da reserva não foi atualizado'
-                                                }
+                                                response.message = 'Valores Reservados'
+                                                response.url = '/#/ferramenta'
+                                                return response
                                             } else {
                                                 console.log('linha 112 /selectHAsP/');
                                                 return response.message = 'Algo deu errado'
@@ -145,19 +140,9 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                                 let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${quantityToPoint} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${numeroOperNew}`
                                 const x = await update(y)
                                 if (x === 'Update sucess') {
-                                    let p: any = []
-                                    codigoFilho.forEach((element: any) => {
-                                        const z = `UPDATE OPERACAO SET STATUS_RESERVA = TRIM('R') WHERE 1 = 1 AND NUMPEC = TRIM('${codigoPeca}') AND NUMITE = '${element}' AND REVISAO = ${revisao}`
-                                        p.push(z)
-                                    });
-                                    const w = await connection.query(p.join('\n')).then(result => result.rowsAffected)
-                                    if (w) {
-                                        response.message = 'Valores Reservados'
-                                        response.url = '/#/ferramenta'
-                                        return response
-                                    } else {
-                                        return response.message = 'Status da reserva não foi atualizado'
-                                    }
+                                    response.message = 'Valores Reservados'
+                                    response.url = '/#/ferramenta'
+                                    return response
                                 } else {
                                     console.log('linha 112 /selectHAsP/');
                                     return response.message = 'Algo deu errado'

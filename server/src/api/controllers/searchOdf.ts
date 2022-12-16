@@ -14,7 +14,8 @@ import { encoded } from '../utils/encodedOdf';
 
 export const searchOdf: RequestHandler = async (req, res) => {
     const dados: any = unravelBarcode(req.body.barcode) || null
-    console.log('dados', dados);
+    const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, CODIGO_PECA, QTD_BOAS, QTD_REFUGO, QTD_FALTANTE, QTD_RETRABALHADA FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
+    // console.log('dados', dados);
     if (!dados.numOdf || !dados.numOper || !dados.codMaq) {
         return res.json({ message: 'ODF não encontrada' })
     }
@@ -26,7 +27,6 @@ export const searchOdf: RequestHandler = async (req, res) => {
     } else {
         return res.json({ message: 'Algo deu errado' })
     }
-    const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, CODIGO_PECA, QTD_BOAS, QTD_REFUGO, QTD_FALTANTE, QTD_RETRABALHADA FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
 
     // Barcode inválido
     if (dados.message === 'Código de barras inválido' || !dados) {
@@ -42,7 +42,7 @@ export const searchOdf: RequestHandler = async (req, res) => {
     if (odf.length <= 0) {
         return res.json({ message: 'Algo deu errado' })
     }
-    console.log('odf', odf);
+    // console.log('odf', odf);
     // Não pode pegar o 0 como erro pois, temos o index = 0 na ODF
     let i: number = await odfIndex(odf, dados.numOper)
 

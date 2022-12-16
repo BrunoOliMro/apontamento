@@ -157,7 +157,7 @@ const point = async (req, res) => {
             try {
                 let a = [];
                 codigoFilho.forEach((element) => {
-                    const updateQuery = `DELETE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${odfNumber}' AND CODIGO_FILHO = '${element}' `;
+                    const updateQuery = `DELETE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${odfNumber}' AND CODIGO_FILHO = '${element}'`;
                     const s = `UPDATE OPERACAO SET STATUS_RESERVA = NULL WHERE 1 = 1 AND NUMPEC =  TRIM('${codigoPeca}') AND NUMITE = '${element}' AND REVISAO = ${revisao}`;
                     a.push(s);
                     updateQtyQuery2.push(updateQuery);

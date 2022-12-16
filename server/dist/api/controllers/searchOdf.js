@@ -14,7 +14,7 @@ const codeNote_1 = require("../utils/codeNote");
 const encodedOdf_1 = require("../utils/encodedOdf");
 const searchOdf = async (req, res) => {
     const dados = (0, unravelBarcode_1.unravelBarcode)(req.body.barcode) || null;
-    console.log('dados', dados);
+    const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, CODIGO_PECA, QTD_BOAS, QTD_REFUGO, QTD_FALTANTE, QTD_RETRABALHADA FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
     if (!dados.numOdf || !dados.numOper || !dados.codMaq) {
         return res.json({ message: 'ODF não encontrada' });
     }
@@ -25,7 +25,6 @@ const searchOdf = async (req, res) => {
     else {
         return res.json({ message: 'Algo deu errado' });
     }
-    const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, CODIGO_PECA, QTD_BOAS, QTD_REFUGO, QTD_FALTANTE, QTD_RETRABALHADA FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
     if (dados.message === 'Código de barras inválido' || !dados) {
         return res.json({ message: 'Código de barras inválido' });
     }
@@ -39,7 +38,6 @@ const searchOdf = async (req, res) => {
     if (odf.length <= 0) {
         return res.json({ message: 'Algo deu errado' });
     }
-    console.log('odf', odf);
     let i = await (0, odfIndex_1.odfIndex)(odf, dados.numOper);
     if (i <= 0) {
         if (!odf[i].QTDE_APONTADA) {
