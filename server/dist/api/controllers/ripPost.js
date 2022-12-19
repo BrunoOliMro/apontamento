@@ -33,7 +33,7 @@ const ripPost = async (req, res) => {
     var objectSanitized = {};
     const boas = null;
     const ruins = null;
-    const codAponta = 6;
+    const codAponta = [6];
     const descricaoCodAponta = 'Rip Fin';
     const motivo = null;
     const faltante = null;
@@ -48,7 +48,7 @@ const ripPost = async (req, res) => {
         const x = await (0, insert_1.insertInto)(funcionario, odfNumber, codigoPeca, revisao, operationNumber, codeMachine, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorridoRip);
         if (x) {
             const y = await (0, update_1.update)(updatePcpProg);
-            if (y === 'Update sucess') {
+            if (y === 'Sucess') {
                 await (0, clearCookie_1.cookieCleaner)(res);
                 return res.json({ message: "rip enviada, odf finalizada" });
             }
@@ -75,7 +75,7 @@ const ripPost = async (req, res) => {
         else if (x) {
             try {
                 const y = await (0, update_1.update)(updatePcpProg);
-                if (y !== 'Update sucess') {
+                if (y !== 'Sucess') {
                     return res.json({ message: 'Algo deu errado' });
                 }
                 else {
@@ -99,7 +99,7 @@ const ripPost = async (req, res) => {
                             await connection.query(updateQtyQuery.join("\n"));
                         }
                         catch (error) {
-                            console.log("error - linha 98 /ripPost.ts/ - ", error);
+                            console.log("error - linha 103 /ripPost.ts/ - ", error);
                             return res.json({ message: "ocorreu um erro ao enviar os dados da rip" });
                         }
                         console.log('Apagando cookies');
@@ -107,13 +107,13 @@ const ripPost = async (req, res) => {
                         return res.json({ message: 'rip enviada, odf finalizada', url: '/#/codigobarras' });
                     }
                     catch (error) {
-                        console.log("linha 75 /ripPost/", error);
+                        console.log("linha 110 /ripPost/", error);
                         return res.json({ message: "ocorreu um erro ao enviar os dados da rip" });
                     }
                 }
             }
             catch (error) {
-                console.log('error linha 72', error);
+                console.log('error linha 115', error);
                 return res.json({ message: 'Algo deu errado' });
             }
         }
@@ -122,7 +122,7 @@ const ripPost = async (req, res) => {
         }
     }
     catch (error) {
-        console.log('linha 64 - ripPost -', error);
+        console.log('linha 122 - ripPost -', error);
         return res.json({ message: 'Algo deu errado' });
     }
 };

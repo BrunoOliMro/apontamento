@@ -11,10 +11,10 @@ const codeNote = async (odfNumber, operationNumber, codeMachine, funcionario) =>
     };
     codigoDeApontamento = await (0, select_1.select)(lookForHisaponta);
     if (codigoDeApontamento.length > 0) {
-        if (funcionario !== codigoDeApontamento[0].USUARIO) {
-            console.log('funcionario diferente');
+        if (funcionario !== codigoDeApontamento[0].USUARIO && codigoDeApontamento[0].CODAPONTA === 4) {
+            response.message = 'Usuario diferente';
+            response.funcionario = codigoDeApontamento[0].USUARIO;
         }
-        response.funcionario = codigoDeApontamento[0].USUARIO;
     }
     if (codigoDeApontamento.length > 0) {
         if (codigoDeApontamento[0].hasOwnProperty('CODAPONTA')) {

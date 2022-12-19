@@ -8,7 +8,7 @@ const select_1 = require("./select");
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
 const update_1 = require("./update");
-const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOperacao, codigoPeca, revisao) => {
+const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOperacao, codigoPeca) => {
     let response = {
         message: '',
         quantidade: quantidadeOdf,
@@ -42,7 +42,6 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
            AND PCP.NUMERO_ODF = '${dados.numOdf}'
            AND OP.NUMSEQ = ${numeroOperacao}`;
     try {
-        const y = `SELECT QUANTIDADE FROM CST_ALOCACAO WHERE 1 = 1 AND ODF = ${dados.numOdf} ORDER BY CODIGO ASC`;
         const selectKnowHasP = await (0, select_1.select)(queryStorageFund);
         if (selectKnowHasP.length <= 0) {
             return response.message = "Não há item para reservar";
@@ -111,7 +110,7 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                                         try {
                                             let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${quantityToPoint} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${numeroOperNew}`;
                                             const x = await (0, update_1.update)(y);
-                                            if (x === 'Update sucess') {
+                                            if (x === 'Sucess') {
                                                 response.message = 'Valores Reservados';
                                                 response.url = '/#/ferramenta';
                                                 return response;
@@ -137,7 +136,7 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                             try {
                                 let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${quantityToPoint} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${numeroOperNew}`;
                                 const x = await (0, update_1.update)(y);
-                                if (x === 'Update sucess') {
+                                if (x === 'Sucess') {
                                     response.message = 'Valores Reservados';
                                     response.url = '/#/ferramenta';
                                     return response;

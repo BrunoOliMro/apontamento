@@ -46,6 +46,8 @@ const point = async (req, res) => {
         var codigoFilho = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['codigoFilho']))).split(",") || null;
         var lookForOdfData = `SELECT TOP 1 CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS, APONTAMENTO_LIBERADO FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND NUMERO_OPERACAO = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}' AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
         var valuesFromBack = await (0, select_1.select)(lookForOdfData);
+        var stringFromHisaponta = `SELECT TOP 1 USUARIO FROM HISAPONTA WHERE 1 = 1 AND ODF = '${odfNumber}'  ORDER BY DATAHORA DESC`;
+        var valuesFromHisaponta = await (0, select_1.select)(stringFromHisaponta);
         var valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed));
         var lib = qtdLibMax - valorTotalApontado;
         var faltante = qtdLibMax - valorTotalApontado;
@@ -56,7 +58,7 @@ const point = async (req, res) => {
         res.cookie('qtdBoas', (0, encryptOdf_1.encrypted)(String(qtdBoas)));
         res.cookie("startRip", Number(new Date().getTime()));
         var updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + ${valorTotalApontado}, QTD_REFUGO = COALESCE(QTD_REFUGO, 0) + ${badFeed}, QTDE_LIB = ${lib}, QTD_FALTANTE = ${faltante}, QTD_BOAS = COALESCE(QTD_BOAS, 0) + ${qtdBoas}, QTD_RETRABALHADA = COALESCE(QTD_RETRABALHADA, 0) + ${reworkFeed} WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`;
-        var codAponta = 4;
+        var codAponta = [4];
         var descricaoCodigoAponta = 'Fin Prod';
     }
     catch (error) {
@@ -74,9 +76,6 @@ const point = async (req, res) => {
         }
         else if (pointCode.message !== 'Ini Prod') {
             return res.json({ message: pointCode.message });
-        }
-        else if (pointCode.funcionario !== employee) {
-            return res.json({ message: 'Funcionário diferente' });
         }
         else if (!supervisor && valorTotalApontado === qtdLibMax) {
             if (badFeed > 0) {
@@ -110,6 +109,22 @@ const point = async (req, res) => {
         console.log('linha 100 - Error on Point.ts -', error);
         return res.json({ message: 'Algo deu errado' });
     }
+    if (employee !== valuesFromBack[0].USUARIO) {
+        let arrayDeCodAponta = [4, 5, 6];
+        let boasEnd = null;
+        let badEnd = null;
+        let missingEnd = null;
+        let reworkEnd = null;
+        console.log('valuesFromHisaponta[0].USUARIO', valuesFromHisaponta);
+        const x = await (0, insert_1.insertInto)(valuesFromHisaponta[0].USUARIO, odfNumber, codigoPeca, revisao, String(operationNumber), machineCode, qtdLibMax, boasEnd, badEnd, arrayDeCodAponta, descricaoCodigoAponta, motivorefugo, missingEnd, reworkEnd, finalProdTimer);
+        if (x) {
+            let codeArray = [1, 2, 3];
+            await (0, insert_1.insertInto)(employee, odfNumber, codigoPeca, revisao, String(operationNumber), machineCode, qtdLibMax, boasEnd, badEnd, codeArray, descricaoCodigoAponta, motivorefugo, missingEnd, reworkEnd, finalProdTimer);
+        }
+        else {
+            return res.json({ message: 'Algo deu errado' });
+        }
+    }
     if (condic === 'P') {
         try {
             if (!codigoFilho) {
@@ -125,7 +140,7 @@ const point = async (req, res) => {
                     await connection.query(updateSaldoReal.join("\n")).then(result => result.rowsAffected);
                 }
                 catch (error) {
-                    console.log("linha 131  - Point.ts - ", error);
+                    console.log("linha 140  - Point.ts - ", error);
                     return res.json({ message: 'Algo deu errado' });
                 }
             }
@@ -145,7 +160,7 @@ const point = async (req, res) => {
             }
         }
         catch (error) {
-            console.log("linha 138  - Point.ts - ", error);
+            console.log("linha 158  - Point.ts - ", error);
             return res.json({ message: 'Algo deu errado' });
         }
     }
@@ -166,7 +181,7 @@ const point = async (req, res) => {
         return res.json({ message: 'Sucesso ao apontar' });
     }
     catch (error) {
-        console.log("linha 150 - error - /point.ts/", error);
+        console.log("linha 164 - error - /point.ts/", error);
         return res.json({ message: 'Algo deu errado' });
     }
 };

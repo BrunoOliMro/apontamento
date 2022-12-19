@@ -82,7 +82,7 @@ const searchOdf = async (req, res) => {
     if (!odf[i].QTDE_LIB || odf[i].QTDE_LIB <= 0) {
         return res.json({ message: 'Não há limite na ODF' });
     }
-    let lookForChildComponents = await (0, selectIfHasP_1.selectToKnowIfHasP)(dados, odf[i].QTDE_LIB, funcionario, odf[i].NUMERO_OPERACAO, odf[i].CODIGO_PECA, odf[i].REVISAO);
+    let lookForChildComponents = await (0, selectIfHasP_1.selectToKnowIfHasP)(dados, odf[i].QTDE_LIB, funcionario, odf[i].NUMERO_OPERACAO, odf[i].CODIGO_PECA);
     if (lookForChildComponents.message === 'Valores Reservados') {
         if (lookForChildComponents.quantidade < odf[i].QTDE_LIB) {
             odf[i].QTDE_LIB = lookForChildComponents.quantidade;
@@ -108,11 +108,6 @@ const searchOdf = async (req, res) => {
     res.cookie('encodedOperationNuber', (0, encodedOdf_1.encoded)(String(odf[i].NUMERO_OPERACAO)), { httpOnly: true });
     res.cookie('encodedMachineCode', (0, encodedOdf_1.encoded)(String(odf[i].CODIGO_MAQUINA)), { httpOnly: true });
     const pointCode = await (0, codeNote_1.codeNote)(dados.numOdf, dados.numOper, dados.codMaq, funcionario);
-    if (pointCode.funcionario !== '') {
-        if (pointCode.funcionario !== funcionario) {
-            return res.json({ message: 'Funcionario diferente' });
-        }
-    }
     return res.json({ message: pointCode.message });
 };
 exports.searchOdf = searchOdf;

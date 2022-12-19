@@ -96,7 +96,7 @@ export const searchOdf: RequestHandler = async (req, res) => {
     }
 
     // Generate cookie that is gonna be used later;
-    let lookForChildComponents = await selectToKnowIfHasP(dados, odf[i].QTDE_LIB, funcionario, odf[i].NUMERO_OPERACAO, odf[i].CODIGO_PECA, odf[i].REVISAO)
+    let lookForChildComponents = await selectToKnowIfHasP(dados, odf[i].QTDE_LIB, funcionario, odf[i].NUMERO_OPERACAO, odf[i].CODIGO_PECA)
 
     if (lookForChildComponents.message === 'Valores Reservados') {
         if (lookForChildComponents.quantidade < odf[i].QTDE_LIB) {
@@ -124,11 +124,11 @@ export const searchOdf: RequestHandler = async (req, res) => {
     res.cookie('encodedMachineCode', encoded(String(odf[i].CODIGO_MAQUINA)), { httpOnly: true })
     const pointCode = await codeNote(dados.numOdf, dados.numOper, dados.codMaq, funcionario)
 
-    if (pointCode.funcionario !== '') {
-        if (pointCode.funcionario !== funcionario) {
-            return res.json({ message: 'Funcionario diferente' })
-        }
-    }
+    // if (pointCode.funcionario !== '') {
+    //     if (pointCode.funcionario !== funcionario) {
+    //         return res.json({ message: 'Funcionario diferente' })
+    //     }
+    // }
 
     return res.json({ message: pointCode.message })
 }

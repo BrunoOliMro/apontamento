@@ -27,7 +27,7 @@ const rip = async (req, res) => {
         var ruins = null;
         var faltante = null;
         var retrabalhada = null;
-        var codAponta = 5;
+        var codAponta = [5];
         var motivo = null;
         var startTime = Number(new Date(start).getTime()) || 0;
         var response = {

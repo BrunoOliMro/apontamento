@@ -3,7 +3,9 @@ import mssql from 'mssql';
 import { sqlConfig } from '../../global.config'
 import { update } from './update';
 
-export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, funcionario: string, numeroOperacao: string, codigoPeca: string, revisao: number) => {
+export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, funcionario: string, numeroOperacao: string, codigoPeca: string, 
+    //revisao: number
+    ) => {
     let response: any = {
         message: '',
         quantidade: quantidadeOdf,
@@ -38,7 +40,7 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
            AND OP.NUMSEQ = ${numeroOperacao}`
 
     try {
-        const y = `SELECT QUANTIDADE FROM CST_ALOCACAO WHERE 1 = 1 AND ODF = ${dados.numOdf} ORDER BY CODIGO ASC`
+        //const y = `SELECT QUANTIDADE FROM CST_ALOCACAO WHERE 1 = 1 AND ODF = ${dados.numOdf} ORDER BY CODIGO ASC`
         const selectKnowHasP: any = await select(queryStorageFund)
         // const selectAlocasdo = await select(y)
 
@@ -54,7 +56,6 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
             if (makeReservation.length <= 0) {
                 return response.message = 'Não há item para reservar'
             }
-
 
             const y = `SELECT QUANTIDADE FROM CST_ALOCACAO WHERE 1 = 1 AND ODF = ${dados.numOdf} ORDER BY CODIGO ASC`
             const selectAlocado = await select(y)
@@ -116,7 +117,7 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                                         try {
                                             let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${quantityToPoint} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${numeroOperNew}`
                                             const x = await update(y)
-                                            if (x === 'Update sucess') {
+                                            if (x === 'Sucess') {
                                                 response.message = 'Valores Reservados'
                                                 response.url = '/#/ferramenta'
                                                 return response
@@ -138,7 +139,7 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
                             try {
                                 let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${quantityToPoint} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${numeroOperNew}`
                                 const x = await update(y)
-                                if (x === 'Update sucess') {
+                                if (x === 'Sucess') {
                                     response.message = 'Valores Reservados'
                                     response.url = '/#/ferramenta'
                                     return response

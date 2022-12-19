@@ -29,7 +29,7 @@ export const ripPost: RequestHandler = async (req, res) => {
     var objectSanitized: { [k: string]: any; } = {}
     const boas = null
     const ruins = null
-    const codAponta = 6
+    const codAponta = [6]
     const descricaoCodAponta = 'Rip Fin'
     const motivo = null
     const faltante = null
@@ -53,7 +53,7 @@ export const ripPost: RequestHandler = async (req, res) => {
         const x = await insertInto(funcionario, odfNumber, codigoPeca, revisao, operationNumber, codeMachine, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorridoRip)
         if (x) {
             const y = await update(updatePcpProg)
-            if (y === 'Update sucess') {
+            if (y === 'Sucess') {
                 await cookieCleaner(res)
                 return res.json({ message: "rip enviada, odf finalizada" })
             } else {
@@ -78,7 +78,7 @@ export const ripPost: RequestHandler = async (req, res) => {
         } else if (x) {
             try {
                 const y = await update(updatePcpProg)
-                if (y !== 'Update sucess') {
+                if (y !== 'Sucess') {
                     return res.json({ message: 'Algo deu errado' })
                 } else {
                     const resultSplitLines: { [k: string]: any; } = Object.keys(objectSanitized).reduce((acc: any, iterator: any) => {
@@ -100,26 +100,26 @@ export const ripPost: RequestHandler = async (req, res) => {
                             const connection = await mssql.connect(sqlConfig);
                             await connection.query(updateQtyQuery.join("\n"))
                         } catch (error) {
-                            console.log("error - linha 98 /ripPost.ts/ - ", error)
+                            console.log("error - linha 103 /ripPost.ts/ - ", error)
                             return res.json({ message: "ocorreu um erro ao enviar os dados da rip" })
                         }
                         console.log('Apagando cookies');
                         await cookieCleaner(res)
                         return res.json({ message: 'rip enviada, odf finalizada', url: '/#/codigobarras' })
                     } catch (error) {
-                        console.log("linha 75 /ripPost/", error)
+                        console.log("linha 110 /ripPost/", error)
                         return res.json({ message: "ocorreu um erro ao enviar os dados da rip" })
                     }
                 }
             } catch (error) {
-                console.log('error linha 72', error);
+                console.log('error linha 115', error);
                 return res.json({ message: 'Algo deu errado' })
             }
         } else {
             return res.json({ message: 'Algo deu errado' })
         }
     } catch (error) {
-        console.log('linha 64 - ripPost -', error);
+        console.log('linha 122 - ripPost -', error);
         return res.json({ message: 'Algo deu errado' })
     }
 }

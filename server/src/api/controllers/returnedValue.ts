@@ -23,7 +23,7 @@ export const returnedValue: RequestHandler = async (req, res) => {
         var lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`;
         var boas = null;
         var ruins = null;
-        var codAponta = 8
+        var codAponta = [8]
         var descricaoCodigoAponta = null
         var motivo = null
         var tempoDecorrido = null
@@ -110,7 +110,7 @@ export const returnedValue: RequestHandler = async (req, res) => {
                 if (insertHisCodReturned) {
                     const updateQuery = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA - ${boas}, QTD_FALTANTE = QTD_FALTANTE - ${faltante}, QTDE_LIB = ${qtdLib} ,QTD_REFUGO = QTD_REFUGO - ${ruins} WHERE 1 = 1 AND NUMERO_ODF = '${data.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${data.numOper}' AND CODIGO_MAQUINA = '${data.codMaq}'`
                     const updateValuesOnPcp = await update(updateQuery)
-                    if (updateValuesOnPcp === 'Update sucess') {
+                    if (updateValuesOnPcp === 'Sucess') {
                         return res.status(200).json({ message: 'Returned values done' })
                     } else {
                         return res.json({ message: 'Return error' })

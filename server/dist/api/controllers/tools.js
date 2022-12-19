@@ -22,7 +22,7 @@ const tools = async (req, res) => {
         var ferramenta = String("_ferr");
         var boas = null;
         var ruins = null;
-        var codAponta = 1;
+        var codAponta = [1];
         var descricaoCodigoAponta = 'Ini Setup.';
         var faltante = null;
         var retrabalhada = null;
@@ -91,8 +91,8 @@ const selectedTools = async (req, res) => {
         var qtdLibMax = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB'])))) || null;
         var boas = null;
         var ruins = null;
-        var codAponta = 2;
-        var codAponta3 = 3;
+        var codAponta = [2];
+        var codAponta3 = [3];
         var descricaoCodigoAponta = 'Fin Setup.';
         var descricaoCodigoAponta3 = 'Ini Prod.';
         var faltante = null;
