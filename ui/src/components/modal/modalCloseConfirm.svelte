@@ -21,6 +21,8 @@
             </div>
 
             <div class="confirmPopDiv">
+                <!-- svelte-ignore a11y-autofocus -->
+                <!-- svelte-ignore a11y-positive-tabindex -->
                 <button
                     autofocus
                     class="btnPop"

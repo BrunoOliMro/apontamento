@@ -23,7 +23,6 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
     const insertAlocaoQuery = [];
     const queryStorageFund = `SELECT DISTINCT  
     PCP.NUMERO_ODF,
-    OP.STATUS_RESERVA,
     OP.NUMITE,
     OP.NUMSEQ,
     CAST(LTRIM(OP.NUMOPE) AS INT) AS NUMOPE,

@@ -10,8 +10,8 @@ export const update = async (query: string) => {
     console.log('linha 10 /update Data/', data);
 
     if (data.length > 0) {
-        return response.message = "Update sucess"
+        return response.message = "Sucess"
     } else {
-        return response.message = "Error on update"
+        return response.message = "Error"
     }
 }

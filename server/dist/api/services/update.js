@@ -14,10 +14,10 @@ const update = async (query) => {
     const data = await connection.query(`${query}`).then((result) => result.rowsAffected);
     console.log('linha 10 /update Data/', data);
     if (data.length > 0) {
-        return response.message = "Update sucess";
+        return response.message = "Sucess";
     }
     else {
-        return response.message = "Error on update";
+        return response.message = "Error";
     }
 };
 exports.update = update;

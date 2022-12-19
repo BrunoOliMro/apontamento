@@ -18,7 +18,6 @@
     let motivoUrl = `/api/v1/badFeedMotives`;
     let odfData = [];
     let dados = [];
-    let dataRedirect = [];
     let showConfirm = false;
     let valorFeed;
     let value;
@@ -39,7 +38,6 @@
     let balance;
     getOdfData();
     let superSuperMaqPar;
-    // let back = "/images/icons8-go-back-24.png";
 
     const checkPostSuper = async (event) => {
         if (!superSuperMaqPar) {
@@ -155,7 +153,6 @@
     }
 
     const doPost = async (e) => {
-        console.log('linha e', e);
         loader = true;
         close()
 
@@ -415,7 +412,7 @@
         </div>
     {:then item}
         {#if showConfirm === true}
-            <div class="fundo">
+            <div class="background">
                 <div class="header">
                     <div class="closed">
                         <h3>Apontamento com refugo</h3>
@@ -447,7 +444,7 @@
     {/await}
 
     {#if modalMessage === "Apontamento parcial"}
-        <div class="fundo">
+        <div class="background">
             <div class="header">
                 <div class="content-area">
                     <div class="modalTitle">
@@ -481,7 +478,7 @@
     {/if}
 
     {#if modalMessage === "Apontando apenas peças retrabalhadas, confirma ?"}
-        <div class="fundo">
+        <div class="background">
             <div class="header">
                 <div class="content-area">
                     <div class="modalTitle">
@@ -515,7 +512,7 @@
     {/if}
 
     {#if modalMessage === "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?"}
-        <div class="fundo">
+        <div class="background">
             <div class="header">
                 <div class="content-area">
                     <div class="modalTitle">
@@ -549,7 +546,7 @@
     {/if}
 
     {#if modalMessage === "Machine stopped"}
-        <div class="fundo">
+        <div class="background">
             <div class="header">
                 <div class="closed">
                     <h2>Máquina parada</h2>
@@ -578,7 +575,7 @@
     {/if}
 
     {#if modalMessage === "Already pointed"}
-        <div class="fundo">
+        <div class="background">
             <div class="header">
                 <div class="closed">
                     <h2>
@@ -595,7 +592,7 @@
     {/if}
 
     {#if modalMessage !== "" && modalMessage !== "Apontamento parcial" && modalMessage !== "Already pointed" && modalMessage !== "Machine stopped" && modalMessage !== "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?" && modalMessage !== "Apontando apenas peças retrabalhadas, confirma ?"}
-        <div class="fundo">
+        <div class="background">
             <div class="header">
                 <div class="closed">
                     <h2>{modalMessage}</h2>
@@ -608,7 +605,7 @@
     {/if}
 
     {#if modalMessage === 'Algo deu errado'}
-    <div class="fundo">
+    <div class="background">
         <div class="header">
             <div class="closed">
                 <h2>{modalMessage}</h2>
@@ -621,7 +618,7 @@
     {/if}
 
     {#if showAddress === true}
-        <div class="fundo">
+        <div class="background">
             <div class="header">
                 <div class="closed">
                     <h2>
@@ -962,11 +959,11 @@
         width: 140px;
     }
     a:hover {
-        background: black;
+        background: white;
         color: #fff;
         border-radius: 5px;
-        box-shadow: 0 0 2.5px black, 0 0 12.5px black, 0 0 25px black,
-            0 0 1px black;
+        box-shadow: 0 0 2.5px white, 0 0 12.5px white, 0 0 25px white,
+            0 0 1px white;
     }
     a span {
         position: absolute;
@@ -1115,7 +1112,7 @@
         z-index: 9;
     }
 
-    .fundo {
+    .background {
         margin: 0%;
         padding: 0%;
         position: fixed;

@@ -18,7 +18,6 @@ export const selectToKnowIfHasP = async (dados: any, quantidadeOdf: number, func
     const insertAlocaoQuery: any = [];
     const queryStorageFund = `SELECT DISTINCT  
     PCP.NUMERO_ODF,
-    OP.STATUS_RESERVA,
     OP.NUMITE,
     OP.NUMSEQ,
     CAST(LTRIM(OP.NUMOPE) AS INT) AS NUMOPE,
