@@ -1,4 +1,4 @@
-import { sanitize } from "./sanitize";
+import { sanitize } from './sanitize';
 
 export function unravelBarcode(barcode: string) {
     barcode = String(sanitize(barcode))

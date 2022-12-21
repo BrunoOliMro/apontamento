@@ -1,6 +1,5 @@
 <script>
   let imageLoader = "/images/axonLoader.gif";
-  let dadosOdf = [];
   let urlString = `/api/v1/odfData`;
   let horaInicio = "";
   let horaFinal = "";
@@ -13,11 +12,14 @@
   let meioFim = "";
   let anoFim = "";
 
-  var errorMessage = ''
+  let dadosOdf = [];
+
+  var message = "";
+  let resultado = getOdfData();
 
   //Takes an array and modify undefined and null values
-  function modifyObj (array, x){
-    array.forEach(key => {
+  function modifyObj(array, x) {
+    array.forEach((key) => {
       x[key] = x[key] ?? "";
     });
   }
@@ -25,16 +27,17 @@
   async function getOdfData() {
     const res = await fetch(urlString);
     dadosOdf = await res.json();
-    if(dadosOdf){
-      if(dadosOdf.message){
-        if(dadosOdf.message !== '' && dadosOdf.message !== 'Tudo certo por aqui /OdfData.ts/'){
-          errorMessage = dadosOdf.message
+    console.log('footer', dadosOdf);
+    if (dadosOdf) {
+      if (dadosOdf.message) {
+        if (dadosOdf.message !== "" && dadosOdf.message !== "Success") {
+          message = dadosOdf.message;
         }
       }
     }
-    let odf  = dadosOdf.odfSelecionada
+    let odf = dadosOdf.odfSelecionada;
 
-    modifyObj(Object.keys(dadosOdf.odfSelecionada), odf)
+    modifyObj(Object.keys(dadosOdf.odfSelecionada), odf);
 
     dataInicio = odf.DT_INICIO_OP.slice(6, 8);
 
@@ -54,7 +57,6 @@
 
     horaFinal = odf.HORA_FIM.slice(11, 19);
   }
-  let resultado = getOdfData();
 </script>
 
 {#await resultado}
@@ -68,21 +70,23 @@
     <div class="text-area">
       <div class="title">INICIO</div>
       <div class="data-time">
-        {dataInicio} / {meioInicio} / {anoInicio} - {(horaInicio = horaInicio === '' ? "S/I" : horaInicio)}
+        {dataInicio} / {meioInicio} / {anoInicio} - {(horaInicio =
+          horaInicio === "" ? "S/I" : horaInicio)}
       </div>
     </div>
 
     <div class="text-area">
       <div class="title">FINAL</div>
       <div class="data-time">
-        {dataFim} / {meioFim} / {anoFim} - {(horaFinal = horaFinal === '' ? "S/I" : horaFinal)}
+        {dataFim} / {meioFim} / {anoFim} - {(horaFinal =
+          horaFinal === "" ? "S/I" : horaFinal)}
       </div>
     </div>
   </main>
 {/await}
 
-{#if errorMessage !== ''}
-  <h1>{errorMessage}</h1>
+{#if message !== ""}
+  <h1>{message}</h1>
 {/if}
 
 <style>

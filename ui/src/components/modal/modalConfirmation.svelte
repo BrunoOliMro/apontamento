@@ -1,8 +1,8 @@
 <script>
-    export let title = "Maquina Parada";
+    export let title = "Máquina Parada";
     import { createEventDispatcher } from "svelte";
     const dispatch = createEventDispatcher();
-    function confirma() {
+    function callDispatch() {
         dispatch("message", {
             text: "teste basso cabaço",
         });
@@ -17,7 +17,7 @@
             <div class="div-btn">
                 <hr />
                 <!-- svelte-ignore a11y-autofocus -->
-                <button autofocus class="btn" on:click={confirma}>
+                <button autofocus class="btn" on:click={callDispatch}>
                     Fechar
                 </button>
             </div>

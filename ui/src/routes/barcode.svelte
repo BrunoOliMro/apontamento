@@ -2,30 +2,29 @@
   // @ts-nocheck
   import ModalConfirmation from "../../src/components/modal/modalConfirmation.svelte";
   import blockForbiddenChars from "../routes/presanitize";
-  let imageLoader = "/images/axonLoader.gif";
-  let barcodeReturn = "";
-  let barcode = "";
-  let urlS = `/api/v1/odf`;
-  let urlBagde = `/api/v1/badge`;
+  let returnedValueApi = `/api/v1/returnedValue`;
   let supervisorApi = "api/v1/supervisorParada";
-  let badge = "";
+  let imageLoader = "/images/axonLoader.gif";
+  let urlBagde = `/api/v1/badge`;
+  let urlS = `/api/v1/odf`;
   let showmodal = false;
   let showCorr = false;
-  let returnedValueApi = `/api/v1/returnedValue`;
-  let returnValueStorage;
-  let superSuperMaqPar;
-  let supervisor;
-  let quantity;
   let superParada = false;
   let showBadge = true;
   let showBarcode = false;
   let showSupervisor = false;
-  let quantityModal = "";
-  let returnValueAvailable;
-  let paradaMsg = "";
-  let barcodeMsg = "";
   let showBreadcrumb = false;
   let loader = false;
+  let barcodeReturn = "";
+  let barcode = "";
+  let badge = "";
+  let returnValueStorage;
+  let superSuperMaqPar;
+  let supervisor;
+  let quantity;
+  let quantityModal = "";
+  let paradaMsg = "";
+  let barcodeMsg = "";
   let modalMessage = "";
 
   // let badgeMsg = '';
@@ -60,8 +59,8 @@
   const doPostSuper = async () => {
     console.log("linha 37", superSuperMaqPar);
     loader = true;
-    const headers = new Headers();
-    headers.append("Content-Type", "application/json");
+    // const headers = new Headers();
+    // headers.append("Content-Type", "application/json");
     const res = await fetch(supervisorApi, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -98,11 +97,11 @@
       return (modalMessage = "Algo deu errado");
     }
     loader = true;
-    const headers = new Headers();
-    headers.append("Content-Type", "application/json");
+    // const headers = new Headers();
+    // headers.append("Content-Type", "application/json");
     const res = await fetch(urlS, {
       method: "POST",
-      headers: headers,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         barcode,
       }),
@@ -111,11 +110,9 @@
 
     if (res) {
       if (res.message !== "") {
-
-        if(res.message === 'Algo deu errado'){
-          console.log('rinbirbreebr', res.message);
-          modalMessage = 'Algo deu errado'
-          loader = false
+        if (res.message === "Algo deu errado") {
+          modalMessage = "Algo deu errado";
+          loader = false;
         }
 
         if (res.message === "Rip iniciated" || res.message === "Pointed") {
@@ -156,7 +153,7 @@
         }
       }
     } else {
-      modalMessage = res.message
+      modalMessage = res.message;
     }
   };
 
@@ -247,54 +244,6 @@
       showmodal = false;
       modalMessage = res.message;
     }
-
-    // if (res.message === "Not possible to return") {
-    //   modalMessage = "Processo em aberto, Não é possível fazer estorno";
-    //   loader = false;
-    //   showmodal = false;
-    // }
-
-    // if (res.message === "Refugo Inválido") {
-    //   modalMessage = "Não há refugo para estornar";
-    //   showmodal = false;
-    // }
-
-    // if (res.message === "Crachá de supervisor inválido") {
-    //   modalMessage = "Crachá de supervisor inválido";
-    //   showSupervisor = true;
-    //   showmodal = false;
-    //   //location.reload();
-    // }
-    // if (res.message === "Essa não pode ser estornada") {
-    //   modalMessage = "Essa não pode ser estornada";
-    //   showmodal = false;
-    // }
-
-    // if (res.message === "Returned values done") {
-    //   modalMessage = "Estorno realizado";
-    //   showmodal = false;
-    // }
-    // if (res.message === "erro de estorno") {
-    //   modalMessage === "Erro ao fazer estorno";
-    //   showmodal = false;
-    // }
-    // if (res.message === "quantidade esta vazio") {
-    //   modalMessage = "Quantidade esta vazia";
-    //   quantityModal = "quantidade esta vazio";
-    //   showmodal = false;
-    // }
-    // if (res.message === "Código de barras está vazio") {
-    //   modalMessage === "Código de barras está vazio";
-    //   showmodal = false;
-    // }
-    // if (res.message === "ODF não encontrada") {
-    //   modalMessage === "ODF não encontrada";
-    //   showmodal = false;
-    // }
-    // if (res.message === "No limit") {
-    //   modalMessage = "Não há valor a ser devolvido";
-    //   showmodal = false;
-    // }
   }
 
   function closePopCor() {
@@ -498,82 +447,6 @@
     <ModalConfirmation title={modalMessage} on:message={closePopCor} />
   {/if}
 
-  <!-- {#if modalMessage === "Processo em aberto, Não é possível fazer estorno"}
-    <ModalConfirmation title={modalMessage} on:message={closePopCor} />
-  {/if}
-
-  {#if modalMessage === "Não há refugo para estornar"}
-    <ModalConfirmation title={modalMessage} on:message={closePopCor} />
-  {/if}
-
-  {#if modalMessage === "Essa não pode ser estornada"}
-    <ModalConfirmation title={modalMessage} on:message={closePopCor} />
-  {/if}
-
-  {#if modalMessage === "Estorno realizado"}
-    <ModalConfirmation title={modalMessage} on:message={closePopCor} />
-  {/if}
-
-  {#if modalMessage === "Quantidade para reserva inválida"}
-    <ModalConfirmation on:message={closePopCor} title={modalMessage} />
-  {/if}
-
-  {#if modalMessage === "Erro ao fazer estorno"}
-    <ModalConfirmation on:message={closePopCor} title={modalMessage} />
-  {/if}
-
-  {#if modalMessage === "Não há valor a ser devolvido"}
-    <ModalConfirmation on:message={closePopCor} title={modalMessage} />
-  {/if}
-
-  {#if modalMessage === "Supervisor não encontrado"}
-    <ModalConfirmation on:message={closePopCor} title={modalMessage} />
-  {/if}
-
-  {#if modalMessage === "Limite de estorno excedido"}
-    <ModalConfirmation on:message={closePopCor} title={modalMessage} />
-  {/if}
-
-  {#if modalMessage === "Não há limite na ODF"}
-    <ModalConfirmation on:message={closePop} title={modalMessage} />
-  {/if}
-
-  {#if modalMessage === "ODF não encontrada"}
-    <ModalConfirmation on:message={closePop} title={modalMessage} />
-  {/if}
-
-  {#if modalMessage === "Código de barras inválido"}
-    <ModalConfirmation on:message={closePop} title={modalMessage} />
-  {/if}
-
-  {#if modalMessage === "Código de barras está vazio"}
-    <ModalConfirmation on:message={closePop} title={modalMessage} />
-  {/if}
-
-  {#if modalMessage === "Crachá não encontrado"}
-    <ModalConfirmation on:message={closePop} title={modalMessage} />
-  {/if}
-
-  {#if modalMessage === "Crachá vazio"}
-    // bagdeEmpty === true
-    <ModalConfirmation on:message={closePop} title={modalMessage} />
-  {/if}
-
-  {#if modalMessage === "Quantidade está vazia"}
-    <ModalConfirmation on:message={closePop} title={modalMessage} />
-  {/if}
-
-  {#if modalMessage === "Crachá de supervisor inválido"}
-    <ModalConfirmation on:message={closePop} title={modalMessage} />
-  {/if}
-
-  {#if modalMessage === "Crachá inválido"}
-    <ModalConfirmation on:message={closePopCor} title={modalMessage} />
-  {/if}
-
-  {#if modalMessage === "Algo deu errado"}
-    <ModalConfirmation on:message={closePopCor} title={modalMessage} />
-  {/if} -->
 </main>
 
 <style>
@@ -764,8 +637,6 @@
     border-radius: 3px;
     background-color: transparent;
     letter-spacing: 1px;
-    /* border-color: grey;
-    box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4); */
   }
 
   .sideButton:hover {

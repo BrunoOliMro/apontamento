@@ -8,16 +8,16 @@ const select_1 = require("./select");
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
 const update_1 = require("./update");
-const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOperacao, codigoPeca) => {
+const selectToKnowIfHasP = async (data, odfQuantity, employee, operationNumber, partCode) => {
     let response = {
         message: '',
-        quantidade: quantidadeOdf,
+        quantidade: odfQuantity,
         codigoFilho: [],
         condic: '',
         execut: 0,
     };
     let quantityToPoint;
-    let numeroOperNew = String(numeroOperacao.replaceAll(' ', ''));
+    let numeroOperNew = String(operationNumber.replaceAll(' ', ''));
     const updateStorageQuery = [];
     let updateAlocacaoQuery = [];
     const insertAlocaoQuery = [];
@@ -39,12 +39,12 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
            AND PRO.ATIVO ='S'                   
            AND PRO.CONCLUIDO ='T'                
            AND OP.CONDIC ='P'                 
-           AND PCP.NUMERO_ODF = '${dados.numOdf}'
-           AND OP.NUMSEQ = ${numeroOperacao}`;
+           AND PCP.NUMERO_ODF = '${data.numOdf}'
+           AND OP.NUMSEQ = ${operationNumber}`;
     try {
         const selectKnowHasP = await (0, select_1.select)(queryStorageFund);
         if (selectKnowHasP.length <= 0) {
-            return response.message = "Não há item para reservar";
+            return response.message = 'Não há item para reservar';
         }
         else if (selectKnowHasP.length > 0) {
             let execut = Math.max(...selectKnowHasP.map((element) => element.EXECUT));
@@ -54,12 +54,12 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
             if (makeReservation.length <= 0) {
                 return response.message = 'Não há item para reservar';
             }
-            const y = `SELECT QUANTIDADE FROM CST_ALOCACAO WHERE 1 = 1 AND ODF = ${dados.numOdf} ORDER BY CODIGO ASC`;
-            const selectAlocado = await (0, select_1.select)(y);
-            if (selectAlocado.length > 0) {
-                if (selectAlocado[0].QUANTIDADE > 0) {
+            const stringSelectQuantityFromCst = `SELECT QUANTIDADE FROM CST_ALOCACAO WHERE 1 = 1 AND ODF = ${data.numOdf} ORDER BY CODIGO ASC`;
+            const resultQuantityCst = await (0, select_1.select)(stringSelectQuantityFromCst);
+            if (resultQuantityCst.length > 0) {
+                if (resultQuantityCst[0].QUANTIDADE > 0) {
                     console.log('Alocacao encontrada');
-                    response.quantidade = selectAlocado[0].QUANTIDADE;
+                    response.quantidade = resultQuantityCst[0].QUANTIDADE;
                     response.codigoFilho = codigoFilho;
                     response.execut = execut;
                     response.condic = 'P';
@@ -67,14 +67,14 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                     return response;
                 }
             }
-            if (quantidadeOdf <= 0) {
+            if (odfQuantity <= 0) {
                 return response.message = 'Quantidade para reserva inválida';
             }
             else if (numberOfQtd <= 0) {
                 return response.message = 'Quantidade para reserva inválida';
             }
-            else if (quantidadeOdf < numberOfQtd) {
-                quantityToPoint = quantidadeOdf;
+            else if (odfQuantity < numberOfQtd) {
+                quantityToPoint = odfQuantity;
             }
             else {
                 quantityToPoint = numberOfQtd;
@@ -93,14 +93,14 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                 if (updateStorage > 0) {
                     try {
                         codigoFilho.forEach((codigoFilho) => {
-                            updateAlocacaoQuery.push(`UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${quantityToPoint} WHERE 1 = 1 AND ODF = '${dados.numOdf}' AND CODIGO_FILHO = '${codigoFilho}'`);
+                            updateAlocacaoQuery.push(`UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${quantityToPoint} WHERE 1 = 1 AND ODF = '${data.numOdf}' AND CODIGO_FILHO = '${codigoFilho}'`);
                         });
                         const updateAlocacao = Math.min(...await connection.query(updateAlocacaoQuery.join('\n')).then(result => result.rowsAffected));
                         if (updateAlocacao <= 0) {
                             try {
                                 if (makeReservation) {
                                     codigoFilho.forEach((codigoFilho) => {
-                                        insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES (${dados.numOdf}, ${numeroOperNew}, '${codigoPeca}', '${codigoFilho}', ${quantityToPoint}, 'ADDRESS', NULL, GETDATE(), '${funcionario}')`);
+                                        insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES (${data.numOdf}, ${numeroOperNew}, '${partCode}', '${codigoFilho}', ${quantityToPoint}, 'ADDRESS', NULL, GETDATE(), '${employee}')`);
                                     });
                                     const insertAlocacao = Math.min(...await connection.query(insertAlocaoQuery.join('\n')).then(result => result.rowsAffected));
                                     if (insertAlocacao <= 0) {
@@ -108,11 +108,10 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                                     }
                                     else {
                                         try {
-                                            let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${quantityToPoint} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${numeroOperNew}`;
+                                            let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${quantityToPoint} WHERE 1 = 1 AND NUMERO_ODF = ${data.numOdf} AND NUMERO_OPERACAO = ${numeroOperNew}`;
                                             const x = await (0, update_1.update)(y);
-                                            if (x === 'Sucess') {
+                                            if (x === 'Success') {
                                                 response.message = 'Valores Reservados';
-                                                response.url = '/#/ferramenta';
                                                 return response;
                                             }
                                             else {
@@ -128,15 +127,15 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                                 }
                             }
                             catch (error) {
-                                console.log("linha 122 /selectHasP/", error);
+                                console.log('linha 122 /selectHasP/', error);
                                 return response.message = 'Algo deu errado';
                             }
                         }
                         else {
                             try {
-                                let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${quantityToPoint} WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND NUMERO_OPERACAO = ${numeroOperNew}`;
+                                let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${quantityToPoint} WHERE 1 = 1 AND NUMERO_ODF = ${data.numOdf} AND NUMERO_OPERACAO = ${numeroOperNew}`;
                                 const x = await (0, update_1.update)(y);
-                                if (x === 'Sucess') {
+                                if (x === 'Success') {
                                     response.message = 'Valores Reservados';
                                     response.url = '/#/ferramenta';
                                     return response;
@@ -153,7 +152,7 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                         }
                     }
                     catch (error) {
-                        console.log("linha 138 /selectHasp/", error);
+                        console.log('linha 138 /selectHasp/', error);
                         return response.message = 'Algo deu errado';
                     }
                 }
@@ -162,7 +161,7 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
                 }
             }
             catch (error) {
-                console.log("linha 145 /selectHasP/", error);
+                console.log('linha 145 /selectHasP/', error);
                 return response.message = 'Algo deu errado';
             }
         }
@@ -172,7 +171,7 @@ const selectToKnowIfHasP = async (dados, quantidadeOdf, funcionario, numeroOpera
     }
     catch (error) {
         console.log('linha 154 /error: selectHasP/: ', error);
-        return response.message = "Algo deu errado";
+        return response.message = 'Algo deu errado';
     }
 };
 exports.selectToKnowIfHasP = selectToKnowIfHasP;

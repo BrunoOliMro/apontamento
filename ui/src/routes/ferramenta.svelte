@@ -6,12 +6,12 @@
   let urlFer = `/api/v1/ferselecionadas`;
   let tools = [];
   let loader = true;
-  getTools();
   let fer = [];
   let adicionados = 0;
   let arrayComp = [];
   let breadFer;
   let message = "";
+  getTools();
 
   async function ferSelected() {
     loader = true;
@@ -19,7 +19,7 @@
     fer = await res.json();
 
     if (res) {
-      if (fer.message === "ferramentas selecionadas com successo") {
+      if (fer.message === "Success") {
         window.location.href = "/#/codigobarras/apontamento";
         location.reload();
       } else if (fer.message !== "") {
@@ -36,7 +36,8 @@
     if (tools) {
       loader = false;
       if (
-        tools.message == "Pointed Iniciated" ||
+        tools.message === 'Ini Prod.' ||
+        tools.message === "Pointed Iniciated" ||
         tools.message === "Fin Setup" ||
         tools.message === "" ||
         tools.message === "/images/sem_imagem.gif"

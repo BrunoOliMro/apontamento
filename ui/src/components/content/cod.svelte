@@ -1,11 +1,10 @@
 <script>
     // @ts-nocheck
-    import ModalConfirmation from '../modal/modalConfirmation.svelte'
-    let imageLoader = '/images/axonLoader.gif';
+    import ModalConfirmation from "../modal/modalConfirmation.svelte";
+    let imageLoader = "/images/axonLoader.gif";
     let urlString = `/api/v1/odfData`;
+    let message = "";
     let odfData;
-    let message = '';
-    let resultOdf = getOdfData();
     let numeroOdf;
     let codigoPeca;
     let codigoCliente;
@@ -13,6 +12,7 @@
     let qtdeOdf;
     let funcionario;
     let operationNumber;
+    let resultOdf = getOdfData();
 
     async function getOdfData() {
         const res = await fetch(urlString);
@@ -20,126 +20,111 @@
 
         console.log("linha 14 /cod.svelte////////////////////", odfData);
 
-        if(odfData.message === 'Algo deu errado'){
-            message = 'Algo deu errado'
+        if (odfData.message === "Algo deu errado") {
+            message = odfData.message;
         } else {
-            numeroOdf = odfData.odfSelecionada.NUMERO_ODF
-            codigoPeca = odfData.odfSelecionada.CODIGO_PECA
-            codigoCliente = odfData.odfSelecionada.CODIGO_CLIENTE
-            machineCode = odfData.odfSelecionada.CODIGO_MAQUINA
-            qtdeOdf = odfData.odfSelecionada.QTDE_ODF
-            funcionario = odfData.funcionario
-            operationNumber = odfData.odfSelecionada.NUMERO_OPERACAO
+            numeroOdf = odfData.odfSelecionada.NUMERO_ODF;
+            codigoPeca = odfData.odfSelecionada.CODIGO_PECA;
+            codigoCliente = odfData.odfSelecionada.CODIGO_CLIENTE;
+            machineCode = odfData.odfSelecionada.CODIGO_MAQUINA;
+            qtdeOdf = odfData.odfSelecionada.QTDE_ODF;
+            funcionario = odfData.resEmployee;
+            operationNumber = odfData.odfSelecionada.NUMERO_OPERACAO;
         }
 
-
-        if(odfData.message === 'Acesso negado'){
-            message = 'Acesso Negado'
-            window.location.href = '/#/codigobarras';
-            location.reload()
+        if (odfData.message === "Acesso negado") {
+            message = "Acesso Negado";
+            window.location.href = "/#/codigobarras";
+            location.reload();
         }
 
-        if(odfData.message === 'Algo deu errado ao buscar pelo codigo de apontamento'){
-            window.location.href = '/#/codigobarras';
-            message = 'Acesso Negado'
-            location.reload
+        if (
+            odfData.message ===
+            "Algo deu errado ao buscar pelo codigo de apontamento"
+        ) {
+            window.location.href = "/#/codigobarras";
+            message = "Acesso Negado";
+            location.reload;
         }
-
     }
 
     function redirect() {
-        message = '';
-        window.location.href = '/#/rip';
+        message = "";
+        window.location.href = "/#/rip";
         location.reload();
     }
 
-    function redirectWithouPermissions(){
-        message = ''
-        window.location.href = '/#/codigobarras';
-        location.reload()
+    function redirectWithouPermissions() {
+        message = "";
+        window.location.href = "/#/codigobarras";
+        location.reload();
     }
 </script>
 
 {#await resultOdf}
-    <div class='imageLoader'>
-        <div class='loader'>
-            <img src={imageLoader} alt='' />
+    <div class="imageLoader">
+        <div class="loader">
+            <img src={imageLoader} alt="" />
         </div>
     </div>
 {:then itens}
     <main>
-        <div class='areaCodigos'>
-            <div class='odf-area'>
-                <p class='odf'>ODF:</p>
-                <p class='bold'>
-                    {numeroOdf === null ||
-                    !numeroOdf
-                        ? 'S/I'
-                        : numeroOdf}
+        <div class="areaCodigos">
+            <div class="odf-area">
+                <p class="odf">ODF:</p>
+                <p class="bold">
+                    {numeroOdf === null || !numeroOdf ? "S/I" : numeroOdf}
                 </p>
             </div>
 
-            <hr>
+            <hr />
 
-            <div class='odf-area'>
-                <p class='odf'>Cód. Interno:</p>
-                <p class='bold'>
-                    {codigoPeca === null ||
-                    !codigoPeca
-                        ? 'S/I'
-                        : codigoPeca}
+            <div class="odf-area">
+                <p class="odf">Cód. Interno:</p>
+                <p class="bold">
+                    {codigoPeca === null || !codigoPeca ? "S/I" : codigoPeca}
                 </p>
             </div>
 
-            <hr>
-            <div class='odf-area'>
-                <p class='odf'>Cód. do Cliente:</p>
-                <p class='bold'>
-                    {codigoCliente === null ||
-                    !codigoCliente
-                        ? 'S/I'
+            <hr />
+            <div class="odf-area">
+                <p class="odf">Cód. do Cliente:</p>
+                <p class="bold">
+                    {codigoCliente === null || !codigoCliente
+                        ? "S/I"
                         : codigoCliente}
                 </p>
             </div>
-            <hr>
-            <div class='odf-area'>
-                <p class='odf'>OP:</p>
-                <p class='bold'>
-                    {operationNumber === null ||
-                    !operationNumber
-                        ? 'S/I'
+            <hr />
+            <div class="odf-area">
+                <p class="odf">OP:</p>
+                <p class="bold">
+                    {operationNumber === null || !operationNumber
+                        ? "S/I"
                         : operationNumber} -
-                    {machineCode === null ||
-                    !machineCode
-                        ? 'S/I'
-                        : machineCode} -
-                    {qtdeOdf === null ||
-                    !qtdeOdf
-                        ? 'S/I'
-                        : qtdeOdf}
+                    {machineCode === null || !machineCode ? "S/I" : machineCode}
+                    -
+                    {qtdeOdf === null || !qtdeOdf ? "S/I" : qtdeOdf}
                 </p>
             </div>
-            <hr>
-            <div class='odf-area'>
-                <p class='odf'>Operador:</p>
-                <p class='bold'>
-                    {funcionario === null || !funcionario
-                        ? 'S/I'
-                        : funcionario}
+            <hr />
+            <div class="odf-area">
+                <p class="odf">Operador:</p>
+                <p class="bold">
+                    {funcionario === null || !funcionario ? "S/I" : funcionario}
                 </p>
             </div>
         </div>
     </main>
 {/await}
 
-{#if message === 'codeApont 4 prod finalizado'}
+{#if message === "codeApont 4 prod finalizado"}
     <ModalConfirmation on:message={redirect} />
 {/if}
 
-{#if message === 'Acesso negado'}
+{#if message === "Acesso negado"}
     <ModalConfirmation on:message={redirectWithouPermissions} />
 {/if}
-
 
 <style>
     .loader {

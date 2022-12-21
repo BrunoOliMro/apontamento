@@ -8,7 +8,7 @@
 
     const dispatch = createEventDispatcher();
 
-    async function disa(event) {
+    async function callDispatch(event) {
         if(event.key === 'Enter'){
             dispatch('submit', {
                 text: 'Manda pae',
@@ -31,9 +31,9 @@
         <!-- svelte-ignore a11y-positive-tabindex -->
         <!-- svelte-ignore a11y-autofocus -->
         <input
-            on:keypress={disa}
+            on:keypress={callDispatch}
             bind:value={goodFeed}
-            on:input={disa}
+            on:input={callDispatch}
             on:input={blockForbiddenChars}
             tabindex="1"
             autofocus

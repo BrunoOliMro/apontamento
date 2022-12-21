@@ -1,31 +1,29 @@
-import { RequestHandler } from "express";
-import { select } from "../services/select";
-import { codeNote } from "../utils/codeNote";
-import { decrypted } from "../utils/decryptedOdf";
-import { sanitize } from "../utils/sanitize";
+import { RequestHandler } from 'express';
+import { select } from '../services/select';
+import { codeNote } from '../utils/codeNote';
+import { decrypted } from '../utils/decryptedOdf';
+import { sanitize } from '../utils/sanitize';
 
 export const historic: RequestHandler = async (req, res) => {
     try {
-        var odfNumber = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
-        var operationNumber = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
-        var codeMachine = decrypted(String(sanitize(req.cookies["CODIGO_MAQUINA"]))) || null
-        var employee = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
+        var odfNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_ODF'])))) || null
+        var operationNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO'])))) || null
+        var codeMachine = String(decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA'])))) || null
+        var employee = String(decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))) || null
+        var lookForDetail = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO_DETALHADO WHERE 1 = 1 AND ODF = '${odfNumber}' ORDER BY DATAHORA DESC`
+        var lookforGeneric = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO WHERE 1 = 1 AND ODF = '${odfNumber}' ORDER BY OP ASC`
+        var obj = []
     } catch (error) {
         console.log('error on cookies', error);
         return res.json({ message: 'Algo deu errado' })
     }
 
-    const lookForDetail = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO_DETALHADO WHERE 1 = 1 AND ODF = '${odfNumber}' ORDER BY DATAHORA DESC`
-    const lookforGeneric = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO WHERE 1 = 1 AND ODF = '${odfNumber}' ORDER BY OP ASC`
-    let obj = []
     try {
-
-        const x = await codeNote(odfNumber, operationNumber, codeMachine, employee)
-        if (x.message === 'Ini Prod' || x.message === 'Pointed' || x.message === 'Rip iniciated' || x.message === 'Machine has stopped') {
+        const codePointed = await codeNote(odfNumber, operationNumber, codeMachine, employee)
+        if (codePointed.message === 'Ini Prod' || codePointed.message === 'Pointed' || codePointed.message === 'Rip iniciated' || codePointed.message === 'Machine has stopped') {
             const detailHistoric = await select(lookForDetail)
-
             if (!detailHistoric) {
-                return res.json({ message: 'Error ao localizar o histórico' });
+                return res.json({ message: 'Algo deu errado' });
             }
 
             for (const iterator of detailHistoric) {
@@ -44,7 +42,7 @@ export const historic: RequestHandler = async (req, res) => {
             try {
                 const generalHistoric: any = await select(lookforGeneric)
                 if (!generalHistoric) {
-                    return res.json({ message: 'Error ao localizar o histórico' });
+                    return res.json({ message: 'Algo deu errado' });
                 } else {
                     let objRes = {
                         resourceDetail: generalHistoric,
@@ -55,13 +53,13 @@ export const historic: RequestHandler = async (req, res) => {
                 }
             } catch (error) {
                 console.log(error)
-                return res.json({ message: 'Error ao localizar o histórico' });
+                return res.json({ message: 'Algo deu errado' });
             }
         } else {
-            return res.json({ message: x })
+            return res.json({ message: codePointed })
         }
     } catch (error) {
         console.log(error)
-        return res.json({ message: 'Error ao localizar o histórico' });
+        return res.json({ message: 'Algo deu errado' });
     }
 }

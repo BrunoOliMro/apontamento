@@ -1,23 +1,18 @@
 import { select } from "../services/select"
 
-export const codeNote = async (odfNumber: number | null, operationNumber: number | null, codeMachine: string | null, funcionario: string) => {
+export const codeNote = async (odfNumber: number | null, operationNumber: number | null, codeMachine: string | null, employee: string | null) => {
     const lookForHisaponta = `SELECT TOP 1 CODAPONTA, USUARIO  FROM HISAPONTA WHERE 1 = 1 AND ODF = ${odfNumber} AND NUMOPE = ${operationNumber} AND ITEM = '${codeMachine}' ORDER BY DATAHORA DESC`
     let codigoDeApontamento;
     var response = {
-        funcionario: '',
+        employee: '',
         message: '',
     }
     codigoDeApontamento = await select(lookForHisaponta)
 
     if (codigoDeApontamento.length > 0) {
-        if (funcionario !== codigoDeApontamento[0].USUARIO && codigoDeApontamento[0].CODAPONTA === 4) {
-            response.message = 'Usuario diferente'
-            response.funcionario = codigoDeApontamento[0].USUARIO
+        if (employee !== codigoDeApontamento[0].USUARIO && codigoDeApontamento[0].CODAPONTA === 4) {
+            response.employee = codigoDeApontamento[0].USUARIO
         }
-    }
-
-    // console.log('linha 10 /CodigoDeApontamento/', codigoDeApontamento);
-    if (codigoDeApontamento.length > 0) {
         if (codigoDeApontamento[0].hasOwnProperty('CODAPONTA')) {
             if (codigoDeApontamento[0].CODAPONTA === 1) {
                 response.message = 'Pointed Iniciated'

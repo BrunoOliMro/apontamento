@@ -1,37 +1,35 @@
-import { RequestHandler } from "express";
-import sanitize from "sanitize-html";
-import { insertInto } from "../services/insert";
-import { select } from "../services/select";
-import { codeNote } from "../utils/codeNote";
-//import { cookieGenerator } from "../utils/cookieGenerator";
-//import { cookieGenerator } from "../utils/cookieGenerator";
-import { decrypted } from "../utils/decryptedOdf";
-import { encrypted } from "../utils/encryptOdf";
-//import { encrypted } from "../utils/encryptOdf";
+import { RequestHandler } from 'express';
+import { insertInto } from '../services/insert';
+import { select } from '../services/select';
+import { codeNote } from '../utils/codeNote';
+//import { cookieGenerator } from '../utils/cookieGenerator';
+//import { cookieGenerator } from '../utils/cookieGenerator';
+import { decrypted } from '../utils/decryptedOdf';
+import { encrypted } from '../utils/encryptOdf';
+import { sanitize } from '../utils/sanitize';
+//import { encrypted } from '../utils/encryptOdf';
 
 export const rip: RequestHandler = async (req, res) => {
     try {
-        var numpec: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
-        var revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
-        var codeMachine: string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
-        var codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
-        var odfNumber: number = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
-        var operationNumber = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
-        var funcionario: string = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
-        var start: string = decrypted(String(sanitize(req.cookies["startSetupTime"]))) || null
-        var qtdLibMax: number = decrypted(String(sanitize(req.cookies['QTDE_LIB']))) || null
+        var revision = String(decrypted(String(sanitize(req.cookies['REVISAO'])))) || null
+        var machineCode = String(decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA'])))) || null
+        var partCode = String(decrypted(String(sanitize(req.cookies['CODIGO_PECA'])))) || null
+        var odfNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_ODF'])))) || null
+        var operationNumber = String(decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO'])))) || null
+        var funcionario = String(decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))) || null
+        var start = Number(decrypted(String(sanitize(req.cookies['startSetupTime'])))) || null
+        var maxQuantityReleased = Number(decrypted(String(sanitize(req.cookies['QTDE_LIB'])))) || null
         res.cookie('startRip', encrypted(String(new Date().getDate())));
-        var descricaoCodAponta = `Rip Ini`
+        var descricaoCodAponta = `Rip Ini.`
         var boas = null
         var ruins = null
         var faltante = null
         var retrabalhada = null
         var codAponta = [5]
         var motivo = null
-        var startTime: number = Number(new Date(start).getTime()) || 0
+        var startTime = Number(new Date(start!).getTime()) || null
         var response = {
             message: '',
-            url: '',
             object: '',
         }
         var rip = `
@@ -52,9 +50,9 @@ export const rip: RequestHandler = async (req, res) => {
             AND QA_CARACTERISTICA.REVISAO = PROCESSO.REVISAO 
             LEFT JOIN (SELECT OP.MAQUIN, OP.NUMPEC, OP.RECNO_PROCESSO, LTRIM(NUMOPE) AS CST_SEQUENCIA  
             FROM OPERACAO OP (NOLOCK)) AS TBL ON TBL.RECNO_PROCESSO = PROCESSO.R_E_C_N_O_  AND TBL.MAQUIN = QA_CARACTERISTICA.CST_NUMOPE
-            WHERE PROCESSO.NUMPEC = '${numpec}' 
-            AND PROCESSO.REVISAO = '${revisao}' 
-            AND CST_NUMOPE = '${codeMachine}'
+            WHERE PROCESSO.NUMPEC = '${partCode}' 
+            AND PROCESSO.REVISAO = '${revision}' 
+            AND CST_NUMOPE = '${machineCode}'
             AND NUMCAR < '2999'
             ORDER BY NUMPEC ASC`
     } catch (error) {
@@ -72,12 +70,9 @@ export const rip: RequestHandler = async (req, res) => {
 
     // If there are no response from select
     if (ripDetails.length <= 0) {
-        console.log('inseringo codigo 5...');
         response.message = 'Não há rip a mostrar'
-        response.url = '/#/codigobarras'
-        const x = await insertInto(funcionario, odfNumber, codigoPeca, revisao, operationNumber, codeMachine, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime)
-        if (x) {
-            console.log('linha 60 /rip.svelte/');
+        const insertedPointCode = await insertInto(funcionario, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime)
+        if (insertedPointCode) {
             return res.json(response)
         } else {
             return res.json({ message: 'Algo deu errado' })
@@ -86,7 +81,7 @@ export const rip: RequestHandler = async (req, res) => {
 
     // In case there is response from select
     let arrayNumope = ripDetails.map((acc: { CST_NUMOPE: string; }) => {
-        if (acc.CST_NUMOPE === codeMachine) {
+        if (acc.CST_NUMOPE === machineCode) {
             return acc
         } else {
             return acc
@@ -105,17 +100,17 @@ export const rip: RequestHandler = async (req, res) => {
 
     try {
         // Codigo de apontamento on last point
-        const pointedCode = await codeNote(odfNumber, operationNumber, codeMachine, funcionario)
+        const pointedCode = await codeNote(odfNumber, Number(operationNumber), machineCode, funcionario)
         if (pointedCode.message === 'Pointed') {
             try {
-                const inserted = await insertInto(funcionario, odfNumber, codigoPeca, revisao, operationNumber, codeMachine, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime)
+                const inserted = await insertInto(funcionario, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime)
                 if (inserted) {
                     return res.json(numopeFilter)
                 } else {
                     return response.message = 'Algo deu errado'
                 }
             } catch (error) {
-                console.log('linha 98 /eror/', error);
+                console.log('Error on rip.ts', error);
                 return response.message = 'Algo deu errado'
             }
         } else if (pointedCode.message === 'Rip iniciated') {
@@ -124,7 +119,6 @@ export const rip: RequestHandler = async (req, res) => {
             return res.json({ message: pointedCode.message })
         }
     } catch (error) {
-        response.url = '/#/codigobarras/'
         response.message = 'Erro ao iniciar tempo da rip'
         return res.json(response)
     }

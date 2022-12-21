@@ -8,27 +8,27 @@ const decryptedOdf_1 = require("../utils/decryptedOdf");
 const sanitize_1 = require("../utils/sanitize");
 const drawing = async (req, res) => {
     try {
-        var odfNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))) || null;
-        var operationNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO']))) || null;
-        var codeMachine = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
-        var revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
-        var numpec = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_PECA"]))) || null;
-        var desenho = String("_desenho");
-        var employee = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
-        var lookForImages = `SELECT DISTINCT [NUMPEC], [IMAGEM] FROM QA_LAYOUT (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${numpec}' AND REVISAO = ${revisao} AND IMAGEM IS NOT NULL`;
+        var odfNumber = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'])))) || null;
+        var operationNumber = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])))) || null;
+        var machineCode = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA'])))) || null;
+        var revision = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO'])))) || null;
+        var partCode = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])))) || null;
+        var drawingString = String('_desenho');
+        var employee = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])))) || null;
+        var lookForImages = `SELECT DISTINCT [NUMPEC], [IMAGEM] FROM QA_LAYOUT (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${partCode}' AND REVISAO = ${revision} AND IMAGEM IS NOT NULL`;
     }
     catch (error) {
         console.log('Error on Drawing --cookies--', error);
         return res.json({ message: 'Algo deu errado' });
     }
     try {
-        const pointedCode = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine, employee);
+        const pointedCode = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, machineCode, employee);
         if (pointedCode.message === 'Ini Prod' || pointedCode.message === 'Pointed' || pointedCode.message === 'Rip iniciated' || pointedCode.message === 'Machine has stopped') {
             const resource = await (0, select_1.select)(lookForImages);
             const imgResult = [];
             for await (const [i, record] of resource.entries()) {
                 const rec = await record;
-                const path = await pictures_1.pictures.getPicturePath(rec["NUMPEC"], rec["IMAGEM"], desenho, String(i));
+                const path = await pictures_1.pictures.getPicturePath(rec['NUMPEC'], rec['IMAGEM'], drawingString, String(i));
                 imgResult.push(path);
             }
             return res.status(200).json(imgResult);
@@ -39,7 +39,7 @@ const drawing = async (req, res) => {
     }
     catch (error) {
         console.log(error);
-        return res.json({ error: true, message: "Erro no servidor." });
+        return res.json({ error: true, message: 'Algo deu errado' });
     }
 };
 exports.drawing = drawing;

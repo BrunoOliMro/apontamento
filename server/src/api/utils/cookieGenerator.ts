@@ -1,4 +1,4 @@
-import { encrypted } from "./encryptOdf"
+import { encrypted } from './encryptOdf'
 
 export const cookieGenerator = async (res: any, object: any) => {
     // Loop through an object to generate a cookie

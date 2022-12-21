@@ -7,7 +7,7 @@
 
     const dispatch = createEventDispatcher();
 
-    async function disa() {
+    async function callDispatch() {
         dispatch("message", {
             text: "badfeed!",
             badFeed,
@@ -25,7 +25,7 @@
             <!-- svelte-ignore a11y-autofocus -->
             <input
                 bind:value={badFeed}
-                on:input={disa}
+                on:input={callDispatch}
                 on:input={blockForbiddenChars}
                 tabindex="2"
                 type="text"

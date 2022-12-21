@@ -8,6 +8,7 @@
     }
 </script>
 
+<!-- svelte-ignore a11y-positive-tabindex -->
 <button
     tabindex="6"
     type="button"

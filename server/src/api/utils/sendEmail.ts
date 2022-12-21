@@ -1,19 +1,19 @@
-const nodemailer = require("nodemailer");
+const nodemailer = require('nodemailer');
 
-export const createNewOrder: any = async (odfNumber: number, operationNumber: number, machineCode: string, reworkFeed: number, missingFeed: number, qtdBoas: number, badFeed: number, valorTotalApontado: number, qtdOdf: number, clientCode: string, partCode: string) => {
+export const createNewOrder: any = async (odfNumber: number, operationNumber: number, machineCode: string, reworkFeed: number, missingFeed: number, goodFeed: number, badFeed: number, totalPointed: number, qtdOdf: number, clientCode: string, partCode: string) => {
     // const account = {
-    //     user: "cim@martiaco.com.br",
-    //     pass: "Muc86421"
+    //     user: 'cim@martiaco.com.br',
+    //     pass: 'Muc86421'
     // };
 
     const account = {
-        user: "juniorlucaski@gmail.com",
-        pass: "veerpxepbazwaanw"
+        user: 'juniorlucaski@gmail.com',
+        pass: 'veerpxepbazwaanw'
     };
 
 
     let transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
+        host: 'smtp.gmail.com',
         port: 587,
         secure: false, // true for 465, false for other ports
         auth: {
@@ -23,17 +23,17 @@ export const createNewOrder: any = async (odfNumber: number, operationNumber: nu
     });
 
     const message = {
-        from: "juniorlucaski@gmail.com",
-        to: "juniorlucaski@gmail.com",
+        from: 'juniorlucaski@gmail.com',
+        to: 'juniorlucaski@gmail.com',
         subject: `Nova ordem`,
         text: `Criar nova ordem: \n numero_odf = ${odfNumber}
         \n Numero_operacao = ${operationNumber}
         \n Codigo_maquina = ${machineCode}
         \n Retrabalhadas = ${reworkFeed}
         \n Faltantes = ${missingFeed}
-        \n Boas = ${qtdBoas}
+        \n Boas = ${goodFeed}
         \n Ruins = ${badFeed}
-        \n Valor_apontado = ${valorTotalApontado}
+        \n Valor_apontado = ${totalPointed}
         \n Quantidade_total = ${qtdOdf} 
         \n Código_cliente = ${clientCode} 
         \n Codigo_peca = ${partCode} 

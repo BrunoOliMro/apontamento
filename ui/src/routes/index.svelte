@@ -6,7 +6,7 @@
    async function redirect() {
       const res = await fetch(redirectRoute).then((res) => res.json());
       console.log("res /feed/", res);
-      if (res.message === "Tudo limpo") {
+      if (res.message === "Success") {
          window.location.href = "/#/codigobarras/";
       }
    }

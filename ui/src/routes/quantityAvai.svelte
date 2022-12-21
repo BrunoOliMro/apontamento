@@ -1,30 +1,33 @@
 <script>
     import ModalConfirmation from "../components/modal/modalConfirmation.svelte";
     const imageLoader = "/images/axonLoader.gif";
+    const odfDataRouter = `/api/v1/odfData`;
     const title = "Quantidade liberada: ";
     let quantityAvailableProd;
     let dadosOdf = [];
-    let odfDataRouter = `/api/v1/odfData`;
+    let message = "";
     const promiseResult = getOdfData();
-    let errorMessage = "";
 
     async function getOdfData() {
         const res = await fetch(odfDataRouter);
         dadosOdf = await res.json();
-        console.log('dados linha 14 /Quantity.svekte/', dadosOdf);
+        console.log("dados linha 14 /Quantity.svekte/", dadosOdf);
         if (dadosOdf) {
-            if (dadosOdf.odfSelecionada.QTDE_LIB > 0 && dadosOdf.message === 'Tudo certo por aqui /OdfData.ts/') {
+            if (
+                dadosOdf.odfSelecionada.QTDE_LIB > 0 &&
+                dadosOdf.message === "Success"
+            ) {
                 quantityAvailableProd = dadosOdf.odfSelecionada.QTDE_LIB;
             } else if (dadosOdf.message !== "") {
-                errorMessage = dadosOdf.message;
+                message = dadosOdf.message;
             } else {
-                return (errorMessage = "Algo deu errado");
+                return (message = "Algo deu errado");
             }
         }
     }
 
     function close() {
-        errorMessage = "";
+        message = "";
         window.location.href = "/#/codigobarras";
     }
 </script>
@@ -44,8 +47,8 @@
     </div>
 {/await}
 
-{#if errorMessage !== "" && errorMessage !== "Tudo certo por aqui /OdfData.ts/"}
-    <ModalConfirmation on:message={close} title={errorMessage} />
+{#if message !== "" && message !== "Success"}
+    <ModalConfirmation on:message={close} title={message} />
 {/if}
 
 <style>

@@ -8,19 +8,14 @@ export const insertInto = async (funcionario: string, numeroOdf: number, codigoP
     }
 
     try {
-        const data = await connection.query(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES (${numeroOdf}, ${numeroOperacao}, '${codigoPeca}', '${codigoFilho[i]}', ${revisao}, 'ADDRESS', NULL, GETDATE(), '${funcionario}')`)
-            .then((result) => result.rowsAffected)
-        console.log("insert into -");
+        const data = await connection.query(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES (${numeroOdf}, ${numeroOperacao}, '${codigoPeca}', '${codigoFilho[i]}', ${revisao}, 'ADDRESS', NULL, GETDATE(), '${funcionario}')`).then((result) => result.rowsAffected)
         if (data) {
-            return response.message = "insert done"
-        }
-        if (!data) {
-            return response.message = 'Algo deu errado'
+            return response.message = 'insert done'
         } else {
             return response.message = 'Algo deu errado'
         }
-    } catch (err) {
-        console.log("linha 22 /Error on insert into/", err);
+    } catch (error) {
+        console.log('linha 22 /Error on insert into/', error);
         return response.message = 'Algo deu errado'
     }
 }

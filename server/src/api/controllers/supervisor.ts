@@ -1,10 +1,10 @@
-import { RequestHandler } from "express";
-import { select } from "../services/select";
-import { sanitize } from "../utils/sanitize";
+import { RequestHandler } from 'express';
+import { select } from '../services/select';
+import { sanitize } from '../utils/sanitize';
 
 export const supervisor: RequestHandler = async (req, res) => {
-    let supervisor: string = String(sanitize(req.body['supervisor']))
-    let lookForBadge = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`
+    let supervisor = String(sanitize(req.body['supervisor'])) || null
+    let stringLookForBadge = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`
 
     if (
         !supervisor ||
@@ -15,17 +15,17 @@ export const supervisor: RequestHandler = async (req, res) => {
         supervisor === '0000' ||
         supervisor === '00000' ||
         supervisor === '000000') {
-        return res.json({ message: 'Supervisor não encontrado' })
+        return res.json({ message: 'Supervisor not found' })
     }
 
     try {
-        const resource = await select(lookForBadge)
-        if (resource) {
-            return res.json({ message: 'Supervisor encontrado' })
+        const lookForBadge = await select(stringLookForBadge)
+        if (lookForBadge) {
+            return res.json({ message: 'Supervisor found' })
         } else {
-            return res.json({ message: 'Supervisor não encontrado' })
+            return res.json({ message: 'Supervisor not found' })
         }
     } catch (error) {
-        return res.json({ message: 'Erro ao localizar supervisor' })
+        return res.json({ message: 'Algo deu errado' })
     }
 }

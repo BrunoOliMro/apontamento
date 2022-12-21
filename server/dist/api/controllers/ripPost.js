@@ -13,44 +13,56 @@ const codeNote_1 = require("../utils/codeNote");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const sanitize_1 = require("../utils/sanitize");
 const ripPost = async (req, res) => {
-    const setup = (req.body['setup']);
-    let keySan;
-    let valueSan;
-    const odfNumber = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF']))) || null;
-    const operationNumber = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])) || null;
-    const codeMachine = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA'])) || null;
-    const codigoPeca = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])) || null;
-    const funcionario = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])) || null;
-    const revisao = String((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['REVISAO'])));
-    const qtdLibMax = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB']))) || null;
-    const updateQtyQuery = [];
-    const especif = (req.cookies['especif']) || null;
-    const numCar = (req.cookies['numCar']) || null;
-    const lie = (req.cookies['lie']) || null;
-    const lse = (req.cookies['lse']) || null;
-    const instrumento = (req.cookies['instrumento']) || null;
-    const descricao = (req.cookies['descricao']) || null;
-    var objectSanitized = {};
-    const boas = null;
-    const ruins = null;
-    const codAponta = [6];
-    const descricaoCodAponta = 'Rip Fin';
-    const motivo = null;
-    const faltante = null;
-    const retrabalhada = null;
-    const updatePcpProg = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${codeMachine}'`;
-    const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine, funcionario);
-    if (x.message !== 'Rip iniciated') {
-        return res.json({ message: x });
+    try {
+        var setup = (req.body['setup']) || null;
+        var keySan;
+        var valueSan;
+        var odfNumber = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF']))) || null;
+        var operationNumber = String((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO']))) || null;
+        var machineCode = String((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
+        var partCode = String((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA']))) || null;
+        var employee = String((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
+        var revision = String((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
+        var maxQuantityReleased = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB']))) || null;
+        var tempoDecorridoRip = new Date().getTime() - Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['startRip']))) || null;
+        var updateQtyQuery = [];
+        var specification = (req.cookies['especif']) || null;
+        var numCar = (req.cookies['numCar']) || null;
+        var lie = (req.cookies['lie']) || null;
+        var lse = (req.cookies['lse']) || null;
+        var instruments = (req.cookies['instrumento']) || null;
+        var description = [(req.cookies['descricao'])] || null;
+        var objectSanitized = {};
+        var goodFeed = null;
+        var badFeed = null;
+        var pointCode = [6];
+        var pointCodeDescriptionRipEnded = 'Rip Fin.';
+        var motives = null;
+        var missingFeed = null;
+        var reworkFeed = null;
+        var stringUpdatePcp = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`;
     }
-    const tempoDecorridoRip = new Date().getTime() - Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['startRip'])));
+    catch (error) {
+        console.log('Error on Rip Post ', error);
+        return res.json({ message: 'Algo deu errado' });
+    }
+    try {
+        const pointedCode = await (0, codeNote_1.codeNote)(odfNumber, Number(operationNumber), machineCode, employee);
+        if (pointedCode.message !== 'Rip iniciated') {
+            return res.json({ message: pointedCode });
+        }
+    }
+    catch (error) {
+        console.log('Error on Rip Post ', error);
+        return res.json({ message: 'Algo deu errado' });
+    }
     if (Object.keys(setup).length <= 0) {
-        const x = await (0, insert_1.insertInto)(funcionario, odfNumber, codigoPeca, revisao, operationNumber, codeMachine, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorridoRip);
-        if (x) {
-            const y = await (0, update_1.update)(updatePcpProg);
-            if (y === 'Sucess') {
+        const insertedRipCode = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, goodFeed, badFeed, pointCode, pointCodeDescriptionRipEnded, motives, missingFeed, reworkFeed, tempoDecorridoRip);
+        if (insertedRipCode) {
+            const updatePcpProgResult = await (0, update_1.update)(stringUpdatePcp);
+            if (updatePcpProgResult === 'Success') {
                 await (0, clearCookie_1.cookieCleaner)(res);
-                return res.json({ message: "rip enviada, odf finalizada" });
+                return res.json({ message: 'Success' });
             }
             else {
                 return res.json({ message: 'Algo deu errado' });
@@ -68,19 +80,19 @@ const ripPost = async (req, res) => {
         }
     }
     try {
-        const x = await (0, insert_1.insertInto)(funcionario, odfNumber, codigoPeca, revisao, operationNumber, codeMachine, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorridoRip);
-        if (!x) {
+        const insertedRipCode = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, goodFeed, badFeed, pointCode, pointCodeDescriptionRipEnded, motives, missingFeed, reworkFeed, tempoDecorridoRip);
+        if (!insertedRipCode) {
             return res.json({ message: 'Algo deu errado' });
         }
-        else if (x) {
+        else if (insertedRipCode) {
             try {
-                const y = await (0, update_1.update)(updatePcpProg);
-                if (y !== 'Sucess') {
+                const resultUpdatePcpProg = await (0, update_1.update)(stringUpdatePcp);
+                if (resultUpdatePcpProg !== 'Success') {
                     return res.json({ message: 'Algo deu errado' });
                 }
                 else {
                     const resultSplitLines = Object.keys(objectSanitized).reduce((acc, iterator) => {
-                        const [col, lin] = iterator.split("-");
+                        const [col, lin] = iterator.split('-');
                         if (acc[lin] === undefined)
                             acc[lin] = {};
                         acc[lin][col] = objectSanitized[iterator];
@@ -88,27 +100,26 @@ const ripPost = async (req, res) => {
                     }, {});
                     try {
                         Object.entries(resultSplitLines).forEach(([row], i) => {
-                            if (resultSplitLines[row].SETUP === "ok" && lie[i] === null && lse[i] === null) {
+                            if (resultSplitLines[row].SETUP === 'ok' && lie[i] === null && lse[i] === null) {
                                 resultSplitLines[row] = 0;
                             }
                             updateQtyQuery.push(`INSERT INTO CST_RIP_ODF_PRODUCAO (ODF, FUNCIONARIO, ITEM, REVISAO, NUMCAR, DESCRICAO, ESPECIFICACAO, LIE, LSE, SETUP, M2, M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13, INSTRUMENTO, OPE_MAQUIN, OPERACAO) 
-                                VALUES('${odfNumber}', '${funcionario}'  ,'1', '${revisao}' , '${numCar[i]}', '${descricao[i]}',  '${especif[i]}',${lie[i]}, ${lse[i]},${resultSplitLines[row].SETUP ? `'${resultSplitLines[row].SETUP}'` : null},${resultSplitLines[row].M2 ? `${resultSplitLines[row].M2}` : null},${resultSplitLines[row].M3 ? `${resultSplitLines[row].M3}` : null},${resultSplitLines[row].M4 ? `${resultSplitLines[row].M4}` : null},${resultSplitLines[row].M5 ? `${resultSplitLines[row].M5}` : null},${resultSplitLines[row].M6 ? `${resultSplitLines[row].M6}` : null},${resultSplitLines[row].M7 ? `${resultSplitLines[row].M7}` : null},${resultSplitLines[row].M8 ? `${resultSplitLines[row].M8}` : null},${resultSplitLines[row].M9 ? `${resultSplitLines[row].M9}` : null},${resultSplitLines[row].M10 ? `${resultSplitLines[row].M10}` : null},${resultSplitLines[row].M11 ? `${resultSplitLines[row].M11}` : null},${resultSplitLines[row].M12 ? `${resultSplitLines[row].M12}` : null},${resultSplitLines[row].M13 ? `${resultSplitLines[row].M13}` : null},'${instrumento[i]}','${codeMachine}','${operationNumber}')`);
+                                VALUES('${odfNumber}', '${employee}'  ,'1', '${revision}' , '${numCar[i]}', '${description[i]}',  '${specification[i]}',${lie[i]}, ${lse[i]},${resultSplitLines[row].SETUP ? `'${resultSplitLines[row].SETUP}'` : null},${resultSplitLines[row].M2 ? `${resultSplitLines[row].M2}` : null},${resultSplitLines[row].M3 ? `${resultSplitLines[row].M3}` : null},${resultSplitLines[row].M4 ? `${resultSplitLines[row].M4}` : null},${resultSplitLines[row].M5 ? `${resultSplitLines[row].M5}` : null},${resultSplitLines[row].M6 ? `${resultSplitLines[row].M6}` : null},${resultSplitLines[row].M7 ? `${resultSplitLines[row].M7}` : null},${resultSplitLines[row].M8 ? `${resultSplitLines[row].M8}` : null},${resultSplitLines[row].M9 ? `${resultSplitLines[row].M9}` : null},${resultSplitLines[row].M10 ? `${resultSplitLines[row].M10}` : null},${resultSplitLines[row].M11 ? `${resultSplitLines[row].M11}` : null},${resultSplitLines[row].M12 ? `${resultSplitLines[row].M12}` : null},${resultSplitLines[row].M13 ? `${resultSplitLines[row].M13}` : null},'${instruments[i]}','${machineCode}','${operationNumber}')`);
                         });
                         try {
                             const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-                            await connection.query(updateQtyQuery.join("\n"));
+                            await connection.query(updateQtyQuery.join('\n'));
                         }
                         catch (error) {
-                            console.log("error - linha 103 /ripPost.ts/ - ", error);
-                            return res.json({ message: "ocorreu um erro ao enviar os dados da rip" });
+                            console.log('error - linha 103 /ripPost.ts/ - ', error);
+                            return res.json({ message: 'Algo deu errado' });
                         }
-                        console.log('Apagando cookies');
                         await (0, clearCookie_1.cookieCleaner)(res);
-                        return res.json({ message: 'rip enviada, odf finalizada', url: '/#/codigobarras' });
+                        return res.json({ message: 'Success' });
                     }
                     catch (error) {
-                        console.log("linha 110 /ripPost/", error);
-                        return res.json({ message: "ocorreu um erro ao enviar os dados da rip" });
+                        console.log('linha 110 /ripPost/', error);
+                        return res.json({ message: 'Algo deu errado' });
                     }
                 }
             }
@@ -122,7 +133,7 @@ const ripPost = async (req, res) => {
         }
     }
     catch (error) {
-        console.log('linha 122 - ripPost -', error);
+        console.log('linha 126 - ripPost -', error);
         return res.json({ message: 'Algo deu errado' });
     }
 };

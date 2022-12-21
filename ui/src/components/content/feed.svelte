@@ -11,33 +11,33 @@
     let supervisorApi = `/api/v1/supervisor`;
     let supervisorStop = "api/v1/supervisorParada";
     let imageLoader = "/images/axonLoader.gif";
-    let badFeed;
-    let missingFeed;
-    let reworkFeed;
+    let urlString = `/api/v1/odfData`;
     let urlS = `/api/v1/point`;
     let motivoUrl = `/api/v1/badFeedMotives`;
-    let odfData = [];
-    let dados = [];
-    let showConfirm = false;
-    let valorFeed;
-    let value;
-    let supervisor = "";
-    let qtdPossivelProducao;
     let showError = false;
     let showParcialSuper = false;
     let showSuperNotFound = false;
     let showErrorMessage = false;
     let showRoundedApont = false;
-    let resultRefugo = getRefugodata();
-    let getSpace;
+    let showConfirm = false;
     var showAddress = false;
-    let loader = false;
-    let modalMessage = "";
     let stopModal = false;
-    let urlString = `/api/v1/odfData`;
+    let loader = false;
+    let supervisor = "";
+    let modalMessage = "";
+    let dados = [];
+    let odfData = [];
+    let badFeed;
+    let missingFeed;
+    let reworkFeed;
+    let valorFeed;
+    let value;
+    let qtdPossivelProducao;
+    let getSpace;
     let balance;
-    getOdfData();
     let superSuperMaqPar;
+    let resultRefugo = getRefugodata();
+    getOdfData();
 
     const checkPostSuper = async (event) => {
         if (!superSuperMaqPar) {
@@ -64,8 +64,6 @@
     };
     const doPostSuper = async () => {
         loader = true;
-        const headers = new Headers();
-        headers.append("Content-Type", "application/json");
         const res = await fetch(supervisorStop, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -103,7 +101,7 @@
             return (window.location.href = `/#/codigobarras`);
         } else if (
             odfData.message === "codeApont 3 prod Ini." ||
-            odfData.message === "Tudo certo por aqui /OdfData.ts/"
+            odfData.message === "Success"
         ) {
             loader = false;
             qtdPossivelProducao = odfData.odfSelecionada.QTDE_LIB;
@@ -123,11 +121,11 @@
     async function getRefugodata() {
         const res = await fetch(motivoUrl);
         dados = await res.json();
-        console.log('dados GetRefugoData', dados);
-        if(dados){
-            if(dados.message){
-                if(dados.message !== ''){
-                    modalMessage = dados.message
+        console.log("dados GetRefugoData", dados);
+        if (dados) {
+            if (dados.message) {
+                if (dados.message !== "") {
+                    modalMessage = dados.message;
                 }
             }
         }
@@ -138,7 +136,6 @@
             if (supervisor === "000000") {
                 modalMessage = "Crachá inválido";
             }
-            const headers = new Headers();
             const res = await fetch(supervisorApi, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -146,7 +143,7 @@
                     supervisor: supervisor,
                 }),
             }).then((res) => res.json());
-            if (res.message === "Supervisor encontrado") {
+            if (res.message === "Supervisor found") {
                 doPost();
             }
         }
@@ -154,9 +151,7 @@
 
     const doPost = async (e) => {
         loader = true;
-        close()
-
-        const headers = new Headers();
+        close();
         const res = await fetch(urlS, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -186,14 +181,14 @@
                 modalMessage = "Saldo menor que o apontado";
                 balance = res.balance;
                 loader = false;
-            } else if (res.message === "Sucesso ao apontar") {
+            } else if (res.message === "Success") {
                 getSpaceFunc();
                 modalMessage = "";
                 showConfirm = false;
-            } else if(res.message === 'Rip iniciated'){
+            } else if (res.message === "Rip iniciated") {
                 window.location.href = `/#/rip`;
                 location.reload();
-            } else if(res.message === 'Algo deu errado'){
+            } else if (res.message === "Algo deu errado") {
                 modalMessage = res.message;
             } else if (res.message !== "") {
                 modalMessage = res.message;
@@ -207,25 +202,25 @@
     async function getSpaceFunc() {
         const res = await fetch(urlS);
         getSpace = await res.json();
+        console.log('getSpace', getSpace);
         if (getSpace.message === "No address") {
             loader = false;
-            window.location.href = `${getSpace.url}`;
+            window.location.href = `/#/codigobarras`;
         }
 
-        if (getSpace.message === "Address located") {
+        if (getSpace.message === "Success") {
             loader = false;
             showAddress = true;
         }
 
         if (getSpace.message === "Error on locating space") {
             loader = false;
-            window.location.href = `${getSpace.url}`;
+            window.location.href = `/#/rip`;
             location.reload();
         }
     }
 
     async function doCallPost(event) {
-        console.log('linha 222 /event/', event);
         let numberBadFeed = Number(badFeed || 0);
         let numberGoodFeed = Number(valorFeed || 0);
         let numberQtdAllowed = Number(qtdPossivelProducao);
@@ -307,7 +302,7 @@
         modalMessage = "";
     }
 
-    function closeRedirectBarcode(){
+    function closeRedirectBarcode() {
         loader = true;
         modalMessage = "";
         showAddress = false;
@@ -321,23 +316,22 @@
         window.location.href = `/#/rip`;
     }
 
-    function handleSS(event) {
-        console.log("linha 377", event);
+    function callGoodFeed(event) {
         valorFeed = event.detail.goodFeed;
         if (event.key === "Enter") {
             doCallPost();
         }
     }
 
-    function handll(event) {
+    function callBadFeed(event) {
         badFeed = event.detail.badFeed;
     }
 
-    function hand(event) {
+    function callMissingFeed(event) {
         missingFeed = event.detail.missingFeed;
     }
 
-    function handllaa(event) {
+    function callReworkFeed(event) {
         reworkFeed = event.detail.reworkFeed;
     }
 </script>
@@ -357,7 +351,6 @@
         </div>
     </div>
 {:then itens}
-    <!-- {#if dadosOdf.length !== 0} -->
     <div class="content">
         <div class="status-area">
             <div><Status /></div>
@@ -372,18 +365,18 @@
                     <GoodFeed
                         autofocus
                         tabindex="1"
-                        on:keypress={handleSS}
-                        on:message={handleSS}
+                        on:keypress={callGoodFeed}
+                        on:message={callGoodFeed}
                     />
                 </div>
                 <div class="feed-area-div">
-                    <Bad tabindex="2" on:message={handll} />
+                    <Bad tabindex="2" on:message={callBadFeed} />
                 </div>
                 <div class="feed-area-div">
-                    <Missing tabindex="3" on:message={hand} />
+                    <Missing tabindex="3" on:message={callMissingFeed} />
                 </div>
                 <div class="feed-area-div">
-                    <Rework tabindex="4" on:message={handllaa} />
+                    <Rework tabindex="4" on:message={callReworkFeed} />
                 </div>
             </div>
             <div class="buttonApontar">
@@ -604,17 +597,19 @@
         </div>
     {/if}
 
-    {#if modalMessage === 'Algo deu errado'}
-    <div class="background">
-        <div class="header">
-            <div class="closed">
-                <h2>{modalMessage}</h2>
+    {#if modalMessage === "Algo deu errado"}
+        <div class="background">
+            <div class="header">
+                <div class="closed">
+                    <h2>{modalMessage}</h2>
+                </div>
+                <button
+                    tabindex="7"
+                    on:keypress={closeRedirectBarcode}
+                    on:click={closeRedirectBarcode}>fechar</button
+                >
             </div>
-            <button tabindex="7" on:keypress={closeRedirectBarcode} on:click={closeRedirectBarcode}
-                >fechar</button
-            >
         </div>
-    </div>
     {/if}
 
     {#if showAddress === true}

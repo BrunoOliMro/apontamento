@@ -2,33 +2,21 @@
     // @ts-nocheck
     const imageLoader = "/images/axonLoader.gif";
     const back = "images/icons8-go-back-24.png";
-    const Subtitle = "DESENHO";
-    const zoomNumber = 400;
     const urlString = `/api/v1/drawing`;
-    const resultado = getIMAGEM();
-    let rotation = 0;
+    const Subtitle = "DESENHO";
     let imagemBack = [];
+    const zoomNumber = 400;
+    let rotation = 0;
     let imagemMsg = "";
-    let selected;
-    let ar = [];
-    let img = `img`;
-
-    // function selectPic(e) {
-    //     selected = e.target.src.split("000")[1];
-    //     console.log('selected', e.target);
-    // }
+    const resultado = getIMAGEM();
 
     async function getIMAGEM() {
         const res = await fetch(urlString);
         imagemBack = await res.json();
-        if(imagemBack){
-            if(imagemBack.message !== ''){
-                imagemMsg = imagemBack.message
+        if (imagemBack) {
+            if (imagemBack.message !== "") {
+                imagemMsg = imagemBack.message;
             }
-        }
-        console.log('linha 24 /Desenho/', imagemBack);
-        if (imagemBack.message === "dados não conferem conferidos") {
-            imagemMsg = "dados não conferem conferidos";
         }
     }
 
@@ -143,10 +131,6 @@
     {#if imagemMsg !== ""}
         <h3>{imagemMsg}</h3>
     {/if}
-
-    <!-- {#if imagemMsg === "dados não conferem"}
-        <h3>Dados não conferem</h3>
-    {/if} -->
 </main>
 
 <style>

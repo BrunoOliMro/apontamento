@@ -1,16 +1,16 @@
 <script>
   // @ts-nocheck
+  let message = "";
   import TableHistorico from "../components/Tables/TableHistorico.svelte";
+  let back = "/images/icons8-go-back-24.png";
   let imageLoader = "/images/axonLoader.gif";
   let subtitle = "Histórico de Apontamento";
-  let historicData = [];
   let urlString = `/api/v1/historic`;
-  let message = "";
-  let resultado = getHistorico();
-  let back = "/images/icons8-go-back-24.png";
-  let showDetail = true;
-  let showNormalTable = false;
   let messageOnBtn = "Detalhado";
+  let historicData = [];
+  let showNormalTable = false;
+  let showDetail = true;
+  let resultado = getHistorico();
 
   async function getHistorico() {
     const res = await fetch(urlString);
@@ -76,7 +76,7 @@
           </thead>
 
           {#if showDetail === true}
-            <tbody id="corpoTabela">
+            <tbody id="table-body">
               {#each historicData.resourceDetail as column}
                 <TableHistorico dados={column} />
               {/each}
@@ -84,7 +84,7 @@
           {/if}
 
           {#if showNormalTable === true}
-            <tbody id="corpoTabela">
+            <tbody id="table-body">
               {#each historicData.resource as column}
                 <TableHistorico dados={column} />
               {/each}
@@ -184,7 +184,7 @@
     margin-right: 0%;
   }
 
-  /* #corpoTabela {
+  /* #table-body {
     height: 250px;
     background-color: rebeccapurple;
   } */

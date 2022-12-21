@@ -1,35 +1,29 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getPoint = void 0;
-const mssql_1 = __importDefault(require("mssql"));
-const global_config_1 = require("../../global.config");
 const select_1 = require("../services/select");
 const selectAddress_1 = require("../services/selectAddress");
-const update_1 = require("../services/update");
 const codeNote_1 = require("../utils/codeNote");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const sanitize_1 = require("../utils/sanitize");
+const updateQuantityCstStorage_1 = require("../utils/updateQuantityCstStorage");
 const getPoint = async (req, res) => {
     try {
-        var odfNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))) || null;
-        var qtdBoas = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["qtdBoas"]))) || null;
-        var operationNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO']))) || null;
-        var codeMachine = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
-        var codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA']))) || null;
-        var funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
-        var qtdProduzir = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB']))) || null;
-        var revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
-        var updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${qtdBoas}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${codigoPeca}'`;
+        var odfNumber = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'])))) || null;
+        var goodFeed = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['qtdBoas'])))) || null;
+        var operationNumber = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])))) || null;
+        var machineCode = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA'])))) || null;
+        var partCode = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])))) || null;
+        var employee = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])))) || null;
+        var quantityToProduce = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB'])))) || null;
+        var revision = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO'])))) || null;
+        var updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${goodFeed}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${partCode}'`;
         var address;
         var response = {
             message: '',
             address: '',
-            url: '',
         };
-        var hostname = req.get("host");
+        var hostname = req.get('host');
         var { networkInterfaces } = require('os');
         var nets = networkInterfaces();
         var results = {};
@@ -49,163 +43,97 @@ const getPoint = async (req, res) => {
         }
     }
     const ip = String(Object.entries(results)[0][1]);
-    const x = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine, funcionario);
-    if (x.message !== 'Pointed') {
-        return res.json({ message: x });
+    const pointedCode = await (0, codeNote_1.codeNote)(odfNumber, Number(operationNumber), machineCode, employee);
+    if (pointedCode.message !== 'Pointed') {
+        return res.json({ message: pointedCode });
     }
     try {
-        operationNumber = "00" + operationNumber.replaceAll(" ", '0');
-        if (operationNumber === "00999") {
-            let numeroOp = operationNumber.replaceAll('0', '');
-            let y = `SELECT TOP 1 * FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${codigoPeca}' AND NUMOPE = '${numeroOp}' AND REVISAO = ${revisao}`;
-            const x = await (0, select_1.select)(y);
-            console.log("linha 52", x[0].EXECUT);
-            console.log("linha 52", x[0].COMPRIMENTO);
-            console.log("linha 52", x[0].LARGURA);
-            let pesoUnidade = x[0].EXECUT;
-            let comprimento = x[0].COMPRIMENTO;
-            let largura = x[0].LARGURA;
-            let areaCubicaMax = 36000000;
-            let areaMax = 800;
-            let pesoMax = 25;
-            let peso = pesoUnidade * qtdProduzir;
-            console.log("linha 60 /getPoint.ts/", peso);
-            if (peso < pesoMax) {
-                console.log("Passou no primeiro teste ...");
-            }
-            let area = comprimento + largura;
-            if (area <= areaMax) {
-                console.log("passou no segundo teste ...");
-            }
-            let areaCubica = comprimento * largura * qtdProduzir;
-            if (areaCubica < areaCubicaMax) {
-                console.log("passou no terceiro teste ...");
-            }
-            if (codeMachine !== 'EX002') {
-                let condicional = `= '${codigoPeca}'`;
-                let condicional2 = `IS NULL`;
-                let fisrtSelectAddress = await (0, selectAddress_1.selectAddress)(condicional, 5);
-                let secondSelectAddress;
-                if (fisrtSelectAddress === 'odf nao encontrada') {
-                    fisrtSelectAddress = [];
-                    secondSelectAddress = await (0, selectAddress_1.selectAddress)(condicional2, 5);
-                }
-                if (!secondSelectAddress || secondSelectAddress === 'odf nao encontrada') {
-                    secondSelectAddress = [];
-                }
-                let fisrtReqAddress = fisrtSelectAddress.map((callback) => callback.QUANTIDADE);
-                let secondReqAddress = secondSelectAddress.map((callback) => callback.QUANTIDADE);
-                let smallerNumber = Math.min(...fisrtReqAddress);
-                let small = Math.min(...secondReqAddress);
-                let indiceDoArrayDeOdfs = fisrtReqAddress.findIndex((callback) => callback === smallerNumber);
-                let indice = secondReqAddress.findIndex((callback) => callback === small);
-                if (secondSelectAddress.length <= 0) {
-                    response.message = 'Address located';
-                    response.address = fisrtSelectAddress[indiceDoArrayDeOdfs].ENDERECO;
-                }
-                if (fisrtSelectAddress.length <= 0) {
-                    response.message = 'Address located';
-                    response.address = secondSelectAddress[indice].ENDERECO;
-                }
-            }
-            if (codeMachine === 'EX002') {
-                console.log("linha 119 /getPoint.ts/", codigoPeca);
-                let condicional = `= '${codigoPeca}'`;
-                let condicional2 = `IS NULL`;
-                let fisrtSelectAddress = await (0, selectAddress_1.selectAddress)(condicional, 7);
-                let secondSelectAddress;
-                if (fisrtSelectAddress === 'odf nao encontrada') {
-                    console.log("linha 124 /getPoint.ts/");
-                    fisrtSelectAddress = [];
-                    secondSelectAddress = await (0, selectAddress_1.selectAddress)(condicional2, 7);
-                    console.log("linha 129 ", secondSelectAddress);
-                }
-                if (!secondSelectAddress) {
-                    secondSelectAddress = [];
-                }
-                if (typeof (secondSelectAddress) === 'string') {
-                    secondSelectAddress = [];
-                }
-                if (typeof (secondSelectAddress) === 'string') {
-                    fisrtSelectAddress = [];
-                }
-                const fisrtAdd = fisrtSelectAddress.map((callback) => callback.QUANTIDADE);
-                const secondAdd = secondSelectAddress.map((callback) => callback.QUANTIDADE);
-                let smallerNumber = Math.min(...fisrtAdd);
-                let small = Math.min(...secondAdd);
-                let indiceDoArrayDeOdfs = fisrtAdd.findIndex((callback) => callback === smallerNumber);
-                let indice = secondAdd.findIndex((callback) => callback === small);
-                if (secondSelectAddress.length <= 0) {
-                    response.message = 'Address located';
-                    response.address = fisrtSelectAddress[indiceDoArrayDeOdfs].ENDERECO;
-                }
-                if (fisrtSelectAddress.length <= 0) {
-                    response.message = 'Address located';
-                    response.address = secondSelectAddress[indice].ENDERECO;
-                }
-            }
-            try {
-                const lookForHisReal = `SELECT TOP 1  * FROM HISREAL  WHERE 1 = 1 AND CODIGO = '${codigoPeca}' ORDER BY DATA DESC`;
-                const resultQuery = await (0, select_1.select)(lookForHisReal);
-                if (!resultQuery) {
-                    return res.json({ message: 'Algo deu errado' });
-                }
-                const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-                try {
-                    const insertHisReal = await connection.query(`
-                INSERT INTO HISREAL
-                    (CODIGO, DOCUMEN, DTRECEB, QTRECEB, VALPAGO, FORMA, SALDO, DATA, LOTE, USUARIO, ODF, NOTA, LOCAL_ORIGEM, LOCAL_DESTINO, CUSTO_MEDIO, CUSTO_TOTAL, CUSTO_UNITARIO, CATEGORIA, DESCRICAO, EMPRESA_RECNO, ESTORNADO_APT_PRODUCAO, CST_ENDERECO, VERSAOSISTEMA, CST_SISTEMA,CST_HOSTNAME,CST_IP) 
-                SELECT 
-                    CODIGO, '${odfNumber}/${codigoPeca}', GETDATE(), ${qtdBoas}, 0 , 'E', ${resultQuery[0].SALDO} + ${qtdBoas}, GETDATE(), '0', '${funcionario}', '${odfNumber}', '0', '0', '0', 0, 0, 0, '0', 'DESCRI', 1, 'E', '${address}', 1.00, 'APONTAMENTO', '${hostname}', '${ip}'
-                FROM ESTOQUE(NOLOCK)
-                WHERE 1 = 1 
-                AND CODIGO = '${codigoPeca}' 
-                GROUP BY CODIGO`).then(result => result.rowsAffected);
-                    console.log("LINHA 149", insertHisReal);
-                }
-                catch (error) {
-                    console.log('linha 151', error);
-                    return res.json({ message: 'erro inserir em hisreal' });
-                }
-                try {
-                    let updateStorage;
-                    if (operationNumber === "00999") {
-                        updateStorage = await (0, update_1.update)(updateQuery);
-                    }
-                    console.log("linha 197 /getPoint.ts/", updateStorage);
-                    if (updateStorage === 'Update sucess' && address === 'No address') {
-                        console.log("linha 201");
-                        return res.json({ message: 'No address' });
-                    }
-                    if (!response.address) {
-                        console.log("linha 210 /getPoint.ts/ ");
-                        response.message = 'No address';
-                        return res.json({ response });
-                    }
-                    else {
-                        console.log("linha 214 /getPoint.ts/ ");
-                        return res.json(response);
+        var comprimento = 1;
+        var largura = 1;
+        var peso = 1;
+        if ('00' + operationNumber.replaceAll(' ', '') === '00999') {
+            const partCodeCase = `= '${partCode}'`;
+            const isNullCase = `IS NULL`;
+            var add;
+            await callAddress();
+            async function callAddress() {
+                console.log('comprimento linha 70', comprimento);
+                console.log('largura linha 70', largura);
+                console.log('peso linha 70', peso);
+                if (machineCode !== 'EX002') {
+                    add = await (0, selectAddress_1.selectAddress)(partCodeCase, 5, comprimento, largura, peso);
+                    if (add === 'Not found') {
+                        add = await (0, selectAddress_1.selectAddress)(isNullCase, 5, comprimento, largura, peso);
                     }
                 }
-                catch (error) {
-                    console.log(error);
-                    return res.json({ message: 'Error on updating storage' });
+                else if (machineCode === 'EX002') {
+                    add = await (0, selectAddress_1.selectAddress)(partCodeCase, 7, comprimento, largura, peso);
+                    if (add === 'NotFound') {
+                        add = await (0, selectAddress_1.selectAddress)(isNullCase, 7, comprimento, largura, peso);
+                    }
+                }
+                const stringSelectOperacao = `SELECT TOP 1 NUMPEC,  QUANT, REVISAO, COMPRIMENTO, LARGURA, AREA EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${partCode}' AND REVISAO = ${revision} AND NUMITE IS NOT NULL`;
+                const stringSelectCad = `SELECT * FROM  CST_CAD_ENDERECOS CE WHERE 1 = 1  AND ENDERECO = '${add[0].ENDERECO}'`;
+                const composicaoDeEstoque = await (0, select_1.select)(stringSelectCad);
+                const pecas = await (0, select_1.select)(stringSelectOperacao);
+                if (composicaoDeEstoque.length <= 0 || pecas.length <= 0) {
+                    console.log('ta aquiiiiiiiiiiiiii');
+                    await (0, updateQuantityCstStorage_1.cstStorageUp)(quantityToProduce, add[0].ENDERECO, partCode, odfNumber, goodFeed, employee, hostname, ip);
+                    return res.json({ message: 'Success', address: '5A01A01-11' });
+                }
+                const alturaDoEndereco = composicaoDeEstoque[0].ALTURA;
+                const maxTotalWeightParts = pecas[0].EXECUT * goodFeed;
+                const maxWeightStorage = composicaoDeEstoque[0].PESO;
+                const comprimentoPeca = pecas[0].COMPRIMENTO;
+                const comprimentoDoEndereco = composicaoDeEstoque[0].COMPRIMENTO;
+                const larguraPeca = pecas[0].LARGURA;
+                const larguraDoEndereco = composicaoDeEstoque[0].LARGURA;
+                const areaDaPeca = comprimentoPeca * larguraPeca;
+                const maxArea = composicaoDeEstoque[0].COMPRIMENTO * composicaoDeEstoque[0].LARGURA;
+                const dimesaoCubicaEstoque = comprimentoDoEndereco * larguraDoEndereco * alturaDoEndereco;
+                const dimensaoCubicaPeca = comprimentoPeca * larguraPeca * quantityToProduce;
+                const dimensaoLinearEstoque = comprimentoDoEndereco + composicaoDeEstoque[0].LARGURA;
+                const dimensaoLinearPeca = comprimentoPeca + larguraPeca;
+                const array = [];
+                if (maxTotalWeightParts > maxWeightStorage) {
+                    peso = maxWeightStorage;
+                    array.push(false);
+                }
+                if (comprimentoPeca > comprimentoDoEndereco) {
+                    comprimento = comprimentoDoEndereco;
+                    array.push(false);
+                }
+                if (larguraPeca > larguraDoEndereco) {
+                    largura = larguraDoEndereco;
+                    array.push(false);
+                }
+                if (dimensaoLinearPeca > dimensaoLinearEstoque) {
+                    array.push(false);
+                }
+                if (dimensaoCubicaPeca > dimesaoCubicaEstoque) {
+                    array.push(false);
+                }
+                if (maxArea < areaDaPeca) {
+                    array.push(false);
+                }
+                let casesFiltered = array.filter((element) => element === false);
+                if (casesFiltered[0] === false) {
+                    callAddress();
                 }
             }
-            catch (error) {
-                console.log(error);
-                return res.json({ message: 'Error on locating space' });
+            await (0, updateQuantityCstStorage_1.cstStorageUp)(quantityToProduce, response.address, partCode, odfNumber, goodFeed, employee, hostname, ip);
+            if (add[0].ENDERECO) {
+                return res.json({ message: 'Success', address: add[0].ENDERECO });
             }
         }
         else {
-            response.url = '/#/rip';
             response.message = 'No address';
             return res.json(response);
         }
     }
     catch (error) {
-        console.log('linha 185', error);
-        return res.json({ message: 'Error on locating space' });
+        console.log('linha 160', error);
+        return res.json({ message: 'Algo deu errado' });
     }
 };
 exports.getPoint = getPoint;

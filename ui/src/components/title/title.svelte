@@ -1,20 +1,21 @@
 <script>
+    // @ts-nocheck
     import QuantityAvai from "../../routes/quantityAvai.svelte";
     import HistoricButton from "../buttons/historicButton.svelte";
     import StopButton from "../buttons/stopButton.svelte";
     import ModalConfirmation from "../modal/modalConfirmation.svelte";
+    let modalTitle = "Máquina parada com sucesso";
+    let imageLoader = "/images/axonLoader.gif";
     let apiMotivoParada = "api/v1/stopMotives";
     let title = "APONTAMENTO";
     let postParada = `api/v1/stopPost`;
-    let stopModal = false;
     let showMaqPar = false;
-    let value;
-    let dados = [];
-    let result = callMotivo();
-    let modalTitle = "Máquina parada com sucesso";
-    let modalmessage = "";
+    let stopModal = false;
     let loader = false;
-    let imageLoader = "/images/axonLoader.gif";
+    let dados = [];
+    let modalmessage = "";
+    let value;
+    let result = callMotivo();
 
     function showStop() {
         if (stopModal === false) {
@@ -35,7 +36,6 @@
 
     const confirm = async () => {
         loader = true;
-        const headers = new Headers();
         const res = await fetch(postParada, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -43,7 +43,6 @@
                 value: value,
             }),
         }).then((res) => res.json());
-        console.log("res /title.svelte linha 43/", res);
         loader = false;
         if (res) {
             if (res.message === "Máquina já parada") {
@@ -63,7 +62,7 @@
         dados = await res.json();
         if (dados) {
             if (dados.message) {
-                if (dados.message !== "" && dados.message !== 'Tudo certo por aqui /OdfData.ts/' ) {
+                if (dados.message !== "" && dados.message !== "Success") {
                     modalmessage = dados.message;
                 }
             }
@@ -127,7 +126,7 @@
                     <!-- svelte-ignore a11y-positive-tabindex -->
                     <!-- svelte-ignore a11y-autofocus -->
                     <select autofocus tabindex="10" bind:value>
-                        {#each dados as item}
+                        {#each dados.motives as item}
                             <option class="optionsBar">{item}</option>
                         {/each}
                     </select>

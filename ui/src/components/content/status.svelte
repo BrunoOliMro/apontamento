@@ -1,23 +1,22 @@
 <script>
     // @ts-nocheck
-    // import Sanitize from '../../routes/sanitize.JS'
     import ModalConfirmation from "../modal/modalConfirmation.svelte";
     import blockForbiddenChars from "../../routes/presanitize";
     let searchIcon = `/images/search.png`;
     let imageLoader = `/images/axonLoader.gif`;
-    let tempoDecorrido = 0;
-    let prodTime = [];
     let supervisorApi = `/api/v1/supervisor`;
     let urlString = `/api/v1/status`;
     let url = `/api/v1/imagem`;
-    let tempoMax = null;
-    let imagem = [];
     let shwowSuper = false;
-    let showRed = false;
     let showGreen = true;
+    let showRed = false;
+    let tempoMax = null;
     let showBlue = false;
+    let imagem = [];
+    let prodTime = [];
     let supervisor = "";
     let modalMessage = "";
+    let tempoDecorrido = 0;
 
     getTempo();
     getImagem();
@@ -25,13 +24,12 @@
     async function getTempo() {
         const res = await fetch(urlString);
         prodTime = await res.json();
-        console.log("LINHA 28 /prodTime/", prodTime);
         if (prodTime.message === "Algo deu errrado") {
             modalMessage = "Algo deu errado";
         }
         tempoMax = prodTime;
 
-        if (!tempoMax || tempoMax.message === "time for execution not found") {
+        if (!tempoMax || tempoMax.message === "Not found") {
             tempoMax = 600000;
         }
     }

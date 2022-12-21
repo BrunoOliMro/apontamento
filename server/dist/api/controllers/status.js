@@ -7,34 +7,36 @@ const decryptedOdf_1 = require("../utils/decryptedOdf");
 const sanitize_1 = require("../utils/sanitize");
 const status = async (req, res) => {
     try {
-        var numpec = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA']))) || null;
+        var partCode = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA']))) || null;
         var codeMachine = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
-        var operationNumber = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO']));
-        var odfNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))) || null;
-        var revisao = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['REVISAO'])) || null;
+        var operationNumber = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])) || null;
+        var odfNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF']))) || null;
+        var revision = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['REVISAO'])) || null;
         var employee = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
-        var lookForTimer = `SELECT TOP 1 EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${numpec}' AND NUMOPE = ${operationNumber} AND MAQUIN = '${codeMachine}' AND REVISAO = ${revisao} ORDER BY REVISAO DESC`;
+        var quantityReleased = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(String(req.cookies['QTDE_LIB'])))) || null;
+        var startSetupTime = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['startSetupTime']))) || null;
+        var stringLookForTimer = `SELECT TOP 1 EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${partCode}' AND NUMOPE = ${operationNumber} AND MAQUIN = '${codeMachine}' AND REVISAO = ${revision} ORDER BY REVISAO DESC`;
         var response = {
             message: '',
             temporestante: 0,
         };
     }
     catch (error) {
-        console.log('Error on status --cookies--', error);
+        console.log('Error on Status.ts --cookies--', error);
         return res.json({ message: 'Algo deu errado' });
     }
     try {
         const pointedCode = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine, employee);
         if (pointedCode.message === 'Ini Prod' || pointedCode.message === 'Pointed' || pointedCode.message === 'Rip iniciated' || pointedCode.message === 'Machine has stopped') {
-            const resource = await (0, select_1.select)(lookForTimer);
-            let tempoRestante = Number(resource[0].EXECUT * Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(String(req.cookies["QTDE_LIB"])))) * 1000 - (Number(new Date().getTime() - (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['startSetupTime'])))))) || 0;
-            if (tempoRestante > 0) {
-                response.temporestante = tempoRestante;
+            const lookForTimer = await (0, select_1.select)(stringLookForTimer);
+            let timeLeft = Number(lookForTimer[0].EXECUT * quantityReleased * 1000 - (Number(new Date().getTime() - startSetupTime))) || 0;
+            if (timeLeft > 0) {
+                response.temporestante = timeLeft;
                 return res.status(200).json(response);
             }
-            else if (tempoRestante <= 0) {
-                tempoRestante = 0;
-                return res.json({ message: 'time for execution not found' });
+            else if (timeLeft <= 0) {
+                timeLeft = 0;
+                return res.json({ message: 'Not found' });
             }
             else {
                 return res.json({ message: 'Algo deu errado' });
@@ -45,8 +47,8 @@ const status = async (req, res) => {
         }
     }
     catch (error) {
-        console.log('linha 29 - Status.ts -', error);
-        return res.json({ error: true, message: "Erro no servidor." });
+        console.log('linha 42 - Status.ts -', error);
+        return res.json({ error: true, message: 'Error' });
     }
 };
 exports.status = status;

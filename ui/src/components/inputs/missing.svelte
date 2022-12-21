@@ -7,7 +7,7 @@
 
     const dispatch = createEventDispatcher();
 
-    async function disa(event) {
+    async function callDispatch() {
         dispatch("message", {
             text: "missingFeed!",
             missingFeed,
@@ -25,7 +25,7 @@
         <input
             bind:value={missingFeed}
             on:input={blockForbiddenChars}
-            on:input={disa}
+            on:input={callDispatch}
             tabindex="3"
             type="text"
         />
