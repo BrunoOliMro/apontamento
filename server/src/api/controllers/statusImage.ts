@@ -10,7 +10,7 @@ export const statusImage: RequestHandler = async (req, res) => {
         var partCode = String(decrypted(String(sanitize(req.cookies['CODIGO_PECA'])))) || null
         var revision = String(decrypted(String(sanitize(req.cookies['REVISAO'])))) || null
         var machineCode = String(decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA'])))) || null
-        var operationNumber = Number(decrypted(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
+        var operationNumber = Number(decrypted(sanitize(req.cookies['NUMERO_OPERACAO']))!.replaceAll(' ', '')) || null
         var odfNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_ODF'])))) || null
         var employee = String(decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))) || null
         var stringSelectProcess = `SELECT TOP 1 [NUMPEC], [IMAGEM] FROM PROCESSO (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${partCode}' AND REVISAO = '${revision}' AND IMAGEM IS NOT NULL`

@@ -24,7 +24,6 @@ const ripPost = async (req, res) => {
         var employee = String((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
         var revision = String((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
         var maxQuantityReleased = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB']))) || null;
-        var tempoDecorridoRip = new Date().getTime() - Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['startRip']))) || null;
         var updateQtyQuery = [];
         var specification = (req.cookies['especif']) || null;
         var numCar = (req.cookies['numCar']) || null;
@@ -48,6 +47,8 @@ const ripPost = async (req, res) => {
     }
     try {
         const pointedCode = await (0, codeNote_1.codeNote)(odfNumber, Number(operationNumber), machineCode, employee);
+        var oldTimer = new Date(pointedCode.time).getTime();
+        var tempoDecorridoRip = Number(new Date().getTime() - oldTimer) || null;
         if (pointedCode.message !== 'Rip iniciated') {
             return res.json({ message: pointedCode });
         }
@@ -57,7 +58,7 @@ const ripPost = async (req, res) => {
         return res.json({ message: 'Algo deu errado' });
     }
     if (Object.keys(setup).length <= 0) {
-        const insertedRipCode = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, goodFeed, badFeed, pointCode, pointCodeDescriptionRipEnded, motives, missingFeed, reworkFeed, tempoDecorridoRip);
+        const insertedRipCode = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, operationNumber.replaceAll(' ', ''), machineCode, maxQuantityReleased, goodFeed, badFeed, pointCode, pointCodeDescriptionRipEnded, motives, missingFeed, reworkFeed, tempoDecorridoRip);
         if (insertedRipCode) {
             const updatePcpProgResult = await (0, update_1.update)(stringUpdatePcp);
             if (updatePcpProgResult === 'Success') {
@@ -80,7 +81,7 @@ const ripPost = async (req, res) => {
         }
     }
     try {
-        const insertedRipCode = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, goodFeed, badFeed, pointCode, pointCodeDescriptionRipEnded, motives, missingFeed, reworkFeed, tempoDecorridoRip);
+        const insertedRipCode = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, operationNumber.replaceAll(' ', ''), machineCode, maxQuantityReleased, goodFeed, badFeed, pointCode, pointCodeDescriptionRipEnded, motives, missingFeed, reworkFeed, tempoDecorridoRip);
         if (!insertedRipCode) {
             return res.json({ message: 'Algo deu errado' });
         }
@@ -104,7 +105,7 @@ const ripPost = async (req, res) => {
                                 resultSplitLines[row] = 0;
                             }
                             updateQtyQuery.push(`INSERT INTO CST_RIP_ODF_PRODUCAO (ODF, FUNCIONARIO, ITEM, REVISAO, NUMCAR, DESCRICAO, ESPECIFICACAO, LIE, LSE, SETUP, M2, M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13, INSTRUMENTO, OPE_MAQUIN, OPERACAO) 
-                                VALUES('${odfNumber}', '${employee}'  ,'1', '${revision}' , '${numCar[i]}', '${description[i]}',  '${specification[i]}',${lie[i]}, ${lse[i]},${resultSplitLines[row].SETUP ? `'${resultSplitLines[row].SETUP}'` : null},${resultSplitLines[row].M2 ? `${resultSplitLines[row].M2}` : null},${resultSplitLines[row].M3 ? `${resultSplitLines[row].M3}` : null},${resultSplitLines[row].M4 ? `${resultSplitLines[row].M4}` : null},${resultSplitLines[row].M5 ? `${resultSplitLines[row].M5}` : null},${resultSplitLines[row].M6 ? `${resultSplitLines[row].M6}` : null},${resultSplitLines[row].M7 ? `${resultSplitLines[row].M7}` : null},${resultSplitLines[row].M8 ? `${resultSplitLines[row].M8}` : null},${resultSplitLines[row].M9 ? `${resultSplitLines[row].M9}` : null},${resultSplitLines[row].M10 ? `${resultSplitLines[row].M10}` : null},${resultSplitLines[row].M11 ? `${resultSplitLines[row].M11}` : null},${resultSplitLines[row].M12 ? `${resultSplitLines[row].M12}` : null},${resultSplitLines[row].M13 ? `${resultSplitLines[row].M13}` : null},'${instruments[i]}','${machineCode}','${operationNumber}')`);
+                                VALUES('${odfNumber}', '${employee}'  ,'1', '${revision}' , '${numCar[i]}', '${description[i]}',  '${specification[i]}',${lie[i]}, ${lse[i]},${resultSplitLines[row].SETUP ? `'${resultSplitLines[row].SETUP}'` : null},${resultSplitLines[row].M2 ? `${resultSplitLines[row].M2}` : null},${resultSplitLines[row].M3 ? `${resultSplitLines[row].M3}` : null},${resultSplitLines[row].M4 ? `${resultSplitLines[row].M4}` : null},${resultSplitLines[row].M5 ? `${resultSplitLines[row].M5}` : null},${resultSplitLines[row].M6 ? `${resultSplitLines[row].M6}` : null},${resultSplitLines[row].M7 ? `${resultSplitLines[row].M7}` : null},${resultSplitLines[row].M8 ? `${resultSplitLines[row].M8}` : null},${resultSplitLines[row].M9 ? `${resultSplitLines[row].M9}` : null},${resultSplitLines[row].M10 ? `${resultSplitLines[row].M10}` : null},${resultSplitLines[row].M11 ? `${resultSplitLines[row].M11}` : null},${resultSplitLines[row].M12 ? `${resultSplitLines[row].M12}` : null},${resultSplitLines[row].M13 ? `${resultSplitLines[row].M13}` : null},'${instruments[i]}','${machineCode}','${operationNumber.replaceAll(' ', '')}')`);
                         });
                         try {
                             const connection = await mssql_1.default.connect(global_config_1.sqlConfig);

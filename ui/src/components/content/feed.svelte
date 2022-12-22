@@ -205,7 +205,7 @@
         console.log('getSpace', getSpace);
         if (getSpace.message === "No address") {
             loader = false;
-            window.location.href = `/#/codigobarras`;
+            window.location.href = `/#/rip`;
         }
 
         if (getSpace.message === "Success") {
@@ -213,10 +213,10 @@
             showAddress = true;
         }
 
-        if (getSpace.message === "Error on locating space") {
+        if (getSpace.message === "Algo deu errado") {
             loader = false;
-            window.location.href = `/#/rip`;
-            location.reload();
+            getSpace.address = '5A01A01-11'
+            showAddress = true;
         }
     }
 

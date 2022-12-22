@@ -13,9 +13,8 @@ const rip = async (req, res) => {
         var machineCode = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA'])))) || null;
         var partCode = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])))) || null;
         var odfNumber = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'])))) || null;
-        var operationNumber = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])))) || null;
+        var operationNumber = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])))).replaceAll(' ', '') || null;
         var funcionario = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])))) || null;
-        var start = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['startSetupTime'])))) || null;
         var maxQuantityReleased = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB'])))) || null;
         res.cookie('startRip', (0, encryptOdf_1.encrypted)(String(new Date().getDate())));
         var descricaoCodAponta = `Rip Ini.`;
@@ -25,7 +24,6 @@ const rip = async (req, res) => {
         var retrabalhada = null;
         var codAponta = [5];
         var motivo = null;
-        var startTime = Number(new Date(start).getTime()) || null;
         var response = {
             message: '',
             object: '',
@@ -53,6 +51,9 @@ const rip = async (req, res) => {
             AND CST_NUMOPE = '${machineCode}'
             AND NUMCAR < '2999'
             ORDER BY NUMPEC ASC`;
+        var pointedCode = await (0, codeNote_1.codeNote)(odfNumber, Number(operationNumber), machineCode, funcionario);
+        var oldTimer = new Date(pointedCode.time).getTime();
+        var ripStartTime = Number(new Date().getTime() - oldTimer) || null;
     }
     catch (error) {
         console.log('Error on Rip --cookies--', error);
@@ -67,7 +68,7 @@ const rip = async (req, res) => {
     }
     if (ripDetails.length <= 0) {
         response.message = 'Não há rip a mostrar';
-        const insertedPointCode = await (0, insert_1.insertInto)(funcionario, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime);
+        const insertedPointCode = await (0, insert_1.insertInto)(funcionario, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, ripStartTime);
         if (insertedPointCode) {
             return res.json(response);
         }
@@ -92,10 +93,9 @@ const rip = async (req, res) => {
     res.cookie('lie', numopeFilter.map((acc) => acc.LIE));
     res.cookie('lse', numopeFilter.map((acc) => acc.LSE));
     try {
-        const pointedCode = await (0, codeNote_1.codeNote)(odfNumber, Number(operationNumber), machineCode, funcionario);
         if (pointedCode.message === 'Pointed') {
             try {
-                const inserted = await (0, insert_1.insertInto)(funcionario, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime);
+                const inserted = await (0, insert_1.insertInto)(funcionario, odfNumber, partCode, revision, operationNumber.replaceAll(' ', ''), machineCode, maxQuantityReleased, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, ripStartTime);
                 if (inserted) {
                     return res.json(numopeFilter);
                 }

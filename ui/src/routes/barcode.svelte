@@ -19,7 +19,7 @@
   let barcode = "";
   let badge = "";
   let returnValueStorage;
-  let superSuperMaqPar;
+  let superMaqPar;
   let supervisor;
   let quantity;
   let quantityModal = "";
@@ -33,18 +33,18 @@
   // }
 
   const checkPostSuper = async (event) => {
-    if (!superSuperMaqPar) {
-      superSuperMaqPar = "";
-    } else if (superSuperMaqPar) {
-      if (superSuperMaqPar.length >= 6 && event.key === "Enter") {
+    if (!superMaqPar) {
+      superMaqPar = "";
+    } else if (superMaqPar) {
+      if (superMaqPar.length >= 6 && event.key === "Enter") {
         if (
-          !superSuperMaqPar ||
-          superSuperMaqPar === "0" ||
-          superSuperMaqPar === "00" ||
-          superSuperMaqPar === "000" ||
-          superSuperMaqPar === "0000" ||
-          superSuperMaqPar === "00000" ||
-          superSuperMaqPar === "000000"
+          !superMaqPar ||
+          superMaqPar === "0" ||
+          superMaqPar === "00" ||
+          superMaqPar === "000" ||
+          superMaqPar === "0000" ||
+          superMaqPar === "00000" ||
+          superMaqPar === "000000"
         ) {
           modalMessage = "Crachá inválido";
         } else {
@@ -57,7 +57,7 @@
   };
 
   const doPostSuper = async () => {
-    console.log("linha 37", superSuperMaqPar);
+    console.log("linha 37", superMaqPar);
     loader = true;
     // const headers = new Headers();
     // headers.append("Content-Type", "application/json");
@@ -65,7 +65,7 @@
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        superSuperMaqPar: !superSuperMaqPar ? "" : superSuperMaqPar,
+        superMaqPar: !superMaqPar ? "" : superMaqPar,
       }),
     }).then((res) => res.json());
     console.log("linha 57 /barcode.svelte/", res);
@@ -323,7 +323,7 @@
             on:input={blockForbiddenChars}
             on:keypress={checkPostSuper}
             onkeyup="this.value = this.value.toUpperCase()"
-            bind:value={superSuperMaqPar}
+            bind:value={superMaqPar}
           />
         </div>
       </div>

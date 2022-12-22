@@ -10,7 +10,7 @@ function unravelBarcode(barcode) {
     if (!barcode) {
         return response.message = 'Código de barras está vazio';
     }
-    if (barcode.length <= 16 || barcode.length > 20) {
+    if (barcode.length <= 16 || barcode.length > 18) {
         return response.message = 'Código de barras inválido';
     }
     const dados = {

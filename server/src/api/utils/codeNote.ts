@@ -1,15 +1,17 @@
 import { select } from "../services/select"
 
 export const codeNote = async (odfNumber: number | null, operationNumber: number | null, codeMachine: string | null, employee: string | null) => {
-    const lookForHisaponta = `SELECT TOP 1 CODAPONTA, USUARIO  FROM HISAPONTA WHERE 1 = 1 AND ODF = ${odfNumber} AND NUMOPE = ${operationNumber} AND ITEM = '${codeMachine}' ORDER BY DATAHORA DESC`
+    const lookForHisaponta = `SELECT TOP 1 CODAPONTA, USUARIO, DATAHORA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${odfNumber} AND NUMOPE = ${operationNumber} AND ITEM = '${codeMachine}' ORDER BY DATAHORA DESC`
     let codigoDeApontamento;
     var response = {
         employee: '',
         message: '',
+        time: 0, 
     }
     codigoDeApontamento = await select(lookForHisaponta)
 
     if (codigoDeApontamento.length > 0) {
+        response.time = codigoDeApontamento[0].DATAHORA
         if (employee !== codigoDeApontamento[0].USUARIO && codigoDeApontamento[0].CODAPONTA === 4) {
             response.employee = codigoDeApontamento[0].USUARIO
         }

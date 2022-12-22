@@ -44,13 +44,14 @@
             }),
         }).then((res) => res.json());
         loader = false;
+        console.log('res -- Title.svelte--', res);
         if (res) {
             if (res.message === "Máquina já parada") {
                 stopModal = false;
                 showMaqPar = false;
                 modalmessage = "Máquina parada";
             }
-            if (res.message === "maquina parada com sucesso") {
+            if (res.message === "Success") {
                 stopModal = false;
                 showMaqPar = true;
             }

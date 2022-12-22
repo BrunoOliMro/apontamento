@@ -11,7 +11,7 @@ const stopPost = async (req, res) => {
         var employee = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])))) || null;
         var partCode = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])))) || null;
         var revision = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO'])))) || null;
-        var operationNumber = String((0, decryptedOdf_1.decrypted)(String(req.cookies['NUMERO_OPERACAO']))) || null;
+        var operationNumber = String((0, decryptedOdf_1.decrypted)(String(req.cookies['NUMERO_OPERACAO']))).replaceAll(' ', '') || null;
         var machineCode = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA'])))) || null;
         var maxQuantityReleased = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB'])))) || null;
         var goodFeed = null;
@@ -43,7 +43,7 @@ const stopPost = async (req, res) => {
         try {
             const resour = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, goodFeed, badFeed, pointCode, pointCodeDescriptionStopPost, motives, missingFeed, reworkFeed, final);
             if (resour) {
-                return res.status(200).json({ message: 'Sucess' });
+                return res.status(200).json({ message: 'Success' });
             }
             else if (resour === 'Algo deu errado') {
                 return res.json({ message: 'Algo deu errado' });

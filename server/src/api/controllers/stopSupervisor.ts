@@ -7,9 +7,9 @@ import { sanitize } from '../utils/sanitize';
 
 export const stopSupervisor: RequestHandler = async (req, res) => {
     try {
-        var supervisor = String(sanitize(req.body['superSuperMaqPar'])) || null
+        var supervisor = String(sanitize(req.body['superMaqPar'])) || null
         var odfNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_ODF'])))) || null
-        var operationNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO'])))) || null
+        var operationNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO'])))!.replaceAll(' ', '')) || null
         var machineCode = String(decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA'])))) || null
         var maxQuantityReleased = Number(decrypted(String(sanitize(req.cookies['QTDE_LIB'])))) || null
         var employee = String(decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))) || null

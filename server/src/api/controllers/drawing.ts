@@ -8,7 +8,7 @@ import { sanitize } from '../utils/sanitize';
 export const drawing: RequestHandler = async (req, res) => {
     try {
         var odfNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_ODF'])))) || null
-        var operationNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO'])))) || null
+        var operationNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO'])))!.replaceAll(' ', '')) || null
         var machineCode = String(decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA'])))) || null
         var revision = String(decrypted(String(sanitize(req.cookies['REVISAO'])))) || null
         var partCode = String(decrypted(String(sanitize(req.cookies['CODIGO_PECA'])))) || null

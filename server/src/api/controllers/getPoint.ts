@@ -80,7 +80,7 @@ export const getPoint: RequestHandler = async (req, res) => {
                         add = await selectAddress(isNullCase, 7, comprimento, largura, peso)
                     }
                 }
-                const stringSelectOperacao = `SELECT TOP 1 NUMPEC,  QUANT, REVISAO, COMPRIMENTO, LARGURA, AREA EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${partCode}' AND REVISAO = ${revision} AND NUMITE IS NOT NULL`
+                const stringSelectOperacao = `SELECT TOP 1 NUMPEC, QUANT, REVISAO, COMPRIMENTO, LARGURA, AREA, EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${partCode}' AND REVISAO = ${revision} AND NUMITE IS NOT NULL`
 
                 // o select de cad_endreços tras a composição deste local no estoque
                 const stringSelectCad = `SELECT * FROM  CST_CAD_ENDERECOS CE WHERE 1 = 1  AND ENDERECO = '${add[0].ENDERECO}'`
@@ -94,6 +94,8 @@ export const getPoint: RequestHandler = async (req, res) => {
                     return res.json({ message: 'Success', address: '5A01A01-11' })
                 }
                 const alturaDoEndereco = composicaoDeEstoque[0].ALTURA
+                console.log('linha 97 --Execut --', pecas[0].EXECUT);
+                console.log('linha 97 --goodFeed --', goodFeed);
 
                 const maxTotalWeightParts = pecas[0].EXECUT * goodFeed!
                 const maxWeightStorage = composicaoDeEstoque[0].PESO
@@ -114,30 +116,42 @@ export const getPoint: RequestHandler = async (req, res) => {
                 const dimensaoLinearPeca = comprimentoPeca + larguraPeca
 
                 const array = []
+                console.log('TA AQUI PESADAO', maxTotalWeightParts);
+
                 if (maxTotalWeightParts > maxWeightStorage) {
+                    console.log('TA AQUI PESADAO');
                     peso = maxWeightStorage
                     array.push(false)
 
                 }
                 if (comprimentoPeca > comprimentoDoEndereco) {
+                    console.log('comprimento errado');
                     comprimento = comprimentoDoEndereco
                     array.push(false)
 
                 }
                 if (larguraPeca > larguraDoEndereco) {
+                    console.log('larguraPeca errado');
+
                     largura = larguraDoEndereco
                     array.push(false)
 
                 }
                 if (dimensaoLinearPeca > dimensaoLinearEstoque) {
-                    array.push(false)
+                    console.log('dimensaoLinearPeca errado');
+
+                    array.push(false) 
 
                 }
                 if (dimensaoCubicaPeca > dimesaoCubicaEstoque) {
+                    console.log('dimensaoCubicaPeca errado');
+
                     array.push(false)
 
                 }
                 if (maxArea < areaDaPeca) {
+                    console.log('maxArea errado');
+
                     array.push(false)
                 }
 

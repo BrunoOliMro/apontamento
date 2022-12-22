@@ -32,7 +32,7 @@ const point = async (req, res) => {
             condic = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['condic'])))) || null;
         }
         var odfNumber = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF']))) || null;
-        var operationNumber = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO']))) || null;
+        var operationNumber = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])).replaceAll(' ', '')) || null;
         var partCode = String((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA']))) || null;
         var machineCode = String((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
         var maxQuantityReleased = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB']))) || null;
@@ -47,8 +47,6 @@ const point = async (req, res) => {
         var valorTotalApontado = Number(goodFeed) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed);
         var released = maxQuantityReleased - valorTotalApontado;
         var faltante = maxQuantityReleased - valorTotalApontado;
-        var startProd = Number((0, decryptedOdf_1.decrypted)(String(req.cookies['startProd']))) || null;
-        var finalProdTimer = Number(new Date().getTime() - startProd / 1000) || null;
         var execut = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['execut']))) || null;
         var diferenceBetween = execut * maxQuantityReleased - valorTotalApontado * execut;
         res.cookie('startRip', Number(new Date().getTime()));
@@ -72,6 +70,8 @@ const point = async (req, res) => {
     };
     try {
         var pointedCode = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, machineCode, employee);
+        const startProd = new Date(pointedCode.time).getTime();
+        var finalProdTimer = Number(new Date().getTime() - startProd) || null;
         if (!valorTotalApontado || decodedOdfNumber !== odfNumber || decodedOperationNumber !== operationNumber || decodedMachineCode !== machineCode || !machineCode || machineCode === '0' || machineCode === '00' || machineCode === '000' || machineCode === '0000' || machineCode === '00000' || !operationNumber || !partCode || partCode === '0' || partCode === '00' || partCode === '000' || partCode === '0000' || partCode === '00000' || !odfNumber || !employee || employee === '0' || employee === '00' || employee === '000' || employee === '0000' || employee === '00000' || employee === '000000') {
             return res.json({ message: 'Algo deu errado' });
         }

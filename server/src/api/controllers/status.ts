@@ -8,7 +8,7 @@ export const status: RequestHandler = async (req, res) => {
     try {
         var partCode = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
         var codeMachine = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
-        var operationNumber = decrypted(sanitize(req.cookies['NUMERO_OPERACAO'])) || null
+        var operationNumber = Number(decrypted(sanitize(req.cookies['NUMERO_OPERACAO']))!.replaceAll(' ', '')) || null
         var odfNumber = decrypted(String(sanitize(req.cookies['NUMERO_ODF']))) || null
         var revision = decrypted(sanitize(req.cookies['REVISAO'])) || null
         var employee = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null

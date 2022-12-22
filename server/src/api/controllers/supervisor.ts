@@ -3,7 +3,7 @@ import { select } from '../services/select';
 import { sanitize } from '../utils/sanitize';
 
 export const supervisor: RequestHandler = async (req, res) => {
-    let supervisor = String(sanitize(req.body['supervisor'])) || null
+    let supervisor = String(sanitize(req.body['supervisor']))!.replaceAll(' ', '') || null
     let stringLookForBadge = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`
 
     if (

@@ -7,7 +7,7 @@ import { sanitize } from '../utils/sanitize';
 export const badFeedMotives: RequestHandler = async (req, res) => {
     try {
         var odfNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_ODF'])))) || null
-        var operationNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO'])))) || null
+        var operationNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO'])))!.replaceAll(' ', '')) || null
         var machineCode = String(decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA'])))) || null
         var employee = String(decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))) || null
         var motivesString = `SELECT R_E_C_N_O_, DESCRICAO FROM CST_MOTIVO_REFUGO (NOLOCK) ORDER BY DESCRICAO ASC`

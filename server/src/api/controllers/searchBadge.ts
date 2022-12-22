@@ -16,7 +16,7 @@ export const searchBagde: RequestHandler = async (req, res) => {
         const findBadge = await select(lookForBadge)
         if (findBadge.length <= 0) {
             return res.json({ message: 'Crachá não encontrado' });
-        } else if (findBadge.length >= 0) {
+        } else if (findBadge.length > 0) {
             let startSetupTime = encrypted(String(new Date().getTime()));
             res.cookie('startSetupTime', startSetupTime, { httpOnly: true })
             await cookieGenerator(res, findBadge[0])

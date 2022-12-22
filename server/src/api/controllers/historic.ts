@@ -7,7 +7,7 @@ import { sanitize } from '../utils/sanitize';
 export const historic: RequestHandler = async (req, res) => {
     try {
         var odfNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_ODF'])))) || null
-        var operationNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO'])))) || null
+        var operationNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO'])))!.replaceAll(' ', '')) || null
         var codeMachine = String(decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA'])))) || null
         var employee = String(decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))) || null
         var lookForDetail = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO_DETALHADO WHERE 1 = 1 AND ODF = '${odfNumber}' ORDER BY DATAHORA DESC`

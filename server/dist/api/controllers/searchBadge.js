@@ -16,7 +16,7 @@ const searchBagde = async (req, res) => {
         if (findBadge.length <= 0) {
             return res.json({ message: 'Crachá não encontrado' });
         }
-        else if (findBadge.length >= 0) {
+        else if (findBadge.length > 0) {
             let startSetupTime = (0, encryptOdf_1.encrypted)(String(new Date().getTime()));
             res.cookie('startSetupTime', startSetupTime, { httpOnly: true });
             await (0, cookieGenerator_1.cookieGenerator)(res, findBadge[0]);

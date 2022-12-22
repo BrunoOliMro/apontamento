@@ -4,7 +4,7 @@ exports.supervisor = void 0;
 const select_1 = require("../services/select");
 const sanitize_1 = require("../utils/sanitize");
 const supervisor = async (req, res) => {
-    let supervisor = String((0, sanitize_1.sanitize)(req.body['supervisor'])) || null;
+    let supervisor = String((0, sanitize_1.sanitize)(req.body['supervisor'])).replaceAll(' ', '') || null;
     let stringLookForBadge = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`;
     if (!supervisor ||
         supervisor === '' ||

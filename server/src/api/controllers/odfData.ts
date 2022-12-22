@@ -24,7 +24,7 @@ export const odfData: RequestHandler = async (req, res) => {
         return res.json({ message: 'Algo deu errado' })
     }
     try {
-        const pointedCode = await codeNote(odfNumber, Number(operationNumber), machineCode, employee)
+        const pointedCode = await codeNote(odfNumber, Number(operationNumber!.replaceAll(" ", '')), machineCode, employee)
         if (pointedCode.message === 'Ini Prod' || pointedCode.message === 'Pointed' || pointedCode.message === 'Rip iniciated' || pointedCode.message === 'Machine has stopped') {
             const data = await select(stringLookOdfData)
             const i = await odfIndex(data, '00' + operationNumber!.replaceAll(' ', '0') || null)

@@ -29,7 +29,7 @@ export const point: RequestHandler = async (req, res) => {
             condic = String(decrypted(String(sanitize(req.cookies['condic'])))) || null
         }
         var odfNumber = Number(decrypted(sanitize(req.cookies['NUMERO_ODF']))) || null
-        var operationNumber = Number(decrypted(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
+        var operationNumber = Number(decrypted(sanitize(req.cookies['NUMERO_OPERACAO']))!.replaceAll(' ', '')) || null
         var partCode = String(decrypted(sanitize(req.cookies['CODIGO_PECA']))) || null
         var machineCode = String(decrypted(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
         var maxQuantityReleased = Number(decrypted(sanitize(req.cookies['QTDE_LIB']))) || null
@@ -44,8 +44,7 @@ export const point: RequestHandler = async (req, res) => {
         var valorTotalApontado = Number(goodFeed) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed)
         var released = maxQuantityReleased! - valorTotalApontado
         var faltante = maxQuantityReleased! - valorTotalApontado
-        var startProd = Number(decrypted(String(req.cookies['startProd']))) || null
-        var finalProdTimer = Number(new Date().getTime() - startProd! / 1000) || null
+        //var startProd = Number(decrypted(String(req.cookies['startProd']))) || null
         var execut = Number(decrypted(sanitize(req.cookies['execut']))) || null
         var diferenceBetween = execut! * maxQuantityReleased! - valorTotalApontado * execut!
         //Inicia tempo de Rip e a quantidade de peças boas
@@ -71,16 +70,15 @@ export const point: RequestHandler = async (req, res) => {
 
     try {
         var pointedCode = await codeNote(odfNumber, operationNumber, machineCode, employee)
+        const startProd = new Date(pointedCode.time).getTime()
+        var finalProdTimer = Number(new Date().getTime() - startProd) || null
+
         if (!valorTotalApontado || decodedOdfNumber !== odfNumber || decodedOperationNumber !== operationNumber || decodedMachineCode !== machineCode || !machineCode || machineCode === '0' || machineCode === '00' || machineCode === '000' || machineCode === '0000' || machineCode === '00000' || !operationNumber || !partCode || partCode === '0' || partCode === '00' || partCode === '000' || partCode === '0000' || partCode === '00000' || !odfNumber || !employee || employee === '0' || employee === '00' || employee === '000' || employee === '0000' || employee === '00000' || employee === '000000') {
             return res.json({ message: 'Algo deu errado' })
         }
         else if (pointedCode.message !== 'Ini Prod') {
             return res.json({ message: pointedCode.message })
-        }
-        // else if (pointCode.funcionario !== employee) {
-        //     return res.json({ message: 'Funcionário diferente' })
-        // } 
-        else if (!supervisor && valorTotalApontado === maxQuantityReleased) {
+        } else if (!supervisor && valorTotalApontado === maxQuantityReleased) {
             if (badFeed! > 0) {
                 return res.json({ message: 'Supervisor inválido' })
             } else {

@@ -42,7 +42,7 @@ export const tools: RequestHandler = async (req, res) => {
     try {
         const codeNoteResult = await codeNote(odfNumber, operationNumber, machineCode, employee)
         if (codeNoteResult.message === 'First time acessing ODF' || codeNoteResult.message === 'Begin new process') {
-            const inserted = await insertInto(employee, odfNumber, partCode, revision, String(operationNumber), machineCode, maxQuantityReleased, goodFeed, badFeed, pointedCode, pointedCodeDescription, motives, missingFeed, reworkFeed, startSetupTime)
+            const inserted = await insertInto(employee, odfNumber, partCode, revision, String(operationNumber)!.replaceAll(' ', ''), machineCode, maxQuantityReleased, goodFeed, badFeed, pointedCode, pointedCodeDescription, motives, missingFeed, reworkFeed, startSetupTime)
             if (inserted === 'Success') {
                 try {
                     toolsImg = await select(stringLookForTools)
@@ -79,7 +79,7 @@ export const tools: RequestHandler = async (req, res) => {
 export const selectedTools: RequestHandler = async (req, res) => {
     try {
         var odfNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_ODF'])))) || null
-        var operationNumber = String(decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO'])))) || null
+        var operationNumber = String(decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))))!.replaceAll(' ', '') || null
         var machineCode = String(decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA'])))) || null
         var partCode = String(decrypted(String(sanitize(req.cookies["CODIGO_PECA"])))) || null
         var employee = String(decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))) || null
@@ -94,7 +94,7 @@ export const selectedTools: RequestHandler = async (req, res) => {
         var missingFeed = null
         var reworkFeed = null
         var motive = null
-        var startSetupTime = Number(decrypted(sanitize(req.cookies['startSetupTime']))) || null
+        // var startSetupTime = Number(decrypted(sanitize(req.cookies['startSetupTime']))) || null
         // Inicia a produção
         let startProd = await encrypted(String(new Date().getTime()))
         res.cookie("startProd", startProd)
@@ -104,16 +104,19 @@ export const selectedTools: RequestHandler = async (req, res) => {
     }
 
     //Encerra o primeiro tempo de setup
-    const tempoDecorrido = Number(Number(new Date().getTime()) - startSetupTime!) || 0
+    // const tempoDecorrido = Number(Number(new Date().getTime()) - startSetupTime!) || 0
 
     try {
-        const codeNoteResult = await codeNote(odfNumber, Number(operationNumber), machineCode, employee)
+        const codeNoteResult = await codeNote(odfNumber, Number(operationNumber!.replaceAll(' ', '')), machineCode, employee)
+        const startSetupTime = new Date(codeNoteResult.time).getTime()
+        var tempoDecorrido = Number(new Date().getTime() - startSetupTime) || null
+
         if (codeNoteResult.message === 'Pointed Iniciated') {
             //INSERE EM CODAPONTA 2
-            const codApontamentoFinalSetup = await insertInto(employee, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, boas, ruins, pointCodeSetupEnded, pointCodeEndSetup, motive, missingFeed, reworkFeed, tempoDecorrido)
+            const codApontamentoFinalSetup = await insertInto(employee, odfNumber, partCode, revision, operationNumber!.replaceAll(' ', ''), machineCode, maxQuantityReleased, boas, ruins, pointCodeSetupEnded, pointCodeEndSetup, motive, missingFeed, reworkFeed, tempoDecorrido)
             if (codApontamentoFinalSetup !== 'Algo deu errado') {
                 //INSERE EM CODAPONTA 3
-                const codApontamentoInicioSetup = await insertInto(employee, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, boas, ruins, pointCodeIniciatedProd, pointCodeProdIniciated, motive, missingFeed, reworkFeed, Number(new Date().getTime() || null))
+                const codApontamentoInicioSetup = await insertInto(employee, odfNumber, partCode, revision, operationNumber!.replaceAll(' ', ''), machineCode, maxQuantityReleased, boas, ruins, pointCodeIniciatedProd, pointCodeProdIniciated, motive, missingFeed, reworkFeed, Number(new Date().getTime() || null))
                 if (codApontamentoInicioSetup !== 'Algo deu errado') {
                     return res.json({ message: 'Success' })
                 } else {
@@ -125,7 +128,7 @@ export const selectedTools: RequestHandler = async (req, res) => {
             }
         } else if (codeNoteResult.message === 'Fin Setup') {
             //INSERE EM CODAPONTA 3
-            const codApontamentoInicioSetup = await insertInto(employee, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, boas, ruins, pointCodeIniciatedProd, pointCodeProdIniciated, motive, missingFeed, reworkFeed, Number(new Date().getTime() || null))
+            const codApontamentoInicioSetup = await insertInto(employee, odfNumber, partCode, revision, operationNumber!.replaceAll(' ', ''), machineCode, maxQuantityReleased, boas, ruins, pointCodeIniciatedProd, pointCodeProdIniciated, motive, missingFeed, reworkFeed, Number(new Date().getTime() || null))
             if (codApontamentoInicioSetup) {
                 return res.json({ message: 'Success' })
             } else {

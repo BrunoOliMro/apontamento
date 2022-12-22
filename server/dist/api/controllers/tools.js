@@ -41,7 +41,7 @@ const tools = async (req, res) => {
     try {
         const codeNoteResult = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, machineCode, employee);
         if (codeNoteResult.message === 'First time acessing ODF' || codeNoteResult.message === 'Begin new process') {
-            const inserted = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, String(operationNumber), machineCode, maxQuantityReleased, goodFeed, badFeed, pointedCode, pointedCodeDescription, motives, missingFeed, reworkFeed, startSetupTime);
+            const inserted = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, String(operationNumber).replaceAll(' ', ''), machineCode, maxQuantityReleased, goodFeed, badFeed, pointedCode, pointedCodeDescription, motives, missingFeed, reworkFeed, startSetupTime);
             if (inserted === 'Success') {
                 try {
                     toolsImg = await (0, select_1.select)(stringLookForTools);
@@ -82,7 +82,7 @@ exports.tools = tools;
 const selectedTools = async (req, res) => {
     try {
         var odfNumber = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'])))) || null;
-        var operationNumber = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])))) || null;
+        var operationNumber = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])))).replaceAll(' ', '') || null;
         var machineCode = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA'])))) || null;
         var partCode = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_PECA"])))) || null;
         var employee = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])))) || null;
@@ -97,7 +97,6 @@ const selectedTools = async (req, res) => {
         var missingFeed = null;
         var reworkFeed = null;
         var motive = null;
-        var startSetupTime = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['startSetupTime']))) || null;
         let startProd = await (0, encryptOdf_1.encrypted)(String(new Date().getTime()));
         res.cookie("startProd", startProd);
     }
@@ -105,13 +104,14 @@ const selectedTools = async (req, res) => {
         console.log('Error on SelectedTools --cookies--', error);
         return res.json({ message: 'Algo deu errado' });
     }
-    const tempoDecorrido = Number(Number(new Date().getTime()) - startSetupTime) || 0;
     try {
-        const codeNoteResult = await (0, codeNote_1.codeNote)(odfNumber, Number(operationNumber), machineCode, employee);
+        const codeNoteResult = await (0, codeNote_1.codeNote)(odfNumber, Number(operationNumber.replaceAll(' ', '')), machineCode, employee);
+        const startSetupTime = new Date(codeNoteResult.time).getTime();
+        var tempoDecorrido = Number(new Date().getTime() - startSetupTime) || null;
         if (codeNoteResult.message === 'Pointed Iniciated') {
-            const codApontamentoFinalSetup = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, boas, ruins, pointCodeSetupEnded, pointCodeEndSetup, motive, missingFeed, reworkFeed, tempoDecorrido);
+            const codApontamentoFinalSetup = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, operationNumber.replaceAll(' ', ''), machineCode, maxQuantityReleased, boas, ruins, pointCodeSetupEnded, pointCodeEndSetup, motive, missingFeed, reworkFeed, tempoDecorrido);
             if (codApontamentoFinalSetup !== 'Algo deu errado') {
-                const codApontamentoInicioSetup = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, boas, ruins, pointCodeIniciatedProd, pointCodeProdIniciated, motive, missingFeed, reworkFeed, Number(new Date().getTime() || null));
+                const codApontamentoInicioSetup = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, operationNumber.replaceAll(' ', ''), machineCode, maxQuantityReleased, boas, ruins, pointCodeIniciatedProd, pointCodeProdIniciated, motive, missingFeed, reworkFeed, Number(new Date().getTime() || null));
                 if (codApontamentoInicioSetup !== 'Algo deu errado') {
                     return res.json({ message: 'Success' });
                 }
@@ -124,7 +124,7 @@ const selectedTools = async (req, res) => {
             }
         }
         else if (codeNoteResult.message === 'Fin Setup') {
-            const codApontamentoInicioSetup = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, boas, ruins, pointCodeIniciatedProd, pointCodeProdIniciated, motive, missingFeed, reworkFeed, Number(new Date().getTime() || null));
+            const codApontamentoInicioSetup = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, operationNumber.replaceAll(' ', ''), machineCode, maxQuantityReleased, boas, ruins, pointCodeIniciatedProd, pointCodeProdIniciated, motive, missingFeed, reworkFeed, Number(new Date().getTime() || null));
             if (codApontamentoInicioSetup) {
                 return res.json({ message: 'Success' });
             }

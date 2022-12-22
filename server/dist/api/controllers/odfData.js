@@ -24,7 +24,7 @@ const odfData = async (req, res) => {
         return res.json({ message: 'Algo deu errado' });
     }
     try {
-        const pointedCode = await (0, codeNote_1.codeNote)(odfNumber, Number(operationNumber), machineCode, employee);
+        const pointedCode = await (0, codeNote_1.codeNote)(odfNumber, Number(operationNumber.replaceAll(" ", '')), machineCode, employee);
         if (pointedCode.message === 'Ini Prod' || pointedCode.message === 'Pointed' || pointedCode.message === 'Rip iniciated' || pointedCode.message === 'Machine has stopped') {
             const data = await (0, select_1.select)(stringLookOdfData);
             const i = await (0, odfIndex_1.odfIndex)(data, '00' + operationNumber.replaceAll(' ', '0') || null);

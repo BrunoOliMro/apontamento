@@ -15,9 +15,9 @@ export const rip: RequestHandler = async (req, res) => {
         var machineCode = String(decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA'])))) || null
         var partCode = String(decrypted(String(sanitize(req.cookies['CODIGO_PECA'])))) || null
         var odfNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_ODF'])))) || null
-        var operationNumber = String(decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO'])))) || null
+        var operationNumber = String(decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))))!.replaceAll(' ', '') || null
         var funcionario = String(decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))) || null
-        var start = Number(decrypted(String(sanitize(req.cookies['startSetupTime'])))) || null
+        // var start = Number(decrypted(String(sanitize(req.cookies['startSetupTime'])))) || null
         var maxQuantityReleased = Number(decrypted(String(sanitize(req.cookies['QTDE_LIB'])))) || null
         res.cookie('startRip', encrypted(String(new Date().getDate())));
         var descricaoCodAponta = `Rip Ini.`
@@ -27,7 +27,7 @@ export const rip: RequestHandler = async (req, res) => {
         var retrabalhada = null
         var codAponta = [5]
         var motivo = null
-        var startTime = Number(new Date(start!).getTime()) || null
+        // var startTime = Number(new Date(start!).getTime()) || null
         var response = {
             message: '',
             object: '',
@@ -55,6 +55,10 @@ export const rip: RequestHandler = async (req, res) => {
             AND CST_NUMOPE = '${machineCode}'
             AND NUMCAR < '2999'
             ORDER BY NUMPEC ASC`
+
+        var pointedCode = await codeNote(odfNumber, Number(operationNumber), machineCode, funcionario)
+        var oldTimer = new Date(pointedCode.time).getTime()
+        var ripStartTime = Number(new Date().getTime() - oldTimer) || null
     } catch (error) {
         console.log('Error on Rip --cookies--', error);
         return res.json({ message: 'Algo deu errado' })
@@ -71,7 +75,7 @@ export const rip: RequestHandler = async (req, res) => {
     // If there are no response from select
     if (ripDetails.length <= 0) {
         response.message = 'Não há rip a mostrar'
-        const insertedPointCode = await insertInto(funcionario, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime)
+        const insertedPointCode = await insertInto(funcionario, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, ripStartTime)
         if (insertedPointCode) {
             return res.json(response)
         } else {
@@ -100,10 +104,9 @@ export const rip: RequestHandler = async (req, res) => {
 
     try {
         // Codigo de apontamento on last point
-        const pointedCode = await codeNote(odfNumber, Number(operationNumber), machineCode, funcionario)
         if (pointedCode.message === 'Pointed') {
             try {
-                const inserted = await insertInto(funcionario, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime)
+                const inserted = await insertInto(funcionario, odfNumber, partCode, revision, operationNumber!.replaceAll(' ', ''), machineCode, maxQuantityReleased, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, ripStartTime)
                 if (inserted) {
                     return res.json(numopeFilter)
                 } else {

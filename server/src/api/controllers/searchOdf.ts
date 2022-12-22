@@ -47,34 +47,23 @@ export const searchOdf: RequestHandler = async (req, res) => {
     let i: number = await odfIndex(odf, barcode.numOper)
 
     if (i <= 0) {
-        if (!odf[i].QTDE_APONTADA) {
-            odf[i].QTDE_LIB = odf[i].QTDE_ODF;
-        } else {
-            odf[i].QTDE_LIB = odf[i].QTDE_ODF - odf[i].QTDE_APONTADA;
-        }
+        !odf[i].QTDE_APONTADA ? odf[i].QTDE_LIB = odf[i].QTDE_ODF : odf[i].QTDE_LIB = odf[i].QTDE_ODF - odf[i].QTDE_APONTADA;
+        // if (!odf[i].QTDE_APONTADA) {
+        //     odf[i].QTDE_LIB = odf[i].QTDE_ODF;
+        // } else {
+        //     odf[i].QTDE_LIB = odf[i].QTDE_ODF - odf[i].QTDE_APONTADA;
+        // }
     } else if (i > 0) {
 
-        if (!odf[i].QTD_BOAS) {
-            odf[i].QTD_BOAS = 0
-        }
-
-        if (!odf[i].QTD_REFUGO) {
-            odf[i].QTD_REFUGO = 0
-        }
-
-        if (!odf[i].QTD_RETRABALHADA) {
-            odf[i].QTD_RETRABALHADA = 0
-        }
-
-        if (!odf[i].QTD_FALTANTE) {
-            odf[i].QTD_FALTANTE = 0
-        }
+        !odf[i].QTD_BOAS ? odf[i].QTD_BOAS = 0 : odf[i].QTD_BOAS
+        // !odf[i].QTD_REFUGO ? odf[i].QTD_REFUGO = 0 : odf[i].QTD_REFUGO
+        // !odf[i].QTD_FALTANTE ? odf[i].QTD_FALTANTE = 0 : odf[i].QTD_FALTANTE
+        // !odf[i].QTD_RETRABALHADA ? odf[i].QTD_RETRABALHADA = 0 : odf[i].QTD_RETRABALHADA
 
         let valuesPointed = odf[i - 1].QTDE_APONTADA - odf[i].QTDE_APONTADA
         let diferenceBetweenGoodAndBad = odf[i - 1].QTD_BOAS - odf[i].QTD_BOAS
 
         if (diferenceBetweenGoodAndBad <= 0 || valuesPointed <= 0) {
-            odf[i].QTDE_LIB = null
             return res.json({ message: 'Não há limite na ODF' })
         }
 
@@ -88,7 +77,7 @@ export const searchOdf: RequestHandler = async (req, res) => {
             odf[i].QTDE_LIB = diferenceBetweenGoodAndBad
         }
     } else {
-        return odf[i].QTDE_LIB = null;
+        return res.json({ message: 'Não há limite na ODF' })
     }
 
     if (!odf[i].QTDE_LIB || odf[i].QTDE_LIB <= 0) {
