@@ -13,7 +13,6 @@ const update_1 = require("../services/update");
 const codeNote_1 = require("../utils/codeNote");
 const decodeOdf_1 = require("../utils/decodeOdf");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
-const encryptOdf_1 = require("../utils/encryptOdf");
 const sanitize_1 = require("../utils/sanitize");
 const sendEmail_1 = require("../utils/sendEmail");
 const point = async (req, res) => {
@@ -22,7 +21,6 @@ const point = async (req, res) => {
         var supervisor = String((0, sanitize_1.sanitize)(req.body['supervisor'])) || null;
         var motives = String((0, sanitize_1.sanitize)(req.body['value'])) || null;
         var badFeed = Number((0, sanitize_1.sanitize)(req.body['badFeed'])) || null;
-        var missingFeed = Number((0, sanitize_1.sanitize)(req.body['missingFeed'])) || null;
         var reworkFeed = Number((0, sanitize_1.sanitize)(req.body['reworkFeed'])) || null;
         var condic;
         if (!req.cookies['condic']) {
@@ -44,21 +42,20 @@ const point = async (req, res) => {
         var decodedOperationNumber = Number((0, decodeOdf_1.decodedBuffer)(String(req.cookies['encodedOperationNuber'])));
         var decodedMachineCode = String((0, decodeOdf_1.decodedBuffer)(String(req.cookies['encodedMachineCode'])));
         var childCode = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['codigoFilho']))).split(',') || null;
+        var missingFeed = Number((0, sanitize_1.sanitize)(req.body['missingFeed'])) || null;
         var valorTotalApontado = Number(goodFeed) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed);
+        missingFeed = missingFeed + maxQuantityReleased - valorTotalApontado;
         var released = maxQuantityReleased - valorTotalApontado;
-        var faltante = maxQuantityReleased - valorTotalApontado;
         var execut = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['execut']))) || null;
         var diferenceBetween = execut * maxQuantityReleased - valorTotalApontado * execut;
-        res.cookie('startRip', Number(new Date().getTime()));
-        res.cookie('qtdBoas', (0, encryptOdf_1.encrypted)(String(goodFeed)));
         var pointCode = [4];
         var pointCodeDescriptionFinProd = 'Fin Prod';
-        var lookForOdfData = `SELECT TOP 1 CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS, APONTAMENTO_LIBERADO FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND NUMERO_OPERACAO = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}' AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
+        var stringPcpProg = `SELECT TOP 1 CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS, APONTAMENTO_LIBERADO FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND NUMERO_OPERACAO = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}' AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
         var stringFromHisaponta = `SELECT TOP 1 USUARIO FROM HISAPONTA WHERE 1 = 1 AND ODF = '${odfNumber}'  ORDER BY DATAHORA DESC`;
         var lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`;
-        var updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + ${valorTotalApontado}, QTD_REFUGO = COALESCE(QTD_REFUGO, 0) + ${badFeed}, QTDE_LIB = ${released}, QTD_FALTANTE = ${faltante}, QTD_BOAS = COALESCE(QTD_BOAS, 0) + ${goodFeed}, QTD_RETRABALHADA = COALESCE(QTD_RETRABALHADA, 0) + ${reworkFeed} WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`;
+        var updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + ${valorTotalApontado}, QTD_REFUGO = COALESCE(QTD_REFUGO, 0) + ${badFeed}, QTDE_LIB = ${released}, QTD_FALTANTE = ${missingFeed}, QTD_BOAS = COALESCE(QTD_BOAS, 0) + ${goodFeed}, QTD_RETRABALHADA = COALESCE(QTD_RETRABALHADA, 0) + ${reworkFeed} WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`;
         var valuesFromHisaponta = await (0, select_1.select)(stringFromHisaponta);
-        var valuesFromBack = await (0, select_1.select)(lookForOdfData);
+        var resultSelectPcpProg = await (0, select_1.select)(stringPcpProg);
     }
     catch (error) {
         console.log('Error on point.ts --cookies--', error);
@@ -91,7 +88,7 @@ const point = async (req, res) => {
             return res.json({ message: 'Quantidade apontada excede o limite' });
         }
         else if (!missingFeed) {
-            faltante = maxQuantityReleased - valorTotalApontado;
+            missingFeed = maxQuantityReleased - valorTotalApontado;
         }
         else if (badFeed > 0) {
             if (!motives) {
@@ -101,9 +98,6 @@ const point = async (req, res) => {
             if (!findSupervisor) {
                 return res.json({ message: 'Supervisor não encontrado' });
             }
-        }
-        else if (missingFeed > 0) {
-            faltante = missingFeed;
         }
     }
     catch (error) {
@@ -174,8 +168,8 @@ const point = async (req, res) => {
     }
     try {
         if (reworkFeed > 0 || missingFeed > 0) {
-            const newOrderString = `INSERT INTO NOVA_ORDEM (NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_LIB, QTDE_APONTADA, QTD_REFUGO, QTD_BOAS, QTD_RETRABALHADA, QTD_FALTANTE, CODIGO_PECA, CODIGO_CLIENTE) VALUES('${odfNumber}', '${operationNumber}', '${machineCode}', ${valuesFromBack[0].QTDE_ODF}, ${released},${valorTotalApontado}, ${badFeed}, ${goodFeed},  ${reworkFeed}, ${faltante}, '${partCode}', '${valuesFromBack[0].CODIGO_CLIENTE}')`;
-            await (0, sendEmail_1.createNewOrder)(odfNumber, operationNumber, machineCode, reworkFeed, missingFeed, goodFeed, badFeed, valorTotalApontado, valuesFromBack[0].QTDE_ODF, valuesFromBack[0].CODIGO_CLIENTE, partCode);
+            const newOrderString = `INSERT INTO NOVA_ORDEM (NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_LIB, QTDE_APONTADA, QTD_REFUGO, QTD_BOAS, QTD_RETRABALHADA, QTD_FALTANTE, CODIGO_PECA, CODIGO_CLIENTE) VALUES('${odfNumber}', '${operationNumber}', '${machineCode}', ${resultSelectPcpProg[0].QTDE_ODF}, ${released},${valorTotalApontado}, ${badFeed}, ${goodFeed},  ${reworkFeed}, ${missingFeed}, '${partCode}', '${resultSelectPcpProg[0].CODIGO_CLIENTE}')`;
+            await (0, sendEmail_1.createNewOrder)(odfNumber, operationNumber, machineCode, reworkFeed, missingFeed, goodFeed, badFeed, valorTotalApontado, resultSelectPcpProg[0].QTDE_ODF, resultSelectPcpProg[0].CODIGO_CLIENTE, partCode);
             await (0, insertNewOrder_1.insertIntoNewOrder)(newOrderString);
         }
     }
@@ -185,7 +179,7 @@ const point = async (req, res) => {
     }
     try {
         await (0, update_1.update)(updateCol);
-        await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, String(operationNumber), machineCode, maxQuantityReleased, goodFeed, badFeed, pointCode, pointCodeDescriptionFinProd, motives, faltante, reworkFeed, finalProdTimer);
+        await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, String(operationNumber), machineCode, maxQuantityReleased, goodFeed, badFeed, pointCode, pointCodeDescriptionFinProd, motives, missingFeed, reworkFeed, finalProdTimer);
         return res.json({ message: 'Success' });
     }
     catch (error) {

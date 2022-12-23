@@ -5,7 +5,7 @@ import { codeNote } from '../utils/codeNote';
 //import { cookieGenerator } from '../utils/cookieGenerator';
 //import { cookieGenerator } from '../utils/cookieGenerator';
 import { decrypted } from '../utils/decryptedOdf';
-import { encrypted } from '../utils/encryptOdf';
+// import { encrypted } from '../utils/encryptOdf';
 import { sanitize } from '../utils/sanitize';
 //import { encrypted } from '../utils/encryptOdf';
 
@@ -19,7 +19,7 @@ export const rip: RequestHandler = async (req, res) => {
         var funcionario = String(decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))) || null
         // var start = Number(decrypted(String(sanitize(req.cookies['startSetupTime'])))) || null
         var maxQuantityReleased = Number(decrypted(String(sanitize(req.cookies['QTDE_LIB'])))) || null
-        res.cookie('startRip', encrypted(String(new Date().getDate())));
+        // res.cookie('startRip', encrypted(String(new Date().getDate())));
         var descricaoCodAponta = `Rip Ini.`
         var boas = null
         var ruins = null

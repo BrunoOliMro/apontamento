@@ -1,7 +1,7 @@
 <script>
   // @ts-nocheck
-  let message = "";
   import TableHistorico from "../components/Tables/TableHistorico.svelte";
+  let message = "";
   let back = "/images/icons8-go-back-24.png";
   let imageLoader = "/images/axonLoader.gif";
   let subtitle = "Histórico de Apontamento";
@@ -15,7 +15,6 @@
   async function getHistorico() {
     const res = await fetch(urlString);
     historicData = await res.json();
-
     if (historicData.message !== "") {
       message = historicData.message;
     }

@@ -8,12 +8,12 @@
     import Cod from "./cod.svelte";
     import Footer from "./footer.svelte";
     import Status from "./status.svelte";
+    let callOdfData = `/api/v1/odfData`;
+    let urlS = `/api/v1/point`;
+    let motivoUrl = `/api/v1/badFeedMotives`;
     let supervisorApi = `/api/v1/supervisor`;
     let supervisorStop = "api/v1/supervisorParada";
     let imageLoader = "/images/axonLoader.gif";
-    let urlString = `/api/v1/odfData`;
-    let urlS = `/api/v1/point`;
-    let motivoUrl = `/api/v1/badFeedMotives`;
     let showError = false;
     let showParcialSuper = false;
     let showSuperNotFound = false;
@@ -24,7 +24,7 @@
     let stopModal = false;
     let loader = false;
     let supervisor = "";
-    let modalMessage = "";
+    let message = "";
     let dados = [];
     let odfData = [];
     let badFeed;
@@ -53,10 +53,10 @@
                     superSuperMaqPar === "00000" ||
                     superSuperMaqPar === "000000"
                 ) {
-                    modalMessage = "Crachá inválido";
+                    message = "Crachá inválido";
                 } else {
                     loader = true;
-                    modalMessage = "";
+                    message = "";
                     doPostSuper();
                 }
             }
@@ -77,10 +77,10 @@
             if (res.message === "maquina") {
                 loader = true;
                 doPost();
-                modalMessage = "Apontamento Liberado";
+                message = "Apontamento Liberado";
             }
             if (res.message !== "") {
-                modalMessage = res.message;
+                message = res.message;
                 superParada = false;
                 showmodal = false;
                 loader = false;
@@ -89,43 +89,66 @@
     };
 
     async function getOdfData() {
-        const res = await fetch(urlString);
+        const res = await fetch(callOdfData);
         odfData = await res.json();
-        if (!odfData) {
-            return (window.location.href = `/#/codigobarras`);
-        } else if (
-            odfData.message === "Esta tentando acessar algo que não pode" ||
-            odfData.message === `codigo de apontamento: 7 = máquina parada` ||
-            odfData.message === `codeApont 2 setup finalizado`
-        ) {
-            return (window.location.href = `/#/codigobarras`);
-        } else if (
-            odfData.message === "codeApont 3 prod Ini." ||
-            odfData.message === "Success"
-        ) {
+
+        console.log("linha 94 -- odfData / feed.svelte--", odfData);
+        if (odfData) {
             loader = false;
-            qtdPossivelProducao = odfData.odfSelecionada.QTDE_LIB;
-            if (qtdPossivelProducao <= 0) {
-                qtdPossivelProducao = 0;
+            if (odfData.message === "Success") {
+                console.log("odfData.odfSelecionada", odfData.odfSelecionada);
+                if (odfData.odfSelecionada) {
+                    qtdPossivelProducao = odfData.odfSelecionada.QTDE_LIB;
+                } else {
+                    return (window.location.href = `/#/codigobarras`);
+                }
+            } else if (
+                odfData.message === "codeApont 5 inicio de rip" ||
+                odfData.message === "codeApont 4 prod finalzado"
+            ) {
+                return (window.location.href = `/#/rip`);
+            } else if (odfData.message !== "") {
+                message = odfData.message;
             }
-        } else if (
-            odfData.message === "codeApont 5 inicio de rip" ||
-            odfData.message === "codeApont 4 prod finalzado"
-        ) {
-            return (window.location.href = `/#/rip`);
         } else {
-            modalMessage = "Algo deu errado";
+            return (window.location.href = `/#/codigobarras`);
         }
+
+        // if (!odfData) {
+        //     return (window.location.href = `/#/codigobarras`);
+        // } else if (
+        //     odfData.message === "Esta tentando acessar algo que não pode" ||
+        //     odfData.message === `codigo de apontamento: 7 = máquina parada` ||
+        //     odfData.message === `codeApont 2 setup finalizado`
+        // ) {
+        //     return (window.location.href = `/#/codigobarras`);
+        // } else if (
+        //     odfData.message === "codeApont 3 prod Ini."
+        //     ||
+        //     odfData.message === "Success"
+        // ) {
+        //     loader = false;
+        //     qtdPossivelProducao = odfData.odfSelecionada.QTDE_LIB;
+        //     if (qtdPossivelProducao <= 0) {
+        //         qtdPossivelProducao = 0;
+        //     }
+        // } else if (
+        //     odfData.message === "codeApont 5 inicio de rip" ||
+        //     odfData.message === "codeApont 4 prod finalzado"
+        // ) {
+        //     return (window.location.href = `/#/rip`);
+        // } else {
+        //     modalMessage = "Algo deu errado";
+        // }
     }
 
     async function getRefugodata() {
         const res = await fetch(motivoUrl);
         dados = await res.json();
-        console.log("dados GetRefugoData", dados);
         if (dados) {
             if (dados.message) {
                 if (dados.message !== "") {
-                    modalMessage = dados.message;
+                    message = dados.message;
                 }
             }
         }
@@ -134,7 +157,7 @@
     async function checkForSuper(event) {
         if (supervisor.length >= 6 && event.key === "Enter") {
             if (supervisor === "000000") {
-                modalMessage = "Crachá inválido";
+                message = "Crachá inválido";
             }
             const res = await fetch(supervisorApi, {
                 method: "POST",
@@ -164,45 +187,42 @@
                 supervisor: supervisor,
             }),
         }).then((res) => res.json());
-
+        console.log("res", res);
         if (res) {
+            loader = false;
             if (res.message === "Apontamento parcial") {
-                modalMessage = "Apontamento parcial";
+                message = "Apontamento parcial";
             } else if (res.message === "Pointed") {
                 window.location.href = `/#/rip`;
                 location.reload();
             } else if (res.message === "Machine has stopped") {
-                loader = false;
-                modalMessage = "Machine stopped";
+                message = "Machine stopped";
             } else if (res.message === "Jumping steps") {
                 window.location.href = `/#/codigobarras`;
                 location.reload();
             } else if (res.message === "Saldo menor que o apontado") {
-                modalMessage = "Saldo menor que o apontado";
+                message = "Saldo menor que o apontado";
                 balance = res.balance;
-                loader = false;
             } else if (res.message === "Success") {
                 getSpaceFunc();
-                modalMessage = "";
-                showConfirm = false;
+                message = "";
             } else if (res.message === "Rip iniciated") {
                 window.location.href = `/#/rip`;
                 location.reload();
             } else if (res.message === "Algo deu errado") {
-                modalMessage = res.message;
+                message = res.message;
             } else if (res.message !== "") {
-                modalMessage = res.message;
-                loader = false;
+                message = res.message;
             }
         } else {
-            modalMessage = res.message;
+            message = res.message;
         }
     };
 
     async function getSpaceFunc() {
         const res = await fetch(urlS);
         getSpace = await res.json();
-        console.log('getSpace', getSpace);
+        console.log("getSpace", getSpace);
         if (getSpace.message === "No address") {
             loader = false;
             window.location.href = `/#/rip`;
@@ -215,7 +235,7 @@
 
         if (getSpace.message === "Algo deu errado") {
             loader = false;
-            getSpace.address = '5A01A01-11'
+            getSpace.address = "5A01A01-11";
             showAddress = true;
         }
     }
@@ -231,20 +251,20 @@
             numberMissing > 0 &&
             numberBadFeed + numberGoodFeed + numberReworkFeed === 0
         ) {
-            return (modalMessage =
+            return (message =
                 "Não é possível apontar apenas quantidade de peças faltantes");
         } else if (
             numberReworkFeed > 0 &&
             numberBadFeed + numberGoodFeed + numberMissing === 0
         ) {
-            return (modalMessage =
+            return (message =
                 "Apontando apenas peças retrabalhadas, confirma ?");
         } else if (
             numberReworkFeed > 0 &&
             numberMissing > 0 &&
             numberBadFeed + numberGoodFeed === 0
         ) {
-            return (modalMessage =
+            return (message =
                 "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?");
         } else if (
             (numberMissing > 0 &&
@@ -256,21 +276,21 @@
                 numberGoodFeed < numberQtdAllowed &&
                 numberBadFeed + numberMissing === 0)
         ) {
-            return (modalMessage = "Apontamento parcial");
+            return (message = "Apontamento parcial");
         }
 
         let total =
             numberBadFeed + numberGoodFeed + numberMissing + numberReworkFeed;
 
         if (total > numberQtdAllowed) {
-            modalMessage = "Quantidade excedida";
+            message = "Quantidade excedida";
         }
 
         if (numberBadFeed > 0 && total <= numberQtdAllowed) {
             showConfirm = true;
         }
         if (total === 0) {
-            modalMessage = "Apontamento vazio";
+            message = "Apontamento vazio";
         }
 
         if (
@@ -278,7 +298,7 @@
             numberGoodFeed > 0 &&
             numberGoodFeed < numberQtdAllowed
         ) {
-            modalMessage = "Apontamento parcial";
+            message = "Apontamento parcial";
         }
 
         if (
@@ -299,19 +319,19 @@
         showErrorMessage = false;
         showAddress = false;
         stopModal = false;
-        modalMessage = "";
+        message = "";
     }
 
     function closeRedirectBarcode() {
         loader = true;
-        modalMessage = "";
+        message = "";
         showAddress = false;
         window.location.href = `/#/codigoBarras`;
     }
 
     function closeRedirect() {
         loader = true;
-        modalMessage = "";
+        message = "";
         showAddress = false;
         window.location.href = `/#/rip`;
     }
@@ -436,12 +456,12 @@
         {/if}
     {/await}
 
-    {#if modalMessage === "Apontamento parcial"}
+    {#if message === "Apontamento parcial"}
         <div class="background">
             <div class="header">
                 <div class="content-area">
                     <div class="modalTitle">
-                        <h3>{modalMessage}</h3>
+                        <h3>{message}</h3>
                     </div>
                     <div class="modalContent">
                         <div class="modalCenter">
@@ -470,12 +490,12 @@
         </div>
     {/if}
 
-    {#if modalMessage === "Apontando apenas peças retrabalhadas, confirma ?"}
+    {#if message === "Apontando apenas peças retrabalhadas, confirma ?"}
         <div class="background">
             <div class="header">
                 <div class="content-area">
                     <div class="modalTitle">
-                        <h3>{modalMessage}</h3>
+                        <h3>{message}</h3>
                     </div>
                     <div class="modalContent">
                         <div class="modalCenter">
@@ -504,12 +524,12 @@
         </div>
     {/if}
 
-    {#if modalMessage === "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?"}
+    {#if message === "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?"}
         <div class="background">
             <div class="header">
                 <div class="content-area">
                     <div class="modalTitle">
-                        <h3>{modalMessage}</h3>
+                        <h3>{message}</h3>
                     </div>
                     <div class="modalContent">
                         <div class="modalCenter">
@@ -538,7 +558,7 @@
         </div>
     {/if}
 
-    {#if modalMessage === "Machine stopped"}
+    {#if message === "Machine stopped"}
         <div class="background">
             <div class="header">
                 <div class="closed">
@@ -567,7 +587,7 @@
         </div>
     {/if}
 
-    {#if modalMessage === "Already pointed"}
+    {#if message === "Already pointed"}
         <div class="background">
             <div class="header">
                 <div class="closed">
@@ -584,11 +604,11 @@
         </div>
     {/if}
 
-    {#if modalMessage !== "" && modalMessage !== "Apontamento parcial" && modalMessage !== "Already pointed" && modalMessage !== "Machine stopped" && modalMessage !== "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?" && modalMessage !== "Apontando apenas peças retrabalhadas, confirma ?"}
+    {#if message !== "" && message !== "Apontamento parcial" && message !== "Already pointed" && message !== "Machine stopped" && message !== "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?" && message !== "Apontando apenas peças retrabalhadas, confirma ?"}
         <div class="background">
             <div class="header">
                 <div class="closed">
-                    <h2>{modalMessage}</h2>
+                    <h2>{message}</h2>
                 </div>
                 <button tabindex="7" on:keypress={close} on:click={close}
                     >fechar</button
@@ -597,11 +617,11 @@
         </div>
     {/if}
 
-    {#if modalMessage === "Algo deu errado"}
+    {#if message === "Algo deu errado"}
         <div class="background">
             <div class="header">
                 <div class="closed">
-                    <h2>{modalMessage}</h2>
+                    <h2>{message}</h2>
                 </div>
                 <button
                     tabindex="7"

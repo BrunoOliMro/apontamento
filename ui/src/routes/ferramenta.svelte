@@ -2,26 +2,25 @@
   // @ts-nocheck
   import ModalConfirmation from "../components/modal/modalConfirmation.svelte";
   let imageLoader = "/images/axonLoader.gif";
-  let urlString = `/api/v1/tools`;
-  let urlFer = `/api/v1/ferselecionadas`;
+  let toolsApi = `/api/v1/tools`;
+  let selectedToolsApi = `/api/v1/ferselecionadas`;
   let tools = [];
-  let loader = true;
+  let arrayComp = [];
   let fer = [];
   let adicionados = 0;
-  let arrayComp = [];
-  let breadFer;
   let message = "";
-  getTools();
+  let loader = true;
+  let resultTools = getTools();
+  console.log("linha 14 tools ", resultTools);
 
   async function ferSelected() {
     loader = true;
-    const res = await fetch(urlFer);
+    const res = await fetch(selectedToolsApi);
     fer = await res.json();
-
     if (res) {
       if (fer.message === "Success") {
         window.location.href = "/#/codigobarras/apontamento";
-        location.reload();
+        // location.reload();
       } else if (fer.message !== "") {
         message = fer.message;
       }
@@ -29,14 +28,13 @@
   }
 
   async function getTools() {
-    const res = await fetch(urlString);
+    const res = await fetch(toolsApi);
     tools = await res.json();
-    console.log("tools linha 28", tools);
-
+    console.log("tools ", tools);
+    loader = false;
     if (tools) {
-      loader = false;
       if (
-        tools.message === 'Ini Prod.' ||
+        tools.message === "Ini Prod." ||
         tools.message === "Pointed Iniciated" ||
         tools.message === "Fin Setup" ||
         tools.message === "" ||
@@ -46,7 +44,7 @@
         ferSelected();
       }
 
-      if (tools.message === "Data not found") {
+      if (tools.message === "Not found") {
         loader = true;
         window.location.href = "/#/codigobarras/apontamento";
         location.reload();
@@ -82,15 +80,13 @@
   }
 </script>
 
-{#if breadFer === true}
-  <nav class="breadcrumb" aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item">
-        <a href="/#/codigobarras">Colaborador</a>
-      </li>
-    </ol>
-  </nav>
-{/if}
+<nav class="breadcrumb" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="/#/codigobarras">Colaborador</a>
+    </li>
+  </ol>
+</nav>
 {#if loader === true}
   <div class="imageLoader">
     <div class="loader">
@@ -98,17 +94,17 @@
     </div>
   </div>
 {/if}
-{#await tools}
+{#await resultTools}
   <div class="imageLoader">
     <div class="loader">
       <img src={imageLoader} alt="" />
     </div>
   </div>
-{:then item}
+{:then}
   <div class="content">
-    <h3>Selecione as Ferramentas para a produção</h3>
+    <h3>Selecione as ferramentas</h3>
     <div class="itens">
-      {#each item as column, i}
+      {#each tools as column, i}
         <img
           tabindex="${i}"
           on:keypress={checkIfclicked(column, `img-${i}`)}
@@ -126,10 +122,6 @@
 {#if message === "Erro ao tentar acessar as fotos de ferramentas"}
   <ModalConfirmation on:message={close} />
 {/if}
-
-<!-- {#if message === "Algo deu errado"}
-  <ModalConfirmation on:message={close} />
-{/if} -->
 
 {#if message !== ""}
   <ModalConfirmation on:message={close} />

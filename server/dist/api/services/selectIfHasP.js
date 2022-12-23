@@ -42,15 +42,15 @@ const selectToKnowIfHasP = async (data, odfQuantity, employee, operationNumber, 
            AND PCP.NUMERO_ODF = '${data.numOdf}'
            AND OP.NUMSEQ = ${operationNumber}`;
     try {
-        const selectKnowHasP = await (0, select_1.select)(queryStorageFund);
-        if (selectKnowHasP.length <= 0) {
+        const resultHasP = await (0, select_1.select)(queryStorageFund);
+        if (resultHasP.length <= 0) {
             return response.message = 'Não há item para reservar';
         }
-        else if (selectKnowHasP.length > 0) {
-            let execut = Math.max(...selectKnowHasP.map((element) => element.EXECUT));
-            const codigoFilho = selectKnowHasP.map((item) => item.NUMITE);
-            const numberOfQtd = Math.min(...selectKnowHasP.map((element) => element.QTD_LIBERADA_PRODUZIR));
-            const makeReservation = selectKnowHasP.map((item) => item.NUMSEQ).filter((element) => element === numeroOperNew);
+        else if (resultHasP.length > 0) {
+            let execut = Math.max(...resultHasP.map((element) => element.EXECUT));
+            const codigoFilho = resultHasP.map((item) => item.NUMITE);
+            const numberOfQtd = Math.min(...resultHasP.map((element) => element.QTD_LIBERADA_PRODUZIR));
+            const makeReservation = resultHasP.map((item) => item.NUMSEQ).filter((element) => element === numeroOperNew);
             if (makeReservation.length <= 0) {
                 return response.message = 'Não há item para reservar';
             }
@@ -81,7 +81,7 @@ const selectToKnowIfHasP = async (data, odfQuantity, employee, operationNumber, 
             }
             const quantitySetStorage = Number(quantityToPoint * execut);
             response.quantidade = quantityToPoint;
-            response.condic = selectKnowHasP[0].CONDIC;
+            response.condic = resultHasP[0].CONDIC;
             response.codigoFilho = codigoFilho;
             response.execut = execut;
             try {

@@ -40,15 +40,15 @@ export const selectToKnowIfHasP = async (data: any, odfQuantity: number, employe
            AND OP.NUMSEQ = ${operationNumber}`
 
     try {
-        const selectKnowHasP: any = await select(queryStorageFund)
+        const resultHasP: any = await select(queryStorageFund)
 
-        if (selectKnowHasP.length <= 0) {
+        if (resultHasP.length <= 0) {
             return response.message = 'Não há item para reservar'
-        } else if (selectKnowHasP.length > 0) {
-            let execut = Math.max(...selectKnowHasP.map((element: any) => element.EXECUT))
-            const codigoFilho: any = selectKnowHasP.map((item: any) => item.NUMITE)
-            const numberOfQtd: number = Math.min(...selectKnowHasP.map((element: any) => element.QTD_LIBERADA_PRODUZIR))
-            const makeReservation = selectKnowHasP.map((item: any) => item.NUMSEQ).filter((element: string) => element === numeroOperNew)
+        } else if (resultHasP.length > 0) {
+            let execut = Math.max(...resultHasP.map((element: any) => element.EXECUT))
+            const codigoFilho: any = resultHasP.map((item: any) => item.NUMITE)
+            const numberOfQtd: number = Math.min(...resultHasP.map((element: any) => element.QTD_LIBERADA_PRODUZIR))
+            const makeReservation = resultHasP.map((item: any) => item.NUMSEQ).filter((element: string) => element === numeroOperNew)
 
             // Check to see if it's to make a reservation
             if (makeReservation.length <= 0) {
@@ -85,7 +85,7 @@ export const selectToKnowIfHasP = async (data: any, odfQuantity: number, employe
             const quantitySetStorage = Number(quantityToPoint * execut)
 
             response.quantidade = quantityToPoint
-            response.condic = selectKnowHasP[0].CONDIC
+            response.condic = resultHasP[0].CONDIC
             response.codigoFilho = codigoFilho
             response.execut = execut
 

@@ -10,15 +10,14 @@ const updateQuantityCstStorage_1 = require("../utils/updateQuantityCstStorage");
 const getPoint = async (req, res) => {
     try {
         var odfNumber = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'])))) || null;
-        var goodFeed = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['qtdBoas'])))) || null;
         var operationNumber = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])))) || null;
         var machineCode = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA'])))) || null;
         var partCode = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])))) || null;
         var employee = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])))) || null;
         var quantityToProduce = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB'])))) || null;
         var revision = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO'])))) || null;
-        var updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${goodFeed}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${partCode}'`;
-        var address;
+        var stringPcpProg = `SELECT TOP 1 CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS, APONTAMENTO_LIBERADO FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND NUMERO_OPERACAO = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}' AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
+        var resultSelectPcpProg = await (0, select_1.select)(stringPcpProg);
         var response = {
             message: '',
             address: '',
@@ -77,14 +76,11 @@ const getPoint = async (req, res) => {
                 const composicaoDeEstoque = await (0, select_1.select)(stringSelectCad);
                 const pecas = await (0, select_1.select)(stringSelectOperacao);
                 if (composicaoDeEstoque.length <= 0 || pecas.length <= 0) {
-                    console.log('ta aquiiiiiiiiiiiiii');
-                    await (0, updateQuantityCstStorage_1.cstStorageUp)(quantityToProduce, add[0].ENDERECO, partCode, odfNumber, goodFeed, employee, hostname, ip);
+                    await (0, updateQuantityCstStorage_1.cstStorageUp)(quantityToProduce, add[0].ENDERECO, partCode, odfNumber, resultSelectPcpProg[0].QTD_BOAS, employee, hostname, ip);
                     return res.json({ message: 'Success', address: '5A01A01-11' });
                 }
                 const alturaDoEndereco = composicaoDeEstoque[0].ALTURA;
-                console.log('linha 97 --Execut --', pecas[0].EXECUT);
-                console.log('linha 97 --goodFeed --', goodFeed);
-                const maxTotalWeightParts = pecas[0].EXECUT * goodFeed;
+                const maxTotalWeightParts = pecas[0].EXECUT * resultSelectPcpProg[0].QTD_BOAS;
                 const maxWeightStorage = composicaoDeEstoque[0].PESO;
                 const comprimentoPeca = pecas[0].COMPRIMENTO;
                 const comprimentoDoEndereco = composicaoDeEstoque[0].COMPRIMENTO;
@@ -130,7 +126,7 @@ const getPoint = async (req, res) => {
                     callAddress();
                 }
             }
-            await (0, updateQuantityCstStorage_1.cstStorageUp)(quantityToProduce, response.address, partCode, odfNumber, goodFeed, employee, hostname, ip);
+            await (0, updateQuantityCstStorage_1.cstStorageUp)(quantityToProduce, response.address, partCode, odfNumber, resultSelectPcpProg[0].QTD_BOAS, employee, hostname, ip);
             if (add[0].ENDERECO) {
                 return res.json({ message: 'Success', address: add[0].ENDERECO });
             }

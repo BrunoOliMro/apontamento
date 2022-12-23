@@ -5,7 +5,6 @@ const insert_1 = require("../services/insert");
 const select_1 = require("../services/select");
 const codeNote_1 = require("../utils/codeNote");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
-const encryptOdf_1 = require("../utils/encryptOdf");
 const sanitize_1 = require("../utils/sanitize");
 const rip = async (req, res) => {
     try {
@@ -16,7 +15,6 @@ const rip = async (req, res) => {
         var operationNumber = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])))).replaceAll(' ', '') || null;
         var funcionario = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])))) || null;
         var maxQuantityReleased = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB'])))) || null;
-        res.cookie('startRip', (0, encryptOdf_1.encrypted)(String(new Date().getDate())));
         var descricaoCodAponta = `Rip Ini.`;
         var boas = null;
         var ruins = null;

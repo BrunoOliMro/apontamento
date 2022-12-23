@@ -5,6 +5,7 @@
     let Subtitle = "RIP - RELATÓRIO DE INSPEÇÃO DE PROCESSOS";
     let pointRipRouter = `/api/v1/pointRip`;
     let supervisorRouter = `/api/v1/supervisor`;
+    let redirect = `/#/codigobarras`;
     let ripRouter = `/api/v1/rip`;
     let seq = "Seq";
     let showErrorEmpty = false;
@@ -17,8 +18,7 @@
     let extraColumns = [];
     let setup = {};
     let supervisorMessage = "";
-    let badgeMessage = "";
-    let redirect;
+    let message = "";
     let lsd;
     let lie;
     let promiseResult = callRip();
@@ -26,28 +26,27 @@
     async function callRip() {
         const res = await fetch(ripRouter);
         ripTable = await res.json();
+        console.log('ripTable', ripTable);
         if (ripTable) {
             loader = false;
             if (ripTable.message === "Não há rip a mostrar") {
-                loader = true;
-                doPost();
-                return (window.location.href = `/#/codigobarras`);
+                odfFinish = true;
             }
             if (ripTable.message !== "") {
-                badgeMessage = ripTable.message;
+                message = ripTable.message;
             }
 
             lie = ripTable.map((acc) => acc.LIE);
             lsd = ripTable.map((acc) => acc.LSE);
         } else {
-            return (badgeMessage = "Algo deu errado");
+            return (message = "Algo deu errado");
         }
     }
 
     function checkSuper(event) {
         if (supervisorMessage.length >= 6 && event.key === "Enter") {
             if (supervisorMessage === "000000") {
-                badgeMessage = "Crachá inválido";
+                message = "Crachá inválido";
             }
             doPostSuper();
         }
@@ -73,7 +72,6 @@
 
     const doPost = async () => {
         loader = true;
-        const headers = new Headers();
         const res = await fetch(pointRipRouter, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -81,8 +79,7 @@
                 setup: setup,
             }),
         }).then((res) => res.json());
-        console.log("linha 84 res. rip", res);
-
+        console.log('res ripta', res);
         if (res) {
             if (res.message === "Pointed") {
                 window.location.href = "/#/rip";
@@ -92,20 +89,15 @@
                 res.message === "Success" ||
                 res.message === "Não há rip a mostrar"
             ) {
+                loader = false
                 odfFinish = true;
-                window.location.href = "/#/codigobarras";
-                location.reload();
             } else if (res.message === "rip vazia") {
                 showErrorEmpty = true;
-            }
-            // else if (res.message === "Não há rip a mostrar") {
-            //     return (window.location.href = `/#/codigobarras`);
-            // }
-            else if (res.message !== "") {
-                badgeMessage = res.message;
+            } else if (res.message !== "") {
+                message = res.message;
             }
         } else {
-            badgeMessage = "Algo deu errado";
+            message = "Algo deu errado";
         }
     };
 
@@ -136,14 +128,15 @@
             return (showSuper = true);
         }
 
-        let s = extraColumns;
-        let x = [];
+        let copyOfExtraCol = extraColumns;
+        let extraArrayCollumns = [];
         if (extraColumns.length === 1) {
-            x.push(s + 1);
+            extraArrayCollumns.push(copyOfExtraCol + 1);
         }
 
         const quantityReleased =
-            ripTable.length * x.length - Object.values(setup).length;
+            ripTable.length * extraArrayCollumns.length -
+            Object.values(setup).length;
 
         if (quantityReleased === 0) {
             const rows = Object.keys(setup).reduce((acc, iterator) => {
@@ -184,7 +177,7 @@
         showSuper = false;
         showError = false;
         showErrorEmpty = false;
-        badgeMessage = "";
+        message = "";
     }
 </script>
 
@@ -314,7 +307,7 @@
             </div>
         </div>
     {/if}
-    {#if badgeMessage === "ocorreu um erro ao enviar os dados da rip"}
+    {#if message === "ocorreu um erro ao enviar os dados da rip"}
         <div class="fundo">
             <div class="header">
                 <h3>Erro ao enviar a rip</h3>

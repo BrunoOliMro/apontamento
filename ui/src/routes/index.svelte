@@ -5,7 +5,6 @@
    let back = "/images/icons8-go-back-24.png";
    async function redirect() {
       const res = await fetch(redirectRoute).then((res) => res.json());
-      console.log("res /feed/", res);
       if (res.message === "Success") {
          window.location.href = "/#/codigobarras/";
       }
@@ -14,7 +13,12 @@
 
 <main>
    <!-- svelte-ignore a11y-positive-tabindex -->
-   <a tabindex="8" href="/#/codigobarras/" on:keypress={redirect} on:click={redirect}>
+   <a
+      tabindex="8"
+      href="/#/codigobarras/"
+      on:keypress={redirect}
+      on:click={redirect}
+   >
       <img src={back} alt="" /> Código de barras
    </a>
    <Title />

@@ -11,11 +11,11 @@
     async function getOdfData() {
         const res = await fetch(odfDataRouter);
         dadosOdf = await res.json();
-        console.log("dados linha 14 /Quantity.svekte/", dadosOdf);
         if (dadosOdf) {
             if (
-                dadosOdf.odfSelecionada.QTDE_LIB > 0 &&
-                dadosOdf.message === "Success"
+                dadosOdf.odfSelecionada.QTDE_LIB > 0 
+                // &&
+                // dadosOdf.message === "Success"
             ) {
                 quantityAvailableProd = dadosOdf.odfSelecionada.QTDE_LIB;
             } else if (dadosOdf.message !== "") {

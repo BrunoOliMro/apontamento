@@ -106,54 +106,30 @@
         barcode,
       }),
     }).then((res) => res.json());
-    console.log("res", res);
+    console.log("barcode : ", res);
 
     if (res) {
-      if (res.message !== "") {
-        if (res.message === "Algo deu errado") {
-          modalMessage = "Algo deu errado";
-          loader = false;
-        }
-
-        if (res.message === "Rip iniciated" || res.message === "Pointed") {
-          loader = true;
-          window.location.href = "/#/rip";
-        }
-
-        if (res.message === "Ini Prod") {
-          loader = true;
-          window.location.href = "/#/codigobarras/apontamento";
-        }
-
-        if (
-          res.message === "Begin new process" ||
-          res.message === "Pointed Iniciated" ||
-          res.message === "Fin Setup" ||
-          res.message === "A value was returned"
-        ) {
-          loader = true;
-          window.location.href = "/#/ferramenta";
-        }
-
-        if (res.message === "Machine has stopped") {
-          loader = true;
-          window.location.href = "/#/codigobarras/apontamento";
-        }
-
-        if (
-          res.message === "Quantidade para reserva inválida" ||
-          "Não há limite na ODF"
-        ) {
-          modalMessage = "Não há limite na ODF";
-          loader = false;
-        } else {
-          loader = false;
-          showmodal = false;
-          modalMessage = res.message;
-        }
+      loader = false;
+      if (res.message === "Ini Prod") {
+        loader = true;
+        window.location.href = "/#/codigobarras/apontamento";
+      } else if (res.message === "Rip iniciated" || res.message === "Pointed") {
+        loader = true;
+        window.location.href = "/#/rip";
+      } else if (
+        res.message === "Begin new process" ||
+        res.message === "Pointed Iniciated" ||
+        res.message === "Fin Setup" ||
+        res.message === "A value was returned"
+      ) {
+        loader = true;
+        window.location.href = "/#/ferramenta";
+      } else if (res.message === "Machine has stopped") {
+        loader = true;
+        window.location.href = "/#/codigobarras/apontamento";
+      } else if (res.message !== "") {
+        modalMessage = res.message;
       }
-    } else {
-      modalMessage = res.message;
     }
   };
 
@@ -446,7 +422,6 @@
   {#if modalMessage !== ""}
     <ModalConfirmation title={modalMessage} on:message={closePopCor} />
   {/if}
-
 </main>
 
 <style>

@@ -108,21 +108,18 @@
                     <img src={imageLoader} alt="" />
                 </div>
             </div>
-        {:then item}
+        {:then}
             <div class="frame">
                 {#each imagemBack as img}
-                    {#if imagemBack.length > 0}
-                        <!-- on:click|preventDefault={selectPic} -->
-                        <div id={img}>
-                            <img
-                                media="print"
-                                class="img"
-                                src={img}
-                                id="img"
-                                alt=""
-                            />
-                        </div>
-                    {/if}
+                    <div id={img}>
+                        <img
+                            media="print"
+                            class="img"
+                            src={img}
+                            id="img"
+                            alt=""
+                        />
+                    </div>
                 {/each}
             </div>
         {/await}

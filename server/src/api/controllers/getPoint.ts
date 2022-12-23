@@ -13,15 +13,14 @@ import { cstStorageUp } from '../utils/updateQuantityCstStorage';
 export const getPoint: RequestHandler = async (req, res) => {
     try {
         var odfNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_ODF'])))) || null
-        var goodFeed = Number(decrypted(String(sanitize(req.cookies['qtdBoas'])))) || null;
         var operationNumber = String(decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO'])))) || null
         var machineCode = String(decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA'])))) || null
         var partCode = String(decrypted(String(sanitize(req.cookies['CODIGO_PECA'])))) || null
         var employee = String(decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))) || null
         var quantityToProduce = Number(decrypted(String(sanitize(req.cookies['QTDE_LIB'])))) || null
         var revision = String(decrypted(String(sanitize(req.cookies['REVISAO'])))) || null
-        var updateQuery = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + (CAST('${goodFeed}' AS decimal(19, 6))) WHERE 1 = 1 AND CODIGO = '${partCode}'`
-        var address;
+        var stringPcpProg = `SELECT TOP 1 CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS, APONTAMENTO_LIBERADO FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND NUMERO_OPERACAO = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}' AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
+        var resultSelectPcpProg = await select(stringPcpProg)
         var response = {
             message: '',
             address: '',
@@ -89,21 +88,18 @@ export const getPoint: RequestHandler = async (req, res) => {
                 const pecas = await select(stringSelectOperacao)
 
                 if (composicaoDeEstoque.length <= 0 || pecas.length <= 0) {
-                    console.log('ta aquiiiiiiiiiiiiii');
-                    await cstStorageUp(quantityToProduce, add[0].ENDERECO, partCode, odfNumber, goodFeed, employee, hostname, ip)
+                    await cstStorageUp(quantityToProduce, add[0].ENDERECO, partCode, odfNumber, resultSelectPcpProg[0].QTD_BOAS, employee, hostname, ip)
                     return res.json({ message: 'Success', address: '5A01A01-11' })
                 }
                 const alturaDoEndereco = composicaoDeEstoque[0].ALTURA
-                console.log('linha 97 --Execut --', pecas[0].EXECUT);
-                console.log('linha 97 --goodFeed --', goodFeed);
 
-                const maxTotalWeightParts = pecas[0].EXECUT * goodFeed!
+                const maxTotalWeightParts = pecas[0].EXECUT * resultSelectPcpProg[0].QTD_BOAS!
                 const maxWeightStorage = composicaoDeEstoque[0].PESO
 
-                const comprimentoPeca = pecas[0].COMPRIMENTO //* goodFeed!
+                const comprimentoPeca = pecas[0].COMPRIMENTO //* resultSelectPcpProg[0].QTD_BOAS!
                 const comprimentoDoEndereco = composicaoDeEstoque[0].COMPRIMENTO
 
-                const larguraPeca = pecas[0].LARGURA //* goodFeed!
+                const larguraPeca = pecas[0].LARGURA //* resultSelectPcpProg[0].QTD_BOAS!
                 const larguraDoEndereco = composicaoDeEstoque[0].LARGURA
 
                 const areaDaPeca = comprimentoPeca * larguraPeca
@@ -140,7 +136,7 @@ export const getPoint: RequestHandler = async (req, res) => {
                 if (dimensaoLinearPeca > dimensaoLinearEstoque) {
                     console.log('dimensaoLinearPeca errado');
 
-                    array.push(false) 
+                    array.push(false)
 
                 }
                 if (dimensaoCubicaPeca > dimesaoCubicaEstoque) {
@@ -161,7 +157,7 @@ export const getPoint: RequestHandler = async (req, res) => {
                 }
             }
 
-            await cstStorageUp(quantityToProduce, response.address, partCode, odfNumber, goodFeed, employee, hostname, ip)
+            await cstStorageUp(quantityToProduce, response.address, partCode, odfNumber, resultSelectPcpProg[0].QTD_BOAS, employee, hostname, ip)
 
             if (add[0].ENDERECO) {
                 return res.json({ message: 'Success', address: add[0].ENDERECO })
