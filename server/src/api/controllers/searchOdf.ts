@@ -88,7 +88,7 @@ export const searchOdf: RequestHandler = async (req, res) => {
     // Generate cookie that is gonna be used later;
     let resultComponents = await selectToKnowIfHasP(barcode, odf[i].QTDE_LIB, employee, odf[i].NUMERO_OPERACAO, odf[i].CODIGO_PECA)
     console.log('resultComponents : ', resultComponents);
-    if (resultComponents.message === 'Valores Reservados') {
+    if (resultComponents.message === 'Valores Reservados' || resultComponents.message === 'Gerar cookies') {
         if (resultComponents.quantidade < odf[i].QTDE_LIB) {
             odf[i].QTDE_LIB = resultComponents.quantidade
         }

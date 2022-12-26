@@ -17,7 +17,7 @@
     let ripTable = [];
     let extraColumns = [];
     let setup = {};
-    let supervisorMessage = "";
+    let supervisor = "";
     let message = "";
     let lsd;
     let lie;
@@ -26,11 +26,10 @@
     async function callRip() {
         const res = await fetch(ripRouter);
         ripTable = await res.json();
-        console.log('ripTable', ripTable);
         if (ripTable) {
             loader = false;
             if (ripTable.message === "Não há rip a mostrar") {
-                odfFinish = true;
+                post();
             }
             if (ripTable.message !== "") {
                 message = ripTable.message;
@@ -44,8 +43,8 @@
     }
 
     function checkSuper(event) {
-        if (supervisorMessage.length >= 6 && event.key === "Enter") {
-            if (supervisorMessage === "000000") {
+        if (supervisor.length >= 6 && event.key === "Enter") {
+            if (supervisor === "000000") {
                 message = "Crachá inválido";
             }
             doPostSuper();
@@ -58,28 +57,27 @@
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                supervisor: !supervisorMessage ? "" : supervisorMessage,
+                supervisor: !supervisor ? "" : supervisor,
             }),
         }).then((res) => res.json());
         loader = false;
         if (res.message === "Supervisor found") {
             showSuper = false;
-            doPost();
+            post();
         } else if (res.message === "Supervisor not found") {
             showError = true;
         }
     };
 
-    const doPost = async () => {
+    const post = async () => {
         loader = true;
         const res = await fetch(pointRipRouter, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                setup: setup,
+                setup: !setup ? "" : setup,
             }),
         }).then((res) => res.json());
-        console.log('res ripta', res);
         if (res) {
             if (res.message === "Pointed") {
                 window.location.href = "/#/rip";
@@ -89,7 +87,7 @@
                 res.message === "Success" ||
                 res.message === "Não há rip a mostrar"
             ) {
-                loader = false
+                loader = false;
                 odfFinish = true;
             } else if (res.message === "rip vazia") {
                 showErrorEmpty = true;
@@ -164,7 +162,7 @@
                 showSuper = true;
             } else if (callSupervisor === false) {
                 loader = true;
-                doPost();
+                post();
             }
         } else if (quantityReleased !== 0) {
             loader = false;
@@ -270,7 +268,7 @@
                 <input
                     autofocus
                     tabindex="18"
-                    bind:value={supervisorMessage}
+                    bind:value={supervisor}
                     on:keypress={checkSuper}
                     onkeyup="this.value = this.value.toUpperCase()"
                     type="text"

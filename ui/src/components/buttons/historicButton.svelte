@@ -1,6 +1,6 @@
 <!-- svelte-ignore a11y-positive-tabindex -->
 <a class="out" href="/#/historico/"
-    ><button tabindex="7" type="button" class="sideButton">
+    ><button tabindex="7" type="button" class="btn">
         <p>Histórico de apontamento</p>
     </button>
 </a>
@@ -17,7 +17,7 @@
         padding: 0%;
     }
 
-    .sideButton {
+    .btn {
         outline: none;
         margin: 0%;
         padding: 0%;
@@ -36,7 +36,7 @@
         letter-spacing: 1px;
     }
 
-    .sideButton:hover {
+    .btn:hover {
         cursor: pointer;
         background-color: white;
         color: blue;

@@ -9,7 +9,7 @@
     import Footer from "./footer.svelte";
     import Status from "./status.svelte";
     let callOdfData = `/api/v1/odfData`;
-    let urlS = `/api/v1/point`;
+    let pointApi = `/api/v1/point`;
     let motivoUrl = `/api/v1/badFeedMotives`;
     let supervisorApi = `/api/v1/supervisor`;
     let supervisorStop = "api/v1/supervisorParada";
@@ -20,9 +20,9 @@
     let showErrorMessage = false;
     let showRoundedApont = false;
     let showConfirm = false;
-    var showAddress = false;
     let stopModal = false;
     let loader = false;
+    var address = "";
     let supervisor = "";
     let message = "";
     let dados = [];
@@ -36,10 +36,10 @@
     let getSpace;
     let balance;
     let superSuperMaqPar;
-    let resultRefugo = getRefugodata();
+    let resultRefugo = motives();
     getOdfData();
 
-    const checkPostSuper = async (event) => {
+    const checkStopMachine = async (event) => {
         if (!superSuperMaqPar) {
             superSuperMaqPar = "";
         } else if (superSuperMaqPar) {
@@ -57,12 +57,12 @@
                 } else {
                     loader = true;
                     message = "";
-                    doPostSuper();
+                    postStop();
                 }
             }
         }
     };
-    const doPostSuper = async () => {
+    const postStop = async () => {
         loader = true;
         const res = await fetch(supervisorStop, {
             method: "POST",
@@ -71,12 +71,10 @@
                 superSuperMaqPar: !superSuperMaqPar ? "" : superSuperMaqPar,
             }),
         }).then((res) => res.json());
-        console.log("linha 57 /barcode.svelte/", res);
-
         if (res) {
-            if (res.message === "maquina") {
+            if (res.message === "Success") {
                 loader = true;
-                doPost();
+                post();
                 message = "Apontamento Liberado";
             }
             if (res.message !== "") {
@@ -91,12 +89,9 @@
     async function getOdfData() {
         const res = await fetch(callOdfData);
         odfData = await res.json();
-
-        console.log("linha 94 -- odfData / feed.svelte--", odfData);
+        loader = false;
         if (odfData) {
-            loader = false;
             if (odfData.message === "Success") {
-                console.log("odfData.odfSelecionada", odfData.odfSelecionada);
                 if (odfData.odfSelecionada) {
                     qtdPossivelProducao = odfData.odfSelecionada.QTDE_LIB;
                 } else {
@@ -113,36 +108,9 @@
         } else {
             return (window.location.href = `/#/codigobarras`);
         }
-
-        // if (!odfData) {
-        //     return (window.location.href = `/#/codigobarras`);
-        // } else if (
-        //     odfData.message === "Esta tentando acessar algo que não pode" ||
-        //     odfData.message === `codigo de apontamento: 7 = máquina parada` ||
-        //     odfData.message === `codeApont 2 setup finalizado`
-        // ) {
-        //     return (window.location.href = `/#/codigobarras`);
-        // } else if (
-        //     odfData.message === "codeApont 3 prod Ini."
-        //     ||
-        //     odfData.message === "Success"
-        // ) {
-        //     loader = false;
-        //     qtdPossivelProducao = odfData.odfSelecionada.QTDE_LIB;
-        //     if (qtdPossivelProducao <= 0) {
-        //         qtdPossivelProducao = 0;
-        //     }
-        // } else if (
-        //     odfData.message === "codeApont 5 inicio de rip" ||
-        //     odfData.message === "codeApont 4 prod finalzado"
-        // ) {
-        //     return (window.location.href = `/#/rip`);
-        // } else {
-        //     modalMessage = "Algo deu errado";
-        // }
     }
 
-    async function getRefugodata() {
+    async function motives() {
         const res = await fetch(motivoUrl);
         dados = await res.json();
         if (dados) {
@@ -163,33 +131,32 @@
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    supervisor: supervisor,
+                    supervisor,
                 }),
             }).then((res) => res.json());
             if (res.message === "Supervisor found") {
-                doPost();
+                post();
             }
         }
     }
 
-    const doPost = async (e) => {
+    const post = async () => {
         loader = true;
         close();
-        const res = await fetch(urlS, {
+        const res = await fetch(pointApi, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                valorFeed: valorFeed,
-                badFeed: badFeed,
-                missingFeed: missingFeed,
-                reworkFeed: reworkFeed,
-                value: value,
-                supervisor: supervisor,
+                valorFeed,
+                badFeed,
+                missingFeed,
+                reworkFeed,
+                value,
+                supervisor,
             }),
         }).then((res) => res.json());
-        console.log("res", res);
+        loader = false;
         if (res) {
-            loader = false;
             if (res.message === "Apontamento parcial") {
                 message = "Apontamento parcial";
             } else if (res.message === "Pointed") {
@@ -220,27 +187,19 @@
     };
 
     async function getSpaceFunc() {
-        const res = await fetch(urlS);
+        const res = await fetch(pointApi);
         getSpace = await res.json();
-        console.log("getSpace", getSpace);
+        loader = false;
         if (getSpace.message === "No address") {
-            loader = false;
             window.location.href = `/#/rip`;
-        }
-
-        if (getSpace.message === "Success") {
-            loader = false;
-            showAddress = true;
-        }
-
-        if (getSpace.message === "Algo deu errado") {
-            loader = false;
-            getSpace.address = "5A01A01-11";
-            showAddress = true;
+        } else if (getSpace.message === "Success") {
+            address = getSpace.address;
+        } else if (getSpace.message === "Algo deu errado") {
+            address = "5A01A01-11";
         }
     }
 
-    async function doCallPost(event) {
+    async function callPost(event) {
         let numberBadFeed = Number(badFeed || 0);
         let numberGoodFeed = Number(valorFeed || 0);
         let numberQtdAllowed = Number(qtdPossivelProducao);
@@ -306,7 +265,7 @@
             numberGoodFeed === numberQtdAllowed
         ) {
             loader = true;
-            doPost();
+            post();
         }
     }
 
@@ -317,7 +276,7 @@
         showSuperNotFound = false;
         showRoundedApont = false;
         showErrorMessage = false;
-        showAddress = false;
+        address = false;
         stopModal = false;
         message = "";
     }
@@ -325,21 +284,21 @@
     function closeRedirectBarcode() {
         loader = true;
         message = "";
-        showAddress = false;
+        address = false;
         window.location.href = `/#/codigoBarras`;
     }
 
     function closeRedirect() {
         loader = true;
         message = "";
-        showAddress = false;
+        address = false;
         window.location.href = `/#/rip`;
     }
 
     function callGoodFeed(event) {
         valorFeed = event.detail.goodFeed;
         if (event.key === "Enter") {
-            doCallPost();
+            callPost();
         }
     }
 
@@ -400,11 +359,12 @@
                 </div>
             </div>
             <div class="buttonApontar">
+                <!-- svelte-ignore a11y-positive-tabindex -->
                 <a
                     tabindex="5"
                     id="apontar"
-                    on:keypress|once={doCallPost}
-                    on:click|once={doCallPost}
+                    on:keypress|once={callPost}
+                    on:click|once={callPost}
                     type="submit"
                 >
                     <span />
@@ -430,12 +390,13 @@
                     <div class="closed">
                         <h3>Apontamento com refugo</h3>
                     </div>
-                    <select bind:value name="id" id="id">
+                    <select bind:value >
                         {#each dados as item}
                             <option>{item}</option>
                         {/each}
                     </select>
                     <p>Supervisor</p>
+                    <!-- svelte-ignore a11y-autofocus -->
                     <input
                         on:input={blockForbiddenChars}
                         on:keypress={checkForSuper}
@@ -467,6 +428,7 @@
                         <div class="modalCenter">
                             <h4>Informe o supervisor:</h4>
                             <div class="input">
+                                <!-- svelte-ignore a11y-autofocus -->
                                 <input
                                     on:input={blockForbiddenChars}
                                     on:keypress={checkForSuper}
@@ -501,6 +463,7 @@
                         <div class="modalCenter">
                             <h4>Informe o supervisor:</h4>
                             <div class="input">
+                                <!-- svelte-ignore a11y-autofocus -->
                                 <input
                                     on:input={blockForbiddenChars}
                                     on:keypress={checkForSuper}
@@ -535,6 +498,7 @@
                         <div class="modalCenter">
                             <h4>Informe o supervisor:</h4>
                             <div class="input">
+                                <!-- svelte-ignore a11y-autofocus -->
                                 <input
                                     on:input={blockForbiddenChars}
                                     on:keypress={checkForSuper}
@@ -569,6 +533,8 @@
                         <p>Chame um supervisor</p>
                     </div>
                     <div>
+                        <!-- svelte-ignore a11y-autofocus -->
+                        <!-- svelte-ignore a11y-positive-tabindex -->
                         <input
                             autofocus
                             tabindex="12"
@@ -576,7 +542,7 @@
                             name="supervisor"
                             type="text"
                             on:input={blockForbiddenChars}
-                            on:keypress={checkPostSuper}
+                            on:keypress={checkStopMachine}
                             onkeyup="this.value = this.value.toUpperCase()"
                             bind:value={superSuperMaqPar}
                         />
@@ -610,8 +576,9 @@
                 <div class="closed">
                     <h2>{message}</h2>
                 </div>
+                <!-- svelte-ignore a11y-positive-tabindex -->
                 <button tabindex="7" on:keypress={close} on:click={close}
-                    >fechar</button
+                    >Fechar</button
                 >
             </div>
         </div>
@@ -623,6 +590,7 @@
                 <div class="closed">
                     <h2>{message}</h2>
                 </div>
+                <!-- svelte-ignore a11y-positive-tabindex -->
                 <button
                     tabindex="7"
                     on:keypress={closeRedirectBarcode}
@@ -632,12 +600,12 @@
         </div>
     {/if}
 
-    {#if showAddress === true}
+    {#if address !== ""}
         <div class="background">
             <div class="header">
                 <div class="closed">
                     <h2>
-                        Insira a quantidade no local : {getSpace.address}
+                        Insira a quantidade no local : {address}
                     </h2>
                 </div>
                 <button on:keypress={closeRedirect} on:click={closeRedirect}
@@ -696,35 +664,12 @@
         width: 100%;
         height: 28px;
     }
-    .optionsBar {
-        margin-bottom: 10px;
-        padding: 0%;
-        justify-content: left;
-        align-items: left;
-        text-align: left;
-    }
     .modalTitle {
         margin-left: 0px;
         margin-bottom: 25px;
         margin-right: 0px;
         margin-top: 0px;
         padding: 0%;
-        justify-content: left;
-        align-items: left;
-        text-align: left;
-    }
-    .closePopDiv {
-        font-size: 12px;
-        flex-direction: row;
-        margin-right: 2%;
-        margin-top: 0%;
-        padding: 0%;
-    }
-    .confirmPopDiv {
-        font-size: 16px;
-        margin: 0%;
-        padding: 0%;
-        flex-direction: row;
         justify-content: left;
         align-items: left;
         text-align: left;
@@ -752,40 +697,7 @@
         align-items: center;
         justify-content: center;
     }
-    .btnPop {
-        margin: 1%;
-        padding: 0%;
-        background-color: transparent;
-        flex-direction: row;
-        border-radius: 5px;
-        opacity: 0.5;
-        color: white;
-        border: none;
-    }
 
-    .btnPopConfirm {
-        margin: 1%;
-        padding: 0%;
-        background-color: transparent;
-        flex-direction: row;
-        align-items: left;
-        text-align: left;
-        justify-content: left;
-        border-radius: 5px;
-        opacity: 0.5;
-        color: white;
-        border: none;
-    }
-
-    .btnPopConfirm:hover {
-        transition: 1s;
-        opacity: 1;
-    }
-
-    .btnPop:hover {
-        transition: 1s;
-        opacity: 1;
-    }
 
     h2 {
         font-size: 55px;
@@ -809,38 +721,6 @@
         background-color: #252525;
     }
 
-    .modalBackground {
-        transition: 1s;
-        position: fixed;
-        top: 0;
-        left: 0;
-        background-color: rgba(17, 17, 17, 0.618);
-        height: 100vh;
-        width: 100vw;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
-        z-index: 999999999999999999999999999999;
-    }
-    .itensInsideModal {
-        transition: all 1s;
-        animation: ease-in;
-        margin: 0%;
-        padding: 0%;
-        color: white;
-        background-color: #252525;
-        top: 0;
-        left: 0;
-        width: 625px;
-        height: 300px;
-        display: block;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        border-radius: 8px;
-    }
     .buttonApontar {
         margin-top: 110px;
         margin-bottom: 20px;

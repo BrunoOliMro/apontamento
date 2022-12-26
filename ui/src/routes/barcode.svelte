@@ -1,120 +1,67 @@
 <script>
   // @ts-nocheck
+
+  import { destroy_each } from "svelte/internal";
+
+  // @ts-nocheck
   import ModalConfirmation from "../../src/components/modal/modalConfirmation.svelte";
   import blockForbiddenChars from "../routes/presanitize";
   let returnedValueApi = `/api/v1/returnedValue`;
-  let supervisorApi = "api/v1/supervisorParada";
+  let apiCallMotiveReturn = `/api/v1/returnMotives`;
   let imageLoader = "/images/axonLoader.gif";
   let urlBagde = `/api/v1/badge`;
   let urlS = `/api/v1/odf`;
-  let showmodal = false;
-  let showCorr = false;
-  let superParada = false;
-  let showBadge = true;
-  let showBarcode = false;
-  let showSupervisor = false;
-  let showBreadcrumb = false;
+  let back = "/images/icons8-go-back-24.png";
+  let title = "APONTAMENTO";
+  let returnModal = false;
+  let badgeModal = true;
+  let barcodeModal = false;
+  let breadcrumbModal = false;
   let loader = false;
   let barcodeReturn = "";
   let barcode = "";
   let badge = "";
-  let returnValueStorage;
-  let superMaqPar;
+  let valueStorage;
   let supervisor;
   let quantity;
-  let quantityModal = "";
-  let paradaMsg = "";
-  let barcodeMsg = "";
-  let modalMessage = "";
+  let message = "";
+  let motive;
+  let motives;
+  callReturnMotive();
 
-  // let badgeMsg = '';
-  // if (window.location.href.includes('?')) {
-  //   badgeMsg = window.location.href.split('?')[1].split('=')[1];
-  // }
-
-  const checkPostSuper = async (event) => {
-    if (!superMaqPar) {
-      superMaqPar = "";
-    } else if (superMaqPar) {
-      if (superMaqPar.length >= 6 && event.key === "Enter") {
-        if (
-          !superMaqPar ||
-          superMaqPar === "0" ||
-          superMaqPar === "00" ||
-          superMaqPar === "000" ||
-          superMaqPar === "0000" ||
-          superMaqPar === "00000" ||
-          superMaqPar === "000000"
-        ) {
-          modalMessage = "Crachá inválido";
-        } else {
-          loader = true;
-          superParada = false;
-          doPostSuper();
-        }
-      }
-    }
-  };
-
-  const doPostSuper = async () => {
-    console.log("linha 37", superMaqPar);
-    loader = true;
-    // const headers = new Headers();
-    // headers.append("Content-Type", "application/json");
-    const res = await fetch(supervisorApi, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        superMaqPar: !superMaqPar ? "" : superMaqPar,
-      }),
-    }).then((res) => res.json());
-    console.log("linha 57 /barcode.svelte/", res);
-
-    if (res.message !== "") {
-      showmodal = false;
-      modalMessage = res.message;
-      superParada = false;
-      showmodal = false;
-    }
-  };
+  async function callReturnMotive() {
+    const res = await fetch(apiCallMotiveReturn);
+    motives = await res.json();
+  }
 
   function verifyBarcodeBefore(event) {
     if (!barcode && barcode.length > 0) {
-      return (modalMessage = "Algo deu errado");
-    }
-
-    if (event.key === "Enter" && barcode.length >= 16) {
-      doPost();
+      return (message = "Algo deu errado");
+    } else if (event.key === "Enter" && barcode.length >= 16) {
+      post();
     }
   }
 
-  const doPost = async () => {
-    if (!barcode) {
-      return (modalMessage = "Algo deu errado");
-    }
-
-    if (barcode.length < 16) {
-      return (modalMessage = "Algo deu errado");
-    }
+  const post = async () => {
     loader = true;
-    // const headers = new Headers();
-    // headers.append("Content-Type", "application/json");
+    if (!barcode) {
+      loader = false;
+      return (message = "Algo deu errado");
+    } else if (barcode.length < 16) {
+      loader = false;
+      return (message = "Algo deu errado");
+    }
     const res = await fetch(urlS, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        barcode,
+        barcode: !barcode ? "" : barcode,
       }),
     }).then((res) => res.json());
-    console.log("barcode : ", res);
-
     if (res) {
-      loader = false;
       if (res.message === "Ini Prod") {
-        loader = true;
         window.location.href = "/#/codigobarras/apontamento";
       } else if (res.message === "Rip iniciated" || res.message === "Pointed") {
-        loader = true;
         window.location.href = "/#/rip";
       } else if (
         res.message === "Begin new process" ||
@@ -122,18 +69,17 @@
         res.message === "Fin Setup" ||
         res.message === "A value was returned"
       ) {
-        loader = true;
         window.location.href = "/#/ferramenta";
       } else if (res.message === "Machine has stopped") {
-        loader = true;
         window.location.href = "/#/codigobarras/apontamento";
       } else if (res.message !== "") {
-        modalMessage = res.message;
+        loader = false;
+        message = res.message;
       }
     }
   };
 
-  function checkBeforeBadge(event) {
+  function checkBadgeAndCallSearch(event) {
     if (!badge) {
       badge = "";
     } else if (badge) {
@@ -147,110 +93,94 @@
           badge === "00000" ||
           badge === "000000"
         ) {
-          modalMessage = "Crachá inválido";
+          message = "Crachá inválido";
         } else {
-          checkBagde();
+          badgeSearch();
         }
       }
     }
   }
 
-  const checkBagde = async () => {
+  const badgeSearch = async () => {
     loader = true;
-    const headers = new Headers();
-    headers.append("Content-Type", "application/json");
     const res = await fetch(urlBagde, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        badge,
+        badge: !badge ? "" : badge,
       }),
-      headers,
     }).then((res) => res.json());
-    loader = false;
     if (res) {
+      loader = false;
       if (res.message !== "") {
         if (res.message === "Badge found") {
-          showBarcode = true;
-          showBadge = false;
-          showBreadcrumb = true;
+          barcodeModal = true;
+          badgeModal = false;
+          breadcrumbModal = true;
         } else {
-          showmodal = false;
-          modalMessage = res.message;
+          returnModal = false;
+          message = res.message;
         }
       }
     }
   };
 
-  function closePop() {
-    modalMessage = "";
-    window.location.href = "/#/codigobarras";
-    location.reload();
-  }
-
   function returnValue() {
-    if (showmodal === false) {
-      showmodal = true;
+    if (returnModal === false) {
+      returnModal = true;
     } else {
-      showmodal = false;
+      returnModal = false;
     }
   }
-  async function doReturn() {
+  async function returningValues() {
     loader = true;
     const res = await fetch(returnedValueApi, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        returnValueStorage: returnValueStorage,
-        supervisor: supervisor,
-        quantity: quantity,
+        valueStorage: !valueStorage ? "" : valueStorage,
+        supervisor: !supervisor ? "" : supervisor,
+        quantity: !quantity ? "" : quantity,
         barcodeReturn: !barcodeReturn ? "" : barcodeReturn,
+        motive: !motive ? '' : motive,
       }),
     }).then((res) => res.json());
-    loader = false;
-    console.log("linha 245 -return-", res);
-
     barcodeReturn = "";
     supervisor = "";
     quantity = "";
-    returnValueStorage = "";
-    showmodal = false;
-
+    valueStorage = "";
+    returnModal = false;
+    loader = false;
     if (res.message !== "") {
-      loader = false;
-      showmodal = false;
-      modalMessage = res.message;
+      returnModal = false;
+      message = res.message;
     }
   }
 
-  function closePopCor() {
-    barcodeMsg = "";
-    paradaMsg = "";
-    showSupervisor = false;
-    quantityModal = "";
-    showCorr = false;
-    showmodal = false;
-    modalMessage = "";
+  function close() {
+    loader = true;
+    returnModal = false;
+    message = "";
+    window.location.href = "/#/codigobarras";
     location.reload();
   }
 
-  function goBack() {
-    showBreadcrumb = false;
-    showBarcode = false;
-    showBadge = true;
+  function redirectToBarcode() {
+    breadcrumbModal = false;
+    barcodeModal = false;
+    badgeModal = true;
     badge = "";
     barcode = "";
-    modalMessage = "";
+    message = "";
   }
-  let back = "/images/icons8-go-back-24.png";
-  export let title = "APONTAMENTO";
 </script>
 
 <main>
-  {#if showBreadcrumb === true}
+  {#if breadcrumbModal === true}
     <nav class="breadcrumb" aria-label="breadcrumb">
       <ol class="breadcrumb">
         <li class="breadcrumb-item">
-          <a href="/#/codigobarras" on:click={goBack}>
+          <a href="/#/codigobarras" on:click={redirectToBarcode}>
             <img src={back} alt="" />Colaborador</a
           >
         </li>
@@ -260,55 +190,32 @@
 
   <div>
     <div>
-      <!-- <Title /> -->
-      <div class="titleDiv">
+      <div class="title-div">
         <h1 class="title">{title}</h1>
       </div>
 
       {#if loader === true}
-        <div class="imageLoader">
+        <div class="image-loader">
           <div class="loader">
             <img src={imageLoader} alt="" />
           </div>
         </div>
       {/if}
 
-      {#if showBarcode === true}
+      {#if barcodeModal === true}
         <div class="return">
-          <button
-            on:keypress={returnValue}
-            on:click={returnValue}
-            class="sideButton"
-          >
+          <button on:keypress={returnValue} on:click={returnValue} class="btn">
             Estornar Valores
           </button>
         </div>
       {/if}
     </div>
 
-    {#if superParada === true}
-      <div class="modalBackground">
-        <div class="confirmationModal">
-          <h5>Máquina parada selecione um supervisor</h5>
-          <input
-            autofocus
-            tabindex="12"
-            id="supervisor"
-            name="supervisor"
-            type="text"
-            on:input={blockForbiddenChars}
-            on:keypress={checkPostSuper}
-            onkeyup="this.value = this.value.toUpperCase()"
-            bind:value={superMaqPar}
-          />
-        </div>
-      </div>
-    {/if}
-
-    {#if showBarcode === true}
-      <div class="form">
-        <div id="popUpCracha">
+    {#if barcodeModal === true}
+      <div class="form-div">
+        <div id="pop-up-badge">
           <div id="title">CÓDIGO DE BARRAS DA ODF</div>
+          <!-- svelte-ignore a11y-autofocus -->
           <input
             autocomplete="off"
             autofocus
@@ -316,122 +223,155 @@
             on:input|preventDefault={blockForbiddenChars}
             bind:value={barcode}
             onkeyup="this.value = this.value.toUpperCase()"
-            name="MATRIC"
-            id="MATRIC"
             type="text"
           />
         </div>
       </div>
     {/if}
 
-    {#if showBadge === true}
-      <div class="form">
-        <div id="popUpCracha">
+    {#if badgeModal === true}
+      <div class="form-div">
+        <div id="pop-up-badge">
           <div id="title">COLABORADOR</div>
+          <!-- svelte-ignore a11y-autofocus -->
           <input
             autocomplete="off"
             autofocus
-            on:keypress={checkBeforeBadge}
+            on:keypress={checkBadgeAndCallSearch}
             on:input|preventDefault={blockForbiddenChars}
             bind:value={badge}
             onkeyup="this.value = this.value.toUpperCase()"
-            name="MATRIC"
-            id="MATRIC"
             type="text"
           />
         </div>
       </div>
     {/if}
   </div>
-  {#if showmodal === true}
-    <div class="fundo">
-      <div class="header">
-        <div class="close">
-          <h4>Codigo do Supervisor</h4>
+
+  {#if returnModal === true}
+    <div class="background-modal">
+      <div class="modal-div">
+        <div class="line">
+          <p>Código de barras da ODF:</p>
+          <!-- svelte-ignore a11y-positive-tabindex -->
+          <!-- svelte-ignore a11y-autofocus -->
+          <input
+            on:input={blockForbiddenChars}
+            bind:value={barcodeReturn}
+            autofocus
+            autocomplete="off"
+            class="return-input"
+            onkeyup="this.value = this.value.toUpperCase()"
+            type="text"
+            tabindex="14"
+          />
         </div>
-        <input
-          autocomplete="off"
-          autofocus
-          tabindex="14"
-          bind:value={supervisor}
-          class="returnInput"
-          on:input={blockForbiddenChars}
-          onkeyup="this.value = this.value.toUpperCase()"
-          type="text"
-          name="supervisor"
-          id="supervisor"
-        />
-        <h4>Qual irá retornar</h4>
-        <div class="options">
-          <select
+
+        <div class="line">
+          <p>Insira a quantidade que deseja estornar:</p>
+          <!-- svelte-ignore a11y-positive-tabindex -->
+          <input
+            on:input={blockForbiddenChars}
+            bind:value={quantity}
+            autocomplete="off"
+            class="return-input"
+            onkeyup="this.value = this.value.toUpperCase()"
+            type="text"
             tabindex="15"
-            bind:value={returnValueStorage}
-            name="id"
-            id="id"
-          >
-            <option>BOAS</option>
-            <option>RUINS</option>
+          />
+        </div>
+
+        <div class="line">
+          <p>Crachá do Supervisor:</p>
+          <!-- svelte-ignore a11y-positive-tabindex -->
+          <input
+            bind:value={supervisor}
+            on:input={blockForbiddenChars}
+            autocomplete="off"
+            tabindex="16"
+            class="return-input"
+            onkeyup="this.value = this.value.toUpperCase()"
+            type="text"
+          />
+        </div>
+
+        <div class="line">
+          <p>Qual irá retornar:</p>
+          <div class="options">
+            <!-- svelte-ignore a11y-positive-tabindex -->
+            <select tabindex="17" bind:value={valueStorage}>
+              <option>BOAS</option>
+              <option>RUINS</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="line">
+          <p>Qual o motivo do estorno:</p>
+          <select bind:value={motive}>
+            {#each motives as item}
+              <option>{item}</option>
+            {/each}
           </select>
         </div>
-        <h4>Insira a quantidade que deseja estornar</h4>
-        <input
-          tabindex="15"
-          on:input={blockForbiddenChars}
-          autocomplete="off"
-          class="returnInput"
-          onkeyup="this.value = this.value.toUpperCase()"
-          bind:value={quantity}
-          type="text"
-          name="returnValueStorage"
-        />
 
-        <h4>CÓDIGO DE BARRAS DA ODF</h4>
-        <input
-          tabindex="16"
-          on:input={blockForbiddenChars}
-          autocomplete="off"
-          class="returnInput"
-          onkeyup="this.value = this.value.toUpperCase()"
-          bind:value={barcodeReturn}
-          id="barcode"
-          name="barcode"
-          type="text"
-        />
-
-        <div>
+        <div class="line-btn">
+          <!-- svelte-ignore a11y-positive-tabindex -->
           <p
-            tabindex="17"
-            on:keypress|preventDefault={doReturn}
-            on:click|preventDefault={doReturn}
-          >
-            Confirmar
-          </p>
-
-          <p
-            tabindex="17"
-            on:keypress|preventDefault={closePop}
-            on:click|preventDefault={closePop}
+            tabindex="19"
+            on:keypress|preventDefault={close}
+            on:click|preventDefault={close}
           >
             Fechar
+          </p>
+          <!-- svelte-ignore a11y-positive-tabindex -->
+          <p
+            tabindex="18"
+            on:keypress|preventDefault={returningValues}
+            on:click|preventDefault={returningValues}
+          >
+            Confirmar
           </p>
         </div>
       </div>
     </div>
   {/if}
 
-  {#if modalMessage !== ""}
-    <ModalConfirmation title={modalMessage} on:message={closePopCor} />
+  {#if message !== ""}
+    <ModalConfirmation title={message} on:message={close} />
   {/if}
 </main>
 
 <style>
-  .header {
+  .line-btn {
+    margin: 1%;
+    padding: 0%;
+    display: flex;
+    flex-direction: row;
+    justify-content: right;
+    align-items: right;
+    text-align: right;
+    width: 100%;
+    height: 100px;
+  }
+  .line {
+    margin: 0%;
+    padding: 0%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    height: 100px;
+  }
+  .modal-div {
     margin: 0%;
     padding: 0%;
     color: white;
     background-color: black;
-    width: 700px;
-    height: 400px;
+    width: 850px;
+    height: 500px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -449,20 +389,6 @@
     opacity: 0.5s;
     transition: all 1s;
   }
-  .modalBackground {
-    transition: 1s;
-    position: fixed;
-    top: 0;
-    left: 0;
-    background-color: rgba(17, 17, 17, 0.618);
-    height: 100vh;
-    width: 100vw;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    z-index: 999999999999999999999999999999;
-  }
   .breadcrumb {
     margin-top: 5px;
     margin-left: 0%;
@@ -479,19 +405,6 @@
     align-items: center;
     justify-content: center;
   }
-  .imageLoader {
-    margin: 0%;
-    padding: 0%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    background-color: black;
-    height: 100vh;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
 
   button {
     letter-spacing: 0.5px;
@@ -501,18 +414,8 @@
     color: white;
     background-color: transparent;
   }
-  /* .loader {
-    margin: 0%;
-    position: relative;
-    width: 10vw;
-    height: 5vw;
-    padding: 1.5vw;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 99999999999;
-  } */
-  .imageLoader {
+
+  .image-loader {
     margin: 0%;
     padding: 0%;
     position: fixed;
@@ -526,54 +429,43 @@
     justify-content: center;
     z-index: 999999999999;
   }
-  div {
-    margin: 0%;
-    padding: 0%;
-  }
   input {
     margin: 1%;
     padding: 0%;
-    border-radius: 3px;
+    border-radius: 8px;
   }
-  h4 {
-    width: 400px;
-    margin: 0%;
-    padding: 0%;
-  }
-  .close {
-    margin: 0%;
-    padding: 0%;
-    width: 400px;
-    display: flex;
-  }
+
   select {
     margin: 1%;
     padding: 0%;
-    width: 150px;
-    border-radius: 3px;
+    width: 120px;
+    border-radius: 8px;
     color: #fff;
     background-color: #252525;
   }
-  .returnInput {
+  .return-input {
+    margin: 0%;
+    padding: 0%;
     height: 30px;
-    width: 100px;
+    width: 250px;
+    border-radius: 8px;
   }
   p {
-    margin: 0%;
+    font-size: 30px;
+    margin: 1%;
     padding: 0%;
     display: flex;
     justify-content: center;
     text-decoration: none;
-    background: #252525;
     color: #fff;
   }
-  .form {
+  .form-div {
     height: 180px;
     letter-spacing: 1px;
     border-color: grey;
     box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
   }
-  .fundo {
+  .background-modal {
     margin: 0%;
     padding: 0%;
     position: fixed;
@@ -598,42 +490,37 @@
     background-color: transparent;
   }
 
-  .sideButton {
-    color: black;
-    margin: 1%;
+  .btn {
+    outline: none;
+    margin: 0%;
     padding: 0%;
-    font-size: 14px;
-    width: 132px;
-    height: 35px;
+    width: 250px;
+    height: 30px;
     display: flex;
     justify-content: center;
     text-align: center;
     align-items: center;
-    border-radius: 3px;
-    background-color: transparent;
+    border-radius: 6px;
+    background-color: white;
+    border: none;
+    color: black;
+    border-color: #999999;
+    box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
     letter-spacing: 1px;
   }
 
-  .sideButton:hover {
+  .btn:hover {
     cursor: pointer;
-    background-color: black;
-    color: white;
-    transition: 1s;
-  }
-
-  #MATRIC {
-    margin: 1%;
-  }
-
-  h5 {
-    font-size: 45px;
+    background-color: white;
+    color: blue;
+    transition: all 0.2s;
   }
 
   main {
     margin: 1%;
   }
 
-  #popUpCracha {
+  #pop-up-badge {
     margin: 1%;
     padding: 0%;
     padding: 15px;
@@ -644,27 +531,5 @@
     justify-content: center;
     text-align: center;
     align-items: center;
-  }
-  input {
-    border-radius: 8px;
-  }
-
-  .confirmationModal {
-    transition: all 1s;
-    animation: ease-in;
-    margin: 0%;
-    padding: 0%;
-    color: white;
-    background-color: #252525;
-    top: 0;
-    left: 0;
-    width: 600px;
-    height: 250px;
-    display: block;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    border-radius: 8px;
   }
 </style>

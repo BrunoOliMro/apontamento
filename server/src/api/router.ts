@@ -12,22 +12,20 @@ import { status } from './controllers/status';
 import { statusImage } from './controllers/statusImage';
 import { stopMotives } from './controllers/stopMotives';
 import { stopPost } from './controllers/stopPost';
-//import { stopSupervisor } from './controllers/stopSupervisor';
 import { selectedTools, tools } from './controllers/tools';
 import { point } from './controllers/point';
 import { searchBagde } from './controllers/searchBadge';
 import { getPoint } from './controllers/getPoint';
 import { supervisor } from './controllers/supervisor';
-//import { codeNote } from './controllers/codeNote';
 import { stopSupervisor } from './controllers/stopSupervisor';
 import { clear } from './controllers/clear';
-//import { getBefore } from './controllers/getBefSel';
+import { returnMotives } from './controllers/returnMotives';
 
 // /api/v1/
 const apiRouter = Router();
 
-// apiRouter.route('/codeNote')
-//     .post(codeNote)
+apiRouter.route('/returnMotives')
+    .get(returnMotives)
 
 apiRouter.route('/clearAll')
     .get(clear)
