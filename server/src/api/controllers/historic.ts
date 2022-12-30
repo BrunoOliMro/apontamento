@@ -15,7 +15,7 @@ export const historic: RequestHandler = async (req, res) => {
         var obj = []
     } catch (error) {
         console.log('error on cookies', error);
-        return res.json({ message: 'Algo deu errado' })
+        return res.json({ message: '' })
     }
 
     try {
@@ -23,7 +23,7 @@ export const historic: RequestHandler = async (req, res) => {
         if (codePointed.message === 'Ini Prod' || codePointed.message === 'Pointed' || codePointed.message === 'Rip iniciated' || codePointed.message === 'Machine has stopped') {
             const detailHistoric = await select(lookForDetail)
             if (!detailHistoric) {
-                return res.json({ message: 'Algo deu errado' });
+                return res.json({ message: '' });
             }
 
             for (const iterator of detailHistoric) {
@@ -42,7 +42,7 @@ export const historic: RequestHandler = async (req, res) => {
             try {
                 const generalHistoric: any = await select(lookforGeneric)
                 if (!generalHistoric) {
-                    return res.json({ message: 'Algo deu errado' });
+                    return res.json({ message: '' });
                 } else {
                     let objRes = {
                         resourceDetail: generalHistoric,
@@ -53,13 +53,13 @@ export const historic: RequestHandler = async (req, res) => {
                 }
             } catch (error) {
                 console.log(error)
-                return res.json({ message: 'Algo deu errado' });
+                return res.json({ message: '' });
             }
         } else {
             return res.json({ message: codePointed })
         }
     } catch (error) {
         console.log(error)
-        return res.json({ message: 'Algo deu errado' });
+        return res.json({ message: '' });
     }
 }

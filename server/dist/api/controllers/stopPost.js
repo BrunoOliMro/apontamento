@@ -20,7 +20,7 @@ const stopPost = async (req, res) => {
         var pointCode = [7];
         var badFeed = null;
         var motives = null;
-        var pointCodeDescriptionStopPost = 'Parada';
+        var pointCodeDescriptionStopPost = ['Parada'];
         var end = new Date().getTime() || 0;
         var start = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['startSetupTime'])))) || null;
         var final = Number(end - start) || 0;
@@ -45,7 +45,7 @@ const stopPost = async (req, res) => {
             if (resour) {
                 return res.status(200).json({ message: 'Success' });
             }
-            else if (resour === 'Algo deu errado') {
+            else if (!resour) {
                 return res.json({ message: 'Algo deu errado' });
             }
             else {

@@ -29,7 +29,7 @@ const getPoint = async (req, res) => {
     }
     catch (error) {
         console.log('Error on GetPoint', error);
-        return res.json({ message: 'Algo deu errado' });
+        return res.json({ message: '' });
     }
     for (const name of Object.keys(nets)) {
         for (const net of nets[name]) {
@@ -138,7 +138,7 @@ const getPoint = async (req, res) => {
     }
     catch (error) {
         console.log('linha 160', error);
-        return res.json({ message: 'Algo deu errado' });
+        return res.json({ message: '' });
     }
 };
 exports.getPoint = getPoint;

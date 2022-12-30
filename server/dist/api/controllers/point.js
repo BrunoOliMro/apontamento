@@ -17,9 +17,10 @@ const sanitize_1 = require("../utils/sanitize");
 const sendEmail_1 = require("../utils/sendEmail");
 const point = async (req, res) => {
     try {
+        console.log('Body', req.body);
         var goodFeed = Number((0, sanitize_1.sanitize)(req.body['valorFeed'])) || null;
         var supervisor = String((0, sanitize_1.sanitize)(req.body['supervisor'])) || null;
-        var motives = String((0, sanitize_1.sanitize)(req.body['value'])) || null;
+        var motives = (0, sanitize_1.sanitize)(req.body['value']) || null;
         var badFeed = Number((0, sanitize_1.sanitize)(req.body['badFeed'])) || null;
         var reworkFeed = Number((0, sanitize_1.sanitize)(req.body['reworkFeed'])) || null;
         var condic;
@@ -49,7 +50,7 @@ const point = async (req, res) => {
         var execut = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['execut']))) || null;
         var diferenceBetween = execut * maxQuantityReleased - valorTotalApontado * execut;
         var pointCode = [4];
-        var pointCodeDescriptionFinProd = 'Fin Prod';
+        var pointCodeDescriptionFinProd = ['Fin Prod.'];
         var stringPcpProg = `SELECT TOP 1 CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS, APONTAMENTO_LIBERADO FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND NUMERO_OPERACAO = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}' AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
         var stringFromHisaponta = `SELECT TOP 1 USUARIO FROM HISAPONTA WHERE 1 = 1 AND ODF = '${odfNumber}'  ORDER BY DATAHORA DESC`;
         var lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`;
@@ -59,7 +60,7 @@ const point = async (req, res) => {
     }
     catch (error) {
         console.log('Error on point.ts --cookies--', error);
-        return res.json({ message: 'Algo deu errado' });
+        return res.json({ message: '' });
     }
     var response = {
         message: '',
@@ -70,7 +71,7 @@ const point = async (req, res) => {
         const startProd = new Date(pointedCode.time).getTime();
         var finalProdTimer = Number(new Date().getTime() - startProd) || null;
         if (!valorTotalApontado || decodedOdfNumber !== odfNumber || decodedOperationNumber !== operationNumber || decodedMachineCode !== machineCode || !machineCode || machineCode === '0' || machineCode === '00' || machineCode === '000' || machineCode === '0000' || machineCode === '00000' || !operationNumber || !partCode || partCode === '0' || partCode === '00' || partCode === '000' || partCode === '0000' || partCode === '00000' || !odfNumber || !employee || employee === '0' || employee === '00' || employee === '000' || employee === '0000' || employee === '00000' || employee === '000000') {
-            return res.json({ message: 'Algo deu errado' });
+            return res.json({ message: '' });
         }
         else if (pointedCode.message !== 'Ini Prod') {
             return res.json({ message: pointedCode.message });
@@ -92,7 +93,7 @@ const point = async (req, res) => {
         }
         else if (badFeed > 0) {
             if (!motives) {
-                return res.json({ message: 'Algo deu errado' });
+                return res.json({ message: '' });
             }
             const findSupervisor = await (0, select_1.select)(lookForSupervisor);
             if (!findSupervisor) {
@@ -102,25 +103,28 @@ const point = async (req, res) => {
     }
     catch (error) {
         console.log('linha 100 - Error on Point.ts -', error);
-        return res.json({ message: 'Algo deu errado' });
+        return res.json({ message: '' });
     }
+    console.log('motives', motives);
     if (employee !== valuesFromHisaponta[0].USUARIO) {
-        let arrayDeCodAponta = [4, 5, 6];
-        let goodEnd = null;
-        let badEnd = null;
-        let missingEnd = null;
-        let reworkEnd = null;
+        const arrayDeCodAponta = [4, 5, 6];
+        const descriptionArrat = ['Fin Prod.', 'Rip Ini.', 'Rip Fin.'];
+        const goodEnd = null;
+        const badEnd = null;
+        const missingEnd = null;
+        const reworkEnd = null;
         try {
-            const resultEndingProcess = await (0, insert_1.insertInto)(valuesFromHisaponta[0].USUARIO, odfNumber, partCode, revision, String(operationNumber), machineCode, maxQuantityReleased, goodEnd, badEnd, arrayDeCodAponta, pointCodeDescriptionFinProd, motives, missingEnd, reworkEnd, finalProdTimer);
+            const resultEndingProcess = await (0, insert_1.insertInto)(valuesFromHisaponta[0].USUARIO, odfNumber, partCode, revision, String(operationNumber), machineCode, maxQuantityReleased, goodEnd, badEnd, arrayDeCodAponta, descriptionArrat, motives, missingEnd, reworkEnd, finalProdTimer);
             if (resultEndingProcess === 'Success') {
-                let codeArray = [1, 2, 3];
-                const resultNewProcess = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, String(operationNumber), machineCode, maxQuantityReleased, goodEnd, badEnd, codeArray, pointCodeDescriptionFinProd, motives, missingEnd, reworkEnd, finalProdTimer);
+                const codeArray = [1, 2, 3];
+                const descriptionArray = ['Ini Setup.', 'Fin Setup.', 'Ini Prod.'];
+                const resultNewProcess = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, String(operationNumber), machineCode, maxQuantityReleased, goodEnd, badEnd, codeArray, descriptionArray, motives, missingEnd, reworkEnd, finalProdTimer);
                 if (resultNewProcess !== 'Success') {
-                    return res.json({ message: 'Algo deu errado' });
+                    return res.json({ message: '' });
                 }
             }
             else {
-                return res.json({ message: 'Algo deu errado' });
+                return res.json({ message: '' });
             }
         }
         catch (error) {
@@ -130,7 +134,7 @@ const point = async (req, res) => {
     if (condic === 'P') {
         try {
             if (!childCode) {
-                return res.json({ message: 'Algo deu errado' });
+                return res.json({ message: '' });
             }
             const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
             if (valorTotalApontado < maxQuantityReleased) {
@@ -143,7 +147,7 @@ const point = async (req, res) => {
                 }
                 catch (error) {
                     console.log('linha 140  - Point.ts - ', error);
-                    return res.json({ message: 'Algo deu errado' });
+                    return res.json({ message: '' });
                 }
             }
             try {
@@ -155,7 +159,7 @@ const point = async (req, res) => {
             }
             catch (error) {
                 console.log('linha 159  - Point.ts - ', error);
-                return res.json({ message: 'Algo deu errado' });
+                return res.json({ message: '' });
             }
             finally {
                 await connection.close();
@@ -163,7 +167,7 @@ const point = async (req, res) => {
         }
         catch (error) {
             console.log('linha 165  - Point.ts - ', error);
-            return res.json({ message: 'Algo deu errado' });
+            return res.json({ message: '' });
         }
     }
     try {
@@ -175,7 +179,7 @@ const point = async (req, res) => {
     }
     catch (error) {
         console.log('Error on Point.ts -', error);
-        return res.json({ message: 'Algo deu errado' });
+        return res.json({ message: '' });
     }
     try {
         await (0, update_1.update)(updateCol);
@@ -184,7 +188,7 @@ const point = async (req, res) => {
     }
     catch (error) {
         console.log('linha 194 - error - /point.ts/', error);
-        return res.json({ message: 'Algo deu errado' });
+        return res.json({ message: '' });
     }
 };
 exports.point = point;

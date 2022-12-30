@@ -1,16 +1,14 @@
 <script>
   // @ts-nocheck
-
-  import { destroy_each } from "svelte/internal";
-
-  // @ts-nocheck
   import ModalConfirmation from "../../src/components/modal/modalConfirmation.svelte";
-  import blockForbiddenChars from "../routes/presanitize";
+  import blockForbiddenChars from "../utils/presanitize";
+  import { verifyStringLenght } from "../utils/verifyLength";
+  import post from "../utils/postFunction";
   let returnedValueApi = `/api/v1/returnedValue`;
   let apiCallMotiveReturn = `/api/v1/returnMotives`;
   let imageLoader = "/images/axonLoader.gif";
   let urlBagde = `/api/v1/badge`;
-  let urlS = `/api/v1/odf`;
+  let barcodeUrl = `/api/v1/odf`;
   let back = "/images/icons8-go-back-24.png";
   let title = "APONTAMENTO";
   let returnModal = false;
@@ -27,103 +25,91 @@
   let message = "";
   let motive;
   let motives;
+  const messageObj = {
+    sucess: "Success",
+    generalError: "Algo deu errado",
+    invalidBadge: "Crachá inválido",
+    invalidChars: "Não atende aos requisitos de caracteres",
+    prodIni: "Ini Prod",
+    pointed: "Pointed",
+    ripIni: "Rip iniciated",
+    newProcess: "Begin new process",
+    pointedIni: "Pointed Iniciated",
+    finSetup: "Fin Setup",
+    returned: "A value was returned",
+    machineStop: "Machine has stopped",
+    pointUrl: "/#/codigobarras/apontamento",
+    ripUrl: "/#/rip",
+    toolsUrl: "/#/ferramenta",
+  };
   callReturnMotive();
 
   async function callReturnMotive() {
     const res = await fetch(apiCallMotiveReturn);
     motives = await res.json();
-  }
-
-  function verifyBarcodeBefore(event) {
-    if (!barcode && barcode.length > 0) {
-      return (message = "Algo deu errado");
-    } else if (event.key === "Enter" && barcode.length >= 16) {
-      post();
+    if (!motives) {
+      motives = ["Erro de apontamento"];
     }
   }
 
-  const post = async () => {
-    loader = true;
-    if (!barcode) {
-      loader = false;
-      return (message = "Algo deu errado");
-    } else if (barcode.length < 16) {
-      loader = false;
-      return (message = "Algo deu errado");
-    }
-    const res = await fetch(urlS, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        barcode: !barcode ? "" : barcode,
-      }),
-    }).then((res) => res.json());
-    if (res) {
-      if (res.message === "Ini Prod") {
-        window.location.href = "/#/codigobarras/apontamento";
-      } else if (res.message === "Rip iniciated" || res.message === "Pointed") {
-        window.location.href = "/#/rip";
-      } else if (
-        res.message === "Begin new process" ||
-        res.message === "Pointed Iniciated" ||
-        res.message === "Fin Setup" ||
-        res.message === "A value was returned"
-      ) {
-        window.location.href = "/#/ferramenta";
-      } else if (res.message === "Machine has stopped") {
-        window.location.href = "/#/codigobarras/apontamento";
-      } else if (res.message !== "") {
-        loader = false;
-        message = res.message;
-      }
-    }
-  };
-
-  function checkBadgeAndCallSearch(event) {
-    if (!badge) {
-      badge = "";
-    } else if (badge) {
-      if (badge.length >= 6 && event.key === "Enter") {
-        if (
-          !badge ||
-          badge === "0" ||
-          badge === "00" ||
-          badge === "000" ||
-          badge === "0000" ||
-          badge === "00000" ||
-          badge === "000000"
+  async function verifyBarcode(event) {
+    const verifyBarcode = await verifyStringLenght(event, barcode, 16, 20);
+    if (verifyBarcode === messageObj.sucess) {
+      loader = true;
+      const res = await post(barcodeUrl, barcode);
+      if (res) {
+        if (res.message === messageObj.prodIni) {
+          window.location.href = messageObj.pointUrl;
+        } else if (
+          res.message === messageObj.ripIni ||
+          res.message === messageObj.pointed
         ) {
-          message = "Crachá inválido";
-        } else {
-          badgeSearch();
-        }
-      }
-    }
-  }
-
-  const badgeSearch = async () => {
-    loader = true;
-    const res = await fetch(urlBagde, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        badge: !badge ? "" : badge,
-      }),
-    }).then((res) => res.json());
-    if (res) {
-      loader = false;
-      if (res.message !== "") {
-        if (res.message === "Badge found") {
-          barcodeModal = true;
-          badgeModal = false;
-          breadcrumbModal = true;
-        } else {
-          returnModal = false;
+          window.location.href = messageObj.ripUrl;
+        } else if (
+          res.message === messageObj.newProcess ||
+          res.message === messageObj.pointedIni ||
+          res.message === messageObj.finSetup ||
+          res.message === messageObj.returned
+        ) {
+          window.location.href = messageObj.toolsUrl;
+        } else if (res.message === messageObj.machineStop) {
+          window.location.href = messageObj.pointUrl;
+        } else if (res.message !== "") {
+          loader = false;
           message = res.message;
         }
       }
     }
-  };
+  }
+
+  async function checkBadge(event) {
+    const resultVerifyBadge = await verifyStringLenght(event, badge, 6, 8);
+    if (resultVerifyBadge === messageObj.sucess) {
+      loader = true;
+      const res = await post(urlBagde, badge);
+      if (res) {
+        loader = false;
+        if (res.message) {
+          if (res.message === messageObj.sucess) {
+            barcodeModal = true;
+            badgeModal = false;
+            breadcrumbModal = true;
+          } else if (res.message !== "") {
+            returnModal = false;
+            message = res.message;
+          } else {
+            message = messageObj.generalError;
+          }
+        }
+      }
+    } else if (resultVerifyBadge === messageObj.invalidBadge) {
+      returnModal = false;
+      message = resultVerifyBadge;
+    } else if (resultVerifyBadge === messageObj.invalidChars) {
+      returnModal = false;
+      message = resultVerifyBadge;
+    }
+  }
 
   function returnValue() {
     if (returnModal === false) {
@@ -132,19 +118,16 @@
       returnModal = false;
     }
   }
+
   async function returningValues() {
     loader = true;
-    const res = await fetch(returnedValueApi, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        valueStorage: !valueStorage ? "" : valueStorage,
-        supervisor: !supervisor ? "" : supervisor,
-        quantity: !quantity ? "" : quantity,
-        barcodeReturn: !barcodeReturn ? "" : barcodeReturn,
-        motive: !motive ? '' : motive,
-      }),
-    }).then((res) => res.json());
+    const res = await post(returnedValueApi, {
+      valueStorage: !valueStorage ? "" : valueStorage,
+      supervisor: !supervisor ? "" : supervisor,
+      quantity: !quantity ? "" : quantity,
+      barcodeReturn: !barcodeReturn ? "" : barcodeReturn,
+      motive: !motive ? "" : motive,
+    });
     barcodeReturn = "";
     supervisor = "";
     quantity = "";
@@ -155,14 +138,7 @@
       returnModal = false;
       message = res.message;
     }
-  }
-
-  function close() {
-    loader = true;
-    returnModal = false;
-    message = "";
-    window.location.href = "/#/codigobarras";
-    location.reload();
+    console.log("res", res);
   }
 
   function redirectToBarcode() {
@@ -172,6 +148,13 @@
     badge = "";
     barcode = "";
     message = "";
+  }
+  function close() {
+    loader = true;
+    returnModal = false;
+    message = "";
+    location.reload();
+    loader = false;
   }
 </script>
 
@@ -219,7 +202,7 @@
           <input
             autocomplete="off"
             autofocus
-            on:keypress={verifyBarcodeBefore}
+            on:keypress={verifyBarcode}
             on:input|preventDefault={blockForbiddenChars}
             bind:value={barcode}
             onkeyup="this.value = this.value.toUpperCase()"
@@ -237,7 +220,7 @@
           <input
             autocomplete="off"
             autofocus
-            on:keypress={checkBadgeAndCallSearch}
+            on:keypress={checkBadge}
             on:input|preventDefault={blockForbiddenChars}
             bind:value={badge}
             onkeyup="this.value = this.value.toUpperCase()"

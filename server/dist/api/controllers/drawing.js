@@ -19,7 +19,7 @@ const drawing = async (req, res) => {
     }
     catch (error) {
         console.log('Error on Drawing --cookies--', error);
-        return res.json({ message: 'Algo deu errado' });
+        return res.json({ message: '' });
     }
     try {
         const pointedCode = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, machineCode, employee);
@@ -39,7 +39,7 @@ const drawing = async (req, res) => {
     }
     catch (error) {
         console.log(error);
-        return res.json({ error: true, message: 'Algo deu errado' });
+        return res.json({ error: true, message: '' });
     }
 };
 exports.drawing = drawing;

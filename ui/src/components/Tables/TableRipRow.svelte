@@ -1,6 +1,6 @@
 <script>
     // @ts-nocheck
-    import blockForbiddenChars from "../../routes/presanitize";
+    import blockForbiddenChars from "../../utils/presanitize";
     export let dados;
     export let indice;
     export let extraColumns;
@@ -124,6 +124,7 @@
             <div class="onlyConfirmModalContent">
                 <h2 class="modalTitle">Limite de caracteres</h2>
                 <div class="onlyConfirmPop">
+                    <!-- svelte-ignore a11y-positive-tabindex -->
                     <button
                         class="btnPopConfirm"
                         id="confirmPop"

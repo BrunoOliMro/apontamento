@@ -1,94 +1,85 @@
 <script>
     // @ts-nocheck
     import ModalConfirmation from "../modal/modalConfirmation.svelte";
-    import blockForbiddenChars from "../../routes/presanitize";
+    import blockForbiddenChars from "../../utils/presanitize";
     let searchIcon = `/images/search.png`;
     let imageLoader = `/images/axonLoader.gif`;
     let supervisorApi = `/api/v1/supervisor`;
-    let urlString = `/api/v1/status`;
-    let url = `/api/v1/imagem`;
-    let shwowSuper = false;
-    let showGreen = true;
-    let showRed = false;
-    let tempoMax = null;
-    let showBlue = false;
-    let imagem = [];
+    let statusUrlApi = `/api/v1/status`;
+    let imageUrl = `/api/v1/imagem`;
+    let modalSuper = false;
+    let greenBar = true;
+    let redBar = false;
+    let maxTimeSpend = null;
+    let blueBar = false;
+    let image = [];
     let prodTime = [];
     let supervisor = "";
-    let modalMessage = "";
-    let tempoDecorrido = 0;
+    let message = "";
+    let timeSpend = 0;
 
     getTempo();
     getImagem();
 
     async function getTempo() {
-        const res = await fetch(urlString);
+        const res = await fetch(statusUrlApi);
         prodTime = await res.json();
+        console.log('timer ---', prodTime);
         if (prodTime.message === "Algo deu errrado") {
-            modalMessage = "Algo deu errado";
+            message = "Algo deu errado";
         }
-        tempoMax = prodTime;
+        maxTimeSpend = prodTime;
 
-        if (!tempoMax || tempoMax.message === "Not found") {
-            tempoMax = 600000;
+        if (!maxTimeSpend) {
+            maxTimeSpend = 60000;
         }
     }
 
-    let tempoDaBarra = setInterval(() => {
-        let menorFif = (Number(50) * Number(tempoMax)) / Number(100);
-        let maiorFif = (Number(75) * Number(tempoMax)) / Number(100);
-        let excedido = (Number(100) * Number(tempoMax)) / Number(100);
+    const barTime = setInterval(() => {
+        let menorFif = (Number(50) * Number(maxTimeSpend)) / Number(100);
+        let maiorFif = (Number(75) * Number(maxTimeSpend)) / Number(100);
+        let excedido = (Number(100) * Number(maxTimeSpend)) / Number(100);
 
-        tempoDecorrido++;
+        timeSpend++;
 
-        if (tempoDecorrido <= menorFif) {
-            showRed = false;
-            showBlue = false;
-            shwowSuper = false;
-            showGreen = true;
-        }
-        if (tempoDecorrido >= menorFif && tempoDecorrido <= maiorFif) {
-            showGreen = false;
-            showBlue = true;
-            showRed = false;
-            shwowSuper = false;
-        }
-        if (tempoDecorrido >= maiorFif) {
-            showRed = true;
-            showGreen = false;
-            showBlue = false;
-        }
-        if (tempoDecorrido >= excedido) {
-            shwowSuper = true;
-            showGreen = false;
-            showRed = true;
+        if (timeSpend <= menorFif) {
+            redBar = false;
+            blueBar = false;
+            modalSuper = false;
+            greenBar = true;
+        } else if (timeSpend >= menorFif && timeSpend <= maiorFif) {
+            greenBar = false;
+            blueBar = true;
+            redBar = false;
+            modalSuper = false;
+        } else if (timeSpend >= maiorFif) {
+            redBar = true;
+            greenBar = false;
+            blueBar = false;
+        } else if (timeSpend >= excedido) {
+            modalSuper = true;
+            greenBar = false;
+            redBar = true;
+        } else if (maxTimeSpend <= 0 || maxTimeSpend === null) {
+            modalSuper = true;
+            redBar = true;
         } else {
-            shwowSuper = false;
-        }
-
-        if (tempoMax <= 0) {
-            shwowSuper = true;
-            showRed = true;
-            //showGreen = false;
-        }
-
-        if (tempoMax === null) {
-            showRed = true;
+            modalSuper = false;
         }
     }, 1000);
 
     async function getImagem() {
-        const res = await fetch(url);
-        imagem = await res.json();
+        const res = await fetch(imageUrl);
+        image = await res.json();
     }
 
     function checkForSuper(event) {
         if (event.key === "Enter" && supervisor.length >= 6) {
-            doPostSuper();
+            postCallSupervisor();
         }
     }
 
-    const doPostSuper = async () => {
+    const postCallSupervisor = async () => {
         if (
             supervisor === "" ||
             supervisor === "0" ||
@@ -99,11 +90,10 @@
             supervisor === "000000"
         ) {
             supervisor = "";
-            modalMessage = "Supervisor não encontrado";
+            message = "Supervisor não encontrado";
         }
 
         if (supervisor.length > 5) {
-            const headers = new Headers();
             const res = await fetch(supervisorApi, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -111,46 +101,43 @@
                     supervisor: supervisor,
                 }),
             }).then((res) => res.json());
+            console.log("res -- Status.svelte ---", res);
             if (res.message === "Supervisor encontrado") {
-                shwowSuper = false;
-                clearInterval(tempoDaBarra);
+                modalSuper = false;
+                clearInterval(barTime);
             }
             if (res.message === "Supervisor não encontrado") {
-                modalMessage = "Supervisor não encontrado";
+                message = "Supervisor não encontrado";
                 supervisor = "";
             }
         } else {
             supervisor = "";
-            modalMessage = "Erro ao localizar supervisor";
+            message = "Erro ao localizar supervisor";
         }
     };
 
-    let resultPromises = Promise.all([getImagem, getTempo, tempoDaBarra]);
-
     function close() {
-        modalMessage = "";
+        message = "";
     }
+    let resultPromises = Promise.all([getImagem, getTempo, barTime]);
 </script>
 
-{#if shwowSuper === true}
-    <div class="modalBackground">
-        <div class="confirmationModal">
-            <div class="onlyConfirmModalContent">
-                <h2 class="modalTitle">Tempo Excedido</h2>
-                <h3 class="modalSubtitle">
+{#if modalSuper === true}
+    <div class="background-modal">
+        <div class="modal-content">
+            <div class="modal-display">
+                <h2 class="modal-title">Tempo Excedido</h2>
+                <h3 class="modal-subtitle">
                     Insira um supervisor para continuar
                 </h3>
 
-                <!-- on:input={Sanitize} -->
-                <!-- autofocus -->
-                <!-- tabindex="8" -->
+                <!-- svelte-ignore a11y-autofocus -->
                 <input
                     autocomplete="off"
+                    autofocus
                     bind:value={supervisor}
                     on:keypress={checkForSuper}
                     on:input={blockForbiddenChars}
-                    name="supervisor"
-                    id="supervisor"
                     type="text"
                 />
             </div>
@@ -158,41 +145,38 @@
     </div>
 {/if}
 
-{#if modalMessage !== ""}
-    <ModalConfirmation on:message={close} title={modalMessage} />
+{#if message !== ""}
+    <ModalConfirmation on:message={close} title={message} />
 {/if}
 
-<!-- {#if modalMessage === "Supervisor não encontrado" || modalMessage === "Erro ao localizar supervisor"}
-{/if} -->
-
 {#await resultPromises}
-    <div class="imageLoader" id="imageLoader">
+    <div class="image-loader">
         <div class="loader">
             <img src={imageLoader} alt="" />
         </div>
     </div>
 {:then itens}
     <div class="conj">
-        {#if showGreen === true}
+        {#if greenBar === true}
             <div class="green" id="tempoDecorrido" />
         {/if}
-        {#if showBlue === true}
+        {#if blueBar === true}
             <div class="blue" id="tempoDecorrido" />
         {/if}
-        {#if showRed === true}
+        {#if redBar === true}
             <div class="red" id="tempoDecorrido" />
         {/if}
-        <div class="containerIcon">
+        <div class="icon-container">
             <a class="out" href="/#/desenho/">
-                <img class="iconSearch" src={searchIcon} alt="" />
+                <img class="search-icon" src={searchIcon} alt="" />
             </a>
-            <img class="img" src={String(imagem)} alt="" />
+            <img class="img" src={String(image)} alt="" />
         </div>
     </div>
 {/await}
 
 <style>
-    .containerIcon {
+    .icon-container {
         position: relative;
         display: flex;
         justify-content: left;
@@ -201,7 +185,7 @@
         margin: 0%;
         padding: 0%;
     }
-    .iconSearch {
+    .search-icon {
         width: 25px;
         height: 25px;
         display: block;
@@ -255,11 +239,11 @@
         height: 40px;
         width: 378px;
     }
-    .modalSubtitle {
+    .modal-subtitle {
         display: flex;
         flex-direction: column;
     }
-    .modalBackground {
+    .background-modal {
         transition: 1s;
         position: fixed;
         top: 0;
@@ -275,7 +259,7 @@
         justify-content: center;
         z-index: 999999999999999999999999999999;
     }
-    .modalTitle {
+    .modal-title {
         margin-left: 0px;
         margin-bottom: 25px;
         margin-right: 0px;
@@ -285,7 +269,7 @@
         align-items: left;
         text-align: left;
     }
-    .confirmationModal {
+    .modal-content {
         transition: all 1s;
         animation: ease-in;
         margin: 0%;
@@ -302,7 +286,7 @@
         text-align: center;
         border-radius: 8px;
     }
-    .onlyConfirmModalContent {
+    .modal-display {
         display: flex;
         flex-direction: column;
         margin-top: 25px;
@@ -322,7 +306,7 @@
         justify-content: center;
         z-index: 999999999999999999999999999999999999999999999999999999999;
     }
-    .imageLoader {
+    .image-loader {
         margin: 0%;
         padding: 0%;
         position: fixed;

@@ -7,5 +7,9 @@ export const returnMotives: RequestHandler = async (_req, res) => {
     const connection = await mssql.connect(sqlConfig)
     let data: any = await connection.query(`${stringCallMotives}`).then(record => record.recordsets)
     let response = data[0].map((element: any) => element.DESCRICAO)
-    return res.json(response)
+    if(response){
+        return res.json(response)
+    } else {
+        return res.json(response = '')
+    }
 }

@@ -8,10 +8,13 @@
 <style>
     a {
         text-decoration: none;
-        /* color: black; */
     }
 
-    p{
+    a:hover {
+        text-decoration: none;
+    }
+
+    p {
         font-size: 20px;
         margin: 0%;
         padding: 0%;
@@ -21,7 +24,7 @@
         outline: none;
         margin: 0%;
         padding: 0%;
-        width:300px;
+        width: 300px;
         height: 30px;
         display: flex;
         justify-content: center;
@@ -41,9 +44,5 @@
         background-color: white;
         color: blue;
         transition: all 1s;
-    }
-
-    a:hover {
-        text-decoration: none;
     }
 </style>

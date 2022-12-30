@@ -4,22 +4,17 @@
     const odfDataRouter = `/api/v1/odfData`;
     const title = "Quantidade liberada: ";
     let quantityAvailableProd;
-    let dadosOdf = [];
+    export let odfData = [];
     let message = "";
-    const promiseResult = getOdfData();
-
-    async function getOdfData() {
+    let promiseResult = getData();
+    async function getData() {
         const res = await fetch(odfDataRouter);
-        dadosOdf = await res.json();
-        if (dadosOdf) {
-            if (
-                dadosOdf.odfSelecionada.QTDE_LIB > 0 
-                // &&
-                // dadosOdf.message === "Success"
-            ) {
-                quantityAvailableProd = dadosOdf.odfSelecionada.QTDE_LIB;
-            } else if (dadosOdf.message !== "") {
-                message = dadosOdf.message;
+        odfData = await res.json();
+        if (odfData) {
+            if (odfData.odfSelecionada.QTDE_LIB > 0) {
+                quantityAvailableProd = odfData.odfSelecionada.QTDE_LIB;
+            } else if (odfData.message !== "") {
+                message = odfData.message;
             } else {
                 return (message = "Algo deu errado");
             }
@@ -33,7 +28,7 @@
 </script>
 
 {#await promiseResult}
-    <div class="imageLoader">
+    <div class="image-loader">
         <div class="loader">
             <img src={imageLoader} alt="" />
         </div>
@@ -84,7 +79,7 @@
         align-items: center;
         justify-content: center;
     }
-    .imageLoader {
+    .image-loader {
         margin: 0%;
         padding: 0%;
         position: fixed;

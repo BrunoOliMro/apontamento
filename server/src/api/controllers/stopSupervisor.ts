@@ -20,7 +20,7 @@ export const stopSupervisor: RequestHandler = async (req, res) => {
         var reworkFeed = null
         var badFeed = null
         var pointCode = [3]
-        var pointedCodeDescriptionProdIniciated = `Ini Prod.`
+        var pointedCodeDescriptionProdIniciated = [`Ini Prod.`]
         var motivo = null
         var tempoDecorrido = 0
         var lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`

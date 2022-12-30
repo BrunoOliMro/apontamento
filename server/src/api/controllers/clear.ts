@@ -1,7 +1,11 @@
 import { RequestHandler } from "express";
 import { cookieCleaner } from "../utils/clearCookie";
 
-export const clear: RequestHandler =  async (_req, res) =>{
-    await cookieCleaner(res)
-    return res.json({message : 'Success'})
+export const clear: RequestHandler = async (_req, res) => {
+    const x = await cookieCleaner(res)
+    if (x) {
+        return res.json({ message: 'Success' })
+    } else {
+        return res.json({ message: '' })
+    }
 }

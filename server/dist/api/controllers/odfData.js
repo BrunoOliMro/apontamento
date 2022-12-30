@@ -7,6 +7,12 @@ const decryptedOdf_1 = require("../utils/decryptedOdf");
 const odfIndex_1 = require("../utils/odfIndex");
 const sanitize_1 = require("../utils/sanitize");
 const odfData = async (req, res) => {
+    const statusMessage = {
+        success: 'Success',
+        generalError: 'Algo deu errado',
+        cookiesError: 'Erro ao acessar os cookies',
+        tryAgain: 'Tente novamente',
+    };
     const response = {
         message: '',
         resEmployee: '',
@@ -21,21 +27,21 @@ const odfData = async (req, res) => {
     }
     catch (error) {
         console.log('error on cookies', error);
-        return res.json({ message: 'Algo deu errado' });
+        return res.json({ message: statusMessage.cookiesError });
     }
     try {
         const pointedCode = await (0, codeNote_1.codeNote)(odfNumber, Number(operationNumber.replaceAll(" ", '')), machineCode, employee);
         if (pointedCode.message === 'Ini Prod' || pointedCode.message === 'Pointed' || pointedCode.message === 'Rip iniciated' || pointedCode.message === 'Machine has stopped') {
             const data = await (0, select_1.select)(stringLookOdfData);
-            const i = await (0, odfIndex_1.odfIndex)(data, '00' + operationNumber.replaceAll(' ', '0') || null);
+            const i = await (0, odfIndex_1.odfIndex)(data, '00' + operationNumber.replaceAll(' ', '0'));
             response.odfSelecionada = data[i];
             response.resEmployee = employee;
-            if (response.message === 'Algo deu errado') {
-                return res.json({ message: 'Algo deu errado' });
+            if (response.odfSelecionada) {
+                response.message = statusMessage.success;
+                return res.status(200).json(response);
             }
             else {
-                response.message = 'Success';
-                return res.status(200).json(response);
+                return response.message = statusMessage.tryAgain;
             }
         }
         else {
@@ -44,7 +50,7 @@ const odfData = async (req, res) => {
     }
     catch (error) {
         console.log(error);
-        return res.json({ message: 'Algo deu errado' });
+        return res.json({ message: statusMessage.generalError });
     }
 };
 exports.odfData = odfData;

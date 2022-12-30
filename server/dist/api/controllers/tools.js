@@ -7,7 +7,6 @@ const select_1 = require("../services/select");
 const codeNote_1 = require("../utils/codeNote");
 const decodeOdf_1 = require("../utils/decodeOdf");
 const decryptedOdf_1 = require("../utils/decryptedOdf");
-const encryptOdf_1 = require("../utils/encryptOdf");
 const sanitize_1 = require("../utils/sanitize");
 const tools = async (req, res) => {
     try {
@@ -17,7 +16,6 @@ const tools = async (req, res) => {
         var machineCode = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_MAQUINA"])))) || null;
         var employee = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])))) || null;
         var revision = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO'])))) || null;
-        var startSetupTime = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["startSetupTime"])))) || null;
         var maxQuantityReleased = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB'])))) || null;
         var toolString = String("_ferr");
         var goodFeed = null;
@@ -25,7 +23,7 @@ const tools = async (req, res) => {
         var pointedCode = [1];
         var missingFeed = null;
         var reworkFeed = null;
-        var pointedCodeDescription = 'Ini Setup.';
+        var pointedCodeDescription = ['Ini Setup.'];
         var motives = null;
         var stringLookForTools = `SELECT [CODIGO], [IMAGEM] FROM VIEW_APTO_FERRAMENTAL WHERE 1 = 1 AND IMAGEM IS NOT NULL AND CODIGO = '${partCode}'`;
         var toolsImg;
@@ -40,8 +38,8 @@ const tools = async (req, res) => {
     }
     try {
         const codeNoteResult = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, machineCode, employee);
-        if (codeNoteResult.message === 'First time acessing ODF' || codeNoteResult.message === 'Begin new process') {
-            const inserted = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, String(operationNumber).replaceAll(' ', ''), machineCode, maxQuantityReleased, goodFeed, badFeed, pointedCode, pointedCodeDescription, motives, missingFeed, reworkFeed, startSetupTime);
+        if (codeNoteResult.message === 'First time acessing ODF' || codeNoteResult.message === 'Begin new process' || codeNoteResult.message === 'A value was returned') {
+            const inserted = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, String(operationNumber).replaceAll(' ', ''), machineCode, maxQuantityReleased, goodFeed, badFeed, pointedCode, pointedCodeDescription, motives, missingFeed, reworkFeed, new Date().getTime());
             if (inserted === 'Success') {
                 try {
                     toolsImg = await (0, select_1.select)(stringLookForTools);
@@ -92,13 +90,11 @@ const selectedTools = async (req, res) => {
         var ruins = null;
         var pointCodeSetupEnded = [2];
         var pointCodeIniciatedProd = [3];
-        var pointCodeEndSetup = 'Fin Setup';
-        var pointCodeProdIniciated = 'Ini Prod.';
+        var pointCodeEndSetup = ['Fin Setup'];
+        var pointCodeProdIniciated = ['Ini Prod.'];
         var missingFeed = null;
         var reworkFeed = null;
         var motive = null;
-        let startProd = await (0, encryptOdf_1.encrypted)(String(new Date().getTime()));
-        res.cookie("startProd", startProd);
     }
     catch (error) {
         console.log('Error on SelectedTools --cookies--', error);

@@ -3,15 +3,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.unravelBarcode = void 0;
 const sanitize_1 = require("./sanitize");
 function unravelBarcode(barcode) {
-    barcode = String((0, sanitize_1.sanitize)(barcode));
+    barcode = (0, sanitize_1.sanitize)(barcode).trim();
     let response = {
-        message: ''
+        message: '',
+        data: {
+            odfNumber: '',
+            opNumber: '',
+            machineCod: '',
+        },
     };
-    if (!barcode) {
-        return response.message = 'Código de barras está vazio';
-    }
-    if (barcode.length <= 16 || barcode.length > 18) {
-        return response.message = 'Código de barras inválido';
+    if (!barcode || barcode.length <= 16 || barcode.length > 18) {
+        return response.message = '';
     }
     const dados = {
         numOdf: String(barcode.slice(10)),
@@ -23,7 +25,11 @@ function unravelBarcode(barcode) {
         dados.numOper = barcode.slice(0, 5);
         dados.codMaq = barcode.slice(5, 11);
     }
-    return dados;
+    response.message = 'Success';
+    response.data.odfNumber = dados.numOdf;
+    response.data.opNumber = dados.numOper;
+    response.data.machineCod = dados.codMaq;
+    return response;
 }
 exports.unravelBarcode = unravelBarcode;
 //# sourceMappingURL=unravelBarcode.js.map

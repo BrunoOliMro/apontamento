@@ -31,7 +31,7 @@ export const getPoint: RequestHandler = async (req, res) => {
         var results: any = {}; // Or just '{}', an empty object
     } catch (error) {
         console.log('Error on GetPoint', error);
-        return res.json({ message: 'Algo deu errado' })
+        return res.json({ message: '' })
     }
     for (const name of Object.keys(nets)) {
         for (const net of nets[name]) {
@@ -168,6 +168,6 @@ export const getPoint: RequestHandler = async (req, res) => {
         }
     } catch (error) {
         console.log('linha 160', error);
-        return res.json({ message: 'Algo deu errado' })
+        return res.json({ message: '' })
     }
 }

@@ -17,7 +17,7 @@ export const drawing: RequestHandler = async (req, res) => {
         var lookForImages = `SELECT DISTINCT [NUMPEC], [IMAGEM] FROM QA_LAYOUT (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${partCode}' AND REVISAO = ${revision} AND IMAGEM IS NOT NULL`
     } catch (error) {
         console.log('Error on Drawing --cookies--', error);
-        return res.json({ message: 'Algo deu errado' })
+        return res.json({ message: '' })
     }
     try {
         const pointedCode = await codeNote(odfNumber, operationNumber, machineCode, employee)
@@ -35,6 +35,6 @@ export const drawing: RequestHandler = async (req, res) => {
         }
     } catch (error) {
         console.log(error)
-        return res.json({ error: true, message: 'Algo deu errado' });
+        return res.json({ error: true, message: '' });
     }
 }

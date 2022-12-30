@@ -10,14 +10,12 @@
         ano = "S/I";
         mes = "S/I";
         dia = "S/I";
-    } 
-    else {
+    } else {
         datahora = dados.DATAHORA.split(".").map((value) => value.split("T"));
         ano = datahora[0][0].slice(0, 4);
         mes = datahora[0][0].slice(5, 7);
         dia = datahora[0][0].slice(8, 10);
     }
-
 </script>
 
 <tr class="tabelahistorico">
@@ -32,7 +30,7 @@
     >
     <td>{dados.ODF === null ? "S/I" : dados.ODF}</td>
 
-    {#if datahora !== 'S/I'}
+    {#if datahora !== "S/I"}
         <td>
             {dia === null || !dia ? "S/I" : dia}
             -{mes === null || !mes ? "S/I" : mes}
@@ -52,13 +50,8 @@
     *:focus {
         outline: none;
     }
-/*     
-    .tabelahistorico {
-        margin: 1%;
-        padding: 0%;
-    } */
 
-    .tabelahistorico{
+    .tabelahistorico {
         font-size: 25px;
     }
 
@@ -67,7 +60,6 @@
         text-align: center;
     }
     td {
-        /* width: 100%; */
         vertical-align: middle;
         align-items: center;
         background-color: white;

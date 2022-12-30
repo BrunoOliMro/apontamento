@@ -11,7 +11,12 @@ const returnMotives = async (_req, res) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     let data = await connection.query(`${stringCallMotives}`).then(record => record.recordsets);
     let response = data[0].map((element) => element.DESCRICAO);
-    return res.json(response);
+    if (response) {
+        return res.json(response);
+    }
+    else {
+        return res.json(response = '');
+    }
 };
 exports.returnMotives = returnMotives;
 //# sourceMappingURL=returnMotives.js.map

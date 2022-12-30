@@ -10,7 +10,8 @@ import { sanitize } from '../utils/sanitize';
 
 export const ripPost: RequestHandler = async (req, res) => {
     try {
-        var setup = (req.body['setup']) || null
+        console.log('req.body', req.body);
+        var setup = (req.body['values']) || null
         var keySan: any
         var valueSan: any;
         var odfNumber = Number(decrypted(sanitize(req.cookies['NUMERO_ODF']))) || null
@@ -32,14 +33,14 @@ export const ripPost: RequestHandler = async (req, res) => {
         var goodFeed = null
         var badFeed = null
         var pointCode = [6]
-        var pointCodeDescriptionRipEnded = 'Rip Fin.'
+        var pointCodeDescriptionRipEnded = ['Rip Fin.']
         var motives = null
         var missingFeed = null
         var reworkFeed = null
         var stringUpdatePcp = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`
     } catch (error) {
         console.log('Error on Rip Post ', error);
-        return res.json({ message: 'Algo deu errado' })
+        return res.json({ message: '' })
     }
 
     try {
@@ -52,7 +53,7 @@ export const ripPost: RequestHandler = async (req, res) => {
         }
     } catch (error) {
         console.log('Error on Rip Post ', error);
-        return res.json({ message: 'Algo deu errado' })
+        return res.json({ message: '' })
     }
 
     if (Object.keys(setup).length <= 0) {
@@ -63,10 +64,10 @@ export const ripPost: RequestHandler = async (req, res) => {
                 await cookieCleaner(res)
                 return res.json({ message: 'Success' })
             } else {
-                return res.json({ message: 'Algo deu errado' })
+                return res.json({ message: '' })
             }
         } else {
-            return res.json({ message: 'Algo deu errado' })
+            return res.json({ message: '' })
         }
     } else {
         for (const [key, value] of Object.entries(setup)) {
@@ -80,12 +81,12 @@ export const ripPost: RequestHandler = async (req, res) => {
     try {
         const insertedRipCode = await insertInto(employee, odfNumber, partCode, revision, operationNumber!.replaceAll(' ', ''), machineCode, maxQuantityReleased, goodFeed, badFeed, pointCode, pointCodeDescriptionRipEnded, motives, missingFeed, reworkFeed, tempoDecorridoRip)
         if (!insertedRipCode) {
-            return res.json({ message: 'Algo deu errado' })
+            return res.json({ message: '' })
         } else if (insertedRipCode) {
             try {
                 const resultUpdatePcpProg = await update(stringUpdatePcp)
                 if (resultUpdatePcpProg !== 'Success') {
-                    return res.json({ message: 'Algo deu errado' })
+                    return res.json({ message: '' })
                 } else {
                     const resultSplitLines: { [k: string]: any; } = Object.keys(objectSanitized).reduce((acc: any, iterator: any) => {
                         const [col, lin] = iterator.split('-')
@@ -107,24 +108,24 @@ export const ripPost: RequestHandler = async (req, res) => {
                             await connection.query(updateQtyQuery.join('\n'))
                         } catch (error) {
                             console.log('error - linha 103 /ripPost.ts/ - ', error)
-                            return res.json({ message: 'Algo deu errado' })
+                            return res.json({ message: '' })
                         }
                         await cookieCleaner(res)
                         return res.json({ message: 'Success' })
                     } catch (error) {
                         console.log('linha 110 /ripPost/', error)
-                        return res.json({ message: 'Algo deu errado' })
+                        return res.json({ message: '' })
                     }
                 }
             } catch (error) {
                 console.log('error linha 115', error);
-                return res.json({ message: 'Algo deu errado' })
+                return res.json({ message: '' })
             }
         } else {
-            return res.json({ message: 'Algo deu errado' })
+            return res.json({ message: '' })
         }
     } catch (error) {
         console.log('linha 126 - ripPost -', error);
-        return res.json({ message: 'Algo deu errado' })
+        return res.json({ message: '' })
     }
 }

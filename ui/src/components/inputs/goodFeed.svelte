@@ -1,6 +1,6 @@
 <script>
     // @ts-nocheck
-    import blockForbiddenChars from "../../routes/presanitize";
+    import blockForbiddenChars from "../../utils/presanitize";
     let title = "BOAS";
     let goodFeed;
 
@@ -23,11 +23,11 @@
     }
 </script>
 
-<div class="input-area">
+<div class="content">
     <div class="title">
         <p>{title}</p>
     </div>
-    <div class="input-field">
+    <div >
         <!-- svelte-ignore a11y-positive-tabindex -->
         <!-- svelte-ignore a11y-autofocus -->
         <input
@@ -48,7 +48,7 @@
         padding: 0%;
         font-size: 37px;
     }
-    .input-area {
+    .content {
         display: flex;
         flex-direction: column;
         justify-content: center;

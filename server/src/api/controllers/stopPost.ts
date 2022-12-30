@@ -19,7 +19,7 @@ export const stopPost: RequestHandler = async (req, res) => {
         var pointCode = [7]
         var badFeed = null
         var motives = null
-        var pointCodeDescriptionStopPost = 'Parada'
+        var pointCodeDescriptionStopPost = ['Parada']
 
         //Encerra o processo todo
         var end = new Date().getTime() || 0;
@@ -44,7 +44,7 @@ export const stopPost: RequestHandler = async (req, res) => {
             const resour = await insertInto(employee, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, goodFeed, badFeed, pointCode, pointCodeDescriptionStopPost, motives, missingFeed, reworkFeed, final)
             if (resour) {
                 return res.status(200).json({ message: 'Success' })
-            } else if (resour === 'Algo deu errado') {
+            } else if (!resour) {
                 return res.json({ message: 'Algo deu errado' })
             } else {
                 return res.json({ message: 'Algo deu errado' })

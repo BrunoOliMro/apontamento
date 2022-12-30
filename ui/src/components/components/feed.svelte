@@ -1,6 +1,6 @@
 <script>
     // @ts-nocheck
-    import blockForbiddenChars from "../../routes/presanitize";
+    import blockForbiddenChars from "../../utils/presanitize";
     import Bad from "../inputs/bad.svelte";
     import GoodFeed from "../inputs/goodFeed.svelte";
     import Missing from "../inputs/missing.svelte";
@@ -10,48 +10,43 @@
     import Status from "./status.svelte";
     let callOdfData = `/api/v1/odfData`;
     let pointApi = `/api/v1/point`;
-    let motivoUrl = `/api/v1/badFeedMotives`;
+    let urlBadFeedMotive = `/api/v1/badFeedMotives`;
     let supervisorApi = `/api/v1/supervisor`;
     let supervisorStop = "api/v1/supervisorParada";
     let imageLoader = "/images/axonLoader.gif";
-    let showError = false;
-    let showParcialSuper = false;
-    let showSuperNotFound = false;
-    let showErrorMessage = false;
-    let showRoundedApont = false;
     let showConfirm = false;
-    let stopModal = false;
     let loader = false;
     var address = "";
     let supervisor = "";
     let message = "";
-    let dados = [];
-    let odfData = [];
+    let data = [];
+    export let odfData = [];
     let badFeed;
     let missingFeed;
     let reworkFeed;
     let valorFeed;
     let value;
-    let qtdPossivelProducao;
+    let availableQuantity;
     let getSpace;
     let balance;
-    let superSuperMaqPar;
+    let supervisorMaq;
+    let isRequesting = false;
     let resultRefugo = motives();
-    getOdfData();
+    // getOdfData();
 
     const checkStopMachine = async (event) => {
-        if (!superSuperMaqPar) {
-            superSuperMaqPar = "";
-        } else if (superSuperMaqPar) {
-            if (superSuperMaqPar.length >= 6 && event.key === "Enter") {
+        if (!supervisorMaq) {
+            supervisorMaq = "";
+        } else if (supervisorMaq) {
+            if (supervisorMaq.length >= 6 && event.key === "Enter") {
                 if (
-                    !superSuperMaqPar ||
-                    superSuperMaqPar === "0" ||
-                    superSuperMaqPar === "00" ||
-                    superSuperMaqPar === "000" ||
-                    superSuperMaqPar === "0000" ||
-                    superSuperMaqPar === "00000" ||
-                    superSuperMaqPar === "000000"
+                    !supervisorMaq ||
+                    supervisorMaq === "0" ||
+                    supervisorMaq === "00" ||
+                    supervisorMaq === "000" ||
+                    supervisorMaq === "0000" ||
+                    supervisorMaq === "00000" ||
+                    supervisorMaq === "000000"
                 ) {
                     message = "Crachá inválido";
                 } else {
@@ -68,7 +63,7 @@
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                superSuperMaqPar: !superSuperMaqPar ? "" : superSuperMaqPar,
+                superSuperMaqPar: !supervisorMaq ? "" : supervisorMaq,
             }),
         }).then((res) => res.json());
         if (res) {
@@ -86,37 +81,37 @@
         }
     };
 
-    async function getOdfData() {
-        const res = await fetch(callOdfData);
-        odfData = await res.json();
-        loader = false;
-        if (odfData) {
-            if (odfData.message === "Success") {
-                if (odfData.odfSelecionada) {
-                    qtdPossivelProducao = odfData.odfSelecionada.QTDE_LIB;
-                } else {
-                    return (window.location.href = `/#/codigobarras`);
-                }
-            } else if (
-                odfData.message === "codeApont 5 inicio de rip" ||
-                odfData.message === "codeApont 4 prod finalzado"
-            ) {
-                return (window.location.href = `/#/rip`);
-            } else if (odfData.message !== "") {
-                message = odfData.message;
-            }
-        } else {
-            return (window.location.href = `/#/codigobarras`);
-        }
-    }
+    // async function getOdfData() {
+    //     const res = await fetch(callOdfData);
+    //     odfData = await res.json();
+    //     loader = false;
+    //     if (odfData) {
+    //         if (odfData.message === "Success") {
+    //             if (odfData.odfSelecionada) {
+    //                 availableQuantity = odfData.odfSelecionada.QTDE_LIB;
+    //             } else {
+    //                 return (window.location.href = `/#/codigobarras`);
+    //             }
+    //         } else if (
+    //             odfData.message === "codeApont 5 inicio de rip" ||
+    //             odfData.message === "codeApont 4 prod finalzado"
+    //         ) {
+    //             return (window.location.href = `/#/rip`);
+    //         } else if (odfData.message !== "") {
+    //             message = odfData.message;
+    //         }
+    //     } else {
+    //         return (window.location.href = `/#/codigobarras`);
+    //     }
+    // }
 
     async function motives() {
-        const res = await fetch(motivoUrl);
-        dados = await res.json();
-        if (dados) {
-            if (dados.message) {
-                if (dados.message !== "") {
-                    message = dados.message;
+        const res = await fetch(urlBadFeedMotive);
+        data = await res.json();
+        if (data) {
+            if (data.message) {
+                if (data.message !== "") {
+                    message = data.message;
                 }
             }
         }
@@ -156,6 +151,7 @@
             }),
         }).then((res) => res.json());
         loader = false;
+        console.log('res', res);
         if (res) {
             if (res.message === "Apontamento parcial") {
                 message = "Apontamento parcial";
@@ -170,6 +166,7 @@
             } else if (res.message === "Saldo menor que o apontado") {
                 message = "Saldo menor que o apontado";
                 balance = res.balance;
+                isRequesting = false;
             } else if (res.message === "Success") {
                 getSpaceFunc();
                 message = "";
@@ -177,8 +174,10 @@
                 window.location.href = `/#/rip`;
                 location.reload();
             } else if (res.message === "Algo deu errado") {
+                isRequesting = false;
                 message = res.message;
             } else if (res.message !== "") {
+                isRequesting = false;
                 message = res.message;
             }
         } else {
@@ -200,9 +199,10 @@
     }
 
     async function callPost(event) {
+        isRequesting = true;
         let numberBadFeed = Number(badFeed || 0);
         let numberGoodFeed = Number(valorFeed || 0);
-        let numberQtdAllowed = Number(qtdPossivelProducao);
+        let numberQtdAllowed = Number(availableQuantity);
         let numberMissing = Number(missingFeed || 0);
         let numberReworkFeed = Number(reworkFeed || 0);
 
@@ -270,14 +270,7 @@
     }
 
     function close() {
-        showError = false;
-        showConfirm = false;
-        showParcialSuper = false;
-        showSuperNotFound = false;
-        showRoundedApont = false;
-        showErrorMessage = false;
-        address = false;
-        stopModal = false;
+        address = "";
         message = "";
     }
 
@@ -323,7 +316,7 @@
     </div>
 {/if}
 
-{#await dados.length !== 0}
+{#await data.length !== 0}
     <div class="imageLoader">
         <div class="loader">
             <img src={imageLoader} alt="" />
@@ -361,6 +354,7 @@
             <div class="buttonApontar">
                 <!-- svelte-ignore a11y-positive-tabindex -->
                 <a
+                    disabled={isRequesting === true}
                     tabindex="5"
                     id="apontar"
                     on:keypress|once={callPost}
@@ -390,8 +384,8 @@
                     <div class="closed">
                         <h3>Apontamento com refugo</h3>
                     </div>
-                    <select bind:value >
-                        {#each dados as item}
+                    <select bind:value>
+                        {#each data as item}
                             <option>{item}</option>
                         {/each}
                     </select>
@@ -544,7 +538,7 @@
                             on:input={blockForbiddenChars}
                             on:keypress={checkStopMachine}
                             onkeyup="this.value = this.value.toUpperCase()"
-                            bind:value={superSuperMaqPar}
+                            bind:value={supervisorMaq}
                         />
                     </div>
                 </div>
@@ -697,7 +691,6 @@
         align-items: center;
         justify-content: center;
     }
-
 
     h2 {
         font-size: 55px;

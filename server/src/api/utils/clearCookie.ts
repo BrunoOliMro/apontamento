@@ -60,4 +60,5 @@ export const cookieCleaner = async (res: any) => {
     ].forEach(cookie => {
         res.clearCookie(`${cookie}`)
     });
+    return 'Success'
 }

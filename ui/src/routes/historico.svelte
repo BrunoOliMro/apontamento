@@ -7,28 +7,28 @@
   let subtitle = "Histórico de Apontamento";
   let urlString = `/api/v1/historic`;
   let messageOnBtn = "Detalhado";
-  let historicData = [];
-  let showNormalTable = false;
-  let showDetail = true;
-  let resultado = getHistorico();
+  let historic = [];
+  let generalData = false;
+  let detailData = true;
+  let result = getHistorico();
 
   async function getHistorico() {
     const res = await fetch(urlString);
-    historicData = await res.json();
-    if (historicData.message !== "") {
-      message = historicData.message;
+    historic = await res.json();
+    if (historic.message !== "") {
+      message = historic.message;
     }
   }
 
   function detail() {
-    if (showNormalTable === true) {
+    if (generalData === true) {
       messageOnBtn = "Detalhado";
-      showNormalTable = false;
-      showDetail = true;
+      generalData = false;
+      detailData = true;
     } else {
       messageOnBtn = "Geral";
-      showDetail = false;
-      showNormalTable = true;
+      detailData = false;
+      generalData = true;
     }
   }
 </script>
@@ -49,13 +49,13 @@
       >{messageOnBtn}</button
     >
   </div>
-  {#await resultado}
+  {#await result}
     <div class="imageLoader">
       <div class="loader">
         <img src={imageLoader} alt="" />
       </div>
     </div>
-  {:then itens}
+  {:then}
     {#if message === "Exibir histórico"}
       <div class="tabela table-responsive">
         <table class="table table-hover table-striped caption-top">
@@ -67,24 +67,24 @@
               <th scope="col">REFUGO</th>
               <th scope="col">FALTANTE</th>
               <th scope="col">ODF</th>
-              {#if showNormalTable === true}
+              {#if generalData === true}
                 <th scope="col">DATA</th>
                 <th scope="col">HORA</th>
               {/if}
             </tr>
           </thead>
 
-          {#if showDetail === true}
+          {#if detailData === true}
             <tbody id="table-body">
-              {#each historicData.resourceDetail as column}
+              {#each historic.resourceDetail as column}
                 <TableHistorico dados={column} />
               {/each}
             </tbody>
           {/if}
 
-          {#if showNormalTable === true}
+          {#if generalData === true}
             <tbody id="table-body">
-              {#each historicData.resource as column}
+              {#each historic.resource as column}
                 <TableHistorico dados={column} />
               {/each}
             </tbody>
@@ -117,33 +117,10 @@
     color: black;
   }
   table {
-    /* width: 98%; */
     margin: 0%;
     padding: 0%;
     font-size: 25px;
   }
-  /* button{
-    width: 100px;
-    height: 30px;
-    border: gray;
-    border-radius: 6px;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    letter-spacing: 1px;
-  } */
-  /* .sideBtn {
-    width: 100px;
-    margin: 1%;
-    padding: 0%;
-    border: grey;
-    flex-direction: row; 
-    justify-content: right;
-    align-items: center;
-    text-align: center;
-    border-radius: 5px;
-  } */
-
   .sideBtn {
     margin: 1%;
     padding: 0%;
@@ -256,9 +233,6 @@
   }
 
   @media screen and (min-width: 860px) {
-    main {
-    }
-
     .subtitle {
       font-size: 28px;
     }
@@ -270,9 +244,6 @@
     } */
   }
   @media screen and (min-width: 1000px) {
-    main {
-    }
-
     .subtitle {
       font-size: 30px;
     }

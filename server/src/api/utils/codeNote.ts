@@ -6,7 +6,7 @@ export const codeNote = async (odfNumber: number | null, operationNumber: number
     var response = {
         employee: '',
         message: '',
-        time: 0, 
+        time: 0,
     }
     codigoDeApontamento = await select(lookForHisaponta)
 

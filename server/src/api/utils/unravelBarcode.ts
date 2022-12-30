@@ -1,17 +1,18 @@
 import { sanitize } from './sanitize';
 
 export function unravelBarcode(barcode: string) {
-    barcode = String(sanitize(barcode))
+    barcode = sanitize(barcode).trim()
     let response = {
-        message: ''
+        message: '',
+        data: {
+            odfNumber: '',
+            opNumber: '',
+            machineCod: '',
+        },
     }
 
-    if (!barcode) {
-        return response.message = 'Código de barras está vazio'
-    }
-
-    if (barcode.length <= 16 || barcode.length > 18) {
-        return response.message = 'Código de barras inválido'
+    if (!barcode || barcode.length <= 16 || barcode.length > 18) {
+        return response.message = ''
     }
 
     //Reatribuiu o codigo caso o cado de barras seja maior
@@ -21,12 +22,16 @@ export function unravelBarcode(barcode: string) {
         codMaq: String(barcode!.slice(5, 10)),
     }
 
-    if (barcode!.length > 17) {
+    if (barcode.length > 17) {
         dados.numOdf = barcode!.slice(11)
         dados.numOper = barcode!.slice(0, 5)
         dados.codMaq = barcode!.slice(5, 11)
     }
-    return dados
+    response.message = 'Success'
+    response.data.odfNumber = dados.numOdf
+    response.data.opNumber = dados.numOper
+    response.data.machineCod = dados.codMaq
+    return response
 }
 
 

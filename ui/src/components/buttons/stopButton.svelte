@@ -12,7 +12,7 @@
 <button
     tabindex="6"
     type="button"
-    class="sideButton"
+    class="btn"
     on:click={messageDispatch}
     on:keypress={messageDispatch}
 >
@@ -20,7 +20,7 @@
 </button>
 
 <style>
-    .sideButton {
+    .btn {
         outline: none;
         margin: 0%;
         padding: 0%;
@@ -40,7 +40,7 @@
         letter-spacing: 1px;
     }
 
-    .sideButton:hover {
+    .btn:hover {
         outline: none;
         cursor: pointer;
         color: red;

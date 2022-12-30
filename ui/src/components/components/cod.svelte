@@ -4,7 +4,7 @@
     let imageLoader = "/images/axonLoader.gif";
     let urlString = `/api/v1/odfData`;
     let message = "";
-    let odfData;
+    export let odfData = [];
     let numeroOdf;
     let codigoPeca;
     let codigoCliente;
@@ -12,41 +12,41 @@
     let qtdeOdf;
     let funcionario;
     let operationNumber;
-    let resultOdf = getOdfData();
+    // let resultOdf = getOdfData();
 
-    async function getOdfData() {
-        const res = await fetch(urlString);
-        odfData = await res.json();
+    // async function getOdfData() {
+    //     const res = await fetch(urlString);
+    //     odfData = await res.json();
 
-        console.log("linha 14 /cod.svelte////////////////////", odfData);
+    //     console.log("linha 14 /cod.svelte////////////////////", odfData);
 
-        if (odfData.message === "Algo deu errado") {
-            message = odfData.message;
-        } else {
-            numeroOdf = odfData.odfSelecionada.NUMERO_ODF;
-            codigoPeca = odfData.odfSelecionada.CODIGO_PECA;
-            codigoCliente = odfData.odfSelecionada.CODIGO_CLIENTE;
-            machineCode = odfData.odfSelecionada.CODIGO_MAQUINA;
-            qtdeOdf = odfData.odfSelecionada.QTDE_ODF;
-            funcionario = odfData.resEmployee;
-            operationNumber = odfData.odfSelecionada.NUMERO_OPERACAO;
-        }
+    //     if (odfData.message === "Algo deu errado") {
+    //         message = odfData.message;
+    //     } else {
+    //         numeroOdf = odfData.odfSelecionada.NUMERO_ODF;
+    //         codigoPeca = odfData.odfSelecionada.CODIGO_PECA;
+    //         codigoCliente = odfData.odfSelecionada.CODIGO_CLIENTE;
+    //         machineCode = odfData.odfSelecionada.CODIGO_MAQUINA;
+    //         qtdeOdf = odfData.odfSelecionada.QTDE_ODF;
+    //         funcionario = odfData.resEmployee;
+    //         operationNumber = odfData.odfSelecionada.NUMERO_OPERACAO;
+    //     }
 
-        if (odfData.message === "Acesso negado") {
-            message = "Acesso Negado";
-            window.location.href = "/#/codigobarras";
-            location.reload();
-        }
+    //     if (odfData.message === "Acesso negado") {
+    //         message = "Acesso Negado";
+    //         window.location.href = "/#/codigobarras";
+    //         location.reload();
+    //     }
 
-        if (
-            odfData.message ===
-            "Algo deu errado ao buscar pelo codigo de apontamento"
-        ) {
-            window.location.href = "/#/codigobarras";
-            message = "Acesso Negado";
-            location.reload;
-        }
-    }
+    //     if (
+    //         odfData.message ===
+    //         "Algo deu errado ao buscar pelo codigo de apontamento"
+    //     ) {
+    //         window.location.href = "/#/codigobarras";
+    //         message = "Acesso Negado";
+    //         location.reload;
+    //     }
+    // }
 
     function redirect() {
         message = "";
@@ -61,8 +61,8 @@
     }
 </script>
 
-{#await resultOdf}
-    <div class="imageLoader">
+{#await odfData.length > 0}
+    <div class="image-loader">
         <div class="loader">
             <img src={imageLoader} alt="" />
         </div>
@@ -138,7 +138,7 @@
         justify-content: center;
         z-index: 99999999999999;
     }
-    .imageLoader {
+    .image-loader {
         margin: 0%;
         padding: 0%;
         position: fixed;

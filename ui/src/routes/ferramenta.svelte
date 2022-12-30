@@ -1,28 +1,29 @@
 <script>
   // @ts-nocheck
   import ModalConfirmation from "../components/modal/modalConfirmation.svelte";
+  let back = "/images/icons8-go-back-24.png";
   let imageLoader = "/images/axonLoader.gif";
   let toolsApi = `/api/v1/tools`;
   let selectedToolsApi = `/api/v1/ferselecionadas`;
   let tools = [];
-  let arrayComp = [];
-  let fer = [];
-  let adicionados = 0;
+  let array = [];
+  let selectedTools = [];
+  let added = 0;
   let message = "";
   let loader = true;
-  let resultTools = getTools();
-  console.log("linha 14 tools ", resultTools);
+  let result = getTools();
+  console.log("linha 14 tools ", result);
 
-  async function ferSelected() {
-    loader = true;
+  async function callTools() {
     const res = await fetch(selectedToolsApi);
-    fer = await res.json();
+    selectedTools = await res.json();
+    console.log("fer", selectedTools);
     if (res) {
-      if (fer.message === "Success") {
+      if (selectedTools.message === "Success") {
         window.location.href = "/#/codigobarras/apontamento";
         // location.reload();
-      } else if (fer.message !== "") {
-        message = fer.message;
+      } else if (selectedTools.message !== "") {
+        message = selectedTools.message;
       }
     }
   }
@@ -38,17 +39,18 @@
         tools.message === "Pointed Iniciated" ||
         tools.message === "Fin Setup" ||
         tools.message === "" ||
-        tools.message === "/images/sem_imagem.gif"
+        tools.message === "/images/sem_imagem.gif" ||
+        tools.message === "A value was returned"
       ) {
         loader = true;
-        ferSelected();
+        callTools();
       }
 
       if (tools.message === "Not found") {
         loader = true;
         window.location.href = "/#/codigobarras/apontamento";
-        location.reload();
-        ferSelected();
+        // location.reload();
+        callTools();
       }
 
       if (tools.message === "Erro ao tentar acessar as fotos de ferramentas") {
@@ -62,15 +64,15 @@
   }
 
   function checkIfclicked(column, imgId) {
-    if (!arrayComp.includes(column)) {
-      adicionados += 1;
-      arrayComp.push(column);
+    if (!array.includes(column)) {
+      added += 1;
+      array.push(column);
       document.getElementById(imgId).style.border = "2px solid green";
       document.getElementById(imgId).style.transition = "1px";
     }
-    if (tools.length === arrayComp.length) {
+    if (tools.length === array.length) {
       loader = true;
-      ferSelected();
+      callTools();
     }
   }
 
@@ -80,22 +82,25 @@
   }
 </script>
 
-<nav class="breadcrumb" aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item">
-      <a href="/#/codigobarras">Colaborador</a>
-    </li>
-  </ol>
-</nav>
 {#if loader === true}
-  <div class="imageLoader">
+  <div class="image-loader">
     <div class="loader">
       <img src={imageLoader} alt="" />
     </div>
   </div>
 {/if}
-{#await resultTools}
-  <div class="imageLoader">
+
+<nav class="breadcrumb" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="/#/codigobarras"><img src={back} alt="" />Colaborador</a>
+    </li>
+  </ol>
+</nav>
+
+
+{#await result}
+  <div class="image-loader">
     <div class="loader">
       <img src={imageLoader} alt="" />
     </div>
@@ -118,21 +123,25 @@
     </div>
   </div>
 {/await}
-
+<!-- 
 {#if message === "Erro ao tentar acessar as fotos de ferramentas"}
   <ModalConfirmation on:message={close} />
-{/if}
+{/if} -->
 
 {#if message !== ""}
   <ModalConfirmation on:message={close} />
 {/if}
 
 <style>
+  a {
+    color: #252525;
+    font-size: 20px;
+  }
   .breadcrumb {
-    margin-top: 5px;
-    margin-left: 1%;
+    margin-top: 10px;
+    margin-left: 10px;
     margin-bottom: 0%;
-    text-decoration: underline;
+    margin-right: 0%;
   }
   h3 {
     z-index: 5;
@@ -148,7 +157,7 @@
     justify-content: center;
     z-index: 99999999999999999999999999999999999;
   }
-  .imageLoader {
+  .image-loader {
     margin: 0%;
     padding: 0%;
     position: fixed;

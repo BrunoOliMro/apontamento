@@ -63,6 +63,7 @@ const cookieCleaner = async (res) => {
     ].forEach(cookie => {
         res.clearCookie(`${cookie}`);
     });
+    return 'Success';
 };
 exports.cookieCleaner = cookieCleaner;
 //# sourceMappingURL=clearCookie.js.map

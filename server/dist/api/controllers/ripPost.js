@@ -14,7 +14,8 @@ const decryptedOdf_1 = require("../utils/decryptedOdf");
 const sanitize_1 = require("../utils/sanitize");
 const ripPost = async (req, res) => {
     try {
-        var setup = (req.body['setup']) || null;
+        console.log('req.body', req.body);
+        var setup = (req.body['values']) || null;
         var keySan;
         var valueSan;
         var odfNumber = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF']))) || null;
@@ -35,7 +36,7 @@ const ripPost = async (req, res) => {
         var goodFeed = null;
         var badFeed = null;
         var pointCode = [6];
-        var pointCodeDescriptionRipEnded = 'Rip Fin.';
+        var pointCodeDescriptionRipEnded = ['Rip Fin.'];
         var motives = null;
         var missingFeed = null;
         var reworkFeed = null;
@@ -43,7 +44,7 @@ const ripPost = async (req, res) => {
     }
     catch (error) {
         console.log('Error on Rip Post ', error);
-        return res.json({ message: 'Algo deu errado' });
+        return res.json({ message: '' });
     }
     try {
         const pointedCode = await (0, codeNote_1.codeNote)(odfNumber, Number(operationNumber), machineCode, employee);
@@ -55,7 +56,7 @@ const ripPost = async (req, res) => {
     }
     catch (error) {
         console.log('Error on Rip Post ', error);
-        return res.json({ message: 'Algo deu errado' });
+        return res.json({ message: '' });
     }
     if (Object.keys(setup).length <= 0) {
         const insertedRipCode = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, operationNumber.replaceAll(' ', ''), machineCode, maxQuantityReleased, goodFeed, badFeed, pointCode, pointCodeDescriptionRipEnded, motives, missingFeed, reworkFeed, tempoDecorridoRip);
@@ -66,11 +67,11 @@ const ripPost = async (req, res) => {
                 return res.json({ message: 'Success' });
             }
             else {
-                return res.json({ message: 'Algo deu errado' });
+                return res.json({ message: '' });
             }
         }
         else {
-            return res.json({ message: 'Algo deu errado' });
+            return res.json({ message: '' });
         }
     }
     else {
@@ -83,13 +84,13 @@ const ripPost = async (req, res) => {
     try {
         const insertedRipCode = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, operationNumber.replaceAll(' ', ''), machineCode, maxQuantityReleased, goodFeed, badFeed, pointCode, pointCodeDescriptionRipEnded, motives, missingFeed, reworkFeed, tempoDecorridoRip);
         if (!insertedRipCode) {
-            return res.json({ message: 'Algo deu errado' });
+            return res.json({ message: '' });
         }
         else if (insertedRipCode) {
             try {
                 const resultUpdatePcpProg = await (0, update_1.update)(stringUpdatePcp);
                 if (resultUpdatePcpProg !== 'Success') {
-                    return res.json({ message: 'Algo deu errado' });
+                    return res.json({ message: '' });
                 }
                 else {
                     const resultSplitLines = Object.keys(objectSanitized).reduce((acc, iterator) => {
@@ -113,29 +114,29 @@ const ripPost = async (req, res) => {
                         }
                         catch (error) {
                             console.log('error - linha 103 /ripPost.ts/ - ', error);
-                            return res.json({ message: 'Algo deu errado' });
+                            return res.json({ message: '' });
                         }
                         await (0, clearCookie_1.cookieCleaner)(res);
                         return res.json({ message: 'Success' });
                     }
                     catch (error) {
                         console.log('linha 110 /ripPost/', error);
-                        return res.json({ message: 'Algo deu errado' });
+                        return res.json({ message: '' });
                     }
                 }
             }
             catch (error) {
                 console.log('error linha 115', error);
-                return res.json({ message: 'Algo deu errado' });
+                return res.json({ message: '' });
             }
         }
         else {
-            return res.json({ message: 'Algo deu errado' });
+            return res.json({ message: '' });
         }
     }
     catch (error) {
         console.log('linha 126 - ripPost -', error);
-        return res.json({ message: 'Algo deu errado' });
+        return res.json({ message: '' });
     }
 };
 exports.ripPost = ripPost;

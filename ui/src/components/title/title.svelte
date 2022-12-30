@@ -12,10 +12,40 @@
     let showMaqPar = false;
     let stopModal = false;
     let loader = false;
-    let dados = [];
-    let modalmessage = "";
+    export let odfData = []
+    let message = "";
     let value;
     let result = callMotivo();
+
+    async function callMotivo() {
+        odfData = await fetch(apiMotivoParada).then((res) => res.json());
+        if (odfData) {
+            if (odfData.message) {
+                if (odfData.message !== "" && odfData.message !== "Success") {
+                    message = odfData.message;
+                }
+            }
+        } else {
+            odfData.motives = "Parar máquina";
+        }
+    }
+
+    const confirm = async () => {
+        loader = true;
+        const res = await post(postParada, value).then((res) => res.json());
+        console.log("res -- Title.svelte", res);
+        if (res) {
+            if (res.message === "Máquina já parada") {
+                stopModal = false;
+                showMaqPar = false;
+                message = "Máquina parada";
+            }
+            if (res.message === "Success") {
+                stopModal = false;
+                showMaqPar = true;
+            }
+        }
+    };
 
     function showStop() {
         if (stopModal === false) {
@@ -34,46 +64,10 @@
         }
     }
 
-    const confirm = async () => {
-        loader = true;
-        const res = await fetch(postParada, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                value: value,
-            }),
-        }).then((res) => res.json());
-        loader = false;
-        console.log('res -- Title.svelte--', res);
-        if (res) {
-            if (res.message === "Máquina já parada") {
-                stopModal = false;
-                showMaqPar = false;
-                modalmessage = "Máquina parada";
-            }
-            if (res.message === "Success") {
-                stopModal = false;
-                showMaqPar = true;
-            }
-        }
-    };
-
-    async function callMotivo() {
-        const res = await fetch(apiMotivoParada);
-        dados = await res.json();
-        if (dados) {
-            if (dados.message) {
-                if (dados.message !== "" && dados.message !== "Success") {
-                    modalmessage = dados.message;
-                }
-            }
-        }
-    }
-
     function closeConfirm() {
         showMaqPar = false;
         stopModal = false;
-        modalmessage = "";
+        message = "";
     }
 </script>
 
@@ -127,7 +121,7 @@
                     <!-- svelte-ignore a11y-positive-tabindex -->
                     <!-- svelte-ignore a11y-autofocus -->
                     <select autofocus tabindex="10" bind:value>
-                        {#each dados.motives as item}
+                        {#each odfData.motives as item}
                             <option class="optionsBar">{item}</option>
                         {/each}
                     </select>
@@ -149,8 +143,8 @@
     </div>
 {/if}
 
-{#if modalmessage !== ""}
-    <ModalConfirmation title={modalmessage} on:message={closeConfirm} />
+{#if message !== ""}
+    <ModalConfirmation title={message} on:message={closeConfirm} />
 {/if}
 
 {#if showMaqPar === true}

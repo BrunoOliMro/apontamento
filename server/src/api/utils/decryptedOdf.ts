@@ -1,4 +1,4 @@
-export const decrypted = (numberOdf: string) =>{
+export const decrypted = (numberOdf: string | null) =>{
     const crypto = require('crypto')
     const algorithm = process.env['ALGORITH_ENCRYPTED']
     const key = process.env['SECRET_ODF_KEY']

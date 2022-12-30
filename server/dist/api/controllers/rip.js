@@ -15,7 +15,7 @@ const rip = async (req, res) => {
         var operationNumber = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])))).replaceAll(' ', '') || null;
         var funcionario = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])))) || null;
         var maxQuantityReleased = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB'])))) || null;
-        var descricaoCodAponta = `Rip Ini.`;
+        var descricaoCodAponta = [`Rip Ini.`];
         var boas = null;
         var ruins = null;
         var faltante = null;
@@ -55,23 +55,24 @@ const rip = async (req, res) => {
     }
     catch (error) {
         console.log('Error on Rip --cookies--', error);
-        return res.json({ message: 'Algo deu errado' });
+        return res.json({ message: '' });
     }
     try {
         var ripDetails = await (0, select_1.select)(rip);
     }
     catch (error) {
         console.log('Error on Rip Select', error);
-        return res.json({ message: 'Algo deu errado' });
+        return res.json({ message: '' });
     }
     if (ripDetails.length <= 0) {
         response.message = 'Não há rip a mostrar';
         const insertedPointCode = await (0, insert_1.insertInto)(funcionario, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, ripStartTime);
+        console.log('response', response);
         if (insertedPointCode) {
             return res.json(response);
         }
         else {
-            return res.json({ message: 'Algo deu errado' });
+            return res.json({ message: '' });
         }
     }
     let arrayNumope = ripDetails.map((acc) => {
@@ -98,12 +99,12 @@ const rip = async (req, res) => {
                     return res.json(numopeFilter);
                 }
                 else {
-                    return response.message = 'Algo deu errado';
+                    return response.message = '';
                 }
             }
             catch (error) {
                 console.log('Error on rip.ts', error);
-                return response.message = 'Algo deu errado';
+                return response.message = '';
             }
         }
         else if (pointedCode.message === 'Rip iniciated') {

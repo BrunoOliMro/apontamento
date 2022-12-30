@@ -10,10 +10,10 @@
 </script>
 
 <div class="background">
-    <div class="confirmationModal">
+    <div class="modal-content">
         <div class="content">
             <hr />
-            <h2 class="modalTitle">{title}</h2>
+            <h2 class="modal-title">{title}</h2>
             <div class="div-btn">
                 <hr />
                 <!-- svelte-ignore a11y-autofocus -->
@@ -31,7 +31,7 @@
         padding: 0%;
         color: white;
     }
-    .confirmationModal {
+    .modal-content {
         transition: all 1s;
         animation: ease-in;
         margin: 0%;
@@ -89,7 +89,7 @@
             0 0 1px rgb(216, 208, 208);
     }
 
-    .modalTitle {
+    .modal-title {
         margin-left: 0px;
         margin-bottom: 25px;
         margin-right: 0px;

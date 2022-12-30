@@ -4,15 +4,14 @@
     const back = "images/icons8-go-back-24.png";
     const urlString = `/api/v1/drawing`;
     const Subtitle = "DESENHO";
-    let imagemBack = [];
+    let tecnicalDrawing;
     const zoomNumber = 400;
     let rotation = 0;
     let imagemMsg = "";
-    const resultado = getIMAGEM();
+    let result = getDrawing()
 
-    async function getIMAGEM() {
-        const res = await fetch(urlString);
-        imagemBack = await res.json();
+    async function getDrawing() {
+        const imagemBack = await fetch(urlString).then(res => res.json());
         if (imagemBack) {
             if (imagemBack.message !== "") {
                 imagemMsg = imagemBack.message;
@@ -71,6 +70,7 @@
         <button tabindex="1" type="button" class="sideButton" on:click={right}
             >DIREITA</button
         >
+        <!-- svelte-ignore a11y-positive-tabindex -->
         <button
             tabindex="2"
             type="button"
@@ -78,6 +78,7 @@
             on:click={left}
             on:keypress={left}>ESQUERDA</button
         >
+        <!-- svelte-ignore a11y-positive-tabindex -->
         <button
             tabindex="3"
             type="button"
@@ -85,6 +86,8 @@
             on:click={zoomIn}
             on:keypress={left}>ZOOM +</button
         >
+
+        <!-- svelte-ignore a11y-positive-tabindex -->
         <button
             tabindex="4"
             type="button"
@@ -92,6 +95,8 @@
             on:click={zoomOut}
             on:keypress={left}>ZOOM -</button
         >
+
+        <!-- svelte-ignore a11y-positive-tabindex -->
         <button
             tabindex="5"
             type="button"
@@ -102,7 +107,7 @@
     </div>
 
     <div class="newDiv">
-        {#await resultado}
+        {#await result}
             <div class="imageLoader">
                 <div class="loader">
                     <img src={imageLoader} alt="" />
@@ -110,7 +115,7 @@
             </div>
         {:then}
             <div class="frame">
-                {#each imagemBack as img}
+                {#each tecnicalDrawing as img}
                     <div id={img}>
                         <img
                             media="print"

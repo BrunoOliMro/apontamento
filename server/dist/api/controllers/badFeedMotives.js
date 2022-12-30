@@ -15,18 +15,18 @@ const badFeedMotives = async (req, res) => {
     }
     catch (error) {
         console.log('Error on BadFeedMotives --cookies--', error);
-        return res.json({ message: 'Algo deu errado' });
+        return res.json({ message: '' });
     }
     try {
         const pointedCode = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, machineCode, employee);
         if (pointedCode.message === 'Ini Prod' || pointedCode.message === 'Pointed' || pointedCode.message === 'Rip iniciated' || pointedCode.message === 'Machine has stopped') {
             const resultMotives = await (0, select_1.select)(motivesString);
-            const resultMap = resultMotives.map((e) => e.DESCRICAO);
+            const resultMap = resultMotives.map((element) => element.DESCRICAO);
             if (resultMotives.length > 0) {
                 return res.status(200).json(resultMap);
             }
             else {
-                return res.json({ message: 'Algo deu errado' });
+                return res.json({ message: '' });
             }
         }
         else {
@@ -34,8 +34,8 @@ const badFeedMotives = async (req, res) => {
         }
     }
     catch (error) {
-        console.log(error);
-        return res.json({ message: 'Algo deu errado' });
+        console.log('BadFeedMotives :', error);
+        return res.json({ message: '' });
     }
 };
 exports.badFeedMotives = badFeedMotives;

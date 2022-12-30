@@ -12,55 +12,59 @@
   let meioFim = "";
   let anoFim = "";
 
-  let dadosOdf = [];
+  export let odfData = [];
 
   var message = "";
-  let resultado = getOdfData();
+  // let resultado = getData();
 
   //Takes an array and modify undefined and null values
+  /**
+   * @param {any[]} array
+   * @param {{ [x: string]: string; }} x
+   */
   function modifyObj(array, x) {
     array.forEach((key) => {
       x[key] = x[key] ?? "";
     });
   }
 
-  async function getOdfData() {
-    const res = await fetch(urlString);
-    dadosOdf = await res.json();
-    console.log('footer', dadosOdf);
-    if (dadosOdf) {
-      if (dadosOdf.message) {
-        if (dadosOdf.message !== "" && dadosOdf.message !== "Success") {
-          message = dadosOdf.message;
-        }
-      }
-    }
-    let odf = dadosOdf.odfSelecionada;
+  // async function getData() {
+  //   const res = await fetch(urlString);
+  //   odfData = await res.json();
+  //   console.log("footer", odfData);
+  //   if (odfData) {
+  //     if (odfData.message) {
+  //       if (odfData.message !== "" && odfData.message !== "Success") {
+  //         message = odfData.message;
+  //       }
+  //     }
+  //   }
+  //   let odf = odfData.odfSelecionada;
 
-    modifyObj(Object.keys(dadosOdf.odfSelecionada), odf);
+  //   modifyObj(Object.keys(odfData.odfSelecionada), odf);
 
-    dataInicio = odf.DT_INICIO_OP.slice(6, 8);
+  //   dataInicio = odf.DT_INICIO_OP.slice(6, 8);
 
-    meioInicio = odf.DT_INICIO_OP.slice(4, 6);
+  //   meioInicio = odf.DT_INICIO_OP.slice(4, 6);
 
-    anoInicio = odf.DT_INICIO_OP.slice(0, 4);
+  //   anoInicio = odf.DT_INICIO_OP.slice(0, 4);
 
-    horaInicio = odf.HORA_INICIO.slice(11, 19);
+  //   horaInicio = odf.HORA_INICIO.slice(11, 19);
 
-    dataFim = odf.DT_FIM_OP.slice(6, 8);
+  //   dataFim = odf.DT_FIM_OP.slice(6, 8);
 
-    meioFim = odf.DT_FIM_OP.slice(4, 6);
+  //   meioFim = odf.DT_FIM_OP.slice(4, 6);
 
-    anoFim = odf.DT_FIM_OP.slice(0, 4);
+  //   anoFim = odf.DT_FIM_OP.slice(0, 4);
 
-    horaFinal = odf.HORA_FIM.slice(11, 19);
+  //   horaFinal = odf.HORA_FIM.slice(11, 19);
 
-    horaFinal = odf.HORA_FIM.slice(11, 19);
-  }
+  //   horaFinal = odf.HORA_FIM.slice(11, 19);
+  // }
 </script>
 
-{#await resultado}
-  <div class="imageLoader">
+{#await odfData.length > 0}
+  <div class="image-loader">
     <div class="loader">
       <img src={imageLoader} alt="" />
     </div>
@@ -68,7 +72,7 @@
 {:then itens}
   <main class="main">
     <div class="text-area">
-      <div class="title">INICIO</div>
+      <div class="title">Início</div>
       <div class="data-time">
         {dataInicio} / {meioInicio} / {anoInicio} - {(horaInicio =
           horaInicio === "" ? "S/I" : horaInicio)}
@@ -76,7 +80,7 @@
     </div>
 
     <div class="text-area">
-      <div class="title">FINAL</div>
+      <div class="title">Fim</div>
       <div class="data-time">
         {dataFim} / {meioFim} / {anoFim} - {(horaFinal =
           horaFinal === "" ? "S/I" : horaFinal)}
@@ -115,7 +119,7 @@
     justify-content: center;
     z-index: 99999999999;
   }
-  .imageLoader {
+  .image-loader {
     margin: 0%;
     padding: 0%;
     position: fixed;
@@ -139,20 +143,7 @@
     justify-content: space-around;
     letter-spacing: 1px;
     margin: 0%;
-    /* border-color: grey;
-    box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
-    border-radius: 5px; */
   }
-  /* div {
-    margin: 0%;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-  } */
-
-  /* .div2 {
-    margin-left: 41%;
-  } */
   .title {
     font-size: 21;
     font-weight: normal;
