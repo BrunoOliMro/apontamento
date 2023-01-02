@@ -7,40 +7,41 @@
    const back = "/images/icons8-go-back-24.png";
    const callOdfData = `/api/v1/odfData`;
    let loader = false;
-   export let data = [];
+   let odfData = [];
    var message;
    let result = getData();
 
    async function redirect() {
       const res = await fetch(redirectRoute);
-      data = await res.json();
-      if (data.message === "Success") {
+      odfData = await res.json();
+      if (odfData.message === "Success") {
          window.location.href = "/#/codigobarras/";
       }
    }
 
    async function getData() {
       const res = await fetch(callOdfData);
-      data = await res.json();
+      odfData = await res.json();
+      console.log('getData index.svelte', odfData);
       loader = false;
-      if (data) {
-         if (data.message === "Success") {
-            if (data.odfSelecionada) {
-               var availableQuantity = data.odfSelecionada.QTDE_LIB;
-            } else {
-               return (window.location.href = `/#/codigobarras`);
-            }
-         } else if (
-            data.message === "codeApont 5 inicio de rip" ||
-            data.message === "codeApont 4 prod finalzado"
-         ) {
-            return (window.location.href = `/#/rip`);
-         } else if (data.message !== "") {
-            message = data.message;
-         }
-      } else {
-         return (window.location.href = `/#/codigobarras`);
-      }
+      // if (data) {
+      //    if (data.message === "Success") {
+      //       if (data.odfSelecionada) {
+      //          var availableQuantity = data.odfSelecionada.QTDE_LIB;
+      //       } else {
+      //          return (window.location.href = `/#/codigobarras`);
+      //       }
+      //    } else if (
+      //       data.message === "codeApont 5 inicio de rip" ||
+      //       data.message === "codeApont 4 prod finalzado"
+      //    ) {
+      //       return (window.location.href = `/#/rip`);
+      //    } else if (data.message !== "") {
+      //       message = data.message;
+      //    }
+      // } else {
+      //    return (window.location.href = `/#/codigobarras`);
+      // }
    }
 </script>
 
@@ -61,12 +62,12 @@
       >
          <img src={back} alt="" /> Código de barras
       </a>
-      {#if data.length > 0}
-         <Title odfData={data} />
-         <Feed odfData={data} />
-      {:else}
-         <Message on:message={redirect} />
-      {/if}
+      <!-- {#if data.length > 0} -->
+         <Title odfData={odfData} />
+         <Feed odfData={odfData} />
+      <!-- {:else} -->
+         <!-- <Message on:message={redirect} /> -->
+      <!-- {/if} -->
    {/await}
 </main>
 

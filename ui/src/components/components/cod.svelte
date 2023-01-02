@@ -2,9 +2,8 @@
     // @ts-nocheck
     import ModalConfirmation from "../modal/modalConfirmation.svelte";
     let imageLoader = "/images/axonLoader.gif";
-    let urlString = `/api/v1/odfData`;
+    // let urlString = `/api/v1/odfData`;
     let message = "";
-    export let odfData = [];
     let numeroOdf;
     let codigoPeca;
     let codigoCliente;
@@ -12,7 +11,10 @@
     let qtdeOdf;
     let funcionario;
     let operationNumber;
+    export let odfData;
     // let resultOdf = getOdfData();
+
+    console.log('odfData Cod.svelte', odfData);
 
     // async function getOdfData() {
     //     const res = await fetch(urlString);
@@ -23,13 +25,13 @@
     //     if (odfData.message === "Algo deu errado") {
     //         message = odfData.message;
     //     } else {
-    //         numeroOdf = odfData.odfSelecionada.NUMERO_ODF;
-    //         codigoPeca = odfData.odfSelecionada.CODIGO_PECA;
-    //         codigoCliente = odfData.odfSelecionada.CODIGO_CLIENTE;
-    //         machineCode = odfData.odfSelecionada.CODIGO_MAQUINA;
-    //         qtdeOdf = odfData.odfSelecionada.QTDE_ODF;
-    //         funcionario = odfData.resEmployee;
-    //         operationNumber = odfData.odfSelecionada.NUMERO_OPERACAO;
+            numeroOdf = odfData.odfSelecionada.NUMERO_ODF;
+            codigoPeca = odfData.odfSelecionada.CODIGO_PECA;
+            codigoCliente = odfData.odfSelecionada.CODIGO_CLIENTE;
+            machineCode = odfData.odfSelecionada.CODIGO_MAQUINA;
+            qtdeOdf = odfData.odfSelecionada.QTDE_ODF;
+            funcionario = odfData.resEmployee;
+            operationNumber = odfData.odfSelecionada.NUMERO_OPERACAO;
     //     }
 
     //     if (odfData.message === "Acesso negado") {
@@ -61,7 +63,7 @@
     }
 </script>
 
-{#await odfData.length > 0}
+{#await odfData}
     <div class="image-loader">
         <div class="loader">
             <img src={imageLoader} alt="" />

@@ -1,6 +1,6 @@
 <script>
   let imageLoader = "/images/axonLoader.gif";
-  let urlString = `/api/v1/odfData`;
+  // let urlString = `/api/v1/odfData`;
   let horaInicio = "";
   let horaFinal = "";
 
@@ -12,9 +12,11 @@
   let meioFim = "";
   let anoFim = "";
 
-  export let odfData = [];
+  export let odfData;
 
   var message = "";
+
+  console.log('odfData Footer.svelte', odfData);
   // let resultado = getData();
 
   //Takes an array and modify undefined and null values
@@ -39,31 +41,31 @@
   //       }
   //     }
   //   }
-  //   let odf = odfData.odfSelecionada;
+    let odf = odfData.odfSelecionada;
 
-  //   modifyObj(Object.keys(odfData.odfSelecionada), odf);
+    modifyObj(Object.keys(odfData.odfSelecionada), odf);
 
-  //   dataInicio = odf.DT_INICIO_OP.slice(6, 8);
+    dataInicio = odf.DT_INICIO_OP.slice(6, 8);
 
-  //   meioInicio = odf.DT_INICIO_OP.slice(4, 6);
+    meioInicio = odf.DT_INICIO_OP.slice(4, 6);
 
-  //   anoInicio = odf.DT_INICIO_OP.slice(0, 4);
+    anoInicio = odf.DT_INICIO_OP.slice(0, 4);
 
-  //   horaInicio = odf.HORA_INICIO.slice(11, 19);
+    horaInicio = odf.HORA_INICIO.slice(11, 19);
 
-  //   dataFim = odf.DT_FIM_OP.slice(6, 8);
+    dataFim = odf.DT_FIM_OP.slice(6, 8);
 
-  //   meioFim = odf.DT_FIM_OP.slice(4, 6);
+    meioFim = odf.DT_FIM_OP.slice(4, 6);
 
-  //   anoFim = odf.DT_FIM_OP.slice(0, 4);
+    anoFim = odf.DT_FIM_OP.slice(0, 4);
 
-  //   horaFinal = odf.HORA_FIM.slice(11, 19);
+    horaFinal = odf.HORA_FIM.slice(11, 19);
 
-  //   horaFinal = odf.HORA_FIM.slice(11, 19);
+    horaFinal = odf.HORA_FIM.slice(11, 19);
   // }
 </script>
 
-{#await odfData.length > 0}
+{#await odfData}
   <div class="image-loader">
     <div class="loader">
       <img src={imageLoader} alt="" />

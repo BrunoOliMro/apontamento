@@ -1,25 +1,27 @@
 <script>
     import ModalConfirmation from "../components/modal/modalConfirmation.svelte";
     const imageLoader = "/images/axonLoader.gif";
-    const odfDataRouter = `/api/v1/odfData`;
+    // const odfDataRouter = `/api/v1/odfData`;
     const title = "Quantidade liberada: ";
     let quantityAvailableProd;
-    export let odfData = [];
+    export let odfData;
     let message = "";
-    let promiseResult = getData();
-    async function getData() {
-        const res = await fetch(odfDataRouter);
-        odfData = await res.json();
-        if (odfData) {
-            if (odfData.odfSelecionada.QTDE_LIB > 0) {
-                quantityAvailableProd = odfData.odfSelecionada.QTDE_LIB;
-            } else if (odfData.message !== "") {
-                message = odfData.message;
-            } else {
-                return (message = "Algo deu errado");
-            }
-        }
-    }
+    // let promiseResult = getData();
+
+    console.log('odfData Quantity.Svelte', odfData);
+    // async function getData() {
+    //     const res = await fetch(odfDataRouter);
+    //     odfData = await res.json();
+    //     if (odfData) {
+    //         if (odfData.odfSelecionada.QTDE_LIB > 0) {
+    //             quantityAvailableProd = odfData.odfSelecionada.QTDE_LIB;
+    //         } else if (odfData.message !== "") {
+    //             message = odfData.message;
+    //         } else {
+    //             return (message = "Algo deu errado");
+    //         }
+    //     }
+    // }
 
     function close() {
         message = "";
@@ -27,7 +29,7 @@
     }
 </script>
 
-{#await promiseResult}
+{#await odfData}
     <div class="image-loader">
         <div class="loader">
             <img src={imageLoader} alt="" />
@@ -37,7 +39,7 @@
     <div>
         <div class="prod-area">
             {title}
-            <p>{quantityAvailableProd}</p>
+            <p>{odfData.odfSelecionada.QTDE_LIB}</p>
         </div>
     </div>
 {/await}

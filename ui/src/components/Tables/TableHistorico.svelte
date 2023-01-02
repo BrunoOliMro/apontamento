@@ -5,6 +5,8 @@
     let dia;
     let datahora;
 
+    console.log('dados. TableHistorico', dados);
+
     if (dados.DATAHORA === undefined || dados.DATAHORA === null) {
         datahora = "S/I";
         ano = "S/I";

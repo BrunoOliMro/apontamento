@@ -12,21 +12,22 @@
     let showMaqPar = false;
     let stopModal = false;
     let loader = false;
-    export let odfData = []
+    export let odfData;
+    let data;
     let message = "";
     let value;
     let result = callMotivo();
 
     async function callMotivo() {
-        odfData = await fetch(apiMotivoParada).then((res) => res.json());
-        if (odfData) {
-            if (odfData.message) {
-                if (odfData.message !== "" && odfData.message !== "Success") {
-                    message = odfData.message;
+        data = await fetch(apiMotivoParada).then((res) => res.json());
+        if (data) {
+            if (data.message) {
+                if (data.message !== "" && data.message !== "Success") {
+                    message = data.message;
                 }
             }
         } else {
-            odfData.motives = "Parar máquina";
+            data.motives = "Parar máquina";
         }
     }
 
@@ -98,7 +99,7 @@
                 <HistoricButton />
             </li>
             <li>
-                <QuantityAvai />
+                <QuantityAvai odfData={odfData} />
             </li>
         </ul>
     </div>
@@ -121,7 +122,7 @@
                     <!-- svelte-ignore a11y-positive-tabindex -->
                     <!-- svelte-ignore a11y-autofocus -->
                     <select autofocus tabindex="10" bind:value>
-                        {#each odfData.motives as item}
+                        {#each data.motives as item}
                             <option class="optionsBar">{item}</option>
                         {/each}
                     </select>

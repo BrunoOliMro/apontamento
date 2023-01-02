@@ -1,8 +1,13 @@
 import mssql from 'mssql';
 import { sqlConfig } from '../../global.config'
 
-export const select: any = async (query: string) => {
+interface selectResult {
+    key: string,
+    value: string | number,
+  }
+
+export const select: any = async (query: string)  => {
     const connection = await mssql.connect(sqlConfig);
-    const data = await connection.query(`${query}`).then((result) => result.recordset)
+    const data: any = await connection.query(`${query}`).then((result) => result.recordset)
     return data;
 }

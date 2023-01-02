@@ -8,7 +8,7 @@
     import Cod from "./cod.svelte";
     import Footer from "./footer.svelte";
     import Status from "./status.svelte";
-    let callOdfData = `/api/v1/odfData`;
+    // let callOdfData = `/api/v1/odfData`;
     let pointApi = `/api/v1/point`;
     let urlBadFeedMotive = `/api/v1/badFeedMotives`;
     let supervisorApi = `/api/v1/supervisor`;
@@ -20,7 +20,6 @@
     let supervisor = "";
     let message = "";
     let data = [];
-    export let odfData = [];
     let badFeed;
     let missingFeed;
     let reworkFeed;
@@ -32,7 +31,10 @@
     let supervisorMaq;
     let isRequesting = false;
     let resultRefugo = motives();
+    export let odfData;
     // getOdfData();
+
+    console.log('odfData feed.svelte', odfData);
 
     const checkStopMachine = async (event) => {
         if (!supervisorMaq) {
@@ -316,21 +318,21 @@
     </div>
 {/if}
 
-{#await data.length !== 0}
+{#await odfData}
     <div class="imageLoader">
         <div class="loader">
             <img src={imageLoader} alt="" />
         </div>
     </div>
-{:then itens}
+{:then}
     <div class="content">
         <div class="status-area">
             <div><Status /></div>
-            <div><Cod /></div>
+            <div><Cod odfData={odfData}/></div>
         </div>
         <div class="feed-content">
             <div class="footer-area">
-                <Footer />
+                <Footer  odfData={odfData} />
             </div>
             <div class="feed-area">
                 <div class="feed-area-div">
