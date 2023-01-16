@@ -1,41 +1,25 @@
 <script>
     // @ts-nocheck
-    import ModalConfirmation from "../modal/modalConfirmation.svelte";
-    import blockForbiddenChars from "../../utils/presanitize";
-    let searchIcon = `/images/search.png`;
-    let imageLoader = `/images/axonLoader.gif`;
-    let supervisorApi = `/api/v1/supervisor`;
-    let statusUrlApi = `/api/v1/status`;
-    let imageUrl = `/api/v1/imagem`;
-    let modalSuper = false;
-    let greenBar = true;
-    let redBar = false;
+    const imageLoader = `/images/axonLoader.gif`;
+    const searchIcon = `/images/search.png`;
     let maxTimeSpend = null;
+    let greenBar = true;
     let blueBar = false;
-    let image = [];
-    let prodTime = [];
-    let supervisor = "";
-    let message = "";
+    let redBar = false;
+    export let odfData;
     let timeSpend = 0;
+    let image = [];
 
-    getTempo();
-    getImagem();
+    console.log("status.svelte", odfData);
 
-    async function getTempo() {
-        const res = await fetch(statusUrlApi);
-        prodTime = await res.json();
-        console.log('timer ---', prodTime);
-        if (prodTime.message === "Algo deu errrado") {
-            message = "Algo deu errado";
-        }
-        maxTimeSpend = prodTime;
-
-        if (!maxTimeSpend) {
-            maxTimeSpend = 60000;
-        }
+    if (!odfData.codData.data) {
+        odfData.codData.data = "";
+    } else {
+        maxTimeSpend = odfData.prodTime.data;
+        image = odfData.image.data;
     }
 
-    const barTime = setInterval(() => {
+    setInterval(() => {
         let menorFif = (Number(50) * Number(maxTimeSpend)) / Number(100);
         let maiorFif = (Number(75) * Number(maxTimeSpend)) / Number(100);
         let excedido = (Number(100) * Number(maxTimeSpend)) / Number(100);
@@ -45,117 +29,37 @@
         if (timeSpend <= menorFif) {
             redBar = false;
             blueBar = false;
-            modalSuper = false;
+            // modalSuper = false;
             greenBar = true;
         } else if (timeSpend >= menorFif && timeSpend <= maiorFif) {
             greenBar = false;
             blueBar = true;
             redBar = false;
-            modalSuper = false;
+            // modalSuper = false;
         } else if (timeSpend >= maiorFif) {
             redBar = true;
             greenBar = false;
             blueBar = false;
         } else if (timeSpend >= excedido) {
-            modalSuper = true;
+            // modalSuper = true;
             greenBar = false;
             redBar = true;
         } else if (maxTimeSpend <= 0 || maxTimeSpend === null) {
-            modalSuper = true;
+            // modalSuper = true;
             redBar = true;
         } else {
-            modalSuper = false;
+            // modalSuper = false;
         }
     }, 1000);
-
-    async function getImagem() {
-        const res = await fetch(imageUrl);
-        image = await res.json();
-    }
-
-    function checkForSuper(event) {
-        if (event.key === "Enter" && supervisor.length >= 6) {
-            postCallSupervisor();
-        }
-    }
-
-    const postCallSupervisor = async () => {
-        if (
-            supervisor === "" ||
-            supervisor === "0" ||
-            supervisor === "00" ||
-            supervisor === "000" ||
-            supervisor === "0000" ||
-            supervisor === "00000" ||
-            supervisor === "000000"
-        ) {
-            supervisor = "";
-            message = "Supervisor não encontrado";
-        }
-
-        if (supervisor.length > 5) {
-            const res = await fetch(supervisorApi, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    supervisor: supervisor,
-                }),
-            }).then((res) => res.json());
-            console.log("res -- Status.svelte ---", res);
-            if (res.message === "Supervisor encontrado") {
-                modalSuper = false;
-                clearInterval(barTime);
-            }
-            if (res.message === "Supervisor não encontrado") {
-                message = "Supervisor não encontrado";
-                supervisor = "";
-            }
-        } else {
-            supervisor = "";
-            message = "Erro ao localizar supervisor";
-        }
-    };
-
-    function close() {
-        message = "";
-    }
-    let resultPromises = Promise.all([getImagem, getTempo, barTime]);
 </script>
 
-{#if modalSuper === true}
-    <div class="background-modal">
-        <div class="modal-content">
-            <div class="modal-display">
-                <h2 class="modal-title">Tempo Excedido</h2>
-                <h3 class="modal-subtitle">
-                    Insira um supervisor para continuar
-                </h3>
-
-                <!-- svelte-ignore a11y-autofocus -->
-                <input
-                    autocomplete="off"
-                    autofocus
-                    bind:value={supervisor}
-                    on:keypress={checkForSuper}
-                    on:input={blockForbiddenChars}
-                    type="text"
-                />
-            </div>
-        </div>
-    </div>
-{/if}
-
-{#if message !== ""}
-    <ModalConfirmation on:message={close} title={message} />
-{/if}
-
-{#await resultPromises}
+{#await odfData.codData.data}
     <div class="image-loader">
         <div class="loader">
             <img src={imageLoader} alt="" />
         </div>
     </div>
-{:then itens}
+{:then}
     <div class="conj">
         {#if greenBar === true}
             <div class="green" id="tempoDecorrido" />
@@ -231,7 +135,7 @@
         justify-content: left;
         display: flex;
     }
-    h2 {
+    /* h2 {
         font-size: 32px;
     }
     input {
@@ -294,7 +198,7 @@
         margin-left: 25px;
         margin-right: 0%;
         padding: 0%;
-    }
+    } */
     .loader {
         margin: 0%;
         position: relative;

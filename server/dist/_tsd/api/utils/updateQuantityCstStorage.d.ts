@@ -1,2 +1,2 @@
-export declare const cstStorageUp: (quantityToProduce: any, address: any, partCode: any, odfNumber: any, goodFeed: any, employee: any, hostname: any, ip: any) => Promise<"Algo deu errado" | "erro inserir em hisreal" | undefined>;
+export declare const cstStorageUp: (quantityToProduce: any, address: any, partCode: any, odfNumber: any, goodFeed: any, employee: any, hostname: any, ip: any) => Promise<any>;
 //# sourceMappingURL=updateQuantityCstStorage.d.ts.map

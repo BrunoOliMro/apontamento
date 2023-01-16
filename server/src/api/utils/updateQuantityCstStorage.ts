@@ -1,4 +1,6 @@
+import { insertInto } from "../services/insert";
 import { sqlConfig } from "../../global.config"
+import { message } from "../services/message";
 import { select } from "../services/select"
 import { update } from "../services/update"
 import mssql from 'mssql';
@@ -10,17 +12,18 @@ export const cstStorageUp = async (quantityToProduce: any, address: any, partCod
         address: ''
     }
     try {
-        const updateStringCadEnderecos = `UPDATE CST_ESTOQUE_ENDERECOS SET QUANTIDADE = QUANTIDADE + ${quantityToProduce} WHERE 1 = 1 AND ENDERECO = '${address}'`
-        const x = await update(updateStringCadEnderecos)
+        // const updateStringCadEnderecos = `UPDATE CST_ESTOQUE_ENDERECOS SET QUANTIDADE = QUANTIDADE + ${quantityToProduce} WHERE 1 = 1 AND ENDERECO = '${address}'`
+        const x = await update(4, {quantityToProduce, address } )
         if (x !== 'Success') {
             const y = `INSERT INTO CST_ESTOQUE_ENDERECOS(ENDERECO, CODIGO ,QUANTIDADE) VALUES ('${address}','${partCode}' , ${quantityToProduce})`
             // INSERT INTO!!!!!!!!!!!
-            await update(y)
+            // await insertInto({})
+            // await update(y)
         }
-        const lookForHisReal = `SELECT TOP 1  * FROM HISREAL  WHERE 1 = 1 AND CODIGO = '${partCode}' ORDER BY DATA DESC`
-        const resultQuery = await select(lookForHisReal)
+        // const lookForHisReal = `SELECT TOP 1  * FROM HISREAL  WHERE 1 = 1 AND CODIGO = '${partCode}' ORDER BY DATA DESC`
+        const resultQuery = await select(29, {partCode})
         if (!resultQuery) {
-            return response.message = 'Algo deu errado'
+            return message(0)
         }
         const connection = await mssql.connect(sqlConfig);
         try {
@@ -41,6 +44,6 @@ export const cstStorageUp = async (quantityToProduce: any, address: any, partCod
         }
     } catch (error) {
         console.log('Error on updating ', error);
-        return response.message = 'Algo deu errado'
+        return message(0)
     }
 }

@@ -6,7 +6,7 @@ export const cookieCleaner = async (res: any) => {
         'startSetupTime',
         'MAQUINA_PROXIMA',
         'OPERACAO_PROXIMA',
-        'codigoFilho',
+        'childCode',
         'execut',
         'condic',
         'startRip',

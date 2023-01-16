@@ -1,4 +1,8 @@
-export const decrypted = (numberOdf: string | null) =>{
+export const decrypted = (numberOdf: string | null) => {
+    // console.log('numbuy', typeof (numberOdf));
+    if (typeof (numberOdf) === 'object') {
+        return numberOdf
+    }
     const crypto = require('crypto')
     const algorithm = process.env['ALGORITH_ENCRYPTED']
     const key = process.env['SECRET_ODF_KEY']

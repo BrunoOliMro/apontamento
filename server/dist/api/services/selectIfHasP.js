@@ -4,47 +4,31 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.selectToKnowIfHasP = void 0;
-const select_1 = require("./select");
-const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
+const message_1 = require("./message");
+const select_1 = require("./select");
 const update_1 = require("./update");
-const selectToKnowIfHasP = async (data, odfQuantity, employee, operationNumber, partCode) => {
+const mssql_1 = __importDefault(require("mssql"));
+const selectToKnowIfHasP = async (obj) => {
     let response = {
         message: '',
-        quantidade: odfQuantity,
-        codigoFilho: [],
+        quantidade: obj.data.QTDE_LIB,
+        childCode: [],
         condic: '',
         execut: 0,
+        numeroOperNew: '',
     };
     let quantityToPoint;
-    let numeroOperNew = String(operationNumber.replaceAll(' ', ''));
+    let numeroOperNew = String(obj.data.NUMERO_OPERACAO.replaceAll(' ', '')).replaceAll('000', '');
+    obj.data.numeroOperNew = numeroOperNew;
     const updateStorageQuery = [];
     let updateAlocacaoQuery = [];
     const insertAlocaoQuery = [];
-    const queryStorageFund = `SELECT DISTINCT  
-    PCP.NUMERO_ODF,
-    OP.NUMITE,
-    OP.NUMSEQ,
-    CAST(LTRIM(OP.NUMOPE) AS INT) AS NUMOPE,
-           CAST(OP.EXECUT AS INT) AS EXECUT,
-           CONDIC,       
-           CAST(E.SALDOREAL AS INT) AS SALDOREAL,                 
-           CAST(((E.SALDOREAL - ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO AND CA.ODF = PCP.NUMERO_ODF),0)) / ISNULL(OP.EXECUT,0)) AS INT) AS QTD_LIBERADA_PRODUZIR,
-           ISNULL((SELECT ISNULL(SUM(QUANTIDADE),0) FROM CST_ALOCACAO CA (NOLOCK) WHERE CA.CODIGO_FILHO = E.CODIGO),0) as RESERVADO
-           FROM PROCESSO PRO (NOLOCK)                  
-           INNER JOIN OPERACAO OP (NOLOCK) ON OP.RECNO_PROCESSO = PRO.R_E_C_N_O_                  
-           INNER JOIN ESTOQUE E (NOLOCK) ON E.CODIGO = OP.NUMITE                
-           INNER JOIN PCP_PROGRAMACAO_PRODUCAO PCP (NOLOCK) ON PCP.CODIGO_PECA = OP.NUMPEC                
-           WHERE 1=1                    
-           AND PRO.ATIVO ='S'                   
-           AND PRO.CONCLUIDO ='T'                
-           AND OP.CONDIC ='P'                 
-           AND PCP.NUMERO_ODF = '${data.numOdf}'
-           AND OP.NUMSEQ = ${operationNumber}`;
     try {
-        const resultHasP = await (0, select_1.select)(queryStorageFund);
+        const resultHasP = await (0, select_1.select)(22, obj.data);
+        console.log('result Select has P', resultHasP);
         if (resultHasP.length <= 0) {
-            return response.message = 'Não há item para reservar';
+            return response.message = (0, message_1.message)(13);
         }
         else if (resultHasP.length > 0) {
             let execut = Math.max(...resultHasP.map((element) => element.EXECUT));
@@ -52,29 +36,27 @@ const selectToKnowIfHasP = async (data, odfQuantity, employee, operationNumber, 
             const numberOfQtd = Math.min(...resultHasP.map((element) => element.QTD_LIBERADA_PRODUZIR));
             const makeReservation = resultHasP.map((item) => item.NUMSEQ).filter((element) => element === numeroOperNew);
             if (makeReservation.length <= 0) {
-                return response.message = 'Não há item para reservar';
+                return response.message = (0, message_1.message)(13);
             }
-            const stringSelectQuantityFromCst = `SELECT QUANTIDADE FROM CST_ALOCACAO WHERE 1 = 1 AND ODF = ${data.numOdf} ORDER BY CODIGO ASC`;
-            const resultQuantityCst = await (0, select_1.select)(stringSelectQuantityFromCst);
+            const resultQuantityCst = await (0, select_1.select)(21, obj.data);
             if (resultQuantityCst.length > 0) {
                 if (resultQuantityCst[0].QUANTIDADE > 0) {
-                    console.log('Alocacao encontrada');
                     response.quantidade = resultQuantityCst[0].QUANTIDADE;
-                    response.codigoFilho = codigoFilho;
+                    response.childCode = codigoFilho;
                     response.execut = execut;
                     response.condic = 'P';
-                    response.message = 'Gerar cookies';
+                    response.message = (0, message_1.message)(15);
                     return response;
                 }
             }
-            if (odfQuantity <= 0) {
-                return response.message = 'Quantidade para reserva inválida';
+            if (obj.data.QTDE_LIB <= 0) {
+                return response.message = (0, message_1.message)(12);
             }
             else if (numberOfQtd <= 0) {
-                return response.message = 'Quantidade para reserva inválida';
+                return response.message = (0, message_1.message)(12);
             }
-            else if (odfQuantity < numberOfQtd) {
-                quantityToPoint = odfQuantity;
+            else if (obj.data.QTDE_LIB < numberOfQtd) {
+                quantityToPoint = obj.data.QTDE_LIB;
             }
             else {
                 quantityToPoint = numberOfQtd;
@@ -82,8 +64,11 @@ const selectToKnowIfHasP = async (data, odfQuantity, employee, operationNumber, 
             const quantitySetStorage = Number(quantityToPoint * execut);
             response.quantidade = quantityToPoint;
             response.condic = resultHasP[0].CONDIC;
-            response.codigoFilho = codigoFilho;
+            response.childCode = codigoFilho;
             response.execut = execut;
+            obj.data.valorApontado = quantityToPoint;
+            obj.data.QTDE_LIB = quantityToPoint;
+            console.log('quantityToPoint', quantityToPoint);
             try {
                 codigoFilho.forEach((element) => {
                     updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${quantitySetStorage} WHERE 1 = 1 AND CODIGO = '${element}'`);
@@ -93,85 +78,82 @@ const selectToKnowIfHasP = async (data, odfQuantity, employee, operationNumber, 
                 if (updateStorage > 0) {
                     try {
                         codigoFilho.forEach((codigoFilho) => {
-                            updateAlocacaoQuery.push(`UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${quantityToPoint} WHERE 1 = 1 AND ODF = '${data.numOdf}' AND CODIGO_FILHO = '${codigoFilho}'`);
+                            updateAlocacaoQuery.push(`UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${quantityToPoint} WHERE 1 = 1 AND ODF = '${obj.data.NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho}'`);
                         });
                         const updateAlocacao = Math.min(...await connection.query(updateAlocacaoQuery.join('\n')).then(result => result.rowsAffected));
                         if (updateAlocacao <= 0) {
                             try {
                                 if (makeReservation) {
                                     codigoFilho.forEach((codigoFilho) => {
-                                        insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES (${data.numOdf}, ${numeroOperNew}, '${partCode}', '${codigoFilho}', ${quantityToPoint}, 'ADDRESS', NULL, GETDATE(), '${employee}')`);
+                                        insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES (${obj.data.NUMERO_ODF}, ${numeroOperNew}, '${obj.data.CODIGO_PECA}', '${codigoFilho}', ${quantityToPoint}, 'ADDRESS', NULL, GETDATE(), '${obj.data.FUNCIONARIO}')`);
                                     });
                                     const insertAlocacao = Math.min(...await connection.query(insertAlocaoQuery.join('\n')).then(result => result.rowsAffected));
                                     if (insertAlocacao <= 0) {
-                                        response.message = 'Algo deu errado';
+                                        response.message = (0, message_1.message)(0);
                                     }
                                     else {
                                         try {
-                                            let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${quantityToPoint} WHERE 1 = 1 AND NUMERO_ODF = ${data.numOdf} AND NUMERO_OPERACAO = ${numeroOperNew}`;
-                                            const x = await (0, update_1.update)(y);
-                                            if (x === 'Success') {
-                                                response.message = 'Valores Reservados';
+                                            const resultUpdate = await (0, update_1.update)(5, obj.data);
+                                            if (resultUpdate === (0, message_1.message)(1)) {
+                                                response.message = (0, message_1.message)(14);
                                                 return response;
                                             }
                                             else {
                                                 console.log('linha 112 /selectHAsP/');
-                                                return response.message = 'Algo deu errado';
+                                                return response.message = (0, message_1.message)(0);
                                             }
                                         }
                                         catch (error) {
                                             console.log('linha 116 Error on selectHasP', error);
-                                            return response.message = 'Algo deu errado';
+                                            return response.message = (0, message_1.message)(0);
                                         }
                                     }
                                 }
                             }
                             catch (error) {
                                 console.log('linha 122 /selectHasP/', error);
-                                return response.message = 'Algo deu errado';
+                                return response.message = (0, message_1.message)(0);
                             }
                         }
                         else {
                             try {
-                                let y = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${quantityToPoint} WHERE 1 = 1 AND NUMERO_ODF = ${data.numOdf} AND NUMERO_OPERACAO = ${numeroOperNew}`;
-                                const x = await (0, update_1.update)(y);
-                                if (x === 'Success') {
-                                    response.message = 'Valores Reservados';
-                                    response.url = '/#/ferramenta';
+                                const resultUpdate = await (0, update_1.update)(2, obj.data);
+                                if (resultUpdate === (0, message_1.message)(1)) {
+                                    response.message = (0, message_1.message)(14);
                                     return response;
                                 }
                                 else {
                                     console.log('linha 112 /selectHAsP/');
-                                    return response.message = 'Algo deu errado';
+                                    return response.message = (0, message_1.message)(0);
                                 }
                             }
                             catch (error) {
                                 console.log('linha 116 Error on selectHasP', error);
-                                return response.message = 'Algo deu errado';
+                                return response.message = (0, message_1.message)(0);
                             }
                         }
                     }
                     catch (error) {
                         console.log('linha 138 /selectHasp/', error);
-                        return response.message = 'Algo deu errado';
+                        return response.message = (0, message_1.message)(0);
                     }
                 }
                 else {
-                    return response.message = 'Algo deu errado';
+                    return response.message = (0, message_1.message)(0);
                 }
             }
             catch (error) {
                 console.log('linha 145 /selectHasP/', error);
-                return response.message = 'Algo deu errado';
+                return response.message = (0, message_1.message)(0);
             }
         }
         else {
-            return response.message = 'Algo deu errado';
+            return response.message = (0, message_1.message)(0);
         }
     }
     catch (error) {
         console.log('linha 154 /error: selectHasP/: ', error);
-        return response.message = 'Algo deu errado';
+        return response.message = (0, message_1.message)(0);
     }
 };
 exports.selectToKnowIfHasP = selectToKnowIfHasP;

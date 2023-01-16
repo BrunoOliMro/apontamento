@@ -1,33 +1,22 @@
-import { RequestHandler } from 'express';
-import { select } from '../services/select';
+import { inicializer } from '../services/variableInicializer';
 import { cookieGenerator } from '../utils/cookieGenerator';
-import { sanitize } from '../utils/sanitize';
+import { message } from '../services/message';
+import { RequestHandler } from 'express';
+import { selectQuery } from '../services/query';
 
 export const searchBagde: RequestHandler = async (req, res) => {
-    const message = {
-        generalError: 'Ocorreu um erro, tente novamente...',
-        badgeSuccess: 'Success',
-        badgeNotFound: 'Crachá não encontrado'
-    }
-    const badge = String(sanitize(req.body['values'])) || null
-    const lookForBadge = `SELECT TOP 1 [FUNCIONARIO], [CRACHA] FROM FUNCIONARIOS WHERE 1 = 1 AND [CRACHA] = '${badge}' ORDER BY FUNCIONARIO`;
+    const variables = await inicializer(req)
 
-    if (!badge) {
-        return res.json({ message: message.badgeNotFound });
+    if (!variables.body.badge) {
+        return res.json({ status: message(1), message: message(17), data: message(33) });
+    }
+    
+    const resultQuery = await selectQuery( 16, variables.body)
+    console.log('Badge', resultQuery);
+
+    if (resultQuery.message !== 'Not found') {
+        await cookieGenerator(res, resultQuery.data[0])
     }
 
-    try {
-        const resultBadgeSearch = await select(lookForBadge)
-        if (resultBadgeSearch.length <= 0) {
-            return res.json({ message: message.badgeNotFound });
-        } else if (resultBadgeSearch.length > 0) {
-            await cookieGenerator(res, resultBadgeSearch[0])
-            return res.json({ message: message.badgeSuccess });
-        } else {
-            return res.json({ message: message.badgeNotFound });
-        }
-    } catch (error) {
-        console.log('Error on SearchBadge ', error)
-        return res.json({ message: message.generalError });
-    }
+    return res.json({ status: message(1), message: message(1), data: resultQuery.data })
 }

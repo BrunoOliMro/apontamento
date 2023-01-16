@@ -1,54 +1,43 @@
-import { RequestHandler } from 'express';
+import { inicializer } from '../services/variableInicializer';
+import { verifyCodeNote } from '../services/verifyCodeNote';
 import { insertInto } from '../services/insert';
+import { message } from '../services/message';
 import { select } from '../services/select';
-import { codeNote } from '../utils/codeNote';
-import { decrypted } from '../utils/decryptedOdf';
-import { sanitize } from '../utils/sanitize';
+import { RequestHandler } from 'express';
 
 export const stopSupervisor: RequestHandler = async (req, res) => {
-    try {
-        var supervisor = String(sanitize(req.body['superMaqPar'])) || null
-        var odfNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_ODF'])))) || null
-        var operationNumber = Number(decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO'])))!.replaceAll(' ', '')) || null
-        var machineCode = String(decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA'])))) || null
-        var maxQuantityReleased = Number(decrypted(String(sanitize(req.cookies['QTDE_LIB'])))) || null
-        var employee = String(decrypted(String(sanitize(req.cookies['FUNCIONARIO'])))) || null
-        var revision = String(decrypted(String(sanitize(req.cookies['REVISAO'])))) || null
-        var partCode = String(decrypted(String(sanitize(req.cookies['CODIGO_PECA'])))) || null
-        var goodFeed = null
-        var missingFeed = null
-        var reworkFeed = null
-        var badFeed = null
-        var pointCode = [3]
-        var pointedCodeDescriptionProdIniciated = [`Ini Prod.`]
-        var motivo = null
-        var tempoDecorrido = 0
-        var lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`
-    } catch (error) {
-        console.log('Error on StopSupervisor --cookies--', error);
-        return res.json({ message: 'Algo deu errado' })
+    const variables = await inicializer(req)
+
+    if (!variables) {
+        return res.json({ status: message(1), message: message(0), data: message(33) })
     }
 
-    try {
-        const pointedCode = await codeNote(odfNumber, operationNumber, machineCode, employee)
-        if (pointedCode.message === 'Machine has stopped') {
-            const resource = await select(lookForSupervisor)
-            if (resource) {
-                const insertTimerBackTo3 = await insertInto(employee, odfNumber, partCode, revision, String(operationNumber), machineCode, maxQuantityReleased, goodFeed, badFeed, pointCode, pointedCodeDescriptionProdIniciated, motivo, missingFeed, reworkFeed, tempoDecorrido)
-                if (insertTimerBackTo3) {
-                    return res.status(200).json({ message: 'Sucess' })
-                } else {
-                    return res.json({ message: 'Supervisor not found' })
-                }
-            } else if (!resource) {
-                return res.json({ message: 'Supervisor not found' })
+    // const resultVerifyCodeNote = await ver
+    const resultVerifyCodeNote = await verifyCodeNote(variables.cookies, [7])
+    variables.cookies.goodFeed = null
+    variables.cookies.badFeed = null
+    variables.cookies.pointedCode = [3]
+    variables.cookies.missingFeed = null
+    variables.cookies.reworkFeed = null
+    variables.cookies.pointedCodeDescription = [`Ini Prod.`]
+    variables.cookies.motives = null
+    variables.cookies.tempoDecorrido = null
+
+    if (resultVerifyCodeNote.accepted) {
+        const resource = await select(10, variables.body.superMaqPar)
+        if (resource) {
+            const insertPointCode = await insertInto(variables.cookies)
+            if (insertPointCode) {
+                return res.status(200).json({ status: message(1), message: message(1), data: message(33) })
             } else {
-                return res.json({ message: 'Supervisor not found' })
+                return res.json({ status: message(1), message: message(21), data: message(33) })
             }
+        } else if (!resource) {
+            return res.json({ status: message(1), message: message(21), data: message(33) })
         } else {
-            return res.json({ message: pointedCode })
+            return res.json({ status: message(1), message: message(21), data: message(33) })
         }
-    } catch (error) {
-        return res.json({ message: 'Algo deu errado' })
+    } else {
+        return res.json({ status: message(1), message: message(0), data: message(33) })
     }
 }

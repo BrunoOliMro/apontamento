@@ -1,2 +1,2 @@
-export declare const update: (query: string) => Promise<"Success" | "Error">;
+export declare const update: (chosenOption: number, values?: any) => Promise<any>;
 //# sourceMappingURL=update.d.ts.map

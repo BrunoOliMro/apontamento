@@ -1,56 +1,30 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.status = void 0;
-const select_1 = require("../services/select");
-const codeNote_1 = require("../utils/codeNote");
-const decryptedOdf_1 = require("../utils/decryptedOdf");
-const sanitize_1 = require("../utils/sanitize");
+const variableInicializer_1 = require("../services/variableInicializer");
+const verifyCodeNote_1 = require("../services/verifyCodeNote");
+const query_1 = require("../services/query");
+const message_1 = require("../services/message");
 const status = async (req, res) => {
-    const errorObj = {
-        generalError: 'Algo deu errado',
-    };
-    try {
-        var partCode = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA']))) || null;
-        var codeMachine = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
-        var operationNumber = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])).replaceAll(' ', '')) || null;
-        var odfNumber = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF']))) || null;
-        var revision = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['REVISAO'])) || null;
-        var employee = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
-        var quantityReleased = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(String(req.cookies['QTDE_LIB'])))) || null;
-        var stringLookForTimer = `SELECT TOP 1 EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${partCode}' AND NUMOPE = ${operationNumber} AND MAQUIN = '${codeMachine}' AND REVISAO = ${revision} ORDER BY REVISAO DESC`;
-        var response = {
-            message: '',
-            temporestante: 0,
-        };
+    const variables = await (0, variableInicializer_1.inicializer)(req);
+    if (!variables.cookies) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(0) });
     }
-    catch (error) {
-        console.log('Error on Status.ts --cookies--', error);
-        return res.json({ message: '' });
-    }
-    try {
-        const pointedCode = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, codeMachine, employee);
-        if (pointedCode.message === 'Ini Prod' || pointedCode.message === 'Pointed' || pointedCode.message === 'Rip iniciated' || pointedCode.message === 'Machine has stopped') {
-            const lookForTimer = await (0, select_1.select)(stringLookForTimer);
-            let timeLeft = Number(lookForTimer[0].EXECUT * quantityReleased * 1000 - (Number(new Date().getTime() - pointedCode.time))) || 0;
-            if (timeLeft > 0) {
-                response.temporestante = timeLeft;
-                return res.status(200).json(response);
-            }
-            else if (timeLeft <= 0) {
-                timeLeft = 0;
-                return res.json({ message: '' });
-            }
-            else {
-                return res.json({ message: errorObj.generalError });
-            }
+    const resultVerifyCodeNote = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [3, 4, 5, 7]);
+    if (resultVerifyCodeNote.accepted) {
+        const lookForTimer = await (0, query_1.selectQuery)(25, variables.cookies);
+        console.log('lookForTimer', lookForTimer);
+        let timeLeft;
+        if (lookForTimer.data) {
+            timeLeft = Number(lookForTimer.data[0].EXECUT * variables.cookies.QTDE_LIB * 1000 - (Number(new Date().getTime() - resultVerifyCodeNote.time))) || 0;
         }
         else {
-            return res.json({ message: pointedCode });
+            timeLeft = 6000;
         }
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: timeLeft });
     }
-    catch (error) {
-        console.log('linha 42 - Status.ts -', error);
-        return res.json({ message: errorObj.generalError });
+    else {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33) });
     }
 };
 exports.status = status;

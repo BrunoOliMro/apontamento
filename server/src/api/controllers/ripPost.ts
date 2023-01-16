@@ -1,76 +1,61 @@
-import { RequestHandler } from 'express';
-import mssql from 'mssql';
+import { inicializer } from '../services/variableInicializer';
+import { verifyCodeNote } from '../services/verifyCodeNote';
+import { cookieCleaner } from '../utils/clearCookie';
 import { sqlConfig } from '../../global.config';
 import { insertInto } from '../services/insert';
-import { update } from '../services/update';
-import { cookieCleaner } from '../utils/clearCookie';
-import { codeNote } from '../utils/codeNote';
-import { decrypted } from '../utils/decryptedOdf';
+import { message } from '../services/message';
 import { sanitize } from '../utils/sanitize';
+import { update } from '../services/update';
+import { RequestHandler } from 'express';
+import mssql from 'mssql';
+// var stringUpdatePcp = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`
 
 export const ripPost: RequestHandler = async (req, res) => {
-    try {
-        console.log('req.body', req.body);
-        var setup = (req.body['values']) || null
-        var keySan: any
-        var valueSan: any;
-        var odfNumber = Number(decrypted(sanitize(req.cookies['NUMERO_ODF']))) || null
-        var operationNumber = String(decrypted(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
-        var machineCode = String(decrypted(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
-        var partCode = String(decrypted(sanitize(req.cookies['CODIGO_PECA']))) || null
-        var employee = String(decrypted(sanitize(req.cookies['FUNCIONARIO']))) || null
-        var revision = String(decrypted(sanitize(req.cookies['REVISAO']))) || null
-        var maxQuantityReleased = Number(decrypted(sanitize(req.cookies['QTDE_LIB']))) || null
-        // var tempoDecorridoRip = new Date().getTime() - Number(decrypted(sanitize(req.cookies['startRip']))) || null
-        var updateQtyQuery: string[] = [];
-        var specification: string[] = (req.cookies['especif']) || null
-        var numCar: string[] = (req.cookies['numCar']) || null
-        var lie: string[] = (req.cookies['lie']) || null
-        var lse: string[] = (req.cookies['lse']) || null
-        var instruments: string[] = (req.cookies['instrumento']) || null
-        var description = [(req.cookies['descricao'])] || null
-        var objectSanitized: { [k: string]: any; } = {}
-        var goodFeed = null
-        var badFeed = null
-        var pointCode = [6]
-        var pointCodeDescriptionRipEnded = ['Rip Fin.']
-        var motives = null
-        var missingFeed = null
-        var reworkFeed = null
-        var stringUpdatePcp = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}'`
-    } catch (error) {
-        console.log('Error on Rip Post ', error);
-        return res.json({ message: '' })
+    const variables = await inicializer(req)
+
+    if (!variables.cookies) {
+        return res.json({ status: message(1), message: message(47), data: message(47), code: message(33) })
     }
 
-    try {
-        const pointedCode = await codeNote(odfNumber, Number(operationNumber), machineCode, employee)
-        var oldTimer = new Date(pointedCode.time).getTime()
-        var tempoDecorridoRip = Number(new Date().getTime() - oldTimer) || null
+    var keySan: any
+    var valueSan: any;
+    var updateQtyQuery: string[] = [];
+    var objectSanitized: { [key: string]: any; } = {}
+    const pointCode = await verifyCodeNote(variables.cookies, [5])
+    console.log('pointCode', pointCode);
 
-        if (pointedCode.message !== 'Rip iniciated') {
-            return res.json({ message: pointedCode })
-        }
-    } catch (error) {
-        console.log('Error on Rip Post ', error);
-        return res.json({ message: '' })
+    var oldTimer = new Date(pointCode.time).getTime()
+    var timeSpendRip = Number(new Date().getTime() - oldTimer) || null
+    variables.cookies.goodFeed = null
+    variables.cookies.badFeed = null
+    variables.cookies.pointedCode = [6]
+    variables.cookies.missingFeed = null
+    variables.cookies.reworkFeed = null
+    variables.cookies.pointedCodeDescription = ['Rip Fin.']
+    variables.cookies.motives = null
+    variables.cookies.tempoDecorrido = timeSpendRip
+
+    if (!pointCode.accepted) {
+        return res.json({ status: message(1), message: message(33), data: message(33), code: pointCode.code  })
     }
 
-    if (Object.keys(setup).length <= 0) {
-        const insertedRipCode = await insertInto(employee, odfNumber, partCode, revision, operationNumber!.replaceAll(' ', ''), machineCode, maxQuantityReleased, goodFeed, badFeed, pointCode, pointCodeDescriptionRipEnded, motives, missingFeed, reworkFeed, tempoDecorridoRip)
+    if (Object.keys(variables.body).length <= 0) {
+        console.log('insert into 6');
+        const insertedRipCode = await insertInto(variables.cookies)
         if (insertedRipCode) {
-            const updatePcpProgResult = await update(stringUpdatePcp)
-            if (updatePcpProgResult === 'Success') {
+            const pointCode = await verifyCodeNote(variables.cookies, [6])
+            const updatePcpProgResult = await update(0, variables.cookies)
+            if (updatePcpProgResult === message(1)) {
                 await cookieCleaner(res)
-                return res.json({ message: 'Success' })
+                return res.json({ status: message(1), message: message(1), data: message(33), code: pointCode.code })
             } else {
-                return res.json({ message: '' })
+                return res.json({ status: message(1), message: message(33), data: message(33), code: pointCode.code })
             }
         } else {
-            return res.json({ message: '' })
+            return res.json({ status: message(1), message: message(0), data: message(0), code: pointCode.code })
         }
     } else {
-        for (const [key, value] of Object.entries(setup)) {
+        for (const [key, value] of Object.entries(variables.body.values)) {
             keySan = sanitize(key as string)
             valueSan = sanitize(value as string)
             objectSanitized[keySan as string] = valueSan
@@ -79,14 +64,16 @@ export const ripPost: RequestHandler = async (req, res) => {
 
     //Insere O CODAPONTA 6, Tempo da rip e atualizada o tempo em PCP
     try {
-        const insertedRipCode = await insertInto(employee, odfNumber, partCode, revision, operationNumber!.replaceAll(' ', ''), machineCode, maxQuantityReleased, goodFeed, badFeed, pointCode, pointCodeDescriptionRipEnded, motives, missingFeed, reworkFeed, tempoDecorridoRip)
+        console.log('insert into 6');
+        const insertedRipCode = await insertInto(variables.cookies)
+        console.log('insertedRipCode', insertedRipCode);
         if (!insertedRipCode) {
-            return res.json({ message: '' })
+            return res.json({ status: message(1), message: message(33), data: message(33) })
         } else if (insertedRipCode) {
             try {
-                const resultUpdatePcpProg = await update(stringUpdatePcp)
-                if (resultUpdatePcpProg !== 'Success') {
-                    return res.json({ message: '' })
+                const resultUpdatePcpProg = await update(0, variables.cookies)
+                if (resultUpdatePcpProg !== message(1)) {
+                    return res.json({ status: message(1), message: message(33), data: message(33), code: pointCode.code })
                 } else {
                     const resultSplitLines: { [k: string]: any; } = Object.keys(objectSanitized).reduce((acc: any, iterator: any) => {
                         const [col, lin] = iterator.split('-')
@@ -97,35 +84,36 @@ export const ripPost: RequestHandler = async (req, res) => {
 
                     try {
                         Object.entries(resultSplitLines).forEach(([row], i) => {
-                            if (resultSplitLines[row].SETUP === 'ok' && lie![i] === null && lse![i] === null) {
+                            if (resultSplitLines[row].SETUP === 'ok' && variables.cookies.lie.split(',')![i] === null && variables.cookies.lse.split(',')![i] === null) {
                                 resultSplitLines[row] = 0
                             }
                             updateQtyQuery.push(`INSERT INTO CST_RIP_ODF_PRODUCAO (ODF, FUNCIONARIO, ITEM, REVISAO, NUMCAR, DESCRICAO, ESPECIFICACAO, LIE, LSE, SETUP, M2, M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13, INSTRUMENTO, OPE_MAQUIN, OPERACAO) 
-                                VALUES('${odfNumber}', '${employee}'  ,'1', '${revision}' , '${numCar![i]}', '${description![i]}',  '${specification![i]}',${lie![i]}, ${lse![i]},${resultSplitLines[row].SETUP ? `'${resultSplitLines[row].SETUP}'` : null},${resultSplitLines[row].M2 ? `${resultSplitLines[row].M2}` : null},${resultSplitLines[row].M3 ? `${resultSplitLines[row].M3}` : null},${resultSplitLines[row].M4 ? `${resultSplitLines[row].M4}` : null},${resultSplitLines[row].M5 ? `${resultSplitLines[row].M5}` : null},${resultSplitLines[row].M6 ? `${resultSplitLines[row].M6}` : null},${resultSplitLines[row].M7 ? `${resultSplitLines[row].M7}` : null},${resultSplitLines[row].M8 ? `${resultSplitLines[row].M8}` : null},${resultSplitLines[row].M9 ? `${resultSplitLines[row].M9}` : null},${resultSplitLines[row].M10 ? `${resultSplitLines[row].M10}` : null},${resultSplitLines[row].M11 ? `${resultSplitLines[row].M11}` : null},${resultSplitLines[row].M12 ? `${resultSplitLines[row].M12}` : null},${resultSplitLines[row].M13 ? `${resultSplitLines[row].M13}` : null},'${instruments![i]}','${machineCode}','${operationNumber!.replaceAll(' ', '')}')`)
+                                VALUES('${variables.cookies.NUMERO_ODF}', '${variables.cookies.FUNCIONARIO}'  ,'1', '${variables.cookies.REVISAO}' , '${variables.cookies.numCar![i] || null}', '${variables.cookies.description.split(',')![i] || null}',  '${variables.cookies.specification![i] || null}',${variables.cookies.lie.split(',')![i] || null}, ${variables.cookies.lse.split(',')![i] || null},${resultSplitLines[row].SETUP ? `'${resultSplitLines[row].SETUP}'` : null},${resultSplitLines[row].M2 ? `${resultSplitLines[row].M2}` : null},${resultSplitLines[row].M3 ? `${resultSplitLines[row].M3}` : null},${resultSplitLines[row].M4 ? `${resultSplitLines[row].M4}` : null},${resultSplitLines[row].M5 ? `${resultSplitLines[row].M5}` : null},${resultSplitLines[row].M6 ? `${resultSplitLines[row].M6}` : null},${resultSplitLines[row].M7 ? `${resultSplitLines[row].M7}` : null},${resultSplitLines[row].M8 ? `${resultSplitLines[row].M8}` : null},${resultSplitLines[row].M9 ? `${resultSplitLines[row].M9}` : null},${resultSplitLines[row].M10 ? `${resultSplitLines[row].M10}` : null},${resultSplitLines[row].M11 ? `${resultSplitLines[row].M11}` : null},${resultSplitLines[row].M12 ? `${resultSplitLines[row].M12}` : null},${resultSplitLines[row].M13 ? `${resultSplitLines[row].M13}` : null},'${variables.cookies.instruments.split(',')![i] || null}','${variables.cookies.CODIGO_MAQUINA}','${variables.cookies.NUMERO_OPERACAO!.replaceAll(' ', message(33))}')`)
                         })
                         try {
                             const connection = await mssql.connect(sqlConfig);
                             await connection.query(updateQtyQuery.join('\n'))
+                            console.log('cade o update');
+                            await cookieCleaner(res)
+                            return res.json({status: message(1), message: message(1), data: message(1), code: pointCode.code})
                         } catch (error) {
                             console.log('error - linha 103 /ripPost.ts/ - ', error)
-                            return res.json({ message: '' })
+                            return res.json({ status: message(1), message: message(0), data: message(33) })
                         }
-                        await cookieCleaner(res)
-                        return res.json({ message: 'Success' })
                     } catch (error) {
                         console.log('linha 110 /ripPost/', error)
-                        return res.json({ message: '' })
+                        return res.json({ status: message(1), message: message(0), data: message(33) })
                     }
                 }
             } catch (error) {
                 console.log('error linha 115', error);
-                return res.json({ message: '' })
+                return res.json({ status: message(1), message: message(0), data: message(33) })
             }
         } else {
-            return res.json({ message: '' })
+            return res.json({ status: message(1), message: message(0), data: message(33) })
         }
     } catch (error) {
         console.log('linha 126 - ripPost -', error);
-        return res.json({ message: '' })
+        return res.json({ status: message(1), message: message(0), data: message(33) })
     }
 }

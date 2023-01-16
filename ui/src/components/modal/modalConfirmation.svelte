@@ -1,5 +1,5 @@
 <script>
-    export let title = "Máquina Parada";
+    export let title = "";
     import { createEventDispatcher } from "svelte";
     const dispatch = createEventDispatcher();
     function callDispatch() {

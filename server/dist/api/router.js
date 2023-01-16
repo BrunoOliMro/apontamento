@@ -21,11 +21,14 @@ const supervisor_1 = require("./controllers/supervisor");
 const stopSupervisor_1 = require("./controllers/stopSupervisor");
 const clear_1 = require("./controllers/clear");
 const returnMotives_1 = require("./controllers/returnMotives");
+const pointedCode_1 = require("./controllers/pointedCode");
 const apiRouter = (0, express_1.Router)();
 apiRouter.route('/returnMotives')
     .get(returnMotives_1.returnMotives);
 apiRouter.route('/clearAll')
     .get(clear_1.clear);
+apiRouter.route('/verifyCodeNote')
+    .get(pointedCode_1.pointedCode);
 apiRouter.route('/badge')
     .post(searchBadge_1.searchBagde);
 apiRouter.route('/odf')

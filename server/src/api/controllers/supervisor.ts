@@ -1,31 +1,16 @@
-import { RequestHandler } from 'express';
+import { inicializer } from '../services/variableInicializer';
+import { message } from '../services/message';
 import { select } from '../services/select';
-import { sanitize } from '../utils/sanitize';
+import { RequestHandler } from 'express';
 
 export const supervisor: RequestHandler = async (req, res) => {
-    let supervisor = String(sanitize(req.body['supervisor']))!.replaceAll(' ', '') || null
-    let stringLookForBadge = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`
+    const variables = await inicializer(req)
 
-    if (
-        !supervisor ||
-        supervisor === '' ||
-        supervisor === '0' ||
-        supervisor === '00' ||
-        supervisor === '000' ||
-        supervisor === '0000' ||
-        supervisor === '00000' ||
-        supervisor === '000000') {
-        return res.json({ message: 'Supervisor not found' })
+    if (!variables) {
+        return res.json({ status: message(1), message: message(33), data: message(33) })
     }
 
-    try {
-        const lookForBadge = await select(stringLookForBadge)
-        if (lookForBadge) {
-            return res.json({ message: 'Supervisor found' })
-        } else {
-            return res.json({ message: 'Supervisor not found' })
-        }
-    } catch (error) {
-        return res.json({ message: 'Algo deu errado' })
-    }
+    const lookForBadge = await select(10, variables.body)
+    console.log('lookForBadge', lookForBadge);
+    return res.json({ status: message(1), message: message(33), data: lookForBadge })
 }

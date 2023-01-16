@@ -1,123 +1,119 @@
-import { RequestHandler } from 'express';
-import { select } from '../services/select';
 import { selectToKnowIfHasP } from '../services/selectIfHasP';
-import { decrypted } from '../utils/decryptedOdf';
-import { unravelBarcode } from '../utils/unravelBarcode'
-import { odfIndex } from '../utils/odfIndex';
-import { update } from '../services/update';
+import { inicializer } from '../services/variableInicializer';
+import { verifyCodeNote } from '../services/verifyCodeNote';
 import { cookieGenerator } from '../utils/cookieGenerator';
-import { sanitize } from '../utils/sanitize';
+import { unravelBarcode } from '../utils/unravelBarcode'
 import { cookieCleaner } from '../utils/clearCookie';
-import { codeNote } from '../utils/codeNote';
-import { encoded } from '../utils/encodedOdf';
+import { message } from '../services/message';
+// import { encoded } from '../utils/encodedOdf';
+import { odfIndex } from '../utils/odfIndex';
+import { select } from '../services/select';
+import { update } from '../services/update';
+import { RequestHandler } from 'express';
 
 export const searchOdf: RequestHandler = async (req, res) => {
-    const message = {
-        barcodePointed: 'ODF apontada',
-        barcodeNotFound: 'ODF não encontrada',
-        barcodeInvalid: 'Código de barras inválido',
-        barcodeEmpty: 'Código de barras está vazio',
-        invalidEmployee: 'Funcionário inválido',
-        generalError: 'Algo deu errado',
-        noLimit: 'Não há limite na ODF',
-        invalidQuantity: 'Quantidade para reserva inválida',
-        noItensReserved: 'Não há item para reservar',
-        valuesReserved: 'Valores Reservados',
-        generateCookie: 'Gerar cookies',
-    }
-    const barcode = unravelBarcode(req.body.values) || null
-    const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, CODIGO_PECA, QTD_BOAS, QTD_REFUGO, QTD_FALTANTE, QTD_RETRABALHADA FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${barcode!.data.odfNumber} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
-    if (!barcode!.data.odfNumber || !barcode!.data.opNumber || !barcode!.data.machineCod) {
-        return res.json({ message: message.barcodeNotFound })
-    }
-    // Descriptografa o funcionario dos cookies
-    if (req.cookies['FUNCIONARIO']) {
-        var employee = decrypted(String(sanitize(req.cookies['FUNCIONARIO']))) || null
-        if (!employee) {
-            return res.json({ message: message.invalidEmployee })
-        }
-    } else {
-        return res.json({ message: message.generalError })
+    const variables = await inicializer(req)
+    const barcode = unravelBarcode(variables.body.barcode) || null
+    barcode!.data.FUNCIONARIO = variables.cookies.FUNCIONARIO
+
+    // Alguma variavel não reconhecida
+    if (!variables) {
+        return res.json({ status: message(1), message: message(0), data: message(33) })
     }
 
-    // Barcode inválido
-    if (!barcode) {
-        return res.json({ message: message.barcodeInvalid })
+    // Odf nao encontrada
+    if (!barcode!.data.NUMERO_ODF || !barcode!.data.NUMERO_OPERACAO || !barcode!.data.CODIGO_MAQUINA) {
+        return res.json({ status: message(1), message: message(6), data: message(6) })
+    } else if (!barcode?.message) {
+        return res.json({ status: message(1), message: message(6), data: message(6) })
     } else if (!barcode.message) {
-        return res.json({ message: message.barcodeEmpty })
+        return res.json({ status: message(1), message: message(8), data: message(8) })
     }
 
     // Seleciona todos os itens da Odf
-    const odf = await select(lookForOdfData)
-    const i: number = await odfIndex(odf, barcode.data.opNumber)
-    if (odf.length <= 0) {
-        return res.json({ message: message.generalError })
-    } else if (!odf[i]) {
-        // Não pode pegar o 0 como erro pois, temos o index = 0 na ODF
-        return res.json({ message: message.barcodeNotFound })
+    const odf = await select(0, barcode.data)
+
+    if (!odf) {
+        return res.json({ status: message(1), message: message(6), data: message(8) })
     }
 
+    const i: number = await odfIndex(odf, barcode.data.NUMERO_OPERACAO)
+
+    if (odf.length <= 0) {
+        return res.json({ status: message(1), message: message(0), data: message(0) })
+    } else if (!odf[i]) {
+        // Não pode pegar o 0 como erro pois, temos o index = 0 na ODF
+        return res.json({ status: message(1), message: message(6), data: message(6) })
+    }
+
+    console.log('odf[i].QTDE_APONTADA', odf[i].QTDE_APONTADA);
+
     if (i <= 0) {
-        if (odf[i].QTDE_APONTADA !== 0) {
-            return res.json({ message: message.barcodePointed })
+        if (odf[i].QTDE_APONTADA && odf[i].QTDE_APONTADA !== 0) {
+            // const resultVerifyCodeNote = await verifyCodeNote(barcode.data, [1, 3, 6])
+            await cookieGenerator(res, odf[i])
+            return res.json({ status: message(1), message: message(5), data: message(33) })
         } else {
             !odf[i].QTDE_APONTADA ? odf[i].QTDE_LIB = odf[i].QTDE_ODF : odf[i].QTDE_LIB = odf[i].QTDE_ODF - odf[i].QTDE_APONTADA;
         }
     } else if (i > 0) {
-        if (odf[i].QTDE_APONTADA !== 0) {
-            return res.json({ message: message.barcodePointed })
+        if (odf[i].QTDE_APONTADA && odf[i].QTDE_APONTADA !== 0) {
+            // const resultVerifyCodeNote = await verifyCodeNote(barcode.data, [1, 3, 6])
+            await cookieGenerator(res, odf[i])
+            return res.json({ status: message(1), message: message(5), data: message(33) })
         } else {
             !odf[i].QTD_BOAS ? odf[i].QTD_BOAS = 0 : odf[i].QTD_BOAS
         }
-        let valuesPointed = odf[i - 1].QTDE_APONTADA - odf[i].QTDE_APONTADA
-        let diferenceBetweenGoodAndBad = odf[i - 1].QTD_BOAS - odf[i].QTD_BOAS
 
-        if (diferenceBetweenGoodAndBad <= 0 || valuesPointed <= 0) {
-            return res.json({ message: message.noLimit })
+        if (odf[i - 1].QTD_BOAS - odf[i].QTD_BOAS <= 0 || odf[i - 1].QTDE_APONTADA - odf[i].QTDE_APONTADA <= 0) {
+            return res.json({ status: message(1), message: message(11), data: message(11) })
         }
 
         if (odf[i].QTDE_APONTADA >= odf[i - 1].QTD_BOAS) {
-            return res.json({ message: message.noLimit })
+            return res.json({ status: message(1), message: message(11), data: message(11) })
         }
 
         if (odf[i].QTDE_APONTADA > odf[i].QTD_BOAS) {
             odf[i].QTDE_LIB = odf[i - 1].QTD_BOAS - odf[i].QTDE_APONTADA
         } else {
-            odf[i].QTDE_LIB = diferenceBetweenGoodAndBad
+            odf[i].QTDE_LIB = odf[i - 1].QTD_BOAS - odf[i].QTD_BOAS
         }
     } else {
-        return res.json({ message: message.noLimit })
+        return res.json({ status: message(1), message: message(11), data: message(11) })
     }
 
     if (!odf[i].QTDE_LIB || odf[i].QTDE_LIB <= 0) {
-        return res.json({ message: message.noLimit })
+        return res.json({ status: message(1), message: message(11), data: message(11) })
     }
-    
+
+    barcode.data.QTDE_LIB = odf[i].QTDE_LIB
+    barcode.data.CODIGO_PECA = odf[i].CODIGO_PECA
 
     // Generate cookie that is gonna be used later;
-    let resultComponents = await selectToKnowIfHasP(barcode, odf[i].QTDE_LIB, employee, odf[i].NUMERO_OPERACAO, odf[i].CODIGO_PECA)
-    if (resultComponents.message === message.valuesReserved || resultComponents.message === message.generateCookie) {
+    let resultComponents = await selectToKnowIfHasP(barcode)
+    console.log('resultComponents', resultComponents);
+
+    if (resultComponents.message === message(13) || resultComponents.message === message(15)) {
         if (resultComponents.quantidade < odf[i].QTDE_LIB) {
-            odf[i].QTDE_LIB = resultComponents.quantidade
+            barcode.data.QTDE_LIB = resultComponents.quantidade
+            odf[i].QTDE_LIB = barcode.data.QTDE_LIB
         }
         odf[i].condic = resultComponents.condic
         odf[i].execut = resultComponents.execut
-        odf[i].codigoFilho = resultComponents.codigoFilho
-        const queryUpdateQtdLib = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${odf[i].QTDE_LIB} WHERE 1 = 1 AND NUMERO_ODF = ${barcode.data.odfNumber} AND NUMERO_OPERACAO = ${barcode.data.opNumber}`
-        await update(queryUpdateQtdLib)
-    } else if (resultComponents === message.invalidQuantity) {
+        odf[i].childCode = resultComponents.childCode
+        barcode.data.QTDE_LIB = resultComponents.quantidade
+        await update(1, barcode.data)
+    } else if (resultComponents === message(12)) {
         await cookieCleaner(res)
-        return res.json({ message: message.noLimit })
-    } else if (resultComponents === message.noItensReserved) {
-        const queryUpdateQtdeLib = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${odf[i].QTDE_LIB} WHERE 1 = 1 AND NUMERO_ODF = ${barcode.data.odfNumber} AND NUMERO_OPERACAO = ${barcode.data.opNumber}`
-        await update(queryUpdateQtdeLib)
+        return res.json({ status: message(1), message: message(11), data: message(11) })
+    } else if (resultComponents === message(13)) {
+        await update(1, barcode.data)
     }
-
     await cookieGenerator(res, odf[i])
-    res.cookie('encodedOdfNumber', encoded(String(odf[i].NUMERO_ODF)), { httpOnly: true })
-    res.cookie('encodedOperationNuber', encoded(String(odf[i].NUMERO_OPERACAO)), { httpOnly: true })
-    res.cookie('encodedMachineCode', encoded(String(odf[i].CODIGO_MAQUINA)), { httpOnly: true })
-    const pointed = await codeNote(Number(barcode.data.odfNumber), Number(barcode.data.opNumber), barcode.data.machineCod, employee)
-    console.log('SearchOdf -- linha 123 --', pointed);
-    return res.json({ message: pointed.message })
+    const resultVerifyCodeNote = await verifyCodeNote(barcode.data, [1, 3, 6])
+    return res.json({ status: message(1), message: message(1), data: resultVerifyCodeNote.code })
 }
+
+// res.cookie('encodedOdfNumber', encoded(String(odf[i].NUMERO_ODF)), { httpOnly: true })
+// res.cookie('encodedOperationNuber', encoded(String(odf[i].NUMERO_OPERACAO)), { httpOnly: true })
+// res.cookie('encodedMachineCode', encoded(String(odf[i].CODIGO_MAQUINA)), { httpOnly: true })

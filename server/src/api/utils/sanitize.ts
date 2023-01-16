@@ -1,4 +1,8 @@
-export const sanitize = (input?: string | any) => {
+export const sanitize = (input?: any) => {
+    // console.log('input', typeof(input));
+    if(typeof(input) === 'object'){
+        return input
+    }
     let message;
     if (!input || input === '0' || input === '00' || input === '000' || input === '0000' || input === '00000' || input === '000000' || input === '0000000' || input === '00000000') {
         return message = '';

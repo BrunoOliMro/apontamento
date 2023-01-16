@@ -1,75 +1,35 @@
 <script>
     // @ts-nocheck
-    import ModalConfirmation from "../modal/modalConfirmation.svelte";
     let imageLoader = "/images/axonLoader.gif";
-    // let urlString = `/api/v1/odfData`;
-    let message = "";
-    let numeroOdf;
-    let codigoPeca;
-    let codigoCliente;
-    let machineCode;
-    let qtdeOdf;
-    let funcionario;
     let operationNumber;
     export let odfData;
-    // let resultOdf = getOdfData();
+    let codigoCliente;
+    let machineCode;
+    let funcionario;
+    let codigoPeca;
+    let numeroOdf;
+    let qtdeOdf;
 
-    console.log('odfData Cod.svelte', odfData);
-
-    // async function getOdfData() {
-    //     const res = await fetch(urlString);
-    //     odfData = await res.json();
-
-    //     console.log("linha 14 /cod.svelte////////////////////", odfData);
-
-    //     if (odfData.message === "Algo deu errado") {
-    //         message = odfData.message;
-    //     } else {
-            numeroOdf = odfData.odfSelecionada.NUMERO_ODF;
-            codigoPeca = odfData.odfSelecionada.CODIGO_PECA;
-            codigoCliente = odfData.odfSelecionada.CODIGO_CLIENTE;
-            machineCode = odfData.odfSelecionada.CODIGO_MAQUINA;
-            qtdeOdf = odfData.odfSelecionada.QTDE_ODF;
-            funcionario = odfData.resEmployee;
-            operationNumber = odfData.odfSelecionada.NUMERO_OPERACAO;
-    //     }
-
-    //     if (odfData.message === "Acesso negado") {
-    //         message = "Acesso Negado";
-    //         window.location.href = "/#/codigobarras";
-    //         location.reload();
-    //     }
-
-    //     if (
-    //         odfData.message ===
-    //         "Algo deu errado ao buscar pelo codigo de apontamento"
-    //     ) {
-    //         window.location.href = "/#/codigobarras";
-    //         message = "Acesso Negado";
-    //         location.reload;
-    //     }
-    // }
-
-    function redirect() {
-        message = "";
-        window.location.href = "/#/rip";
-        location.reload();
-    }
-
-    function redirectWithouPermissions() {
-        message = "";
-        window.location.href = "/#/codigobarras";
-        location.reload();
+    if (!odfData.codData.data) {
+        odfData.codData.data = "S/I";
+    } else {
+        numeroOdf = odfData.codData.data.odfSelecionada.NUMERO_ODF;
+        codigoPeca = odfData.codData.data.odfSelecionada.CODIGO_PECA;
+        codigoCliente = odfData.codData.data.odfSelecionada.CODIGO_CLIENTE;
+        machineCode = odfData.codData.data.odfSelecionada.CODIGO_MAQUINA;
+        qtdeOdf = odfData.codData.data.odfSelecionada.QTDE_LIB;
+        funcionario = odfData.codData.data.resEmployee;
+        operationNumber = odfData.codData.data.odfSelecionada.NUMERO_OPERACAO;
     }
 </script>
 
-{#await odfData}
+{#await odfData.codData.data}
     <div class="image-loader">
         <div class="loader">
             <img src={imageLoader} alt="" />
         </div>
     </div>
-{:then itens}
+{:then}
     <main>
         <div class="areaCodigos">
             <div class="odf-area">
@@ -119,14 +79,6 @@
         </div>
     </main>
 {/await}
-
-{#if message === "codeApont 4 prod finalizado"}
-    <ModalConfirmation on:message={redirect} />
-{/if}
-
-{#if message === "Acesso negado"}
-    <ModalConfirmation on:message={redirectWithouPermissions} />
-{/if}
 
 <style>
     .loader {

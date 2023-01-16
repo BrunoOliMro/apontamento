@@ -1,19 +1,23 @@
 <script>
     // @ts-nocheck
+    import { verifyStringLenght } from "../../utils/verifyLength";
     import blockForbiddenChars from "../../utils/presanitize";
-    import Bad from "../inputs/bad.svelte";
+    import messageQuery from "../../utils/checkMessage";
     import GoodFeed from "../inputs/goodFeed.svelte";
     import Missing from "../inputs/missing.svelte";
     import Rework from "../inputs/rework.svelte";
-    import Cod from "./cod.svelte";
+    import post from "../../utils/postFunction";
+    import Bad from "../inputs/bad.svelte";
     import Footer from "./footer.svelte";
     import Status from "./status.svelte";
-    // let callOdfData = `/api/v1/odfData`;
-    let pointApi = `/api/v1/point`;
+    import Cod from "./cod.svelte";
+    import ModalConfirmation from "../modal/modalConfirmation.svelte";
+    import Supervisor from "./supervisor.svelte";
+    // let supervisorApi = `/api/v1/supervisor`;
     let urlBadFeedMotive = `/api/v1/badFeedMotives`;
-    let supervisorApi = `/api/v1/supervisor`;
     let supervisorStop = "api/v1/supervisorParada";
     let imageLoader = "/images/axonLoader.gif";
+    let pointApi = `/api/v1/point`;
     let showConfirm = false;
     let loader = false;
     var address = "";
@@ -25,275 +29,196 @@
     let reworkFeed;
     let valorFeed;
     let value;
-    let availableQuantity;
     let getSpace;
     let balance;
     let supervisorMaq;
     let isRequesting = false;
     let resultRefugo = motives();
+    let arrayMotives = [];
     export let odfData;
-    // getOdfData();
+    let availableQuantity = 0
+    let subTitle = ""
 
-    console.log('odfData feed.svelte', odfData);
+    console.log('Feed', odfData.codData.data);
 
-    const checkStopMachine = async (event) => {
-        if (!supervisorMaq) {
-            supervisorMaq = "";
-        } else if (supervisorMaq) {
-            if (supervisorMaq.length >= 6 && event.key === "Enter") {
-                if (
-                    !supervisorMaq ||
-                    supervisorMaq === "0" ||
-                    supervisorMaq === "00" ||
-                    supervisorMaq === "000" ||
-                    supervisorMaq === "0000" ||
-                    supervisorMaq === "00000" ||
-                    supervisorMaq === "000000"
-                ) {
-                    message = "Crachá inválido";
-                } else {
-                    loader = true;
-                    message = "";
-                    postStop();
-                }
-            }
+    if(!odfData.codData.data){
+        odfData.codData.data = 'S/I'
+    } else {
+        availableQuantity = odfData.codData.data.odfSelecionada.QTDE_LIB;
+    }
+
+
+
+    async function checkStopMachine (event){
+        const res = await verifyStringLenght(event, supervisorMaq, 6, 14)
+        if(res === messageQuery(1)){
+            postStop();
         }
-    };
+    }
+
     const postStop = async () => {
-        loader = true;
-        const res = await fetch(supervisorStop, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                superSuperMaqPar: !supervisorMaq ? "" : supervisorMaq,
-            }),
-        }).then((res) => res.json());
+        // @ts-ignore
+        // loader = true
+        // message = ''
+        const res = await post(supervisorStop, supervisor);
         if (res) {
-            if (res.message === "Success") {
-                loader = true;
-                post();
-                message = "Apontamento Liberado";
+            if (res.message === messageQuery(1)) {
+                // loader = true;
+                callPost();
+                // message = "Apontamento Liberado";
             }
-            if (res.message !== "") {
-                message = res.message;
-                superParada = false;
-                showmodal = false;
+            if (res.message !== messageQuery(0)) {
+                // message = res.message;
+                // superParada = false;
+                // showmodal = false;
                 loader = false;
             }
         }
     };
 
-    // async function getOdfData() {
-    //     const res = await fetch(callOdfData);
-    //     odfData = await res.json();
-    //     loader = false;
-    //     if (odfData) {
-    //         if (odfData.message === "Success") {
-    //             if (odfData.odfSelecionada) {
-    //                 availableQuantity = odfData.odfSelecionada.QTDE_LIB;
-    //             } else {
-    //                 return (window.location.href = `/#/codigobarras`);
-    //             }
-    //         } else if (
-    //             odfData.message === "codeApont 5 inicio de rip" ||
-    //             odfData.message === "codeApont 4 prod finalzado"
-    //         ) {
-    //             return (window.location.href = `/#/rip`);
-    //         } else if (odfData.message !== "") {
-    //             message = odfData.message;
-    //         }
-    //     } else {
-    //         return (window.location.href = `/#/codigobarras`);
-    //     }
-    // }
-
     async function motives() {
         const res = await fetch(urlBadFeedMotive);
         data = await res.json();
-        if (data) {
-            if (data.message) {
-                if (data.message !== "") {
-                    message = data.message;
-                }
-            }
+        if(data.data.data){
+            arrayMotives = data.data.data.map(acc => acc.DESCRICAO)
+        } else {
+            arrayMotives = ['PEÇA DANIFICADA']
         }
     }
 
     async function checkForSuper(event) {
-        if (supervisor.length >= 6 && event.key === "Enter") {
-            if (supervisor === "000000") {
-                message = "Crachá inválido";
-            }
-            const res = await fetch(supervisorApi, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    supervisor,
-                }),
-            }).then((res) => res.json());
-            if (res.message === "Supervisor found") {
-                post();
-            }
-        }
+        const result = await verifyStringLenght(event, supervisor, 6, 14);
+        if (result === messageQuery(1)) {
+            callPost();
+        } 
     }
 
-    const post = async () => {
+    const callPost = async () => {
+        isRequesting = true
         loader = true;
         close();
-        const res = await fetch(pointApi, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                valorFeed,
-                badFeed,
-                missingFeed,
-                reworkFeed,
-                value,
-                supervisor,
-            }),
-        }).then((res) => res.json());
-        loader = false;
-        console.log('res', res);
+        const res = await post(pointApi, {
+            valorFeed,
+            badFeed,
+            missingFeed,
+            reworkFeed,
+            value,
+            supervisor,
+        });
         if (res) {
+            console.log('res in callPost', res);
+            isRequesting = false
+            loader = false
             if (res.message === "Apontamento parcial") {
                 message = "Apontamento parcial";
             } else if (res.message === "Pointed") {
-                window.location.href = `/#/rip`;
+                window.location.href =  messageQuery(18);
                 location.reload();
-            } else if (res.message === "Machine has stopped") {
-                message = "Machine stopped";
+            } else if (res.code === "Machine has stopped") {
+                message = "Máquina parada";
             } else if (res.message === "Jumping steps") {
-                window.location.href = `/#/codigobarras`;
+                window.location.href = messageQuery(20);
                 location.reload();
             } else if (res.message === "Saldo menor que o apontado") {
-                message = "Saldo menor que o apontado";
+                // message = "Saldo menor que o apontado";
                 balance = res.balance;
                 isRequesting = false;
-            } else if (res.message === "Success") {
+            } else if (res.message === messageQuery(1)) {
                 getSpaceFunc();
-                message = "";
             } else if (res.message === "Rip iniciated") {
-                window.location.href = `/#/rip`;
+                window.location.href = messageQuery(18);
                 location.reload();
-            } else if (res.message === "Algo deu errado") {
+            } else if (res.message === messageQuery(4)) {
                 isRequesting = false;
-                message = res.message;
-            } else if (res.message !== "") {
+            } else if (res.message !== messageQuery(0)) {
                 isRequesting = false;
                 message = res.message;
             }
-        } else {
-            message = res.message;
         }
     };
 
     async function getSpaceFunc() {
+        loader = true;
+        isRequesting = true
         const res = await fetch(pointApi);
         getSpace = await res.json();
-        loader = false;
-        if (getSpace.message === "No address") {
-            window.location.href = `/#/rip`;
-        } else if (getSpace.message === "Success") {
-            address = getSpace.address;
-        } else if (getSpace.message === "Algo deu errado") {
-            address = "5A01A01-11";
+        console.log('getSpace', getSpace);
+        if (getSpace) {
+            loader = false;
+
+            if(getSpace.message === messageQuery(35)){
+                return window.location.href = messageQuery(18)
+            } else if (getSpace.message === messageQuery(1)) {
+                address = getSpace.address;
+            } else if (getSpace.message === messageQuery(4)) {
+                address = "5A01A01-11";
+            }
         }
     }
 
-    async function callPost(event) {
+    async function checkPost() {
         isRequesting = true;
-        let numberBadFeed = Number(badFeed || 0);
-        let numberGoodFeed = Number(valorFeed || 0);
-        let numberQtdAllowed = Number(availableQuantity);
-        let numberMissing = Number(missingFeed || 0);
-        let numberReworkFeed = Number(reworkFeed || 0);
+        const numberBadFeed = Number(badFeed || 0);
+        const numberGoodFeed = Number(valorFeed || 0);
+        const numberQtdAllowed = Number(availableQuantity || 0);
+        const numberMissing = Number(missingFeed || 0);
+        const numberReworkFeed = Number(reworkFeed || 0);
+        const total = numberBadFeed + numberGoodFeed + numberMissing + numberReworkFeed;
 
-        if (
-            numberMissing > 0 &&
-            numberBadFeed + numberGoodFeed + numberReworkFeed === 0
-        ) {
-            return (message =
-                "Não é possível apontar apenas quantidade de peças faltantes");
-        } else if (
-            numberReworkFeed > 0 &&
-            numberBadFeed + numberGoodFeed + numberMissing === 0
-        ) {
-            return (message =
-                "Apontando apenas peças retrabalhadas, confirma ?");
-        } else if (
-            numberReworkFeed > 0 &&
-            numberMissing > 0 &&
-            numberBadFeed + numberGoodFeed === 0
-        ) {
-            return (message =
-                "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?");
-        } else if (
-            (numberMissing > 0 &&
-                numberGoodFeed > 0 &&
-                numberGoodFeed < numberQtdAllowed &&
-                numberBadFeed + numberReworkFeed === 0) ||
-            (numberReworkFeed > 0 &&
-                numberGoodFeed > 0 &&
-                numberGoodFeed < numberQtdAllowed &&
-                numberBadFeed + numberMissing === 0)
-        ) {
-            return (message = "Apontamento parcial");
-        }
-
-        let total =
-            numberBadFeed + numberGoodFeed + numberMissing + numberReworkFeed;
-
-        if (total > numberQtdAllowed) {
-            message = "Quantidade excedida";
-        }
-
-        if (numberBadFeed > 0 && total <= numberQtdAllowed) {
-            showConfirm = true;
-        }
-        if (total === 0) {
-            message = "Apontamento vazio";
-        }
-
-        if (
-            numberBadFeed + numberMissing + numberReworkFeed === 0 &&
-            numberGoodFeed > 0 &&
-            numberGoodFeed < numberQtdAllowed
-        ) {
-            message = "Apontamento parcial";
-        }
-
-        if (
-            numberBadFeed + numberMissing + numberReworkFeed === 0 &&
-            numberGoodFeed === numberQtdAllowed
-        ) {
-            loader = true;
-            post();
+        try {
+            if(numberMissing > 0 && numberBadFeed + numberGoodFeed + numberReworkFeed === 0){
+                return message = 'Apontar apenas faltantes, confirma?'
+            } else  if ( numberReworkFeed > 0 && numberBadFeed + numberGoodFeed + numberMissing === 0) {
+                return (message = "Apontando apenas peças retrabalhadas, confirma ?");
+            } else if ( numberReworkFeed > 0 && numberMissing > 0 && numberBadFeed + numberGoodFeed === 0) {
+                return (message ="Apontando apenas peças retrabalhadas e peças faltantes, confirma ?");
+            } else if ((numberMissing > 0 && numberGoodFeed > 0 && numberGoodFeed < numberQtdAllowed && numberBadFeed + numberReworkFeed === 0) ||
+                (numberReworkFeed > 0 && numberGoodFeed > 0 && numberGoodFeed < numberQtdAllowed && numberBadFeed + numberMissing === 0)) {
+                    console.log('ibrbuiruiburbubrbu');
+                return (message = "Apontamento parcial");
+            } else if (total > numberQtdAllowed) {
+                message = "Quantidade excedida";
+            } else  if (numberBadFeed > 0 && total <= numberQtdAllowed) {
+                showConfirm = true;
+            } else if (total === 0) {
+                message = "Apontamento vazio";
+            } else if ( numberBadFeed + numberMissing + numberReworkFeed === 0 && numberGoodFeed > 0 && numberGoodFeed < numberQtdAllowed ) {
+                message = "Apontamento parcial";
+            } else if ( numberBadFeed + numberMissing + numberReworkFeed === 0 && numberGoodFeed === numberQtdAllowed) {
+                callPost();
+            }
+        } catch (error) {
+            console.log('Error on CheckPost function checking sended Numbers', error)
+            return message = messageQuery(4)
+        } finally {
+            isRequesting = false
         }
     }
 
     function close() {
         address = "";
         message = "";
+        showConfirm = false;
     }
 
     function closeRedirectBarcode() {
         loader = true;
         message = "";
         address = false;
-        window.location.href = `/#/codigoBarras`;
+        window.location.href =  messageQuery(20);
     }
 
     function closeRedirect() {
         loader = true;
         message = "";
         address = false;
-        window.location.href = `/#/rip`;
+        window.location.href = messageQuery(18);
     }
 
     function callGoodFeed(event) {
         valorFeed = event.detail.goodFeed;
         if (event.key === "Enter") {
-            callPost();
+            checkPost();
         }
     }
 
@@ -318,7 +243,7 @@
     </div>
 {/if}
 
-{#await odfData}
+{#await odfData.codData.data}
     <div class="imageLoader">
         <div class="loader">
             <img src={imageLoader} alt="" />
@@ -327,12 +252,12 @@
 {:then}
     <div class="content">
         <div class="status-area">
-            <div><Status /></div>
-            <div><Cod odfData={odfData}/></div>
+            <div><Status {odfData} /></div>
+            <div><Cod {odfData} /></div>
         </div>
         <div class="feed-content">
             <div class="footer-area">
-                <Footer  odfData={odfData} />
+                <Footer {odfData} />
             </div>
             <div class="feed-area">
                 <div class="feed-area-div">
@@ -359,8 +284,8 @@
                     disabled={isRequesting === true}
                     tabindex="5"
                     id="apontar"
-                    on:keypress|once={callPost}
-                    on:click|once={callPost}
+                    on:keypress|preventDefault={checkPost}
+                    on:click|preventDefault={checkPost}
                     type="submit"
                 >
                     <span />
@@ -379,7 +304,7 @@
                 <img src={imageLoader} alt="" />
             </div>
         </div>
-    {:then item}
+    {:then}
         {#if showConfirm === true}
             <div class="background">
                 <div class="header">
@@ -387,12 +312,11 @@
                         <h3>Apontamento com refugo</h3>
                     </div>
                     <select bind:value>
-                        {#each data as item}
+                        {#each arrayMotives as item}
                             <option>{item}</option>
                         {/each}
                     </select>
                     <p>Supervisor</p>
-                    <!-- svelte-ignore a11y-autofocus -->
                     <input
                         on:input={blockForbiddenChars}
                         on:keypress={checkForSuper}
@@ -413,8 +337,11 @@
         {/if}
     {/await}
 
-    {#if message === "Apontamento parcial"}
-        <div class="background">
+   {#if message === "Apontamento parcial"}
+        
+        <Supervisor titleSupervisor={message} subTitle={subTitle}  bind:supervisor={supervisor} on:message={callPost}/>
+
+        <!-- <div class="background">
             <div class="header">
                 <div class="content-area">
                     <div class="modalTitle">
@@ -424,7 +351,6 @@
                         <div class="modalCenter">
                             <h4>Informe o supervisor:</h4>
                             <div class="input">
-                                <!-- svelte-ignore a11y-autofocus -->
                                 <input
                                     on:input={blockForbiddenChars}
                                     on:keypress={checkForSuper}
@@ -445,10 +371,10 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
     {/if}
 
-    {#if message === "Apontando apenas peças retrabalhadas, confirma ?"}
+    {#if message === "Apontando apenas peças retrabalhadas, confirma ?" || message === 'Apontar apenas faltantes, confirma?'}
         <div class="background">
             <div class="header">
                 <div class="content-area">
@@ -459,7 +385,6 @@
                         <div class="modalCenter">
                             <h4>Informe o supervisor:</h4>
                             <div class="input">
-                                <!-- svelte-ignore a11y-autofocus -->
                                 <input
                                     on:input={blockForbiddenChars}
                                     on:keypress={checkForSuper}
@@ -494,7 +419,6 @@
                         <div class="modalCenter">
                             <h4>Informe o supervisor:</h4>
                             <div class="input">
-                                <!-- svelte-ignore a11y-autofocus -->
                                 <input
                                     on:input={blockForbiddenChars}
                                     on:keypress={checkForSuper}
@@ -518,7 +442,7 @@
         </div>
     {/if}
 
-    {#if message === "Machine stopped"}
+    {#if message === "Máquina parada"}
         <div class="background">
             <div class="header">
                 <div class="closed">
@@ -529,8 +453,6 @@
                         <p>Chame um supervisor</p>
                     </div>
                     <div>
-                        <!-- svelte-ignore a11y-autofocus -->
-                        <!-- svelte-ignore a11y-positive-tabindex -->
                         <input
                             autofocus
                             tabindex="12"
@@ -554,8 +476,7 @@
             <div class="header">
                 <div class="closed">
                     <h2>
-                        ODF apontada, finalize o processo para poder apontar
-                        novamente
+                        ODF apontada, finalize o processo.
                     </h2>
                 </div>
                 <button on:click={close} on:keypress={close}>Fechar</button>
@@ -566,27 +487,23 @@
         </div>
     {/if}
 
-    {#if message !== "" && message !== "Apontamento parcial" && message !== "Already pointed" && message !== "Machine stopped" && message !== "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?" && message !== "Apontando apenas peças retrabalhadas, confirma ?"}
+    <!-- {#if message && message !== messageQuery(0) && message !== "Apontamento parcial" && message !== "Already pointed" && message !== "Máquina parada" && message !== "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?" && message !== "Apontando apenas peças retrabalhadas, confirma ?" && message !== 'Apontar apenas faltantes, confirma?'}
         <div class="background">
             <div class="header">
                 <div class="closed">
                     <h2>{message}</h2>
                 </div>
-                <!-- svelte-ignore a11y-positive-tabindex -->
-                <button tabindex="7" on:keypress={close} on:click={close}
-                    >Fechar</button
-                >
+                <button tabindex="7" on:keypress={close} on:click={close}>Fechar</button>
             </div>
         </div>
-    {/if}
+    {/if} -->
 
-    {#if message === "Algo deu errado"}
+    <!-- {#if message === messageQuery(4)}
         <div class="background">
             <div class="header">
                 <div class="closed">
                     <h2>{message}</h2>
                 </div>
-                <!-- svelte-ignore a11y-positive-tabindex -->
                 <button
                     tabindex="7"
                     on:keypress={closeRedirectBarcode}
@@ -594,14 +511,18 @@
                 >
             </div>
         </div>
+    {/if} -->
+
+    {#if message && message !== messageQuery(0) && message !== "Apontamento parcial" && message !== 'Máquina parada' }
+        <ModalConfirmation on:message={close} message={message} title={message} on:message={close}/>
     {/if}
 
-    {#if address !== ""}
+    {#if address && address !== ""}
         <div class="background">
             <div class="header">
                 <div class="closed">
                     <h2>
-                        Insira a quantidade no local : {address}
+                        Insira a quantidade apontada no endereço : {address}
                     </h2>
                 </div>
                 <button on:keypress={closeRedirect} on:click={closeRedirect}
@@ -649,12 +570,6 @@
         align-items: center;
         text-align: center;
     }
-    /* .modalContent {
-        margin-left: 25px;
-        margin-top: 0%;
-        margin-bottom: 0%;
-        margin-right: 0%;
-    } */
     button {
         letter-spacing: 0.5px;
         width: 100%;

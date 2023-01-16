@@ -1,6 +1,7 @@
 <script>
+  import messageQuery from "../../utils/checkMessage";
+
   let imageLoader = "/images/axonLoader.gif";
-  // let urlString = `/api/v1/odfData`;
   let horaInicio = "";
   let horaFinal = "";
 
@@ -13,11 +14,39 @@
   let anoFim = "";
 
   export let odfData;
+  console.log('Footer.svelte:', odfData);
 
-  var message = "";
+  if (!odfData.codData.data) {
+    odfData.codData.data = "S/I";
+  }
 
-  console.log('odfData Footer.svelte', odfData);
-  // let resultado = getData();
+  if (odfData.codData.status === messageQuery(1)) {
+    if (odfData.codData.message === messageQuery(4)) {
+      odfData = "S/I";
+    } else if (odfData.codData.data) {
+      let odf = odfData.codData.data.odfSelecionada;
+
+      modifyObj(Object.keys(odfData.codData.data.odfSelecionada), odf);
+
+      dataInicio = odf.DT_INICIO_OP.slice(6, 8);
+
+      meioInicio = odf.DT_INICIO_OP.slice(4, 6);
+
+      anoInicio = odf.DT_INICIO_OP.slice(0, 4);
+
+      horaInicio = odf.HORA_INICIO.slice(11, 19);
+
+      dataFim = odf.DT_FIM_OP.slice(6, 8);
+
+      meioFim = odf.DT_FIM_OP.slice(4, 6);
+
+      anoFim = odf.DT_FIM_OP.slice(0, 4);
+
+      horaFinal = odf.HORA_FIM.slice(11, 19);
+
+      horaFinal = odf.HORA_FIM.slice(11, 19);
+    }
+  }
 
   //Takes an array and modify undefined and null values
   /**
@@ -29,49 +58,16 @@
       x[key] = x[key] ?? "";
     });
   }
-
-  // async function getData() {
-  //   const res = await fetch(urlString);
-  //   odfData = await res.json();
-  //   console.log("footer", odfData);
-  //   if (odfData) {
-  //     if (odfData.message) {
-  //       if (odfData.message !== "" && odfData.message !== "Success") {
-  //         message = odfData.message;
-  //       }
-  //     }
-  //   }
-    let odf = odfData.odfSelecionada;
-
-    modifyObj(Object.keys(odfData.odfSelecionada), odf);
-
-    dataInicio = odf.DT_INICIO_OP.slice(6, 8);
-
-    meioInicio = odf.DT_INICIO_OP.slice(4, 6);
-
-    anoInicio = odf.DT_INICIO_OP.slice(0, 4);
-
-    horaInicio = odf.HORA_INICIO.slice(11, 19);
-
-    dataFim = odf.DT_FIM_OP.slice(6, 8);
-
-    meioFim = odf.DT_FIM_OP.slice(4, 6);
-
-    anoFim = odf.DT_FIM_OP.slice(0, 4);
-
-    horaFinal = odf.HORA_FIM.slice(11, 19);
-
-    horaFinal = odf.HORA_FIM.slice(11, 19);
   // }
 </script>
 
-{#await odfData}
+{#await odfData.codData.data}
   <div class="image-loader">
     <div class="loader">
       <img src={imageLoader} alt="" />
     </div>
   </div>
-{:then itens}
+{:then}
   <main class="main">
     <div class="text-area">
       <div class="title">Início</div>
@@ -91,9 +87,9 @@
   </main>
 {/await}
 
-{#if message !== ""}
+<!-- {#if message !== ""}
   <h1>{message}</h1>
-{/if}
+{/if} -->
 
 <style>
   .data-time {

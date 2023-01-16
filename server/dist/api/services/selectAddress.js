@@ -6,11 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.selectAddress = void 0;
 const mssql_1 = __importDefault(require("mssql"));
 const global_config_1 = require("../../global.config");
+const message_1 = require("./message");
 const selectAddress = async (condicional, percentage, comprimento, largura, peso) => {
-    let response = {
-        message: '',
-        data: {},
-    };
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const data = await connection.query(`
@@ -23,17 +20,16 @@ const selectAddress = async (condicional, percentage, comprimento, largura, peso
         FROM CST_CAD_ENDERECOS CE(NOLOCK)
         LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO)
         WHERE ISNULL(EE.QUANTIDADE,0) <= 0 AND CE.ENDERECO LIKE '${percentage}%' AND UPPER(EE.CODIGO) ${condicional} AND CE.COMPRIMENTO > ${comprimento} AND CE.LARGURA > ${largura} AND CE.PESO > ${peso} ORDER BY CE.ENDERECO ASC`).then((result) => result.recordset);
-        console.log('select Address: ', data);
         if (data.length > 0) {
-            return response.data = data;
+            return data;
         }
         else {
-            return response.message = 'Not found';
+            return (0, message_1.message)(17);
         }
     }
     catch (error) {
         console.log('Error on selecting Address', error);
-        return response.message = 'Not Found';
+        return (0, message_1.message)(33);
     }
     finally {
         await connection.close();

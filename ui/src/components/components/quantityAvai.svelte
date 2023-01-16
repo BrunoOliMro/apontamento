@@ -1,52 +1,31 @@
 <script>
-    import ModalConfirmation from "../components/modal/modalConfirmation.svelte";
     const imageLoader = "/images/axonLoader.gif";
-    // const odfDataRouter = `/api/v1/odfData`;
     const title = "Quantidade liberada: ";
     let quantityAvailableProd;
     export let odfData;
-    let message = "";
-    // let promiseResult = getData();
+    console.log('odffffffffff', odfData);
 
-    console.log('odfData Quantity.Svelte', odfData);
-    // async function getData() {
-    //     const res = await fetch(odfDataRouter);
-    //     odfData = await res.json();
-    //     if (odfData) {
-    //         if (odfData.odfSelecionada.QTDE_LIB > 0) {
-    //             quantityAvailableProd = odfData.odfSelecionada.QTDE_LIB;
-    //         } else if (odfData.message !== "") {
-    //             message = odfData.message;
-    //         } else {
-    //             return (message = "Algo deu errado");
-    //         }
-    //     }
-    // }
-
-    function close() {
-        message = "";
-        window.location.href = "/#/codigobarras";
+    if (!odfData.codData.data) {
+        odfData.codData.data = "";
+    } else {
+        quantityAvailableProd = odfData.codData.data.odfSelecionada.QTDE_LIB;
     }
 </script>
 
-{#await odfData}
+{#await odfData.codData.data}
     <div class="image-loader">
         <div class="loader">
             <img src={imageLoader} alt="" />
         </div>
     </div>
-{:then item}
+{:then}
     <div>
         <div class="prod-area">
             {title}
-            <p>{odfData.odfSelecionada.QTDE_LIB}</p>
+            <p>{quantityAvailableProd}</p>
         </div>
     </div>
 {/await}
-
-{#if message !== "" && message !== "Success"}
-    <ModalConfirmation on:message={close} title={message} />
-{/if}
 
 <style>
     p {

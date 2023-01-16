@@ -1,47 +1,44 @@
 <script>
     // @ts-nocheck
-    import QuantityAvai from "../../routes/quantityAvai.svelte";
     import HistoricButton from "../buttons/historicButton.svelte";
+    import QuantityAvai from "../components/quantityAvai.svelte";
     import StopButton from "../buttons/stopButton.svelte";
-    import ModalConfirmation from "../modal/modalConfirmation.svelte";
+    import messageQuery from '../../utils/checkMessage';
+    import post from "../../utils/postFunction";
     let modalTitle = "Máquina parada com sucesso";
-    let imageLoader = "/images/axonLoader.gif";
     let apiMotivoParada = "api/v1/stopMotives";
-    let title = "APONTAMENTO";
     let postParada = `api/v1/stopPost`;
+    let title = "APONTAMENTO";
     let showMaqPar = false;
     let stopModal = false;
-    let loader = false;
     export let odfData;
-    let data;
-    let message = "";
+    let data = [];
     let value;
+    let motives = [];
     let result = callMotivo();
-
+    
     async function callMotivo() {
-        data = await fetch(apiMotivoParada).then((res) => res.json());
-        if (data) {
-            if (data.message) {
-                if (data.message !== "" && data.message !== "Success") {
-                    message = data.message;
-                }
+        const res = await fetch(apiMotivoParada);
+        data = await res.json();
+        if (data.status === messageQuery(1)) {
+            if (data.message !== messageQuery(0) && data.message === messageQuery(4)) {
+               motives = ["Parar máquina"];
+            } else {
+                motives = data.data.map(acc => acc.DESCRICAO);
             }
-        } else {
-            data.motives = "Parar máquina";
         }
     }
 
     const confirm = async () => {
-        loader = true;
-        const res = await post(postParada, value).then((res) => res.json());
-        console.log("res -- Title.svelte", res);
+        // loader = true;
+        const res = await post(postParada, value);
         if (res) {
             if (res.message === "Máquina já parada") {
                 stopModal = false;
                 showMaqPar = false;
-                message = "Máquina parada";
+                // message = "Máquina parada";
             }
-            if (res.message === "Success") {
+            if (res.message === messageQuery(1)) {
                 stopModal = false;
                 showMaqPar = true;
             }
@@ -64,25 +61,19 @@
             stopModal = false;
         }
     }
-
-    function closeConfirm() {
-        showMaqPar = false;
-        stopModal = false;
-        message = "";
-    }
 </script>
 
-{#if loader === true}
+<!-- {#if loader === true}
     <div class="imageLoader">
         <div class="loader">
             <img src={imageLoader} alt="" />
         </div>
     </div>
-{/if}
+{/if} -->
 
 {#await result}
     <div>...</div>
-{:then item}
+{:then}
     <div class="nav-area">
         <ul>
             <li class="fist-item-nav">
@@ -99,7 +90,7 @@
                 <HistoricButton />
             </li>
             <li>
-                <QuantityAvai odfData={odfData} />
+                <QuantityAvai {odfData} />
             </li>
         </ul>
     </div>
@@ -122,7 +113,7 @@
                     <!-- svelte-ignore a11y-positive-tabindex -->
                     <!-- svelte-ignore a11y-autofocus -->
                     <select autofocus tabindex="10" bind:value>
-                        {#each data.motives as item}
+                        {#each motives as item}
                             <option class="optionsBar">{item}</option>
                         {/each}
                     </select>
@@ -144,13 +135,13 @@
     </div>
 {/if}
 
-{#if message !== ""}
+<!-- {#if message && message !== messageQuery(0)}
     <ModalConfirmation title={message} on:message={closeConfirm} />
 {/if}
 
 {#if showMaqPar === true}
     <ModalConfirmation title={modalTitle} on:message={closeConfirm} />
-{/if}
+{/if} -->
 
 <style>
     .loader {

@@ -1,34 +1,34 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.unravelBarcode = void 0;
-const sanitize_1 = require("./sanitize");
-function unravelBarcode(barcode) {
-    barcode = (0, sanitize_1.sanitize)(barcode).trim();
+const message_1 = require("../services/message");
+function unravelBarcode(obj) {
     let response = {
         message: '',
         data: {
-            odfNumber: '',
-            opNumber: '',
-            machineCod: '',
+            NUMERO_ODF: '',
+            NUMERO_OPERACAO: '',
+            CODIGO_MAQUINA: '',
+            FUNCIONARIO: '',
+            QTDE_LIB: 0,
+            CODIGO_PECA: '',
         },
     };
-    if (!barcode || barcode.length <= 16 || barcode.length > 18) {
-        return response.message = '';
-    }
+    console.log('obj in unravel', obj);
     const dados = {
-        numOdf: String(barcode.slice(10)),
-        numOper: String(barcode.slice(0, 5)),
-        codMaq: String(barcode.slice(5, 10)),
+        numOdf: String(obj.slice(10)),
+        numOper: String(obj.slice(0, 5)),
+        codMaq: String(obj.slice(5, 10)),
     };
-    if (barcode.length > 17) {
-        dados.numOdf = barcode.slice(11);
-        dados.numOper = barcode.slice(0, 5);
-        dados.codMaq = barcode.slice(5, 11);
+    if (obj.length > 17) {
+        dados.numOdf = obj.slice(11);
+        dados.numOper = obj.slice(0, 5);
+        dados.codMaq = obj.slice(5, 11);
     }
-    response.message = 'Success';
-    response.data.odfNumber = dados.numOdf;
-    response.data.opNumber = dados.numOper;
-    response.data.machineCod = dados.codMaq;
+    response.message = (0, message_1.message)(1);
+    response.data.NUMERO_ODF = dados.numOdf;
+    response.data.NUMERO_OPERACAO = dados.numOper;
+    response.data.CODIGO_MAQUINA = dados.codMaq;
     return response;
 }
 exports.unravelBarcode = unravelBarcode;

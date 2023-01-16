@@ -1,60 +1,39 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.stopPost = void 0;
+const variableInicializer_1 = require("../services/variableInicializer");
+const verifyCodeNote_1 = require("../services/verifyCodeNote");
 const insert_1 = require("../services/insert");
-const codeNote_1 = require("../utils/codeNote");
-const decryptedOdf_1 = require("../utils/decryptedOdf");
-const sanitize_1 = require("../utils/sanitize");
+const message_1 = require("../services/message");
 const stopPost = async (req, res) => {
-    try {
-        var odfNumber = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'])))) || null;
-        var employee = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])))) || null;
-        var partCode = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])))) || null;
-        var revision = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO'])))) || null;
-        var operationNumber = String((0, decryptedOdf_1.decrypted)(String(req.cookies['NUMERO_OPERACAO']))).replaceAll(' ', '') || null;
-        var machineCode = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA'])))) || null;
-        var maxQuantityReleased = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB'])))) || null;
-        var goodFeed = null;
-        var missingFeed = null;
-        var reworkFeed = null;
-        var pointCode = [7];
-        var badFeed = null;
-        var motives = null;
-        var pointCodeDescriptionStopPost = ['Parada'];
-        var end = new Date().getTime() || 0;
-        var start = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['startSetupTime'])))) || null;
-        var final = Number(end - start) || 0;
+    const variables = await (0, variableInicializer_1.inicializer)(req);
+    if (!variables) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
     }
-    catch (error) {
-        console.log('Error on stopPost --cookies--', error);
-        return res.json({ message: 'Algo deu errado' });
-    }
-    try {
-        var pointedCode = await (0, codeNote_1.codeNote)(odfNumber, Number(operationNumber), machineCode, employee);
-    }
-    catch (error) {
-        console.log('Error on StopPost --cookies--', error);
-        return res.json({ message: 'Algo deu errado' });
-    }
-    if (pointedCode.message === 'Machine has stopped') {
-        return res.json({ message: 'Máquina já parada' });
+    const resultVerifyCodeNote = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [(0, message_1.message)(20)]);
+    const end = new Date().getTime() || 0;
+    const timeSpend = Number(end - resultVerifyCodeNote.time) || 0;
+    variables.cookies.goodFeed = null;
+    variables.cookies.badFeed = null;
+    variables.cookies.pointedCode = [7];
+    variables.cookies.missingFeed = null;
+    variables.cookies.reworkFeed = null;
+    variables.cookies.pointedCodeDescription = ['Parada'];
+    variables.cookies.motives = null;
+    variables.cookies.tempoDecorrido = timeSpend;
+    if (resultVerifyCodeNote.accepted) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(19), data: (0, message_1.message)(33) });
     }
     else {
-        try {
-            const resour = await (0, insert_1.insertInto)(employee, odfNumber, partCode, revision, operationNumber, machineCode, maxQuantityReleased, goodFeed, badFeed, pointCode, pointCodeDescriptionStopPost, motives, missingFeed, reworkFeed, final);
-            if (resour) {
-                return res.status(200).json({ message: 'Success' });
-            }
-            else if (!resour) {
-                return res.json({ message: 'Algo deu errado' });
-            }
-            else {
-                return res.json({ message: 'Algo deu errado' });
-            }
+        const resour = await (0, insert_1.insertInto)(variables.cookies);
+        if (resour) {
+            return res.status(200).json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33) });
         }
-        catch (error) {
-            console.log(error);
-            return res.json({ message: 'Algo deu errado' });
+        else if (!resour) {
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
+        }
+        else {
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
         }
     }
 };

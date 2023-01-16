@@ -1,4 +1,4 @@
-export default async function checkRipTable(setup, ripTable, extraColumns, message, loader, res, post, pointRipRouter) {
+export default async function checkRipTable(setup, ripTable, extraColumns, message, res, post, pointRipRouter) {
     if (
         Object.values(setup).length <= 0 ||
         Object.values(setup).length < ripTable.length
@@ -38,14 +38,11 @@ export default async function checkRipTable(setup, ripTable, extraColumns, messa
         });
 
         if (callSupervisor === true) {
-            loader = false;
             message = "Supervisor needed";
         } else if (callSupervisor === false) {
-            loader = true;
-            res = post(pointRipRouter, setup, loader);
+            res = post(pointRipRouter, setup);
         }
     } else if (quantityReleased !== 0) {
-        loader = false;
         return (message = "Algo deu errado");
     }
 };

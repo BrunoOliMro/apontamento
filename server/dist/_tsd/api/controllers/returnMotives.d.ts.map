@@ -1,1 +1,1 @@
-{"version":3,"file":"returnMotives.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/returnMotives.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,cAAc,EAAE,MAAM,SAAS,CAAA;AAIxC,eAAO,MAAM,aAAa,EAAE,cAU3B,CAAA"}
+{"version":3,"file":"returnMotives.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/returnMotives.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,cAAc,EAAE,MAAM,SAAS,CAAA;AAExC,eAAO,MAAM,aAAa,EAAE,cAG3B,CAAA"}

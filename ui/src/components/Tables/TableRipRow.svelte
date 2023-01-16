@@ -24,7 +24,7 @@
     };
     export let setup = {};
     let id = '';
-    let allowedChars = /[KOko0-9.,]/;
+    // let allowedChars = /[KOko0-9.,]/;
     let errUser = '';
 
     function checkColor(event) {

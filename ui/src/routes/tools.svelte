@@ -1,65 +1,76 @@
 <script>
   // @ts-nocheck
   import ModalConfirmation from "../components/modal/modalConfirmation.svelte";
+  import Message from "../components/components/message.svelte";
+  import messageQuery from "../utils/checkMessage";
+  import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
+  let selectedToolsApi = `/api/v1/ferselecionadas`;
   let back = "/images/icons8-go-back-24.png";
   let imageLoader = "/images/axonLoader.gif";
   let toolsApi = `/api/v1/tools`;
-  let selectedToolsApi = `/api/v1/ferselecionadas`;
+  let continuer = `Continuar`;
+  let title = "Colaborador";
+  let selectedTools = [];
+  let loader = true;
+  let message = "";
   let tools = [];
   let array = [];
-  let selectedTools = [];
   let added = 0;
-  let message = "";
-  let loader = true;
   let result = getTools();
-  console.log("linha 14 tools ", result);
 
   async function callTools() {
+    loader = true;
+    console.log("call tools");
     const res = await fetch(selectedToolsApi);
     selectedTools = await res.json();
-    console.log("fer", selectedTools);
-    if (res) {
-      if (selectedTools.message === "Success") {
-        window.location.href = "/#/codigobarras/apontamento";
+    console.log("selectedTools", selectedTools);
+    loader = false;
+    if (selectedTools.data === messageQuery(10)) {
+      return (window.location.hred = messageQuery(18));
+    }
+
+    if (selectedTools.status === messageQuery(1)) {
+      if (selectedTools.message === messageQuery(1)) {
+        window.location.href = messageQuery(17);
         // location.reload();
-      } else if (selectedTools.message !== "") {
+      } else if (selectedTools.message !== messageQuery(0)) {
         message = selectedTools.message;
       }
     }
   }
 
   async function getTools() {
+    loader = true;
     const res = await fetch(toolsApi);
     tools = await res.json();
-    console.log("tools ", tools);
+    console.log("tools", tools);
     loader = false;
-    if (tools) {
+    if (tools.status === messageQuery(1)) {
       if (
-        tools.message === "Ini Prod." ||
-        tools.message === "Pointed Iniciated" ||
-        tools.message === "Fin Setup" ||
-        tools.message === "" ||
-        tools.message === "/images/sem_imagem.gif" ||
-        tools.message === "A value was returned"
+        tools.message === messageQuery(32) ||
+        tools.message === messageQuery(27) ||
+        tools.message === messageQuery(28) ||
+        tools.message === messageQuery(29) ||
+        tools.message === messageQuery(0) ||
+        tools.message === messageQuery(30) ||
+        tools.message === messageQuery(31)
       ) {
-        loader = true;
-        callTools();
+        message = messageQuery(32);
       }
 
-      if (tools.message === "Not found") {
+      if (tools === messageQuery(5)) {
         loader = true;
-        window.location.href = "/#/codigobarras/apontamento";
-        // location.reload();
-        callTools();
+        window.location.href = messageQuery(17);
+        message = messageQuery(32);
       }
 
-      if (tools.message === "Erro ao tentar acessar as fotos de ferramentas") {
-        window.location.href = "/#/codigobarras/apontamento";
+      if (tools === messageQuery(33)) {
+        window.location.href = messageQuery(17);
         location.reload();
         loader = false;
       }
     } else {
-      message = "Algo deu errado";
+      message = messageQuery(4);
     }
   }
 
@@ -70,15 +81,20 @@
       document.getElementById(imgId).style.border = "2px solid green";
       document.getElementById(imgId).style.transition = "1px";
     }
-    if (tools.length === array.length) {
+    if (tools.data.length === array.length) {
       loader = true;
       callTools();
     }
   }
 
   function close() {
-    window.location.href = "/#/codigobarras";
+    window.location.href = messageQuery(20);
     location.reload();
+  }
+
+  function redirectToBarcode() {
+    loader = true;
+    window.location.href = messageQuery(20);
   }
 </script>
 
@@ -90,14 +106,28 @@
   </div>
 {/if}
 
-<nav class="breadcrumb" aria-label="breadcrumb">
+<!-- <Breadcrumb src={back} {titleBreadcrumb} /> -->
+
+<Breadcrumb
+  imgResource={back}
+  titleBreadcrumb={title}
+  on:message={redirectToBarcode}
+/>
+<!-- <nav class="breadcrumb" aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item">
       <a href="/#/codigobarras"><img src={back} alt="" />Colaborador</a>
     </li>
   </ol>
-</nav>
+</nav> -->
 
+{#if loader === true}
+  <div class="image-loader">
+    <div class="loader">
+      <img src={imageLoader} alt="" />
+    </div>
+  </div>
+{/if}
 
 {#await result}
   <div class="image-loader">
@@ -107,36 +137,38 @@
   </div>
 {:then}
   <div class="content">
-    <h3>Selecione as ferramentas</h3>
-    <div class="itens">
-      {#each tools as column, i}
-        <img
-          tabindex="${i}"
-          on:keypress={checkIfclicked(column, `img-${i}`)}
-          on:click={checkIfclicked(column, `img-${i}`)}
-          id="img-{i}"
-          class="img"
-          src={column}
-          alt=""
-        />
-      {/each}
-    </div>
+    {#if tools.data && tools.data !== messageQuery(0) && message === messageQuery(0)}
+      <h3>Selecione as ferramentas</h3>
+      <div class="itens">
+        {#each tools.data as column, i}
+          <img
+            tabindex="${i}"
+            on:keypress={checkIfclicked(column, `img-${i}`)}
+            on:click={checkIfclicked(column, `img-${i}`)}
+            id="img-{i}"
+            class="img"
+            src={column}
+            alt=""
+          />
+        {/each}
+      </div>
+    {/if}
   </div>
 {/await}
-<!-- 
-{#if message === "Erro ao tentar acessar as fotos de ferramentas"}
-  <ModalConfirmation on:message={close} />
-{/if} -->
 
-{#if message !== ""}
+{#if message && message === messageQuery(32)}
+  <Message
+    titleInMessage={message}
+    btnInMessage={continuer}
+    on:message={callTools}
+  />
+{/if}
+
+{#if message && message !== messageQuery(0) && message !== messageQuery(32)}
   <ModalConfirmation on:message={close} />
 {/if}
 
 <style>
-  a {
-    color: #252525;
-    font-size: 20px;
-  }
   .breadcrumb {
     margin-top: 10px;
     margin-left: 10px;
@@ -184,7 +216,10 @@
 
   .itens {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
     z-index: 2;
   }
   .img {
@@ -210,14 +245,14 @@
   }
 
   .content {
-    margin-left: 5%;
-    margin-right: 5%;
+    margin: 1%;
+    padding: 0%;
+    display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
-    display: flex;
-    flex-direction: column;
-    z-index: 3;
+    z-index: 2;
   }
   /* 
   div {

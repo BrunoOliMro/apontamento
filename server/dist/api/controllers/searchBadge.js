@@ -1,37 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.searchBagde = void 0;
-const select_1 = require("../services/select");
+const variableInicializer_1 = require("../services/variableInicializer");
 const cookieGenerator_1 = require("../utils/cookieGenerator");
-const sanitize_1 = require("../utils/sanitize");
+const message_1 = require("../services/message");
+const query_1 = require("../services/query");
 const searchBagde = async (req, res) => {
-    const message = {
-        generalError: 'Ocorreu um erro, tente novamente...',
-        badgeSuccess: 'Success',
-        badgeNotFound: 'Crachá não encontrado'
-    };
-    const badge = String((0, sanitize_1.sanitize)(req.body['values'])) || null;
-    const lookForBadge = `SELECT TOP 1 [FUNCIONARIO], [CRACHA] FROM FUNCIONARIOS WHERE 1 = 1 AND [CRACHA] = '${badge}' ORDER BY FUNCIONARIO`;
-    if (!badge) {
-        return res.json({ message: message.badgeNotFound });
+    const variables = await (0, variableInicializer_1.inicializer)(req);
+    if (!variables.body.badge) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(17), data: (0, message_1.message)(33) });
     }
-    try {
-        const resultBadgeSearch = await (0, select_1.select)(lookForBadge);
-        if (resultBadgeSearch.length <= 0) {
-            return res.json({ message: message.badgeNotFound });
-        }
-        else if (resultBadgeSearch.length > 0) {
-            await (0, cookieGenerator_1.cookieGenerator)(res, resultBadgeSearch[0]);
-            return res.json({ message: message.badgeSuccess });
-        }
-        else {
-            return res.json({ message: message.badgeNotFound });
-        }
+    const resultQuery = await (0, query_1.selectQuery)(16, variables.body);
+    console.log('Badge', resultQuery);
+    if (resultQuery.message !== 'Not found') {
+        await (0, cookieGenerator_1.cookieGenerator)(res, resultQuery.data[0]);
     }
-    catch (error) {
-        console.log('Error on SearchBadge ', error);
-        return res.json({ message: message.generalError });
-    }
+    return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: resultQuery.data });
 };
 exports.searchBagde = searchBagde;
 //# sourceMappingURL=searchBadge.js.map

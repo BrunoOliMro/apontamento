@@ -1,21 +1,23 @@
 <script>
   // @ts-nocheck
   import TableHistorico from "../components/Tables/TableHistorico.svelte";
-  let message = "";
+  import messageQuery from "../utils/checkMessage";
   let back = "/images/icons8-go-back-24.png";
   let imageLoader = "/images/axonLoader.gif";
   let subtitle = "Histórico de Apontamento";
   let urlString = `/api/v1/historic`;
   let messageOnBtn = "Detalhado";
+  let result = getHistorico();
   let historic = [];
   let generalData = false;
   let detailData = true;
-  let result = getHistorico();
+  let message = "";
 
   async function getHistorico() {
     const res = await fetch(urlString);
     historic = await res.json();
-    if (historic.message !== "") {
+    console.log('Historic', historic);
+    if (historic.message !== messageQuery(0)) {
       message = historic.message;
     }
   }
@@ -93,7 +95,7 @@
       </div>
     {/if}
 
-    {#if message !== "" && message !== "Exibir histórico"}
+    {#if message !== messageQuery(0) && message !== "Exibir histórico"}
       <div class="message">
         <h3>{message}</h3>
       </div>

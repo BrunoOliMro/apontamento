@@ -1,15 +1,8 @@
+import { selectQuery } from "../services/query";
+import { message } from "../services/message";
 import { RequestHandler } from "express"
-import { sqlConfig } from "../../global.config"
-import mssql from 'mssql';
 
 export const returnMotives: RequestHandler = async (_req, res) => {
-    const stringCallMotives = `SELECT DESCRICAO FROM MOTIVOS_DEVOLUCAO`
-    const connection = await mssql.connect(sqlConfig)
-    let data: any = await connection.query(`${stringCallMotives}`).then(record => record.recordsets)
-    let response = data[0].map((element: any) => element.DESCRICAO)
-    if(response){
-        return res.json(response)
-    } else {
-        return res.json(response = '')
-    }
+    const result = await selectQuery('Select', 13)
+    return res.json({ status: message(1), message: message(1), data: result })
 }

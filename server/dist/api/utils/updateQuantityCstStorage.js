@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.cstStorageUp = void 0;
 const global_config_1 = require("../../global.config");
+const message_1 = require("../services/message");
 const select_1 = require("../services/select");
 const update_1 = require("../services/update");
 const mssql_1 = __importDefault(require("mssql"));
@@ -14,16 +15,13 @@ const cstStorageUp = async (quantityToProduce, address, partCode, odfNumber, goo
         address: ''
     };
     try {
-        const updateStringCadEnderecos = `UPDATE CST_ESTOQUE_ENDERECOS SET QUANTIDADE = QUANTIDADE + ${quantityToProduce} WHERE 1 = 1 AND ENDERECO = '${address}'`;
-        const x = await (0, update_1.update)(updateStringCadEnderecos);
+        const x = await (0, update_1.update)(4, { quantityToProduce, address });
         if (x !== 'Success') {
             const y = `INSERT INTO CST_ESTOQUE_ENDERECOS(ENDERECO, CODIGO ,QUANTIDADE) VALUES ('${address}','${partCode}' , ${quantityToProduce})`;
-            await (0, update_1.update)(y);
         }
-        const lookForHisReal = `SELECT TOP 1  * FROM HISREAL  WHERE 1 = 1 AND CODIGO = '${partCode}' ORDER BY DATA DESC`;
-        const resultQuery = await (0, select_1.select)(lookForHisReal);
+        const resultQuery = await (0, select_1.select)(29, { partCode });
         if (!resultQuery) {
-            return response.message = 'Algo deu errado';
+            return (0, message_1.message)(0);
         }
         const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
         try {
@@ -47,7 +45,7 @@ const cstStorageUp = async (quantityToProduce, address, partCode, odfNumber, goo
     }
     catch (error) {
         console.log('Error on updating ', error);
-        return response.message = 'Algo deu errado';
+        return (0, message_1.message)(0);
     }
 };
 exports.cstStorageUp = cstStorageUp;

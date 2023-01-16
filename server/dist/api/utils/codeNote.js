@@ -1,74 +1,46 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.codeNote = void 0;
+const message_1 = require("../services/message");
 const select_1 = require("../services/select");
-const codeNote = async (odfNumber, operationNumber, codeMachine, employee) => {
-    const lookForHisaponta = `SELECT TOP 1 CODAPONTA, USUARIO, DATAHORA FROM HISAPONTA WHERE 1 = 1 AND ODF = ${odfNumber} AND NUMOPE = ${operationNumber} AND ITEM = '${codeMachine}' ORDER BY DATAHORA DESC`;
-    let codigoDeApontamento;
+const codeNote = async (obj) => {
     var response = {
         employee: '',
-        message: '',
+        code: '',
         time: 0,
     };
-    codigoDeApontamento = await (0, select_1.select)(lookForHisaponta);
+    const codigoDeApontamento = await (0, select_1.select)(23, obj);
     if (codigoDeApontamento.length > 0) {
         response.time = codigoDeApontamento[0].DATAHORA;
-        if (employee !== codigoDeApontamento[0].USUARIO && codigoDeApontamento[0].CODAPONTA === 4) {
+        if (obj.employee !== codigoDeApontamento[0].USUARIO && codigoDeApontamento[0].CODAPONTA === 4) {
             response.employee = codigoDeApontamento[0].USUARIO;
         }
-        if (codigoDeApontamento[0].hasOwnProperty('CODAPONTA')) {
-            if (codigoDeApontamento[0].CODAPONTA === 1) {
-                response.message = 'Pointed Iniciated';
-                return response;
-            }
-            else if (codigoDeApontamento[0].CODAPONTA === 2) {
-                response.message = 'Fin Setup';
-                return response;
-            }
-            else if (codigoDeApontamento[0].CODAPONTA === 3) {
-                response.message = 'Ini Prod';
-                return response;
-            }
-            else if (codigoDeApontamento[0].CODAPONTA === 4) {
-                response.message = 'Pointed';
-                return response;
-            }
-            else if (codigoDeApontamento[0].CODAPONTA === 5) {
-                response.message = 'Rip iniciated';
-                return response;
-            }
-            else if (codigoDeApontamento[0].CODAPONTA === 6) {
-                response.message = 'Begin new process';
-                return response;
-            }
-            else if (codigoDeApontamento[0].CODAPONTA === 7) {
-                response.message = 'Machine has stopped';
-                return response;
-            }
-            else if (codigoDeApontamento[0].CODAPONTA === 8) {
-                response.message = 'A value was returned';
-                return response;
-            }
-            else {
-                response.message = 'Something went wrong';
-                return response;
-            }
-        }
-        else if (codigoDeApontamento.length <= 0) {
-            response.message = 'First time acessing ODF';
-            return response;
-        }
-        else {
-            response.message = 'Something went wrong';
-            return response;
-        }
+        const codes = {
+            0: 'Error',
+            1: 'Pointed Iniciated',
+            2: 'Fin Setup',
+            3: 'Ini Prod',
+            4: 'Pointed',
+            5: 'Rip iniciated',
+            6: 'Begin new process',
+            7: 'Machine has stopped',
+            8: 'A value was returned',
+        };
+        obj.number.forEach((element) => {
+            Object.entries(codes).map((acc) => {
+                if (Number(element) === Number(acc[0])) {
+                    response.code = acc[1];
+                }
+            });
+        });
+        return response;
     }
     else if (codigoDeApontamento.length <= 0) {
-        response.message = 'Begin new process';
+        response.message = (0, message_1.message)(24);
         return response;
     }
     else {
-        response.message = 'Something went wrong';
+        response.message = (0, message_1.message)(0);
         return response;
     }
 };

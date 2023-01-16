@@ -1,16 +1,20 @@
 import mssql from 'mssql';
 import { sqlConfig } from '../../global.config'
+import { message } from './message';
 
-export const insertIntoNewOrder = async (string : string) => {
-    let response = {
-        message: '',
-    }
+export const insertIntoNewOrder = async (string: string) => {
+    const connection = await mssql.connect(sqlConfig);
     try {
-        const connection = await mssql.connect(sqlConfig);
         const data = await connection.query(`${string}`).then((result) => result.recordset)
-        return data;
+        if (data) {
+            return data;
+        } else {
+            return message(17)
+        }
     } catch (error) {
         console.log('linha 13 /Error on insert into new Order/', error);
-        return response.message = 'Algo deu errado'
+        return message(33)
+    } finally {
+        await connection.close()
     }
 }

@@ -1,121 +1,105 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.searchOdf = void 0;
-const select_1 = require("../services/select");
 const selectIfHasP_1 = require("../services/selectIfHasP");
-const decryptedOdf_1 = require("../utils/decryptedOdf");
-const unravelBarcode_1 = require("../utils/unravelBarcode");
-const odfIndex_1 = require("../utils/odfIndex");
-const update_1 = require("../services/update");
+const variableInicializer_1 = require("../services/variableInicializer");
+const verifyCodeNote_1 = require("../services/verifyCodeNote");
 const cookieGenerator_1 = require("../utils/cookieGenerator");
-const sanitize_1 = require("../utils/sanitize");
+const unravelBarcode_1 = require("../utils/unravelBarcode");
 const clearCookie_1 = require("../utils/clearCookie");
-const codeNote_1 = require("../utils/codeNote");
-const encodedOdf_1 = require("../utils/encodedOdf");
+const message_1 = require("../services/message");
+const odfIndex_1 = require("../utils/odfIndex");
+const select_1 = require("../services/select");
+const update_1 = require("../services/update");
 const searchOdf = async (req, res) => {
-    const message = {
-        barcodePointed: 'ODF apontada',
-        barcodeNotFound: 'ODF não encontrada',
-        barcodeInvalid: 'Código de barras inválido',
-        barcodeEmpty: 'Código de barras está vazio',
-        invalidEmployee: 'Funcionário inválido',
-        generalError: 'Algo deu errado',
-        noLimit: 'Não há limite na ODF',
-        invalidQuantity: 'Quantidade para reserva inválida',
-        noItensReserved: 'Não há item para reservar',
-        valuesReserved: 'Valores Reservados',
-        generateCookie: 'Gerar cookies',
-    };
-    const barcode = (0, unravelBarcode_1.unravelBarcode)(req.body.values) || null;
-    const lookForOdfData = `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, CODIGO_PECA, QTD_BOAS, QTD_REFUGO, QTD_FALTANTE, QTD_RETRABALHADA FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${barcode.data.odfNumber} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
-    if (!barcode.data.odfNumber || !barcode.data.opNumber || !barcode.data.machineCod) {
-        return res.json({ message: message.barcodeNotFound });
+    const variables = await (0, variableInicializer_1.inicializer)(req);
+    const barcode = (0, unravelBarcode_1.unravelBarcode)(variables.body.barcode) || null;
+    barcode.data.FUNCIONARIO = variables.cookies.FUNCIONARIO;
+    if (!variables) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
     }
-    if (req.cookies['FUNCIONARIO']) {
-        var employee = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO']))) || null;
-        if (!employee) {
-            return res.json({ message: message.invalidEmployee });
-        }
+    if (!barcode.data.NUMERO_ODF || !barcode.data.NUMERO_OPERACAO || !barcode.data.CODIGO_MAQUINA) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(6), data: (0, message_1.message)(6) });
     }
-    else {
-        return res.json({ message: message.generalError });
-    }
-    if (!barcode) {
-        return res.json({ message: message.barcodeInvalid });
+    else if (!barcode?.message) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(6), data: (0, message_1.message)(6) });
     }
     else if (!barcode.message) {
-        return res.json({ message: message.barcodeEmpty });
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(8), data: (0, message_1.message)(8) });
     }
-    const odf = await (0, select_1.select)(lookForOdfData);
-    const i = await (0, odfIndex_1.odfIndex)(odf, barcode.data.opNumber);
+    const odf = await (0, select_1.select)(0, barcode.data);
+    if (!odf) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(6), data: (0, message_1.message)(8) });
+    }
+    const i = await (0, odfIndex_1.odfIndex)(odf, barcode.data.NUMERO_OPERACAO);
     if (odf.length <= 0) {
-        return res.json({ message: message.generalError });
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(0) });
     }
     else if (!odf[i]) {
-        return res.json({ message: message.barcodeNotFound });
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(6), data: (0, message_1.message)(6) });
     }
+    console.log('odf[i].QTDE_APONTADA', odf[i].QTDE_APONTADA);
     if (i <= 0) {
-        if (odf[i].QTDE_APONTADA !== 0) {
-            return res.json({ message: message.barcodePointed });
+        if (odf[i].QTDE_APONTADA && odf[i].QTDE_APONTADA !== 0) {
+            await (0, cookieGenerator_1.cookieGenerator)(res, odf[i]);
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(5), data: (0, message_1.message)(33) });
         }
         else {
             !odf[i].QTDE_APONTADA ? odf[i].QTDE_LIB = odf[i].QTDE_ODF : odf[i].QTDE_LIB = odf[i].QTDE_ODF - odf[i].QTDE_APONTADA;
         }
     }
     else if (i > 0) {
-        if (odf[i].QTDE_APONTADA !== 0) {
-            return res.json({ message: message.barcodePointed });
+        if (odf[i].QTDE_APONTADA && odf[i].QTDE_APONTADA !== 0) {
+            await (0, cookieGenerator_1.cookieGenerator)(res, odf[i]);
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(5), data: (0, message_1.message)(33) });
         }
         else {
             !odf[i].QTD_BOAS ? odf[i].QTD_BOAS = 0 : odf[i].QTD_BOAS;
         }
-        let valuesPointed = odf[i - 1].QTDE_APONTADA - odf[i].QTDE_APONTADA;
-        let diferenceBetweenGoodAndBad = odf[i - 1].QTD_BOAS - odf[i].QTD_BOAS;
-        if (diferenceBetweenGoodAndBad <= 0 || valuesPointed <= 0) {
-            return res.json({ message: message.noLimit });
+        if (odf[i - 1].QTD_BOAS - odf[i].QTD_BOAS <= 0 || odf[i - 1].QTDE_APONTADA - odf[i].QTDE_APONTADA <= 0) {
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(11), data: (0, message_1.message)(11) });
         }
         if (odf[i].QTDE_APONTADA >= odf[i - 1].QTD_BOAS) {
-            return res.json({ message: message.noLimit });
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(11), data: (0, message_1.message)(11) });
         }
         if (odf[i].QTDE_APONTADA > odf[i].QTD_BOAS) {
             odf[i].QTDE_LIB = odf[i - 1].QTD_BOAS - odf[i].QTDE_APONTADA;
         }
         else {
-            odf[i].QTDE_LIB = diferenceBetweenGoodAndBad;
+            odf[i].QTDE_LIB = odf[i - 1].QTD_BOAS - odf[i].QTD_BOAS;
         }
     }
     else {
-        return res.json({ message: message.noLimit });
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(11), data: (0, message_1.message)(11) });
     }
     if (!odf[i].QTDE_LIB || odf[i].QTDE_LIB <= 0) {
-        return res.json({ message: message.noLimit });
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(11), data: (0, message_1.message)(11) });
     }
-    let resultComponents = await (0, selectIfHasP_1.selectToKnowIfHasP)(barcode, odf[i].QTDE_LIB, employee, odf[i].NUMERO_OPERACAO, odf[i].CODIGO_PECA);
-    if (resultComponents.message === message.valuesReserved || resultComponents.message === message.generateCookie) {
+    barcode.data.QTDE_LIB = odf[i].QTDE_LIB;
+    barcode.data.CODIGO_PECA = odf[i].CODIGO_PECA;
+    let resultComponents = await (0, selectIfHasP_1.selectToKnowIfHasP)(barcode);
+    console.log('resultComponents', resultComponents);
+    if (resultComponents.message === (0, message_1.message)(13) || resultComponents.message === (0, message_1.message)(15)) {
         if (resultComponents.quantidade < odf[i].QTDE_LIB) {
-            odf[i].QTDE_LIB = resultComponents.quantidade;
+            barcode.data.QTDE_LIB = resultComponents.quantidade;
+            odf[i].QTDE_LIB = barcode.data.QTDE_LIB;
         }
         odf[i].condic = resultComponents.condic;
         odf[i].execut = resultComponents.execut;
-        odf[i].codigoFilho = resultComponents.codigoFilho;
-        const queryUpdateQtdLib = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${odf[i].QTDE_LIB} WHERE 1 = 1 AND NUMERO_ODF = ${barcode.data.odfNumber} AND NUMERO_OPERACAO = ${barcode.data.opNumber}`;
-        await (0, update_1.update)(queryUpdateQtdLib);
+        odf[i].childCode = resultComponents.childCode;
+        barcode.data.QTDE_LIB = resultComponents.quantidade;
+        await (0, update_1.update)(1, barcode.data);
     }
-    else if (resultComponents === message.invalidQuantity) {
+    else if (resultComponents === (0, message_1.message)(12)) {
         await (0, clearCookie_1.cookieCleaner)(res);
-        return res.json({ message: message.noLimit });
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(11), data: (0, message_1.message)(11) });
     }
-    else if (resultComponents === message.noItensReserved) {
-        const queryUpdateQtdeLib = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${odf[i].QTDE_LIB} WHERE 1 = 1 AND NUMERO_ODF = ${barcode.data.odfNumber} AND NUMERO_OPERACAO = ${barcode.data.opNumber}`;
-        await (0, update_1.update)(queryUpdateQtdeLib);
+    else if (resultComponents === (0, message_1.message)(13)) {
+        await (0, update_1.update)(1, barcode.data);
     }
     await (0, cookieGenerator_1.cookieGenerator)(res, odf[i]);
-    res.cookie('encodedOdfNumber', (0, encodedOdf_1.encoded)(String(odf[i].NUMERO_ODF)), { httpOnly: true });
-    res.cookie('encodedOperationNuber', (0, encodedOdf_1.encoded)(String(odf[i].NUMERO_OPERACAO)), { httpOnly: true });
-    res.cookie('encodedMachineCode', (0, encodedOdf_1.encoded)(String(odf[i].CODIGO_MAQUINA)), { httpOnly: true });
-    const pointed = await (0, codeNote_1.codeNote)(Number(barcode.data.odfNumber), Number(barcode.data.opNumber), barcode.data.machineCod, employee);
-    console.log('SearchOdf -- linha 123 --', pointed);
-    return res.json({ message: pointed.message });
+    const resultVerifyCodeNote = await (0, verifyCodeNote_1.verifyCodeNote)(barcode.data, [1, 3, 6]);
+    return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: resultVerifyCodeNote.code });
 };
 exports.searchOdf = searchOdf;
 //# sourceMappingURL=searchOdf.js.map

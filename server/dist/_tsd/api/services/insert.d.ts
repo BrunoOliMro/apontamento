@@ -1,2 +1,2 @@
-export declare const insertInto: (funcionario: string | null, numeroOdf: number | null, codigoPeca: string | null, revisao: string | null, numeroOperacao: string | null, codigoMaq: string | null, qtdLibMax: number | null, boas: number | null, ruins: number | null, codAponta: number[], descricaoCodigoAponta: string[] | null, motivo: string | null, faltante: number | null, retrabalhada: number | null, tempoDecorrido: number | null) => Promise<"" | "Success">;
+export declare const insertInto: (obj: any) => Promise<any>;
 //# sourceMappingURL=insert.d.ts.map

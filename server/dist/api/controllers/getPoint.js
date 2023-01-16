@@ -1,36 +1,22 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getPoint = void 0;
-const select_1 = require("../services/select");
-const selectAddress_1 = require("../services/selectAddress");
-const codeNote_1 = require("../utils/codeNote");
-const decryptedOdf_1 = require("../utils/decryptedOdf");
-const sanitize_1 = require("../utils/sanitize");
 const updateQuantityCstStorage_1 = require("../utils/updateQuantityCstStorage");
+const variableInicializer_1 = require("../services/variableInicializer");
+const verifyCodeNote_1 = require("../services/verifyCodeNote");
+const selectAddress_1 = require("../services/selectAddress");
+const message_1 = require("../services/message");
+const select_1 = require("../services/select");
 const getPoint = async (req, res) => {
-    try {
-        var odfNumber = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'])))) || null;
-        var operationNumber = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO'])))) || null;
-        var machineCode = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA'])))) || null;
-        var partCode = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])))) || null;
-        var employee = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])))) || null;
-        var quantityToProduce = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['QTDE_LIB'])))) || null;
-        var revision = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO'])))) || null;
-        var stringPcpProg = `SELECT TOP 1 CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS, APONTAMENTO_LIBERADO FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${odfNumber} AND NUMERO_OPERACAO = ${operationNumber} AND CODIGO_MAQUINA = '${machineCode}' AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
-        var resultSelectPcpProg = await (0, select_1.select)(stringPcpProg);
-        var response = {
-            message: '',
-            address: '',
-        };
-        var hostname = req.get('host');
-        var { networkInterfaces } = require('os');
-        var nets = networkInterfaces();
-        var results = {};
+    const variables = await (0, variableInicializer_1.inicializer)(req);
+    if (!variables) {
+        return res.json((0, message_1.message)(33));
     }
-    catch (error) {
-        console.log('Error on GetPoint', error);
-        return res.json({ message: '' });
-    }
+    const resultSelectPcpProg = await (0, select_1.select)(8, variables.cookies);
+    const hostname = req.get('host');
+    const { networkInterfaces } = require('os');
+    const nets = networkInterfaces();
+    const results = {};
     for (const name of Object.keys(nets)) {
         for (const net of nets[name]) {
             if (net.family === 'IPv4' && !net.internal) {
@@ -42,103 +28,103 @@ const getPoint = async (req, res) => {
         }
     }
     const ip = String(Object.entries(results)[0][1]);
-    const pointedCode = await (0, codeNote_1.codeNote)(odfNumber, Number(operationNumber), machineCode, employee);
-    if (pointedCode.message !== 'Pointed') {
-        return res.json({ message: pointedCode });
+    console.log('Ob', Object.entries(results));
+    console.log('ip', ip);
+    const pointedCode = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [4, 5]);
+    console.log('pointedCode get Point.ts: ', pointedCode);
+    if (!pointedCode.accepted) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33), address: (0, message_1.message)(33) });
     }
-    try {
-        var comprimento = 1;
-        var largura = 1;
-        var peso = 1;
-        if ('00' + operationNumber.replaceAll(' ', '') === '00999') {
-            const partCodeCase = `= '${partCode}'`;
-            const isNullCase = `IS NULL`;
-            var add;
-            await callAddress();
-            async function callAddress() {
-                console.log('comprimento linha 70', comprimento);
-                console.log('largura linha 70', largura);
-                console.log('peso linha 70', peso);
-                if (machineCode !== 'EX002') {
-                    add = await (0, selectAddress_1.selectAddress)(partCodeCase, 5, comprimento, largura, peso);
-                    if (add === 'Not found') {
-                        add = await (0, selectAddress_1.selectAddress)(isNullCase, 5, comprimento, largura, peso);
-                    }
-                }
-                else if (machineCode === 'EX002') {
-                    add = await (0, selectAddress_1.selectAddress)(partCodeCase, 7, comprimento, largura, peso);
-                    if (add === 'NotFound') {
-                        add = await (0, selectAddress_1.selectAddress)(isNullCase, 7, comprimento, largura, peso);
-                    }
-                }
-                const stringSelectOperacao = `SELECT TOP 1 NUMPEC, QUANT, REVISAO, COMPRIMENTO, LARGURA, AREA, EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${partCode}' AND REVISAO = ${revision} AND NUMITE IS NOT NULL`;
-                const stringSelectCad = `SELECT * FROM  CST_CAD_ENDERECOS CE WHERE 1 = 1  AND ENDERECO = '${add[0].ENDERECO}'`;
-                const composicaoDeEstoque = await (0, select_1.select)(stringSelectCad);
-                const pecas = await (0, select_1.select)(stringSelectOperacao);
-                if (composicaoDeEstoque.length <= 0 || pecas.length <= 0) {
-                    await (0, updateQuantityCstStorage_1.cstStorageUp)(quantityToProduce, add[0].ENDERECO, partCode, odfNumber, resultSelectPcpProg[0].QTD_BOAS, employee, hostname, ip);
-                    return res.json({ message: 'Success', address: '5A01A01-11' });
-                }
-                const alturaDoEndereco = composicaoDeEstoque[0].ALTURA;
-                const maxTotalWeightParts = pecas[0].EXECUT * resultSelectPcpProg[0].QTD_BOAS;
-                const maxWeightStorage = composicaoDeEstoque[0].PESO;
-                const comprimentoPeca = pecas[0].COMPRIMENTO;
-                const comprimentoDoEndereco = composicaoDeEstoque[0].COMPRIMENTO;
-                const larguraPeca = pecas[0].LARGURA;
-                const larguraDoEndereco = composicaoDeEstoque[0].LARGURA;
-                const areaDaPeca = comprimentoPeca * larguraPeca;
-                const maxArea = composicaoDeEstoque[0].COMPRIMENTO * composicaoDeEstoque[0].LARGURA;
-                const dimesaoCubicaEstoque = comprimentoDoEndereco * larguraDoEndereco * alturaDoEndereco;
-                const dimensaoCubicaPeca = comprimentoPeca * larguraPeca * quantityToProduce;
-                const dimensaoLinearEstoque = comprimentoDoEndereco + composicaoDeEstoque[0].LARGURA;
-                const dimensaoLinearPeca = comprimentoPeca + larguraPeca;
-                const array = [];
-                console.log('TA AQUI PESADAO', maxTotalWeightParts);
-                if (maxTotalWeightParts > maxWeightStorage) {
-                    console.log('TA AQUI PESADAO');
-                    peso = maxWeightStorage;
-                    array.push(false);
-                }
-                if (comprimentoPeca > comprimentoDoEndereco) {
-                    console.log('comprimento errado');
-                    comprimento = comprimentoDoEndereco;
-                    array.push(false);
-                }
-                if (larguraPeca > larguraDoEndereco) {
-                    console.log('larguraPeca errado');
-                    largura = larguraDoEndereco;
-                    array.push(false);
-                }
-                if (dimensaoLinearPeca > dimensaoLinearEstoque) {
-                    console.log('dimensaoLinearPeca errado');
-                    array.push(false);
-                }
-                if (dimensaoCubicaPeca > dimesaoCubicaEstoque) {
-                    console.log('dimensaoCubicaPeca errado');
-                    array.push(false);
-                }
-                if (maxArea < areaDaPeca) {
-                    console.log('maxArea errado');
-                    array.push(false);
-                }
-                let casesFiltered = array.filter((element) => element === false);
-                if (casesFiltered[0] === false) {
-                    callAddress();
+    var comprimento = 1;
+    var largura = 1;
+    var peso = 1;
+    console.log('variables.cookies.NUMERO_OPERACAO', '00', +variables.cookies.NUMERO_OPERACAO.replaceAll(' ', ''));
+    if ('00' + String(variables.cookies.NUMERO_OPERACAO.replaceAll(' ', '')) === '00999') {
+        console.log('14e9nhgierhbinbitrnbitnibitnbitnbt');
+        const partCodeCase = `= '${variables.cookies.CODIGO_PECA}'`;
+        console.log('partCodeCase', partCodeCase);
+        const isNullCase = `IS NULL`;
+        var add;
+        await callAddress();
+        console.log('variables.cookies.CODIGO_MAQUINA', variables.cookies.CODIGO_MAQUINA);
+        async function callAddress() {
+            if (variables.cookies.CODIGO_MAQUINA !== 'EX002') {
+                add = await (0, selectAddress_1.selectAddress)(partCodeCase, 5, comprimento, largura, peso);
+                console.log('add dif', add);
+                if (add === (0, message_1.message)(17)) {
+                    add = await (0, selectAddress_1.selectAddress)(isNullCase, 5, comprimento, largura, peso);
+                    console.log('add di');
                 }
             }
-            await (0, updateQuantityCstStorage_1.cstStorageUp)(quantityToProduce, response.address, partCode, odfNumber, resultSelectPcpProg[0].QTD_BOAS, employee, hostname, ip);
-            if (add[0].ENDERECO) {
-                return res.json({ message: 'Success', address: add[0].ENDERECO });
+            else if (variables.cookies.CODIGO_MAQUINA === 'EX002') {
+                add = await (0, selectAddress_1.selectAddress)(partCodeCase, 7, comprimento, largura, peso);
+                console.log('add', add);
+                if (add === (0, message_1.message)(17)) {
+                    add = await (0, selectAddress_1.selectAddress)(isNullCase, 7, comprimento, largura, peso);
+                    console.log('add', add);
+                }
+            }
+            const pecas = await (0, select_1.select)(3);
+            const composicaoDeEstoque = await (0, select_1.select)(4);
+            if (composicaoDeEstoque.length <= 0 || pecas.length <= 0) {
+                await (0, updateQuantityCstStorage_1.cstStorageUp)(variables.cookies.QTDE_LIB, add[0].ENDERECO, variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, resultSelectPcpProg[0].QTD_BOAS, variables.cookies.FUNCIONARIO, hostname, ip);
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(46), address: (0, message_1.message)(46) });
+            }
+            const alturaDoEndereco = composicaoDeEstoque[0].ALTURA;
+            const maxTotalWeightParts = pecas[0].EXECUT * resultSelectPcpProg[0].QTD_BOAS;
+            const maxWeightStorage = composicaoDeEstoque[0].PESO;
+            const comprimentoPeca = pecas[0].COMPRIMENTO;
+            const comprimentoDoEndereco = composicaoDeEstoque[0].COMPRIMENTO;
+            const larguraPeca = pecas[0].LARGURA;
+            const larguraDoEndereco = composicaoDeEstoque[0].LARGURA;
+            const areaDaPeca = comprimentoPeca * larguraPeca;
+            const maxArea = composicaoDeEstoque[0].COMPRIMENTO * composicaoDeEstoque[0].LARGURA;
+            const dimesaoCubicaEstoque = comprimentoDoEndereco * larguraDoEndereco * alturaDoEndereco;
+            const dimensaoCubicaPeca = comprimentoPeca * larguraPeca * variables.cookies.QTDE_LIB;
+            const dimensaoLinearEstoque = comprimentoDoEndereco + composicaoDeEstoque[0].LARGURA;
+            const dimensaoLinearPeca = comprimentoPeca + larguraPeca;
+            const array = [];
+            if (maxTotalWeightParts > maxWeightStorage) {
+                console.log('TA AQUI PESADAO');
+                peso = maxWeightStorage;
+                array.push(false);
+            }
+            if (comprimentoPeca > comprimentoDoEndereco) {
+                console.log('comprimento errado');
+                comprimento = comprimentoDoEndereco;
+                array.push(false);
+            }
+            if (larguraPeca > larguraDoEndereco) {
+                console.log('larguraPeca errado');
+                largura = larguraDoEndereco;
+                array.push(false);
+            }
+            if (dimensaoLinearPeca > dimensaoLinearEstoque) {
+                console.log('dimensaoLinearPeca errado');
+                array.push(false);
+            }
+            if (dimensaoCubicaPeca > dimesaoCubicaEstoque) {
+                console.log('dimensaoCubicaPeca errado');
+                array.push(false);
+            }
+            if (maxArea < areaDaPeca) {
+                console.log('maxArea errado');
+                array.push(false);
+            }
+            let casesFiltered = array.filter((element) => element === false);
+            if (casesFiltered[0] === false) {
+                callAddress();
             }
         }
-        else {
-            response.message = 'No address';
-            return res.json(response);
+        console.log('add[0].ENDERECO', add[0].ENDERECO);
+        console.log('resultSelectPcpProg', resultSelectPcpProg);
+        await (0, updateQuantityCstStorage_1.cstStorageUp)(variables.cookies.QTDE_LIB, add[0].ENDERECO, variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, resultSelectPcpProg[0].QTD_BOAS, variables.cookies.FUNCIONARIO, hostname, ip);
+        if (add[0].ENDERECO) {
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(46), address: add[0].ENDERECO });
         }
     }
-    catch (error) {
-        console.log('linha 160', error);
-        return res.json({ message: '' });
+    else {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(32), data: (0, message_1.message)(33), address: (0, message_1.message)(46) });
     }
 };
 exports.getPoint = getPoint;

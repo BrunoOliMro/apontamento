@@ -4,252 +4,209 @@
     import Message from "../components/components/message.svelte";
     import { verifyStringLenght } from "../utils/verifyLength";
     import TableRipRow from "../components/Tables/TableRipRow.svelte";
-    import checkRipTable from "../utils/checkRip";
-    let imageLoader = "/images/axonLoader.gif";
-    let Subtitle = "RIP - RELATÓRIO DE INSPEÇÃO DE PROCESSOS";
-    let pointRipRouter = `/api/v1/pointRip`;
-    let supervisorRouter = `/api/v1/supervisor`;
-    let redirect = `/#/codigobarras`;
-    let ripRouter = `/api/v1/rip`;
-    let seq = "Seq";
+    import messageQuery from "../utils/checkMessage";
+    import ModalConfirmation from "../components/modal/modalConfirmation.svelte";
+    import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
+    import Supervisor from "../components/components/supervisor.svelte";
+    import blockForbiddenChars from "../utils/presanitize";
+    const Subtitle = "RIP - RELATÓRIO DE INSPEÇÃO DE PROCESSOS";
+    const imageLoader = "/images/axonLoader.gif";
+    const back = "/images/icons8-go-back-24.png";
+    const supervisorRouter = `/api/v1/supervisor`;
+    const pointRipRouter = `/api/v1/pointRip`;
+    const titleBread = `Dados da ODF`;
+    const ripRouter = `/api/v1/rip`;
+    const final = `Finalizar`;
+    const seq = "Seq";
+    let isRequesting = false;
     let finish = false;
     let loader = false;
-    let isRequesting = false;
-    let ripTable = [];
+    let odf = false;
     let extraColumns = [];
+    let ripTable = [];
+    const setup = {};
     let values = {};
-    let supervisor = "";
-    let message = "";
-    let lsd;
+    let supervisor = messageQuery(0);
+    let message = messageQuery(0);
     let lie;
+    let lsd;
     let result = callRip();
+    let messageObj = false;
 
     async function callRip() {
         const res = await fetch(ripRouter);
         ripTable = await res.json();
-        console.log("ripTable", ripTable);
+        
         if (ripTable) {
             loader = false;
-            if (ripTable.message === "Não há rip a mostrar") {
-                const res = await post(pointRipRouter, values);
-                if (res) {
-                    if (res.message === "Pointed") {
-                        window.location.href = "/#/rip";
-                        location.reload();
-                    }
-                    if (
-                        res.message === "Success" ||
-                        res.message === "Não há rip a mostrar"
-                    ) {
-                        loader = false;
-                        finish = true;
-                    } else if (res.message === "rip vazia") {
-                        isRequesting = false;
-                        message = "Rip vazia";
-                    } else if (res.message !== "") {
-                        isRequesting = false;
-                        message = res.message;
-                    }
-                } else {
-                    message = "Algo deu errado";
-                }
-            }
-            if (ripTable.message !== "") {
-                message = ripTable.message;
+
+            if(ripTable.message === messageQuery(1) && ripTable.data.length > 0 && ripTable.code === messageQuery(11)){
+                lie = ripTable.data.map((acc) => acc.LIE);
+                return lsd = ripTable.data.map((acc) => acc.LSE);
+            } 
+
+            if(ripTable.message === messageQuery(1) && ripTable.code === messageQuery(12)){
+                message = messageQuery(38)
+                return messageObj = true
             }
 
-            lie = ripTable.map((acc) => acc.LIE);
-            lsd = ripTable.map((acc) => acc.LSE);
+            if(ripTable.data.length <= 0){
+                return callPost()
+            }
         } else {
-            return (message = "Algo deu errado");
+            messageObj = true
+            return (message = messageQuery(4));
         }
     }
 
-    // function checkSuper(event) {
-    //     if (supervisor.length >= 6 && event.key === "Enter") {
-    //         if (supervisor === "000000") {
-    //             message = "Crachá inválido";
-    //         }
-    //         postSupervisor();
-    //     }
-    // }
     async function checkSuper(event) {
-        const resultVerifySupervisor = await verifyStringLenght(
-            event,
-            supervisor,
-            6,
-            8
-        );
-        if (resultVerifySupervisor === "Success") {
-            const res = await post(pointRipRouter, values);
-            console.log(
-                "oirntibnritbriotbn itrnbitbtrbrtbbt tbrt btbtb linha 57",
-                res
-            );
+        const resultVerifySupervisor = await verifyStringLenght( event, supervisor, 6, 14);
+        if (resultVerifySupervisor === messageQuery(1)) {
+            const res = await post(supervisorRouter, supervisor);
+            if (res) {
+                return callPost();
+            } else {
+                return (message = messageQuery(25));
+            }
+        } else {
+            return (message = messageQuery(26));
         }
     }
 
-    // const postSupervisor = async () => {
-    //     isRequesting = true;
-    //     loader = true;
-    //     const res = post(supervisorRouter, supervisor, loader);
-    // };
+    const callPost = async () => {
+        isRequesting = true;
+        loader = true;
+        const res = await post(pointRipRouter, setup);
+        isRequesting = false;
+        if (res) {
+            console.log("call Post Rip", res);
+            loader = false
 
-    // const postSupervisor = async () => {
-    //     const res = await fetch(supervisorRouter, {
-    //         method: "POST",
-    //         headers: { "Content-Type": "application/json" },
-    //         body: JSON.stringify({
-    //             supervisor: !supervisor ? "" : supervisor,
-    //         }),
-    //     }).then((res) => res.json());
-    //     loader = false;
+            if(res.code === messageQuery(12) ){
+                message = messageQuery(38)
+                return messageObj = true
+            }
 
-    //     if (res) {
-    //         if (res.message) {
-    //             if (res.message === "Supervisor found") {
-    //                 post();
-    //             } else if (res.message !== "") {
-    //                 isRequesting = false;
-    //                 message = res.message;
-    //             }
-    //         }
-    //     }
-
-    // if (res.message === "Supervisor found") {
-    //     showSuper = false;
-    //     post();
-    // } else if (res.message === "Supervisor not found") {
-    //     showError = true;
-    // }
-    // };
-
-    // const post = async () => {
-    //     isRequesting = true;
-    //     loader = true;
-    //     const res = await fetch(pointRipRouter, {
-    //         method: "POST",
-    //         headers: { "Content-Type": "application/json" },
-    //         body: JSON.stringify({
-    //             setup: !setup ? "" : setup,
-    //         }),
-    //     }).then((res) => res.json());
-    //     if (res) {
-    //         if (res.message === "Pointed") {
-    //             window.location.href = "/#/rip";
-    //             location.reload();
-    //         }
-    //         if (
-    //             res.message === "Success" ||
-    //             res.message === "Não há rip a mostrar"
-    //         ) {
-    //             loader = false;
-    //             finish = true;
-    //         } else if (res.message === "rip vazia") {
-    //             isRequesting = false;
-    //             message = "Rip vazia";
-    //         } else if (res.message !== "") {
-    //             isRequesting = false;
-    //             message = res.message;
-    //         }
-    //     } else {
-    //         message = "Algo deu errado";
-    //     }
-    // };
-
-    function callFinish() {
-        finish = false;
-        window.location.href = redirect;
-    }
+            if(res.code ===  messageQuery(12) ){
+                message = messageQuery(38)
+                messageObj = false
+            }  
+            else if( res.status === messageQuery(1) && res.message === messageQuery(1) &&  res.data === messageQuery(1) && res.code === messageQuery(33) ){
+                message = messageQuery(38)
+                messageObj = true
+            }
+        } else {
+            message = messageQuery(4);
+        }
+    };
 
     function createCol() {
         const quantityReleased =
             Object.values(values).length -
-            ripTable.length * extraColumns.length;
+            ripTable.data.length * extraColumns.length;
 
-        if (quantityReleased - ripTable.length === 0) {
+        if (quantityReleased - ripTable.data.length === 0) {
             if (extraColumns.length < 13) {
                 extraColumns = [...extraColumns, extraColumns.length + 2];
             }
         } else {
-            showSetup = true;
+            message = "Preencha tudo";
         }
     }
 
-    let z;
-    // Erro ao tentar enviar mais de uma coluna
     const check = async () => {
-        const x = await checkRipTable(
-            values,
-            ripTable,
-            extraColumns,
-            message,
-            loader,
-            res,
-            (z = post(pointRipRouter, values, loader)),
-            pointRipRouter
-        );
-        message = x;
+        isRequesting = true;
+        if (
+            Object.values(values).length <= 0 ||
+            Object.values(values).length < ripTable.data.length
+        ) {
+            return (message = messageQuery(23));
+        }
+
+        let copyOfExtraCol = extraColumns;
+        let extraArrayCollumns = [];
+        if (extraColumns.length === 1) {
+            extraArrayCollumns.push(copyOfExtraCol + 1);
+        }
+
+        const quantityReleased =
+            ripTable.data.length * extraArrayCollumns.length -
+            Object.values(values).length;
+
+        if (quantityReleased <= 0) {
+            const rows = Object.keys(values).reduce((acc, iterator) => {
+                // if (ripTable[i].LSE === null && ripTable[i].LIE === null) {
+                //     ripTable[i].LSE = "OK";
+                //     ripTable[i].LIE = "OK";
+                // }
+                const [col, lin] = iterator.split("-");
+                if (acc[lin] === undefined) acc[lin] = {};
+                acc[lin][col] = values[iterator];
+                return acc;
+            }, {});
+
+            const callSupervisor = Object.values(rows).some((row) => {
+                return Object.keys(row)
+                    .filter((key) => key !== "LIE" && key !== "LSE")
+                    .some((key) => {
+                        let value = row[key];
+                        return value < row["LIE"] || value > row["LSE"];
+                    });
+            });
+
+            if (callSupervisor === true) {
+                loader = false;
+                message = messageQuery(24);
+            } else if (callSupervisor === false) {
+                loader = true;
+                callPost();
+            } else if (quantityReleased !== 0) {
+                loader = false;
+                return (message = messageQuery(4));
+            }
+        }
     };
 
-    // const check = () => {
-    //     if (
-    //         Object.values(setup).length <= 0 ||
-    //         Object.values(setup).length < ripTable.length
-    //     ) {
-    //         return (message = "Preencha todos os campos");
-    //     }
-
-    //     let copyOfExtraCol = extraColumns;
-    //     let extraArrayCollumns = [];
-    //     if (extraColumns.length === 1) {
-    //         extraArrayCollumns.push(copyOfExtraCol + 1);
-    //     }
-
-    //     const quantityReleased =
-    //         ripTable.length * extraArrayCollumns.length -
-    //         Object.values(setup).length;
-
-    //     if (quantityReleased === 0) {
-    //         const rows = Object.keys(setup).reduce((acc, iterator) => {
-    //             // if (ripTable[i].LSE === null && ripTable[i].LIE === null) {
-    //             //     ripTable[i].LSE = "OK";
-    //             //     ripTable[i].LIE = "OK";
-    //             // }
-    //             const [col, lin] = iterator.split("-");
-    //             if (acc[lin] === undefined) acc[lin] = {};
-    //             acc[lin][col] = setup[iterator];
-    //             return acc;
-    //         }, {});
-
-    //         const callSupervisor = Object.values(rows).some((row) => {
-    //             return Object.keys(row)
-    //                 .filter((key) => key !== "LIE" && key !== "LSE")
-    //                 .some((key) => {
-    //                     let value = row[key];
-    //                     return value < row["LIE"] || value > row["LSE"];
-    //                 });
-    //         });
-
-    //         if (callSupervisor === true) {
-    //             loader = false;
-    //             message = "Supervisor needed";
-    //         } else if (callSupervisor === false) {
-    //             loader = true;
-    //             res = post(pointRipRouter, setup, loader);
-    //         }
-    //     } else if (quantityReleased !== 0) {
-    //         loader = false;
-    //         return (message = "Algo deu errado");
-    //     }
-    // };
+    async function callFinish() {
+        finish = false;
+        message = messageQuery(0)
+        window.location.href = messageQuery(20);
+    }
 
     function close() {
-        message = "";
+        message = messageQuery(0);
+        isRequesting = false;
+    }
+
+    function redirect() {
+        message = messageQuery(0);
+        isRequesting = false;
+        window.location.href = messageQuery(17);
     }
 </script>
 
 <main>
+    {#if odf === true}
+        <Breadcrumb
+            imgResource={back}
+            titleBreadcrumb={titleBread}
+            on:message={redirect}
+        />
+
+        <!-- <div class="breadcrumb-area">
+            <div class="cod-area">
+                <a
+                    tabindex="8"
+                    href={messageQuery(17)}
+                    on:keypress={redirect}
+                    on:click={redirect}
+                >
+                    <img src={back} alt="" />Dados da ODF</a
+                >
+            </div>
+        </div> -->
+    {/if}
+
     <div class="div-btn">
         <!-- svelte-ignore a11y-positive-tabindex -->
         <button
@@ -271,6 +228,7 @@
     </div>
 
     <div class="title">{Subtitle}</div>
+
     {#if loader === true}
         <div class="image-loader">
             <div class="loader">
@@ -286,7 +244,7 @@
             </div>
         </div>
     {:then}
-        {#if ripTable.length !== 0}
+        {#if messageObj == false }
             <div class="table table-responsive">
                 <table class="table table-hover table-striped caption-top">
                     <thead>
@@ -305,7 +263,7 @@
                         </tr>
                     </thead>
                     <tbody id="body-table">
-                        {#each ripTable as row, i}
+                        {#each ripTable.data as row, i}
                             <TableRipRow
                                 bind:setup={values}
                                 bind:value={row.values}
@@ -317,31 +275,24 @@
                     </tbody>
                 </table>
             </div>
-        {:else}
-            <h2>Não há histórico para exibir</h2>
         {/if}
     {/await}
 
-    {#if finish === true}
-        <Message on:click={callFinish} on:keypress={callFinish} />
+    {#if messageObj === true}
+        <div class="message-area">
+            <Message
+                titleInMessage={message}
+                btnInMessage={final}
+                on:message={callFinish}
+            />
+        </div>
     {/if}
 
-    <!-- {#if finish === true}
-        <div class="background">
-            <div class="modal-content">
-                <h3>ODF FINALIZADA</h3>
-                <button on:click={callFinish} on:keypress={callFinish}
-                    >Fechar</button
-                >
-            </div>
-        </div>
-    {/if} -->
     {#if message === "Supervisor needed"}
-        <div class="background">
+        <Supervisor bind:supervisor={supervisor} on:message={checkSuper} />
+        <!-- <div class="background">
             <div class="modal-content">
                 <h3>Supervisor</h3>
-                <!-- svelte-ignore a11y-autofocus -->
-                <!-- svelte-ignore a11y-positive-tabindex -->
                 <input
                     bind:value={supervisor}
                     on:keypress={checkSuper}
@@ -351,57 +302,38 @@
                     type="text"
                 />
 
-                <!-- svelte-ignore a11y-positive-tabindex -->
                 <button tabindex="20" on:click={close} on:keypress={close}
                     >Fechar</button
                 >
             </div>
-        </div>
+        </div> -->
+    {/if }
+
+    <!-- {#if message === messageObj }
+        
+    {/if} -->
+
+    {#if message && message === messageQuery(4) && messageObj === true}
+        <Message title={message} btn={final} on:message={redirect} />
     {/if}
 
-    {#if message !== "" && message !== "Supervisor needed"}
-        <div class="background">
-            <div class="modal-content">
-                <h3>{message}</h3>
-                <button on:click={close} on:keypress={close}>Confirma</button>
-            </div>
-        </div>
+    {#if message && message !== messageQuery(0) && message !== messageQuery(38) && message !== messageQuery(4)}
+        <ModalConfirmation title={message} {message} on:message={close} />
     {/if}
-    <!-- {#if showErrorEmpty === true}
-        <div class="background">
-            <div class="modal-content">
-                <h3>Rip vazia, envio inválido</h3>
-                <button on:click={close} on:keypress={close}>Confirma</button>
-            </div>
-        </div>
-    {/if} -->
-    <!-- {#if showError === true}
-        <div class="background">
-            <div class="modal-content">
-                <h3>Algo deu errado</h3>
-                <button on:click={close} on:keypress={close}>Confirma</button>
-            </div>
-        </div>
-    {/if} -->
-    <!-- {#if showSetup === true}
-        <div class="background">
-            <div class="modal-content">
-                <h3>Preencha todos os campos</h3>
-                <button on:click={close} on:keypress={close}>Fechar</button>
-            </div>
-        </div>
-    {/if} -->
-    <!-- {#if message === "ocorreu um erro ao enviar os dados da rip"}
-        <div class="background">
-            <div class="modal-content">
-                <h3>Erro ao enviar a rip</h3>
-                <button on:click={close} on:keypress={close}>Fechar</button>
-            </div>
-        </div>
-    {/if} -->
 </main>
 
 <style>
+    /* .cod-area {
+        display: flex;
+        margin: 1%;
+        padding: 0%;
+    }
+    a {
+        margin: 0%;
+        padding: 0%;
+        color: #252525;
+        font-size: 20px;
+    } */
     .loader {
         margin: 0%;
         position: relative;
@@ -430,11 +362,8 @@
     main {
         letter-spacing: 1px;
     }
-    h2 {
-        font-size: 30px;
-    }
 
-    .background {
+    /* .background {
         position: fixed;
         top: 0;
         left: 0;
@@ -461,7 +390,7 @@
     input {
         width: 300px;
         border-radius: 8px;
-    }
+    } */
 
     .div-btn {
         display: flex;

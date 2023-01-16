@@ -20,6 +20,7 @@ import { supervisor } from './controllers/supervisor';
 import { stopSupervisor } from './controllers/stopSupervisor';
 import { clear } from './controllers/clear';
 import { returnMotives } from './controllers/returnMotives';
+import { pointedCode } from './controllers/pointedCode';
 
 // /api/v1/
 const apiRouter = Router();
@@ -30,24 +31,22 @@ apiRouter.route('/returnMotives')
 apiRouter.route('/clearAll')
     .get(clear)
 
+apiRouter.route('/verifyCodeNote')
+    .get(pointedCode)
+
 apiRouter.route('/badge')
     .post(searchBagde)
 
 apiRouter.route('/odf')
-    //.post(codeNote)
     .post(searchOdf)
 
 apiRouter.route('/tools')
-    //.get(codeNote)
     .get(tools)
-//.get(selectedTools)
 
 apiRouter.route('/ferselecionadas')
-    //.get(codeNote)
     .get(selectedTools)
 
 apiRouter.route('/odfData')
-    //.get(codeNote)
     .get(odfData)
 
 apiRouter.route('/imagem')
@@ -60,16 +59,13 @@ apiRouter.route('/historic')
     .get(historic)
 
 apiRouter.route('/point')
-    //.post(codeNote)
     .post(point)
     .get(getPoint)
 
 apiRouter.route('/rip')
-    //.get(codeNote)
     .get(rip)
 
 apiRouter.route('/pointRip')
-    //.get(codeNote)
     .post(ripPost)
 
 apiRouter.route('/returnedValue')
@@ -79,7 +75,6 @@ apiRouter.route('/supervisor')
     .post(supervisor)
 
 apiRouter.route('/supervisorParada')
-    //.get(getBefore)
     .post(stopSupervisor)
 
 apiRouter.route('/stopMotives')

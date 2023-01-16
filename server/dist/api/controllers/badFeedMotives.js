@@ -1,41 +1,22 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.badFeedMotives = void 0;
-const select_1 = require("../services/select");
-const codeNote_1 = require("../utils/codeNote");
-const decryptedOdf_1 = require("../utils/decryptedOdf");
-const sanitize_1 = require("../utils/sanitize");
+const variableInicializer_1 = require("../services/variableInicializer");
+const verifyCodeNote_1 = require("../services/verifyCodeNote");
+const query_1 = require("../services/query");
+const message_1 = require("../services/message");
 const badFeedMotives = async (req, res) => {
-    try {
-        var odfNumber = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'])))) || null;
-        var operationNumber = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO']))).replaceAll(' ', '')) || null;
-        var machineCode = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA'])))) || null;
-        var employee = String((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['FUNCIONARIO'])))) || null;
-        var motivesString = `SELECT R_E_C_N_O_, DESCRICAO FROM CST_MOTIVO_REFUGO (NOLOCK) ORDER BY DESCRICAO ASC`;
+    const variables = await (0, variableInicializer_1.inicializer)(req);
+    if (!variables) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
     }
-    catch (error) {
-        console.log('Error on BadFeedMotives --cookies--', error);
-        return res.json({ message: '' });
+    const pointedCode = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [3, 4, 5, 7]);
+    if (pointedCode.accepted) {
+        const resultMotives = await (0, query_1.selectQuery)(1);
+        return res.status(200).json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: resultMotives });
     }
-    try {
-        const pointedCode = await (0, codeNote_1.codeNote)(odfNumber, operationNumber, machineCode, employee);
-        if (pointedCode.message === 'Ini Prod' || pointedCode.message === 'Pointed' || pointedCode.message === 'Rip iniciated' || pointedCode.message === 'Machine has stopped') {
-            const resultMotives = await (0, select_1.select)(motivesString);
-            const resultMap = resultMotives.map((element) => element.DESCRICAO);
-            if (resultMotives.length > 0) {
-                return res.status(200).json(resultMap);
-            }
-            else {
-                return res.json({ message: '' });
-            }
-        }
-        else {
-            return res.json({ message: pointedCode.message });
-        }
-    }
-    catch (error) {
-        console.log('BadFeedMotives :', error);
-        return res.json({ message: '' });
+    else {
+        return res.status(400).json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
     }
 };
 exports.badFeedMotives = badFeedMotives;

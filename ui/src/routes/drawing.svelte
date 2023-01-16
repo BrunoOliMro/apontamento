@@ -1,20 +1,24 @@
 <script>
     // @ts-nocheck
+    import messageQuery from "../utils/checkMessage";
+    import Message from "../components/components/message.svelte";
     const imageLoader = "/images/axonLoader.gif";
     const back = "images/icons8-go-back-24.png";
     const urlString = `/api/v1/drawing`;
     const Subtitle = "DESENHO";
-    let tecnicalDrawing;
+    const result = getDrawing();
     const zoomNumber = 400;
     let rotation = 0;
     let imagemMsg = "";
-    let result = getDrawing()
+    let drawing = [];
 
     async function getDrawing() {
-        const imagemBack = await fetch(urlString).then(res => res.json());
-        if (imagemBack) {
-            if (imagemBack.message !== "") {
-                imagemMsg = imagemBack.message;
+        const res = await fetch(urlString);
+        drawing = await res.json();
+        console.log("Drawing", drawing);
+        if (drawing) {
+            if (drawing.message !== messageQuery(0)) {
+                imagemMsg = drawing.message;
             }
         }
     }
@@ -114,8 +118,13 @@
                 </div>
             </div>
         {:then}
-            <div class="frame">
-                {#each tecnicalDrawing as img}
+        
+            {#if !drawing.data}
+                <Message title={imagemMsg} />
+            {/if}
+
+            {#each drawing.data as img}
+                <div class="frame">
                     <div id={img}>
                         <img
                             media="print"
@@ -125,14 +134,14 @@
                             alt=""
                         />
                     </div>
-                {/each}
-            </div>
+                </div>
+            {/each}
         {/await}
     </div>
-
+    <!-- 
     {#if imagemMsg !== ""}
         <h3>{imagemMsg}</h3>
-    {/if}
+    {/if} -->
 </main>
 
 <style>
