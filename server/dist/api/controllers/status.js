@@ -21,7 +21,7 @@ const status = async (req, res) => {
         else {
             timeLeft = 6000;
         }
-        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: timeLeft });
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: timeLeft, supervisor: variables.cookies.supervisor });
     }
     else {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33) });

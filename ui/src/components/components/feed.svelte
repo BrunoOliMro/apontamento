@@ -94,7 +94,7 @@
     }
 
     const callPost = async () => {
-        console.log("chamando call post...")
+        console.log("chamando call post")
         isRequesting = true
         loader = true;
         close();
@@ -146,6 +146,7 @@
         console.log('getSpace', getSpace);
         if (getSpace) {
             loader = false;
+
             if(getSpace.message === messageQuery(35)){
                 return window.location.href = messageQuery(18)
             } else if (getSpace.message === messageQuery(1)) {
@@ -764,7 +765,6 @@
         width: 140px;
     }
     a:hover {
-        background: white;
         color: #fff;
         border-radius: 5px;
         box-shadow: 0 0 2.5px white, 0 0 12.5px white, 0 0 25px white,

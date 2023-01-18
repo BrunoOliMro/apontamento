@@ -2,7 +2,7 @@ import { decrypted } from "../utils/decryptedOdf"
 import { sanitize } from "../utils/sanitize"
 
 export const inicializer = async (req: any) => {
-    console.log('sanitize,', sanitize(req.body.values));
+    // console.log('sanitize,', sanitize(req.body.values));
     var response: any = {
         body: {},
         cookies: {},

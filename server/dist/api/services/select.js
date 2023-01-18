@@ -7,7 +7,7 @@ exports.select = void 0;
 const global_config_1 = require("../../global.config");
 const message_1 = require("./message");
 const mssql_1 = __importDefault(require("mssql"));
-const select = async (chonsenOption, values) => {
+const select = async (chosenOption, values) => {
     if (!values) {
         return values = (0, message_1.message)(33);
     }
@@ -38,9 +38,10 @@ const select = async (chonsenOption, values) => {
         28: `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, CODIGO_PECA, QTD_BOAS, QTD_REFUGO, QTD_FALTANTE, QTD_RETRABALHADA FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${values.NUMERO_ODF} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`,
         29: `SELECT TOP 1  * FROM HISREAL  WHERE 1 = 1 AND CODIGO = '${values.CODIGO_PECA}' ORDER BY DATA DESC`
     };
+    console.log("codes[chosenOption]:", codes[String(chosenOption)]);
     var query = '';
     for (const [key, value] of Object.entries(codes)) {
-        if (Number(key) === chonsenOption) {
+        if (Number(key) === chosenOption) {
             query = value;
         }
     }

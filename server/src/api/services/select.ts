@@ -2,12 +2,12 @@ import { sqlConfig } from '../../global.config'
 import { message } from './message';
 import mssql from 'mssql';
 
-export const select: any = async (chonsenOption: number, values?: any) => {
+export const select: any = async (chosenOption: number, values?: any) => {
   if (!values) {
     return values = message(33)
   }
-  // console.log('values in select', values);
-  const codes = {
+
+  const codes: { [k: string]: string } = {
     0: `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, CODIGO_PECA, QTD_BOAS, QTD_REFUGO, QTD_FALTANTE, QTD_RETRABALHADA FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${values.NUMERO_ODF} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`,
     1: `SELECT R_E_C_N_O_, DESCRICAO FROM CST_MOTIVO_REFUGO (NOLOCK) ORDER BY DESCRICAO ASC`,
     2: `SELECT DISTINCT [NUMPEC], [IMAGEM] FROM QA_LAYOUT (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${values.CODIGO_PECA}' AND REVISAO = ${values.REVISAO} AND IMAGEM IS NOT NULL`,
@@ -38,17 +38,19 @@ export const select: any = async (chonsenOption: number, values?: any) => {
     29: `SELECT TOP 1  * FROM HISREAL  WHERE 1 = 1 AND CODIGO = '${values.CODIGO_PECA}' ORDER BY DATA DESC`
   }
 
+  console.log("codes[chosenOption]:", codes[String(chosenOption)]);
+
   var query: string | any = '';
 
-  for(const [key, value] of Object.entries(codes)){
-    if(Number(key) === chonsenOption){
+  for (const [key, value] of Object.entries(codes)) {
+    if (Number(key) === chosenOption) {
       query = value
     }
   }
 
   // console.log("query", query)
   try {
-    if(query){
+    if (query) {
       const connection = await mssql.connect(sqlConfig);
       const data = await connection.query(`${query}`).then((result) => result.recordset)
       await connection.close()
@@ -63,5 +65,5 @@ export const select: any = async (chonsenOption: number, values?: any) => {
   } catch (error) {
     console.log('Error on Select', error)
     return message(33)
-  } 
+  }
 }

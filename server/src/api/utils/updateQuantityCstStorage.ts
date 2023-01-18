@@ -1,7 +1,5 @@
-// import { insertInto } from "../services/insert";
 import { sqlConfig } from "../../global.config"
 import { message } from "../services/message";
-// import { select } from "../services/select"
 import { update } from "../services/update"
 import mssql from 'mssql';
 import { selectQuery } from "../services/query";

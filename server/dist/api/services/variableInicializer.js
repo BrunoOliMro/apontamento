@@ -4,7 +4,6 @@ exports.inicializer = void 0;
 const decryptedOdf_1 = require("../utils/decryptedOdf");
 const sanitize_1 = require("../utils/sanitize");
 const inicializer = async (req) => {
-    console.log('sanitize,', (0, sanitize_1.sanitize)(req.body.values));
     var response = {
         body: {},
         cookies: {},

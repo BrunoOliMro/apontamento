@@ -46,6 +46,7 @@ export const message = (choosenOption: number) => {
         45: 'Sem ferramentas',
         46: '5A01A01-11',
         47: 'Sem cookies', 
+        48: 'Preencha todos os campos', 
     }
 
     for (const key in response) {

@@ -35,7 +35,7 @@ export const status: RequestHandler = async (req, res) => {
         } else {
             timeLeft = 6000;
         }
-        return res.json({ status: message(1), message: message(1), data: timeLeft })
+        return res.json({ status: message(1), message: message(1), data: timeLeft, supervisor: variables.cookies.supervisor })
     } else {
         return res.json({ status: message(1), message: message(33), data: message(33) })
     }

@@ -8,16 +8,22 @@ import { odfIndex } from '../utils/odfIndex';
 import { select } from '../services/select';
 import { update } from '../services/update';
 import { RequestHandler } from 'express';
+import { selectQuery } from '../services/query';
 
 export const returnedValue: RequestHandler = async (req, res) => {
     const variables = await inicializer(req)
-    console.log('variables', variables.body);
+    // console.log('variables', variables.body);
 
-    if (!variables) {
-        return res.json({ status: message(1), message: message(0), data: message(33) })
+    if (!variables.body.supervisor || !variables.body.quantity || !variables.body.barcodeReturn ) {
+        return res.json({ status: message(1), message: message(48), data: message(33) })
     }
 
     const body = unravelBarcode(variables.body.barcodeReturn) || null;
+
+    if(!body.data){
+        return res.json({ status: message(1), message: message(0), data: message(33) })
+    }
+
     var goodFeed = 0;
     var badFeed = 0;
     var codeNoteResult;
@@ -30,6 +36,7 @@ export const returnedValue: RequestHandler = async (req, res) => {
     variables.cookies.motives = null
     variables.cookies.tempoDecorrido = null
 
+    console.log('variables.body.valueStorage', variables.body.valueStorage);
 
     if (!variables.body.valueStorage) {
         return res.json({ status: message(1), message: message(26), data: message(33) })
@@ -43,29 +50,32 @@ export const returnedValue: RequestHandler = async (req, res) => {
 
 
     if (body.data) {
-        codeNoteResult = await verifyCodeNote(variables.cookies, [6, 8])
+        codeNoteResult = await verifyCodeNote(body.data, [6, 8])
         if (!codeNoteResult.accepted) {
             return res.json({ status: message(1), message: message(25), data: message(33), code: codeNoteResult.code })
         }
     }
 
     const valorTotal = Number(goodFeed + badFeed)
-    const groupOdf = await select(28, variables.cookies)
-    const i: number = await odfIndex(groupOdf, String(body!.data.NUMERO_OPERACAO))
-    const lastIndex: number = groupOdf.findIndex((element: any) => element.QTDE_APONTADA === 0) - 1;
+    const groupOdf = await selectQuery(28, body.data)
+    const i: number = await odfIndex(groupOdf.data, String(body!.data.NUMERO_OPERACAO))
+    const lastIndex: number = groupOdf.data.findIndex((element: any) => element.QTDE_APONTADA === 0) - 1;
+    console.log('i', i);
+    console.log('lastIndex', lastIndex);
 
     if (lastIndex !== i) {
+        console.log('uee');
         return res.json({ status: message(1), message: message(43), data: message(33) })
     }
 
-    let odf = groupOdf[i]
+    let odf = groupOdf.data[i]
 
-    if (i === groupOdf.length - 1) {
-        odf = groupOdf[groupOdf.length - 1]
+    if (i === groupOdf.data.length - 1) {
+        odf = groupOdf.data[groupOdf.data.length - 1]
     }
 
-    if (lastIndex === groupOdf.length - 1) {
-        odf = groupOdf[groupOdf.length - 1]
+    if (lastIndex === groupOdf.data.length - 1) {
+        odf = groupOdf.data[groupOdf.data.length - 1]
     }
 
     console.log(' goood', goodFeed);
@@ -74,6 +84,20 @@ export const returnedValue: RequestHandler = async (req, res) => {
     console.log('odf.QTDE_APONTADA', odf.QTDE_APONTADA);
     console.log('odf.QTDE_LIB', odf.QTDE_LIB);
     console.log('odf.odf.QTD_REFUGO', odf.QTD_REFUGO);
+
+    if(goodFeed){
+        if(!odf.QTD_BOAS || odf.QTD_BOAS <= 0 ){
+            return res.json({ status: message(1), message: message(27), data: message(33) })
+        }
+    } else if(badFeed){
+        if(!odf.QTD_REFUGO || odf.QTD_REFUGO <= 0){
+            return res.json({ status: message(1), message: message(27), data: message(33) })
+        }
+    }
+
+    // if(!odf.QTD_BOAS || odf.QTD_BOAS <= 0 || !odf.QTD_REFUGO || odf.QTD_REFUGO <= 0){
+    //     return res.json({ status: message(1), message: message(27), data: message(33) })
+    // }
 
     if (odf.QTDE_APONTADA < valorTotal || odf.QTDE_APONTADA <= 0 || !odf.QTD_REFUGO && badFeed > 0) {
         return res.json({ status: message(1), message: message(27), data: message(33) })
@@ -103,7 +127,18 @@ export const returnedValue: RequestHandler = async (req, res) => {
         // variables.faltante
         // variables.QTDE_LIB
         // variables.badFeed
-        
+        variables.cookies.QTDE_APONTADA = valorApontado
+        variables.cookies.NUMERO_ODF = body.data.NUMERO_ODF
+        variables.cookies.NUMERO_OPERACAO = body.data.NUMERO_OPERACAO
+        variables.cookies.CODIGO_MAQUINA = body.data.CODIGO_MAQUINA
+        variables.cookies.REVISAO = groupOdf.data[i].REVISAO
+        variables.cookies.QTDE_LIB = groupOdf.data[i].QTDE_LIB
+        variables.cookies.valorTotal = valorTotal
+        variables.cookies.valorApontado = groupOdf.data[i].QTDE_APONTADA - valorApontado
+
+        console.log('groupOdf.data[i].QTDE_APONTADA', groupOdf.data[i].QTDE_APONTADA);
+        console.log('variables.cookies.valorApontado', variables.cookies.valorApontado);
+
         if (selectSuper.length > 0) {
             const insertHisCodReturned = await insertInto(variables.cookies)
             if (insertHisCodReturned) {

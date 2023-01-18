@@ -7,11 +7,10 @@ exports.selectQuery = void 0;
 const global_config_1 = require("../../global.config");
 const message_1 = require("./message");
 const mssql_1 = __importDefault(require("mssql"));
-const selectQuery = async (chonsenOption, values) => {
+const selectQuery = async (chosenOption, values) => {
     if (!values) {
         values = "";
     }
-    console.log('values', values);
     const codes = {
         0: `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, CODIGO_PECA, QTD_BOAS, QTD_REFUGO, QTD_FALTANTE, QTD_RETRABALHADA FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${values.NUMERO_ODF} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`,
         1: `SELECT R_E_C_N_O_, DESCRICAO FROM CST_MOTIVO_REFUGO (NOLOCK) ORDER BY DESCRICAO ASC`,
@@ -40,17 +39,10 @@ const selectQuery = async (chonsenOption, values) => {
         29: `SELECT TOP 1  SALDO FROM HISREAL WHERE 1 = 1 AND CODIGO = '${values.partCode}' ORDER BY DATA DESC`,
         30: `SELECT TOP 1 QTDE_LIB FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND NUMERO_ODF = '${values.NUMERO_ODF}' AND CODIGO_MAQUINA = '${values.CODIGO_MAQUINA}' AND NUMERO_OPERACAO = '${values.NUMERO_OPERACAO}'  `
     };
-    var query = '';
-    for (const [key, value] of Object.entries(codes)) {
-        if (Number(key) === chonsenOption) {
-            query = value;
-        }
-    }
     try {
-        console.log('query', query);
-        if (query) {
+        if (codes[String(chosenOption)]) {
             const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-            const data = await connection.query(`${query}`).then((result) => result.recordset);
+            const data = await connection.query(`${codes[String(chosenOption)]}`).then((result) => result.recordset);
             await connection.close();
             if (data.length > 0) {
                 return { message: (0, message_1.message)(1), data: data };

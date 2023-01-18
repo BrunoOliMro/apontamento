@@ -83,7 +83,7 @@
             return (message = messageQuery(36));
           }
 
-          if (res.data === messageQuery(12) || res.data === messageQuery(13)) {
+          if (res.data === messageQuery(12) || res.data === messageQuery(13) || res.data === messageQuery(15)) {
             return (window.location.href = messageQuery(19));
           }
 
@@ -152,6 +152,7 @@
   }
 
   function returnValue() {
+    
     if (returnModal === false) {
       barcodeModal = false
       returnModal = true;
@@ -164,6 +165,9 @@
   async function returningValues(event) {
 
     if(event.detail.text === 'CloseButton!'){
+      breadcrumbModal = true
+      badgeModal = false
+      barcodeModal = true
       return returnValue();
     }
 
@@ -192,6 +196,7 @@
     breadcrumbModal = false;
     barcodeModal = false;
     badgeModal = true;
+    returnModal = false;
     barcode = "";
     message = "";
     (badge = ""), (barcode = "");
@@ -200,6 +205,7 @@
 
   function close() {
     (badge = ""), (barcode = "");
+    // barcodeModal = false
     loader = true;
     returnModal = false;
     message = "";

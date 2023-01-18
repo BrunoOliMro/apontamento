@@ -1,4 +1,4 @@
-export declare const selectQuery: (chonsenOption: number, values?: any) => Promise<{
+export declare const selectQuery: (chosenOption: number, values?: any) => Promise<{
     message: any;
     data: any;
 }>;

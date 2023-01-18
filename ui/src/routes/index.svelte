@@ -91,13 +91,16 @@
       objData.image = await Id.json();
       const IA = await fetch(callOdfData);
       objData.codData = await IA.json();
-      
+
       if(objData.codData.code === messageQuery(10) ){
          rip = true
       }
 
-      if (objData.prodTime.data <= 0) {
-         message = messageQuery(24);
+      console.log('objData.codData.supervisor', objData.codData.supervisor);
+      if(!objData.prodTime .supervisor){
+         if (objData.prodTime.data <= 0) {
+            message = messageQuery(24);
+         }
       }
 
       console.log('objData.codData.data.odfSelecionada.QTDE.LIB', objData.codData.data.odfSelecionada.QTDE_LIB);

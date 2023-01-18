@@ -9,13 +9,16 @@ const message_1 = require("../services/message");
 const odfIndex_1 = require("../utils/odfIndex");
 const select_1 = require("../services/select");
 const update_1 = require("../services/update");
+const query_1 = require("../services/query");
 const returnedValue = async (req, res) => {
     const variables = await (0, variableInicializer_1.inicializer)(req);
-    console.log('variables', variables.body);
-    if (!variables) {
-        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
+    if (!variables.body.supervisor || !variables.body.quantity || !variables.body.barcodeReturn) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(48), data: (0, message_1.message)(33) });
     }
     const body = (0, unravelBarcode_1.unravelBarcode)(variables.body.barcodeReturn) || null;
+    if (!body.data) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
+    }
     var goodFeed = 0;
     var badFeed = 0;
     var codeNoteResult;
@@ -27,6 +30,7 @@ const returnedValue = async (req, res) => {
     variables.cookies.pointedCodeDescription = ['Estorno'];
     variables.cookies.motives = null;
     variables.cookies.tempoDecorrido = null;
+    console.log('variables.body.valueStorage', variables.body.valueStorage);
     if (!variables.body.valueStorage) {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(26), data: (0, message_1.message)(33) });
     }
@@ -37,24 +41,27 @@ const returnedValue = async (req, res) => {
         badFeed = Number(!variables.body.valueStorage ? 0 : variables.body.quantity);
     }
     if (body.data) {
-        codeNoteResult = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [6, 8]);
+        codeNoteResult = await (0, verifyCodeNote_1.verifyCodeNote)(body.data, [6, 8]);
         if (!codeNoteResult.accepted) {
             return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(25), data: (0, message_1.message)(33), code: codeNoteResult.code });
         }
     }
     const valorTotal = Number(goodFeed + badFeed);
-    const groupOdf = await (0, select_1.select)(28, variables.cookies);
-    const i = await (0, odfIndex_1.odfIndex)(groupOdf, String(body.data.NUMERO_OPERACAO));
-    const lastIndex = groupOdf.findIndex((element) => element.QTDE_APONTADA === 0) - 1;
+    const groupOdf = await (0, query_1.selectQuery)(28, body.data);
+    const i = await (0, odfIndex_1.odfIndex)(groupOdf.data, String(body.data.NUMERO_OPERACAO));
+    const lastIndex = groupOdf.data.findIndex((element) => element.QTDE_APONTADA === 0) - 1;
+    console.log('i', i);
+    console.log('lastIndex', lastIndex);
     if (lastIndex !== i) {
+        console.log('uee');
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(43), data: (0, message_1.message)(33) });
     }
-    let odf = groupOdf[i];
-    if (i === groupOdf.length - 1) {
-        odf = groupOdf[groupOdf.length - 1];
+    let odf = groupOdf.data[i];
+    if (i === groupOdf.data.length - 1) {
+        odf = groupOdf.data[groupOdf.data.length - 1];
     }
-    if (lastIndex === groupOdf.length - 1) {
-        odf = groupOdf[groupOdf.length - 1];
+    if (lastIndex === groupOdf.data.length - 1) {
+        odf = groupOdf.data[groupOdf.data.length - 1];
     }
     console.log(' goood', goodFeed);
     console.log('bad', badFeed);
@@ -62,6 +69,16 @@ const returnedValue = async (req, res) => {
     console.log('odf.QTDE_APONTADA', odf.QTDE_APONTADA);
     console.log('odf.QTDE_LIB', odf.QTDE_LIB);
     console.log('odf.odf.QTD_REFUGO', odf.QTD_REFUGO);
+    if (goodFeed) {
+        if (!odf.QTD_BOAS || odf.QTD_BOAS <= 0) {
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(27), data: (0, message_1.message)(33) });
+        }
+    }
+    else if (badFeed) {
+        if (!odf.QTD_REFUGO || odf.QTD_REFUGO <= 0) {
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(27), data: (0, message_1.message)(33) });
+        }
+    }
     if (odf.QTDE_APONTADA < valorTotal || odf.QTDE_APONTADA <= 0 || !odf.QTD_REFUGO && badFeed > 0) {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(27), data: (0, message_1.message)(33) });
     }
@@ -84,6 +101,16 @@ const returnedValue = async (req, res) => {
         console.log(' variables.cookies.faltante', variables.cookies.faltante);
         console.log(' variables.cookies.QTDE_LIB', variables.cookies.QTDE_LIB);
         console.log(' variables.cookies.badFeed', variables.cookies.badFeed);
+        variables.cookies.QTDE_APONTADA = valorApontado;
+        variables.cookies.NUMERO_ODF = body.data.NUMERO_ODF;
+        variables.cookies.NUMERO_OPERACAO = body.data.NUMERO_OPERACAO;
+        variables.cookies.CODIGO_MAQUINA = body.data.CODIGO_MAQUINA;
+        variables.cookies.REVISAO = groupOdf.data[i].REVISAO;
+        variables.cookies.QTDE_LIB = groupOdf.data[i].QTDE_LIB;
+        variables.cookies.valorTotal = valorTotal;
+        variables.cookies.valorApontado = groupOdf.data[i].QTDE_APONTADA - valorApontado;
+        console.log('groupOdf.data[i].QTDE_APONTADA', groupOdf.data[i].QTDE_APONTADA);
+        console.log('variables.cookies.valorApontado', variables.cookies.valorApontado);
         if (selectSuper.length > 0) {
             const insertHisCodReturned = await (0, insert_1.insertInto)(variables.cookies);
             if (insertHisCodReturned) {

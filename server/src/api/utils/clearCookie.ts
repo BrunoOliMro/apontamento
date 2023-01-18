@@ -56,7 +56,8 @@ export const cookieCleaner = async (res: any) => {
         'QTD_BOAS',
         'encodedOperationNuber',
         'QTD_FALTANTE',
-        'QTD_RETRABALHADA'
+        'QTD_RETRABALHADA',
+        'supervisor'
     ].forEach(cookie => {
         res.clearCookie(`${cookie}`)
     });
