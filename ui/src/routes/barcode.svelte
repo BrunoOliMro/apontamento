@@ -63,6 +63,10 @@
         if (res.status === messageQuery(1)) {
           console.log('barcode', res);
 
+          if(res.data === messageQuery(10)){
+            return window.location.href = messageQuery(18)
+          }
+
           if(res.data === messageQuery(16)){
             return window.location.href = messageQuery(17)
           }

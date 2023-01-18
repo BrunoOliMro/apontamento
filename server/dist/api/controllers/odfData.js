@@ -26,6 +26,7 @@ const odfData = async (req, res) => {
         if (i === null || i === undefined) {
             return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(0) });
         }
+        console.log('Cookies', variables.cookies);
         response.odfSelecionada = resultQuery.data[i];
         response.resEmployee = variables.cookies.FUNCIONARIO;
         response.message = (0, message_1.message)(1);

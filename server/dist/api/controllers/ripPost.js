@@ -13,6 +13,7 @@ const message_1 = require("../services/message");
 const sanitize_1 = require("../utils/sanitize");
 const update_1 = require("../services/update");
 const mssql_1 = __importDefault(require("mssql"));
+const query_1 = require("../services/query");
 const ripPost = async (req, res) => {
     const variables = await (0, variableInicializer_1.inicializer)(req);
     if (!variables.cookies) {
@@ -37,22 +38,23 @@ const ripPost = async (req, res) => {
     if (!pointCode.accepted) {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33), code: pointCode.code });
     }
+    const resultSelect = await (0, query_1.selectQuery)(30, variables.cookies);
     if (Object.keys(variables.body).length <= 0) {
         console.log('insert into 6');
         const insertedRipCode = await (0, insert_1.insertInto)(variables.cookies);
         if (insertedRipCode) {
-            const pointCode = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [6]);
+            const pointCode = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [5]);
             const updatePcpProgResult = await (0, update_1.update)(0, variables.cookies);
             if (updatePcpProgResult === (0, message_1.message)(1)) {
                 await (0, clearCookie_1.cookieCleaner)(res);
-                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33), code: pointCode.code });
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33), code: pointCode.code, qtdelib: resultSelect.data[0].QTDE_LIB });
             }
             else {
-                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33), code: pointCode.code });
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33), code: pointCode.code, qtdelib: resultSelect.data[0].QTDE_LIB });
             }
         }
         else {
-            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(0), code: pointCode.code });
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(0), code: pointCode.code, qtdelib: resultSelect.data[0].QTDE_LIB });
         }
     }
     else {
@@ -73,7 +75,7 @@ const ripPost = async (req, res) => {
             try {
                 const resultUpdatePcpProg = await (0, update_1.update)(0, variables.cookies);
                 if (resultUpdatePcpProg !== (0, message_1.message)(1)) {
-                    return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33), code: pointCode.code });
+                    return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33), code: pointCode.code, qtdelib: resultSelect.data[0].QTDE_LIB });
                 }
                 else {
                     const resultSplitLines = Object.keys(objectSanitized).reduce((acc, iterator) => {
@@ -96,7 +98,7 @@ const ripPost = async (req, res) => {
                             await connection.query(updateQtyQuery.join('\n'));
                             console.log('cade o update');
                             await (0, clearCookie_1.cookieCleaner)(res);
-                            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(1), code: pointCode.code });
+                            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(1), code: pointCode.code, qtdelib: resultSelect });
                         }
                         catch (error) {
                             console.log('error - linha 103 /ripPost.ts/ - ', error);

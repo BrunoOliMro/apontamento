@@ -29,7 +29,7 @@ export const point: RequestHandler = async (req, res) => {
     console.log('Number(variables.body.missingFeed )', Number(variables.body.missingFeed) || 0);
     console.log('Number(variables.body.reworkFeed)', Number(variables.body.reworkFeed) || 0);
 
-    const totalValue = (Number(variables.body.valorFeed) || 0) + (Number(variables.body.badFeed) || 0)  + (Number(variables.body.missingFeed) || 0) + (Number(variables.body.reworkFeed) || 0);
+    const totalValue = (Number(variables.body.valorFeed) || 0) + (Number(variables.body.badFeed) || 0) + (Number(variables.body.reworkFeed) || 0) //+ (Number(variables.body.missingFeed) || 0) ;
 
     console.log('totalValue', totalValue);
 
@@ -43,7 +43,14 @@ export const point: RequestHandler = async (req, res) => {
     const finalProdTimer = Number(new Date().getTime() - startProd) || null
     console.log('Number(variables.body.missingFeed) + Number(variables.cookies.QTDE_LIB!)', (Number(variables.body.missingFeed) || 0) + (Number(variables.cookies.QTDE_LIB!) || 0));
     console.log('a', Number(variables.body.missingFeed) + Number(variables.cookies.QTDE_LIB!) - totalValue);
-    variables.body.missingFeed = Number(variables.body.missingFeed) + Number(variables.cookies.QTDE_LIB!) - totalValue
+    // variables.body.missingFeed = Number(variables.body.missingFeed) + Number(variables.cookies.QTDE_LIB!) - totalValue
+    variables.body.missingFeed =  variables.cookies.QTDE_LIB - totalValue;
+
+    console.log('missingFeed', variables.body.missingFeed);
+    console.log('total value', totalValue);
+    console.log('VALOR A ser apontado', variables.body.missingFeed - totalValue);
+
+
     variables.cookies.QTDE_LIB = Number(variables.cookies.QTDE_LIB)
     variables.cookies.pointedCodeDescription = ['Fin Prod.']
     variables.cookies.tempoDecorrido = finalProdTimer
@@ -104,23 +111,27 @@ export const point: RequestHandler = async (req, res) => {
     }
 
     // Caso haja 'P' faz update na quantidade de peças dos filhos
+    console.log('variables.cookies.condic', variables.cookies);
     if (variables.cookies.condic === 'P') {
+        console.log('updating peças filhasss...');
         try {
             if (!variables.cookies.childCode) {
                 return res.json({ status: message(1), message: message(0), data: message(33) })
             }
             variables.cookies.childCode = variables.cookies.childCode.split(',')
-
+            console.log('childCode', variables.cookies.childCode );
+            console.log('diferenceBetween', diferenceBetween);
             // Loop para atualizar o estoque
             const connection = await mssql.connect(sqlConfig);
             if (totalValue < Number(variables.cookies.QTDE_LIB)!) {
-                console.log('update estoque saldoreal ');
                 try {
                     variables.cookies.childCode.forEach((codigoFilho: string) => {
+                        console.log('codigoFilho', codigoFilho);
                         const stringUpdate = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${diferenceBetween} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`
                         updateSaldoReal.push(stringUpdate)
                     });
                     await connection.query(updateSaldoReal.join('\n')).then(result => result.rowsAffected)
+                    console.log('update estoque saldoreal ');
                 } catch (error) {
                     console.log('linha 140  - Point.ts - ', error);
                     return res.json({ status: message(1), message: message(0), data: message(33) })
@@ -132,7 +143,7 @@ export const point: RequestHandler = async (req, res) => {
                     const stringUpdate: string = `DELETE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${variables.cookies.NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho}'`
                     deleteCstAlocacao.push(stringUpdate)
                 });
-                console.log('delete cst alocacao');
+                console.log('delete cst alocacao', deleteCstAlocacao);
                 await connection.query(deleteCstAlocacao.join('\n')).then(result => result.rowsAffected)
             } catch (error) {
                 console.log('linha 159  - Point.ts - ', error);
@@ -158,9 +169,14 @@ export const point: RequestHandler = async (req, res) => {
     variables.body.NUMERO_OPERACAO = variables.cookies.NUMERO_OPERACAO
     variables.body.CODIGO_MAQUINA = variables.cookies.CODIGO_MAQUINA
     variables.body.NUMERO_ODF = variables.cookies.NUMERO_ODF
+    console.log("missingFeed: ", variables.body.missingFeed)
     console.log('updating 3');
     await update(3, variables.body)
     console.log('insert into 4');
+    variables.cookies.goodFeed = variables.body.valorFeed || 0;
+    variables.cookies.badFeed = variables.body.badFeed || 0;
+    variables.cookies.missingFeed = variables.body.missingFeed || 0;
+    variables.cookies.reworkFeed = variables.body.reworkFeed || 0;
     await insertInto(variables.cookies)
     return res.json({ status: message(1), message: message(1), data: message(33) })
 }

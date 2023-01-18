@@ -30,8 +30,16 @@
     let message = messageQuery(0);
     let lie;
     let lsd;
-    let result = callRip();
+    const cookies = document.cookie;
     let messageObj = false;
+    let result ;
+
+        if(!cookies){
+            message = messageQuery(38)
+            messageObj = true
+        } else {
+            result = callRip()
+        }
 
     async function callRip() {
         const res = await fetch(ripRouter);
@@ -79,10 +87,13 @@
         const res = await post(pointRipRouter, setup);
         isRequesting = false;
         if (res) {
-            console.log("call Post Rip", res);
+            console.log("call Post Rip", res.qtdelib);
             loader = false
 
-            if(res.code === messageQuery(12) ){
+            if(res.code === messageQuery(12) && res.qtdelib > 0 ){
+                message = messageQuery(41)
+                return messageObj = true
+            } else if(res.code === messageQuery(12) && res.qtdelib <= 0) {
                 message = messageQuery(38)
                 return messageObj = true
             }
@@ -309,15 +320,11 @@
         </div> -->
     {/if }
 
-    <!-- {#if message === messageObj }
-        
-    {/if} -->
-
     {#if message && message === messageQuery(4) && messageObj === true}
         <Message title={message} btn={final} on:message={redirect} />
     {/if}
 
-    {#if message && message !== messageQuery(0) && message !== messageQuery(38) && message !== messageQuery(4)}
+    {#if message && message !== messageQuery(0) && message !== messageQuery(38) && message !== messageQuery(4) && message !== messageQuery(41)}
         <ModalConfirmation title={message} {message} on:message={close} />
     {/if}
 </main>

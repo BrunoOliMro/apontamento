@@ -40,13 +40,11 @@
   }
 
   p:hover {
+    opacity: 0.7;
     cursor: pointer;
     color: rgb(52, 52, 52);
   }
-  .breadcrumb {
-    margin: 0%;
-    padding: 0%;
-  }
+  
 
   /* @media screen and (max-width: 500px) {
     .breadcrumb {

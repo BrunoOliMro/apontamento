@@ -5,7 +5,7 @@
     let dia;
     let datahora;
 
-    console.log('dados. TableHistorico', dados);
+    console.log("dados. TableHistorico", dados.PC_FALTANTE);
 
     if (dados.DATAHORA === undefined || dados.DATAHORA === null) {
         datahora = "S/I";
@@ -26,10 +26,11 @@
     <td>{dados.BOAS === null || !dados.BOAS ? "S/I" : dados.BOAS}</td>
     <td>{dados.REFUGO === null ? "S/I" : dados.REFUGO}</td>
     <td
-        >{dados.FALTANTE === null || dados.FALTANTE === undefined
+        >{dados.PC_FALTANTE === null || dados.PC_FALTANTE === undefined
             ? "S/I"
-            : dados.FALTANTE}</td
+            : dados.PC_FALTANTE}</td
     >
+    <td>{dados.RETRABALHADA === null || dados.RETRABALHADA ===  undefined ? "S/I" : dados.RETRABALHADA}</td>
     <td>{dados.ODF === null ? "S/I" : dados.ODF}</td>
 
     {#if datahora !== "S/I"}

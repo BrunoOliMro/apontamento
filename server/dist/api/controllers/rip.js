@@ -13,6 +13,7 @@ const rip = async (req, res) => {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(0), code: (0, message_1.message)(33) });
     }
     const resultVerifyCodeNote = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [4]);
+    console.log('resultVerifyCodeNote', resultVerifyCodeNote);
     if (resultVerifyCodeNote.message === (0, message_1.message)(0)) {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(0), code: (0, message_1.message)(33) });
     }

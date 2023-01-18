@@ -2,7 +2,7 @@
     import { createEventDispatcher } from "svelte";
     export let titleInMessage;
     export let btnInMessage;
-    export let subTitle;
+    export let subTitle = ``;
 
     const dispatch = createEventDispatcher();
     
@@ -22,7 +22,9 @@
 
 <style>
     .title {
-        font-size: 35px;
+        font-size: 55px;
+        margin: 2%;
+        padding: 0%;
     }
 
     div{
@@ -31,7 +33,9 @@
     }
 
     .message-area {
-        margin: 0%;
+        width: 98%;
+        height: 600px;
+        margin: 1%;
         padding: 0%;
         display: flex;
         flex-direction: column;
@@ -41,22 +45,25 @@
         letter-spacing: 1px;
         border-color: grey;
         box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
+        border-radius: 4px;
     }
 
     .btn {
         outline: none;
         margin: 0%;
         padding: 0%;
-        font-size: 14px;
-        width: 120px;
-        height: 35px;
+        width: 300px;
+        height: 30px;
         display: flex;
         justify-content: center;
         text-align: center;
         align-items: center;
-        border-radius: 3px;
-        background-color: transparent;
+        border-radius: 6px;
+        background-color: white;
         border: none;
+        color: black;
+        border-color: #999999;
+        box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
         letter-spacing: 1px;
     }
 

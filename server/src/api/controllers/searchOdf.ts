@@ -49,37 +49,47 @@ export const searchOdf: RequestHandler = async (req, res) => {
     console.log('odf[i].QTDE_APONTADA', odf[i].QTDE_APONTADA);
 
     if (i <= 0) {
-        if (odf[i].QTDE_APONTADA && odf[i].QTDE_APONTADA !== 0) {
-            // const resultVerifyCodeNote = await verifyCodeNote(barcode.data, [1, 3, 6])
-            await cookieGenerator(res, odf[i])
-            return res.json({ status: message(1), message: message(5), data: message(33) })
-        } else {
-            !odf[i].QTDE_APONTADA ? odf[i].QTDE_LIB = odf[i].QTDE_ODF : odf[i].QTDE_LIB = odf[i].QTDE_ODF - odf[i].QTDE_APONTADA;
-        }
+        // ATENÇÃO olhar diferença entre quantidade apontada no processo anterior e no processo atual!!!!!!!!!!
+        odf[i].QTDE_LIB = odf[i].QTDE_ODF -  odf[i].QTDE_APONTADA
+
+        // !odf[i].QTDE_APONTADA ? odf[i].QTDE_LIB = odf[i].QTDE_ODF : odf[i].QTDE_LIB = odf[i].QTDE_ODF - odf[i].QTDE_APONTADA;
     } else if (i > 0) {
-        if (odf[i].QTDE_APONTADA && odf[i].QTDE_APONTADA !== 0) {
-            // const resultVerifyCodeNote = await verifyCodeNote(barcode.data, [1, 3, 6])
-            await cookieGenerator(res, odf[i])
-            return res.json({ status: message(1), message: message(5), data: message(33) })
-        } else {
-            !odf[i].QTD_BOAS ? odf[i].QTD_BOAS = 0 : odf[i].QTD_BOAS
-        }
+        // ATENÇÃO quantidade liberado é igual qtd_lib = boasProcessoPassado -  boas - ruins - retrabalhadas - faltantes
+        // Quantidade liberada é a diferença qtd_lib =  boasProcesso passado - boas - ruins - retrabalhadas - faltantes
+        !odf[i].QTD_BOAS ? odf[i].QTD_BOAS = 0 : odf[i].QTD_BOAS
+        const boasPassadas = odf[i - 1].QTD_BOAS || 0
+        const boas =  odf[i].QTD_BOAS || 0
+        const ruins = odf[i].QTD_REFUGO || 0
+        const retrabalhadas = odf[i].QTD_RETRABALHADA || 0
+        const faltantes = odf[i].QTD_FALTANTE || 0
 
-        if (odf[i - 1].QTD_BOAS - odf[i].QTD_BOAS <= 0 || odf[i - 1].QTDE_APONTADA - odf[i].QTDE_APONTADA <= 0) {
-            return res.json({ status: message(1), message: message(11), data: message(11) })
-        }
+        const quantidadeTotal = boasPassadas - boas - ruins - retrabalhadas - faltantes
+        
+        console.log('QuantidadeTotal', quantidadeTotal)
+        console.log('boasPassadas', boasPassadas);
+        console.log('boas', boas);
+        console.log('ruins', ruins);
+        console.log('retrabalhadas', retrabalhadas);
+        // console.log('faltantes', faltantes);
 
-        if (odf[i].QTDE_APONTADA >= odf[i - 1].QTD_BOAS) {
-            return res.json({ status: message(1), message: message(11), data: message(11) })
-        }
+        odf[i].QTDE_LIB = boasPassadas - boas - ruins - retrabalhadas //- faltantes
 
-        if (odf[i].QTDE_APONTADA > odf[i].QTD_BOAS) {
-            odf[i].QTDE_LIB = odf[i - 1].QTD_BOAS - odf[i].QTDE_APONTADA
-        } else {
-            odf[i].QTDE_LIB = odf[i - 1].QTD_BOAS - odf[i].QTD_BOAS
-        }
-    } else {
-        return res.json({ status: message(1), message: message(11), data: message(11) })
+        console.log('odf[i].QTDE_LIB: ', odf[i].QTDE_LIB);
+
+
+        // if (odf[i - 1].QTD_BOAS - odf[i].QTD_BOAS <= 0 || odf[i - 1].QTDE_APONTADA - odf[i].QTDE_APONTADA <= 0) {
+        //     return res.json({ status: message(1), message: message(11), data: message(11) })
+        // }
+
+        // if (odf[i].QTDE_APONTADA >= odf[i - 1].QTD_BOAS) {
+        //     return res.json({ status: message(1), message: message(11), data: message(11) })
+        // }
+
+        // if (odf[i].QTDE_APONTADA > odf[i].QTD_BOAS) {
+        //     odf[i].QTDE_LIB = odf[i - 1].QTD_BOAS - odf[i].QTDE_APONTADA
+        // } else {
+        //     odf[i].QTDE_LIB = odf[i - 1].QTD_BOAS - odf[i].QTD_BOAS
+        // }
     }
 
     if (!odf[i].QTDE_LIB || odf[i].QTDE_LIB <= 0) {
@@ -93,7 +103,8 @@ export const searchOdf: RequestHandler = async (req, res) => {
     let resultComponents = await selectToKnowIfHasP(barcode)
     console.log('resultComponents', resultComponents);
 
-    if (resultComponents.message === message(13) || resultComponents.message === message(15)) {
+    if (resultComponents.message === message(13) || resultComponents.message === message(14) || resultComponents.message === message(15)) {
+        console.log('Gerar cookies...');
         if (resultComponents.quantidade < odf[i].QTDE_LIB) {
             barcode.data.QTDE_LIB = resultComponents.quantidade
             odf[i].QTDE_LIB = barcode.data.QTDE_LIB
@@ -104,11 +115,15 @@ export const searchOdf: RequestHandler = async (req, res) => {
         barcode.data.QTDE_LIB = resultComponents.quantidade
         await update(1, barcode.data)
     } else if (resultComponents === message(12)) {
+        console.log('await cookie cleaner in result componentes');
         await cookieCleaner(res)
         return res.json({ status: message(1), message: message(11), data: message(11) })
     } else if (resultComponents === message(13)) {
+        console.log('updating in message 13');
         await update(1, barcode.data)
     }
+
+
     await cookieGenerator(res, odf[i])
     const resultVerifyCodeNote = await verifyCodeNote(barcode.data, [1, 3, 6])
     return res.json({ status: message(1), message: message(1), data: resultVerifyCodeNote.code })

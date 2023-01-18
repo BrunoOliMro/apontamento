@@ -35,10 +35,12 @@ const selectToKnowIfHasP = async (obj) => {
             const codigoFilho = resultHasP.map((item) => item.NUMITE);
             const numberOfQtd = Math.min(...resultHasP.map((element) => element.QTD_LIBERADA_PRODUZIR));
             const makeReservation = resultHasP.map((item) => item.NUMSEQ).filter((element) => element === numeroOperNew);
+            console.log('makeReservation', makeReservation);
             if (makeReservation.length <= 0) {
                 return response.message = (0, message_1.message)(13);
             }
             const resultQuantityCst = await (0, select_1.select)(21, obj.data);
+            console.log('resultQuantityCst', resultQuantityCst);
             if (resultQuantityCst.length > 0) {
                 if (resultQuantityCst[0].QUANTIDADE > 0) {
                     response.quantidade = resultQuantityCst[0].QUANTIDADE;
@@ -99,42 +101,42 @@ const selectToKnowIfHasP = async (obj) => {
                                                 return response;
                                             }
                                             else {
-                                                console.log('linha 112 /selectHAsP/');
+                                                console.log('linha 105 /selectHAsP/');
                                                 return response.message = (0, message_1.message)(0);
                                             }
                                         }
                                         catch (error) {
-                                            console.log('linha 116 Error on selectHasP', error);
+                                            console.log('linha 109 Error on selectHasP', error);
                                             return response.message = (0, message_1.message)(0);
                                         }
                                     }
                                 }
                             }
                             catch (error) {
-                                console.log('linha 122 /selectHasP/', error);
+                                console.log('linha 115 /selectHasP/', error);
                                 return response.message = (0, message_1.message)(0);
                             }
                         }
                         else {
                             try {
-                                const resultUpdate = await (0, update_1.update)(2, obj.data);
+                                const resultUpdate = await (0, update_1.update)(5, obj.data);
                                 if (resultUpdate === (0, message_1.message)(1)) {
                                     response.message = (0, message_1.message)(14);
                                     return response;
                                 }
                                 else {
-                                    console.log('linha 112 /selectHAsP/');
+                                    console.log('linha 125 /selectHAsP/');
                                     return response.message = (0, message_1.message)(0);
                                 }
                             }
                             catch (error) {
-                                console.log('linha 116 Error on selectHasP', error);
+                                console.log('linha 129 Error on selectHasP', error);
                                 return response.message = (0, message_1.message)(0);
                             }
                         }
                     }
                     catch (error) {
-                        console.log('linha 138 /selectHasp/', error);
+                        console.log('linha 134 /selectHasp/', error);
                         return response.message = (0, message_1.message)(0);
                     }
                 }
@@ -143,7 +145,7 @@ const selectToKnowIfHasP = async (obj) => {
                 }
             }
             catch (error) {
-                console.log('linha 145 /selectHasP/', error);
+                console.log('linha 141 /selectHasP/', error);
                 return response.message = (0, message_1.message)(0);
             }
         }
@@ -152,7 +154,7 @@ const selectToKnowIfHasP = async (obj) => {
         }
     }
     catch (error) {
-        console.log('linha 154 /error: selectHasP/: ', error);
+        console.log('linha 148 /error: selectHasP/: ', error);
         return response.message = (0, message_1.message)(0);
     }
 };

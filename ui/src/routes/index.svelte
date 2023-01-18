@@ -20,6 +20,7 @@
    const supervisorApi = `/api/v1/supervisor`;
    let supervisor = ``;
    let loader = false;
+   let resultRedirect;
    let objData = {
       codData: [],
       prodTime: [],
@@ -56,8 +57,9 @@
 
    async function redirect() {
       const res = await fetch(redirectRoute);
-      objData = await res.json();
-      if (objData.message === messageQuery(1)) {
+      resultRedirect = await res.json();
+      console.log('resultRedirect', resultRedirect);
+      if (resultRedirect.message === messageQuery(1)) {
          window.location.href = messageQuery(20);
       }
    }
@@ -89,6 +91,10 @@
       objData.image = await Id.json();
       const IA = await fetch(callOdfData);
       objData.codData = await IA.json();
+      
+      if(objData.codData.code === messageQuery(10) ){
+         rip = true
+      }
 
       if (objData.prodTime.data <= 0) {
          message = messageQuery(24);
@@ -131,6 +137,12 @@
    // };
 
    async function checkForSuper(event) {
+      console.log('eve', event);
+
+      if(event.detail.text === 'Go Back!!!') {
+         return redirect()
+      }
+
       const res = await verifyStringLenght( event.detail.eventType, supervisor, 6, 14);
       if (res === messageQuery(1)) {
          loader = true;

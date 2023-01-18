@@ -16,6 +16,14 @@
                 text: "Check for super",
             });
     }
+
+    async function close(event) {
+        console.log('evente in supervisor', event.key);
+            dispatch("message", {
+                eventType: event,
+                text: "Go Back!!!",
+            });
+    }
 </script>
 
 <div class="background">
@@ -39,6 +47,9 @@
         <button tabindex="20" on:click={makeRequest} on:keypress={makeRequest}
             >Confirmar</button
         >
+        <button tabindex="20" on:click={close} on:keypress={close}
+            >Voltar</button
+        >
     </div>
 </div>
 
@@ -54,6 +65,7 @@
         flex-direction: row;
         align-items: center;
         justify-content: center;
+        z-index: 9999999;
     }
     .modal-content {
         color: white;
@@ -66,9 +78,11 @@
         align-items: center;
         text-align: center;
         border-radius: 10px;
+        z-index: 99999999999;
     }
     input {
         width: 300px;
         border-radius: 8px;
+        z-index: 999999999999999999;
     }
 </style>

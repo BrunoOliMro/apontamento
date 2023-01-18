@@ -108,11 +108,14 @@
 
 <!-- <Breadcrumb src={back} {titleBreadcrumb} /> -->
 
-<Breadcrumb
-  imgResource={back}
-  titleBreadcrumb={title}
-  on:message={redirectToBarcode}
-/>
+<div class="breadcrumb">
+  <Breadcrumb
+    imgResource={back}
+    titleBreadcrumb={title}
+    
+    on:message={redirectToBarcode}
+  />
+</div>
 <!-- <nav class="breadcrumb" aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item">
@@ -157,6 +160,7 @@
 {/await}
 
 {#if message && message === messageQuery(32)}
+<!-- subTitle={continue} -->
   <Message
     titleInMessage={message}
     btnInMessage={continuer}

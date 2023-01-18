@@ -41,6 +41,8 @@ export default function messageQuery(numberString) {
         37: 'Sem cookies',
         38: 'ODF finalizada',
         39: 'ODF apontada',
+        40: 'Exibir histórico',
+        41: 'ODF parcialmente apontada',
     }
 
     Object.entries(query).forEach(element => {

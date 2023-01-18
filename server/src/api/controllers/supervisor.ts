@@ -11,6 +11,5 @@ export const supervisor: RequestHandler = async (req, res) => {
     }
 
     const lookForBadge = await select(10, variables.body)
-    console.log('lookForBadge', lookForBadge);
     return res.json({ status: message(1), message: message(33), data: lookForBadge })
 }

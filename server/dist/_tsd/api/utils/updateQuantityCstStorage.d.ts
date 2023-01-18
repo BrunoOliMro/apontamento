@@ -1,2 +1,2 @@
-export declare const cstStorageUp: (quantityToProduce: any, address: any, partCode: any, odfNumber: any, goodFeed: any, employee: any, hostname: any, ip: any) => Promise<any>;
+export declare const cstStorageUp: (QTDE_LIB: any, address: any, CODIGO_PEÇA: any, NUMERO_ODF: any, goodFeed: any, FUNCIONARIO: any, hostname: any, ip: any) => Promise<any>;
 //# sourceMappingURL=updateQuantityCstStorage.d.ts.map

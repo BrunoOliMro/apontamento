@@ -17,7 +17,11 @@
     const res = await fetch(urlString);
     historic = await res.json();
     console.log('Historic', historic);
-    if (historic.message !== messageQuery(0)) {
+    if(historic.data.resourceDetail === messageQuery(0)){
+      return message = "Não há exibir histórico"
+    }
+    // console.log('erburu', historic.data.resource)
+    if (historic.message === messageQuery(40)) {
       message = historic.message;
     }
   }
@@ -68,6 +72,7 @@
               <th scope="col">BOAS</th>
               <th scope="col">REFUGO</th>
               <th scope="col">FALTANTE</th>
+              <th scope="col">RETRABALHADA</th>
               <th scope="col">ODF</th>
               {#if generalData === true}
                 <th scope="col">DATA</th>
@@ -78,7 +83,7 @@
 
           {#if detailData === true}
             <tbody id="table-body">
-              {#each historic.resourceDetail as column}
+              {#each historic.data.resource as column}
                 <TableHistorico dados={column} />
               {/each}
             </tbody>
@@ -86,7 +91,7 @@
 
           {#if generalData === true}
             <tbody id="table-body">
-              {#each historic.resource as column}
+              {#each historic.data.resourceDetail as column}
                 <TableHistorico dados={column} />
               {/each}
             </tbody>
@@ -95,7 +100,7 @@
       </div>
     {/if}
 
-    {#if message !== messageQuery(0) && message !== "Exibir histórico"}
+    {#if message !== messageQuery(0) && message === "Não há exibir histórico" && historic.data.resourceDetail === messageQuery(0)}
       <div class="message">
         <h3>{message}</h3>
       </div>

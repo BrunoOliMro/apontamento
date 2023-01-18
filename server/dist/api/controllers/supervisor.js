@@ -10,7 +10,6 @@ const supervisor = async (req, res) => {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33) });
     }
     const lookForBadge = await (0, select_1.select)(10, variables.body);
-    console.log('lookForBadge', lookForBadge);
     return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: lookForBadge });
 };
 exports.supervisor = supervisor;

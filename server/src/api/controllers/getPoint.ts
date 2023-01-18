@@ -34,6 +34,7 @@ export const getPoint: RequestHandler = async (req, res) => {
     const ip = String(Object.entries(results)[0]![1])
     console.log('Ob', Object.entries(results));
     console.log('ip', ip);
+    console.log('hostname', hostname);
 
     const pointedCode = await verifyCodeNote(variables.cookies, [4, 5])
 
@@ -50,27 +51,21 @@ export const getPoint: RequestHandler = async (req, res) => {
     var peso = 1
     console.log('variables.cookies.NUMERO_OPERACAO', '00', + variables.cookies.NUMERO_OPERACAO.replaceAll(' ', ''));
     if ('00' + String(variables.cookies.NUMERO_OPERACAO!.replaceAll(' ', '')) === '00999') {
-        console.log('14e9nhgierhbinbitrnbitnibitnbitnbt');
         const partCodeCase = `= '${variables.cookies.CODIGO_PECA}'`
         console.log('partCodeCase', partCodeCase);
         const isNullCase = `IS NULL`
         var add: any;
         await callAddress()
-        console.log('variables.cookies.CODIGO_MAQUINA', variables.cookies.CODIGO_MAQUINA);
         async function callAddress() {
             if (variables.cookies.CODIGO_MAQUINA !== 'EX002') {
                 add = await selectAddress(partCodeCase, 5, comprimento, largura, peso)
-                console.log('add dif', add);
                 if (add === message(17)) {
                     add = await selectAddress(isNullCase, 5, comprimento, largura, peso)
-                    console.log('add di');
                 }
             } else if (variables.cookies.CODIGO_MAQUINA === 'EX002') {
                 add = await selectAddress(partCodeCase, 7, comprimento, largura, peso)
-                console.log('add', add);
                 if (add === message(17)) {
                     add = await selectAddress(isNullCase, 7, comprimento, largura, peso)
-                    console.log('add', add);
                 }
             }
             // const stringSelectOperacao = `SELECT TOP 1 NUMPEC, QUANT, REVISAO, COMPRIMENTO, LARGURA, AREA, EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${partCode}' AND REVISAO = ${revision} AND NUMITE IS NOT NULL`
@@ -82,8 +77,10 @@ export const getPoint: RequestHandler = async (req, res) => {
             const composicaoDeEstoque = await select(4)
 
             if (composicaoDeEstoque.length <= 0 || pecas.length <= 0) {
+                 console.log('ou auqiiiiiiiiiiiiiiiiiiiiiiii');
                 await cstStorageUp(variables.cookies.QTDE_LIB, add[0].ENDERECO, variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, resultSelectPcpProg[0].QTD_BOAS, variables.cookies.FUNCIONARIO, hostname, ip)
-                return res.json({ status: message(1), message: message(1), data: message(46), address: message(46) })
+                return add[0].ENDERECO = message(46)
+                // return res.json({ status: message(1), message: message(1), data: message(46), address: message(46) })
             }
             const alturaDoEndereco = composicaoDeEstoque[0].ALTURA
 
@@ -150,14 +147,14 @@ export const getPoint: RequestHandler = async (req, res) => {
                 callAddress()
             }
         }
-        console.log('add[0].ENDERECO', add[0].ENDERECO);
-        console.log('resultSelectPcpProg', resultSelectPcpProg);
         await cstStorageUp(variables.cookies.QTDE_LIB, add[0].ENDERECO, variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, resultSelectPcpProg[0].QTD_BOAS, variables.cookies.FUNCIONARIO, hostname, ip)
 
         if (add[0].ENDERECO) {
-            return res.json({ status: message(1), message: message(1), data: message(46), address: add[0].ENDERECO })
+            console.log('chamando endereço')
+            return res.json({ status: message(1), message: message(1), data: add[0].ENDERECO, address: add[0].ENDERECO })
         }
     } else {
+        await cstStorageUp(variables.cookies.QTDE_LIB, add = message(46), variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, resultSelectPcpProg[0].QTD_BOAS, variables.cookies.FUNCIONARIO, hostname, ip)
         return res.json({ status: message(1), message: message(32), data: message(33), address: message(46) })
     }
 }

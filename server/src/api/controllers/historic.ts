@@ -15,31 +15,37 @@ export const historic: RequestHandler = async (req, res) => {
     const resultVerifyCodeNote = await verifyCodeNote(variables.cookies, [3, 4, 5, 7])
 
     if (resultVerifyCodeNote.accepted) {
-        const detailHistoric = await selectQuery('Select', 5, variables.cookies)
-        const generalHistoric = await selectQuery('Select', 6, variables.cookies)
+        const detailHistoric = await selectQuery(5, variables.cookies)
+        const generalHistoric = await selectQuery(6, variables.cookies)
 
-        for (const iterator of detailHistoric.data) {
-            if (iterator.BOAS > 0) {
-                obj.push(iterator)
+        console.log('detailHistoric', detailHistoric.data);
+        console.log('generalHistoric', generalHistoric.data)
+        console.log('DETAIL', detailHistoric);
+        console.log('Genereal', generalHistoric );
+        if(detailHistoric.data){
+            for (const iterator of detailHistoric.data) {
+                if (iterator.BOAS > 0) {
+                    obj.push(iterator)
+                }
+                if (iterator.REFUGO > 0) {
+                    obj.push(iterator)
+                }
             }
-            if (iterator.REFUGO > 0) {
-                obj.push(iterator)
-            }
+            detailHistoric.data.reduce((acc: any, iterator: any) => {
+                return acc + iterator.BOAS + iterator.REFUGO
+            }, 0)
         }
 
-        detailHistoric.data.reduce((acc: any, iterator: any) => {
-            return acc + iterator.BOAS + iterator.REFUGO
-        }, 0)
 
         let objRes = {
-            resourceDetail: generalHistoric,
-            resource: obj,
+            resourceDetail: detailHistoric.data,
+            resource: generalHistoric.data,
             message: message(34)
         }
 
-        console.log('letRes', objRes);
+        // console.log('letRes', objRes);
 
-        return res.json({ status: message(1), message: message(1), data: objRes })
+        return res.json({ status: message(1), message: message(34), data: objRes })
     } else {
         return res.json({ status: message(1), message: message(0), data: message(33) })
     }

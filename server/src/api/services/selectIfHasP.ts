@@ -31,13 +31,14 @@ export const selectToKnowIfHasP = async (obj: any) => {
             const codigoFilho: any = resultHasP.map((item: any) => item.NUMITE)
             const numberOfQtd: number = Math.min(...resultHasP.map((element: any) => element.QTD_LIBERADA_PRODUZIR))
             const makeReservation = resultHasP.map((item: any) => item.NUMSEQ).filter((element: string) => element === numeroOperNew)
-
+            console.log('makeReservation', makeReservation);
             // Check to see if it's to make a reservation
             if (makeReservation.length <= 0) {
                 return response.message = message(13)
             }
 
             const resultQuantityCst = await select(21, obj.data)
+            console.log('resultQuantityCst', resultQuantityCst);
 
             // If there a values reserved
             if (resultQuantityCst.length > 0) {
@@ -101,50 +102,50 @@ export const selectToKnowIfHasP = async (obj: any) => {
                                                 response.message = message(14)
                                                 return response
                                             } else {
-                                                console.log('linha 112 /selectHAsP/');
+                                                console.log('linha 105 /selectHAsP/');
                                                 return response.message = message(0)
                                             }
                                         } catch (error) {
-                                            console.log('linha 116 Error on selectHasP', error);
+                                            console.log('linha 109 Error on selectHasP', error);
                                             return response.message = message(0)
                                         }
                                     }
                                 }
                             } catch (error) {
-                                console.log('linha 122 /selectHasP/', error);
+                                console.log('linha 115 /selectHasP/', error);
                                 return response.message = message(0)
                             }
                         } else {
                             try {
-                                const resultUpdate = await update(2, obj.data)
+                                const resultUpdate = await update(5, obj.data)
                                 if (resultUpdate === message(1)) {
                                     response.message = message(14)
                                     return response
                                 } else {
-                                    console.log('linha 112 /selectHAsP/');
+                                    console.log('linha 125 /selectHAsP/');
                                     return response.message = message(0)
                                 }
                             } catch (error) {
-                                console.log('linha 116 Error on selectHasP', error);
+                                console.log('linha 129 Error on selectHasP', error);
                                 return response.message = message(0)
                             }
                         }
                     } catch (error) {
-                        console.log('linha 138 /selectHasp/', error);
+                        console.log('linha 134 /selectHasp/', error);
                         return response.message = message(0)
                     }
                 } else {
                     return response.message = message(0)
                 }
             } catch (error) {
-                console.log('linha 145 /selectHasP/', error);
+                console.log('linha 141 /selectHasP/', error);
                 return response.message = message(0)
             }
         } else {
             return response.message = message(0)
         }
     } catch (error) {
-        console.log('linha 154 /error: selectHasP/: ', error);
+        console.log('linha 148 /error: selectHasP/: ', error);
         return response.message = message(0)
     }
 }

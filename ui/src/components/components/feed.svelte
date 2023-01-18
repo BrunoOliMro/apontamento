@@ -94,6 +94,7 @@
     }
 
     const callPost = async () => {
+        console.log("chamando call post...")
         isRequesting = true
         loader = true;
         close();
@@ -145,7 +146,6 @@
         console.log('getSpace', getSpace);
         if (getSpace) {
             loader = false;
-
             if(getSpace.message === messageQuery(35)){
                 return window.location.href = messageQuery(18)
             } else if (getSpace.message === messageQuery(1)) {

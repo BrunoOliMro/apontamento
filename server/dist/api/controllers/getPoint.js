@@ -30,6 +30,7 @@ const getPoint = async (req, res) => {
     const ip = String(Object.entries(results)[0][1]);
     console.log('Ob', Object.entries(results));
     console.log('ip', ip);
+    console.log('hostname', hostname);
     const pointedCode = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [4, 5]);
     console.log('pointedCode get Point.ts: ', pointedCode);
     if (!pointedCode.accepted) {
@@ -40,35 +41,30 @@ const getPoint = async (req, res) => {
     var peso = 1;
     console.log('variables.cookies.NUMERO_OPERACAO', '00', +variables.cookies.NUMERO_OPERACAO.replaceAll(' ', ''));
     if ('00' + String(variables.cookies.NUMERO_OPERACAO.replaceAll(' ', '')) === '00999') {
-        console.log('14e9nhgierhbinbitrnbitnibitnbitnbt');
         const partCodeCase = `= '${variables.cookies.CODIGO_PECA}'`;
         console.log('partCodeCase', partCodeCase);
         const isNullCase = `IS NULL`;
         var add;
         await callAddress();
-        console.log('variables.cookies.CODIGO_MAQUINA', variables.cookies.CODIGO_MAQUINA);
         async function callAddress() {
             if (variables.cookies.CODIGO_MAQUINA !== 'EX002') {
                 add = await (0, selectAddress_1.selectAddress)(partCodeCase, 5, comprimento, largura, peso);
-                console.log('add dif', add);
                 if (add === (0, message_1.message)(17)) {
                     add = await (0, selectAddress_1.selectAddress)(isNullCase, 5, comprimento, largura, peso);
-                    console.log('add di');
                 }
             }
             else if (variables.cookies.CODIGO_MAQUINA === 'EX002') {
                 add = await (0, selectAddress_1.selectAddress)(partCodeCase, 7, comprimento, largura, peso);
-                console.log('add', add);
                 if (add === (0, message_1.message)(17)) {
                     add = await (0, selectAddress_1.selectAddress)(isNullCase, 7, comprimento, largura, peso);
-                    console.log('add', add);
                 }
             }
             const pecas = await (0, select_1.select)(3);
             const composicaoDeEstoque = await (0, select_1.select)(4);
             if (composicaoDeEstoque.length <= 0 || pecas.length <= 0) {
+                console.log('ou auqiiiiiiiiiiiiiiiiiiiiiiii');
                 await (0, updateQuantityCstStorage_1.cstStorageUp)(variables.cookies.QTDE_LIB, add[0].ENDERECO, variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, resultSelectPcpProg[0].QTD_BOAS, variables.cookies.FUNCIONARIO, hostname, ip);
-                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(46), address: (0, message_1.message)(46) });
+                return add[0].ENDERECO = (0, message_1.message)(46);
             }
             const alturaDoEndereco = composicaoDeEstoque[0].ALTURA;
             const maxTotalWeightParts = pecas[0].EXECUT * resultSelectPcpProg[0].QTD_BOAS;
@@ -116,14 +112,14 @@ const getPoint = async (req, res) => {
                 callAddress();
             }
         }
-        console.log('add[0].ENDERECO', add[0].ENDERECO);
-        console.log('resultSelectPcpProg', resultSelectPcpProg);
         await (0, updateQuantityCstStorage_1.cstStorageUp)(variables.cookies.QTDE_LIB, add[0].ENDERECO, variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, resultSelectPcpProg[0].QTD_BOAS, variables.cookies.FUNCIONARIO, hostname, ip);
         if (add[0].ENDERECO) {
-            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(46), address: add[0].ENDERECO });
+            console.log('chamando endereço');
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: add[0].ENDERECO, address: add[0].ENDERECO });
         }
     }
     else {
+        await (0, updateQuantityCstStorage_1.cstStorageUp)(variables.cookies.QTDE_LIB, add = (0, message_1.message)(46), variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, resultSelectPcpProg[0].QTD_BOAS, variables.cookies.FUNCIONARIO, hostname, ip);
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(32), data: (0, message_1.message)(33), address: (0, message_1.message)(46) });
     }
 };

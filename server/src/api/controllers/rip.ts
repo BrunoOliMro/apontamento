@@ -37,6 +37,7 @@ export const rip: RequestHandler = async (req, res) => {
     }
 
     const resultVerifyCodeNote = await verifyCodeNote(variables.cookies, [4])
+    console.log('resultVerifyCodeNote', resultVerifyCodeNote);
 
     if(resultVerifyCodeNote.message === message(0)){
         return res.json({ status: message(1), message: message(0), data: message(0), code: message(33) })

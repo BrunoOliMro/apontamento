@@ -34,6 +34,9 @@ export const odfData: RequestHandler = async (req, res) => {
             return res.json({ status: message(1), message: message(0), data: message(0) })
         }
 
+        console.log('Cookies', variables.cookies);
+
+        // resultQuery.data[i].QTDE_LIB = resultQuery.data[i].QTDE_LIB - resultQuery.data[i].QTD_FALTANTE
         response.odfSelecionada = resultQuery.data[i];
         response.resEmployee = variables.cookies.FUNCIONARIO;
         response.message = message(1);
