@@ -5,45 +5,40 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.selectToKnowIfHasP = void 0;
 const global_config_1 = require("../../global.config");
+const query_1 = require("./query");
 const message_1 = require("./message");
-const select_1 = require("./select");
 const update_1 = require("./update");
 const mssql_1 = __importDefault(require("mssql"));
 const selectToKnowIfHasP = async (obj) => {
     let response = {
         message: '',
-        quantidade: obj.data.QTDE_LIB,
+        quantidade: obj.data['QTDE_LIB'],
         childCode: [],
         condic: '',
-        execut: 0,
+        execut: [],
         numeroOperNew: '',
     };
-    let quantityToPoint;
-    let numeroOperNew = String(obj.data.NUMERO_OPERACAO.replaceAll(' ', '')).replaceAll('000', '');
-    obj.data.numeroOperNew = numeroOperNew;
-    const updateStorageQuery = [];
-    let updateAlocacaoQuery = [];
-    const insertAlocaoQuery = [];
-    try {
-        const resultHasP = await (0, select_1.select)(22, obj.data);
-        console.log('result Select has P', resultHasP);
-        if (resultHasP.length <= 0) {
+    const resultHasP = await (0, query_1.selectQuery)(22, obj.data);
+    if (resultHasP.data.length <= 0) {
+        return response.message = (0, message_1.message)(13);
+    }
+    else if (resultHasP.data.length > 0) {
+        const execut = resultHasP.data.map((element) => element.EXECUT);
+        const codigoFilho = resultHasP.data.map((item) => item.NUMITE);
+        const minQtdAllowed = Math.min(...resultHasP.data.map((element) => element.QTD_LIBERADA_PRODUZIR));
+        const processItens = resultHasP.data.map((item) => item.NUMSEQ).filter((element) => element === String(String(obj.data['NUMERO_OPERACAO']).replaceAll(' ', '')).replaceAll('000', ''));
+        const minToProd = minQtdAllowed < obj.data['QTDE_LIB'] ? minQtdAllowed : Number(obj.data['QTDE_LIB']);
+        if (!minToProd || minToProd <= 0) {
+            return response = (0, message_1.message)(12);
+        }
+        if (processItens.length <= 0) {
             return response.message = (0, message_1.message)(13);
         }
-        else if (resultHasP.length > 0) {
-            let execut = Math.max(...resultHasP.map((element) => element.EXECUT));
-            const codigoFilho = resultHasP.map((item) => item.NUMITE);
-            const numberOfQtd = Math.min(...resultHasP.map((element) => element.QTD_LIBERADA_PRODUZIR));
-            const makeReservation = resultHasP.map((item) => item.NUMSEQ).filter((element) => element === numeroOperNew);
-            console.log('makeReservation', makeReservation);
-            if (makeReservation.length <= 0) {
-                return response.message = (0, message_1.message)(13);
-            }
-            const resultQuantityCst = await (0, select_1.select)(21, obj.data);
-            console.log('resultQuantityCst', resultQuantityCst);
-            if (resultQuantityCst.length > 0) {
-                if (resultQuantityCst[0].QUANTIDADE > 0) {
-                    response.quantidade = resultQuantityCst[0].QUANTIDADE;
+        const resultQuantityCst = await (0, query_1.selectQuery)(21, obj.data);
+        if (resultQuantityCst.data[0]) {
+            if (resultQuantityCst.data[0].hasOwnProperty('QUANTIDADE')) {
+                if (resultQuantityCst.data[0].QUANTIDADE > 0) {
+                    response.quantidade = Math.min(...execut);
                     response.childCode = codigoFilho;
                     response.execut = execut;
                     response.condic = 'P';
@@ -51,110 +46,101 @@ const selectToKnowIfHasP = async (obj) => {
                     return response;
                 }
             }
-            if (obj.data.QTDE_LIB <= 0) {
-                return response.message = (0, message_1.message)(12);
-            }
-            else if (numberOfQtd <= 0) {
-                return response.message = (0, message_1.message)(12);
-            }
-            else if (obj.data.QTDE_LIB < numberOfQtd) {
-                quantityToPoint = obj.data.QTDE_LIB;
-            }
-            else {
-                quantityToPoint = numberOfQtd;
-            }
-            const quantitySetStorage = Number(quantityToPoint * execut);
-            response.quantidade = quantityToPoint;
-            response.condic = resultHasP[0].CONDIC;
-            response.childCode = codigoFilho;
-            response.execut = execut;
-            obj.data.valorApontado = quantityToPoint;
-            obj.data.QTDE_LIB = quantityToPoint;
-            console.log('quantityToPoint', quantityToPoint);
-            try {
-                codigoFilho.forEach((element) => {
-                    updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${quantitySetStorage} WHERE 1 = 1 AND CODIGO = '${element}'`);
-                });
-                const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-                let updateStorage = Math.min(...await connection.query(updateStorageQuery.join('\n')).then(result => result.rowsAffected));
-                if (updateStorage > 0) {
-                    try {
-                        codigoFilho.forEach((codigoFilho) => {
-                            updateAlocacaoQuery.push(`UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${quantityToPoint} WHERE 1 = 1 AND ODF = '${obj.data.NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho}'`);
-                        });
-                        const updateAlocacao = Math.min(...await connection.query(updateAlocacaoQuery.join('\n')).then(result => result.rowsAffected));
-                        if (updateAlocacao <= 0) {
-                            try {
-                                if (makeReservation) {
-                                    codigoFilho.forEach((codigoFilho) => {
-                                        insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES (${obj.data.NUMERO_ODF}, ${numeroOperNew}, '${obj.data.CODIGO_PECA}', '${codigoFilho}', ${quantityToPoint}, 'ADDRESS', NULL, GETDATE(), '${obj.data.FUNCIONARIO}')`);
-                                    });
-                                    const insertAlocacao = Math.min(...await connection.query(insertAlocaoQuery.join('\n')).then(result => result.rowsAffected));
-                                    if (insertAlocacao <= 0) {
-                                        response.message = (0, message_1.message)(0);
-                                    }
-                                    else {
-                                        try {
-                                            const resultUpdate = await (0, update_1.update)(5, obj.data);
-                                            if (resultUpdate === (0, message_1.message)(1)) {
-                                                response.message = (0, message_1.message)(14);
-                                                return response;
-                                            }
-                                            else {
-                                                console.log('linha 105 /selectHAsP/');
-                                                return response.message = (0, message_1.message)(0);
-                                            }
+        }
+        try {
+            const updateStorageQuery = [];
+            const updateAlocacaoQuery = [];
+            const insertAlocaoQuery = [];
+            codigoFilho.forEach((element, i) => {
+                updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${minToProd * execut[i]} WHERE 1 = 1 AND CODIGO = '${element}'`);
+            });
+            const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+            let updateStorage = Math.min(...await connection.query(updateStorageQuery.join('\n')).then(result => result.rowsAffected));
+            if (updateStorage > 0) {
+                try {
+                    codigoFilho.forEach((codigoFilho, i) => {
+                        updateAlocacaoQuery.push(`UPDATE CST_ALOCACAO SET QUANTIDADE = QUANTIDADE + ${minToProd * execut[i]} WHERE 1 = 1 AND ODF = '${obj.data['NUMERO_ODF']}' AND CODIGO_FILHO = '${codigoFilho}'`);
+                    });
+                    const updateAlocacao = Math.min(...await connection.query(updateAlocacaoQuery.join('\n')).then(result => result.rowsAffected));
+                    if (updateAlocacao <= 0) {
+                        try {
+                            if (processItens) {
+                                codigoFilho.forEach((codigoFilho, i) => {
+                                    insertAlocaoQuery.push(`INSERT INTO CST_ALOCACAO (ODF, NUMOPE, CODIGO, CODIGO_FILHO, QUANTIDADE, ENDERECO, ALOCADO, DATAHORA, USUARIO) VALUES (${obj.data['NUMERO_ODF']}, ${String(String(obj.data['NUMERO_OPERACAO']).replaceAll(' ', '')).replaceAll('000', '')}, '${obj.data['CODIGO_PECA']}', '${codigoFilho}', ${minToProd * execut[i]}, 'ADDRESS', NULL, GETDATE(), '${obj.data['FUNCIONARIO']}')`);
+                                });
+                                const insertAlocacao = Math.min(...await connection.query(insertAlocaoQuery.join('\n')).then(result => result.rowsAffected));
+                                if (insertAlocacao <= 0) {
+                                    response.message = (0, message_1.message)(0);
+                                }
+                                else {
+                                    try {
+                                        const resultUpdate = await (0, update_1.update)(5, obj.data);
+                                        if (resultUpdate === (0, message_1.message)(1)) {
+                                            console.log('quero ver');
+                                            response.message = (0, message_1.message)(14);
+                                            return response;
                                         }
-                                        catch (error) {
-                                            console.log('linha 109 Error on selectHasP', error);
+                                        else {
+                                            console.log('linha 105 /selectHAsP/');
                                             return response.message = (0, message_1.message)(0);
                                         }
                                     }
+                                    catch (error) {
+                                        console.log('linha 109 Error on selectHasP', error);
+                                        return response.message = (0, message_1.message)(0);
+                                    }
                                 }
-                            }
-                            catch (error) {
-                                console.log('linha 115 /selectHasP/', error);
-                                return response.message = (0, message_1.message)(0);
                             }
                         }
-                        else {
-                            try {
-                                const resultUpdate = await (0, update_1.update)(5, obj.data);
-                                if (resultUpdate === (0, message_1.message)(1)) {
-                                    response.message = (0, message_1.message)(14);
-                                    return response;
-                                }
-                                else {
-                                    console.log('linha 125 /selectHAsP/');
-                                    return response.message = (0, message_1.message)(0);
-                                }
-                            }
-                            catch (error) {
-                                console.log('linha 129 Error on selectHasP', error);
-                                return response.message = (0, message_1.message)(0);
-                            }
+                        catch (error) {
+                            console.log('linha 115 /selectHasP/', error);
+                            return response.message = (0, message_1.message)(0);
                         }
                     }
-                    catch (error) {
-                        console.log('linha 134 /selectHasp/', error);
-                        return response.message = (0, message_1.message)(0);
+                    else {
+                        try {
+                            const resultUpdate = await (0, update_1.update)(5, obj.data);
+                            if (resultUpdate === (0, message_1.message)(1)) {
+                                response.message = (0, message_1.message)(14);
+                                return response;
+                            }
+                            else {
+                                console.log('linha 125 /selectHAsP/');
+                                return response.message = (0, message_1.message)(0);
+                            }
+                        }
+                        catch (error) {
+                            console.log('linha 129 Error on selectHasP', error);
+                            return response.message = (0, message_1.message)(0);
+                        }
                     }
                 }
-                else {
+                catch (error) {
+                    console.log('linha 134 /selectHasp/', error);
                     return response.message = (0, message_1.message)(0);
                 }
             }
-            catch (error) {
-                console.log('linha 141 /selectHasP/', error);
+            else {
                 return response.message = (0, message_1.message)(0);
             }
         }
-        else {
+        catch (error) {
+            console.log('linha 141 /selectHasP/', error);
             return response.message = (0, message_1.message)(0);
         }
+        finally {
+            console.log('finalyyyyyy');
+            response.condic = resultHasP.data[0].CONDIC;
+            obj.data['valorApontado'] = minToProd;
+            obj.data['QTDE_LIB'] = minToProd;
+            response.childCode = codigoFilho;
+            response.quantidade = minToProd;
+            response.message = (0, message_1.message)(14);
+            response.execut = execut;
+            return response;
+        }
     }
-    catch (error) {
-        console.log('linha 148 /error: selectHasP/: ', error);
+    else {
         return response.message = (0, message_1.message)(0);
     }
 };

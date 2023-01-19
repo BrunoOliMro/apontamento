@@ -1,2 +1,2 @@
-export declare const insertInto: (funcionario: string, numeroOdf: number, codigoPeca: string, revisao: string, numeroOperacao: string, codigoFilho: string, i: number) => Promise<any>;
+export declare const insertInto: (funcionario: string, numeroOdf: number, codigoPeca: string, revisao: string, numeroOperacao: string, codigoFilho: string, i: number) => Promise<string | undefined>;
 //# sourceMappingURL=insertCst.d.ts.map

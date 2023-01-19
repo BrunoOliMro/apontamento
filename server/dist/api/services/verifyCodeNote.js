@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyCodeNote = void 0;
+const query_1 = require("./query");
 const message_1 = require("./message");
-const select_1 = require("./select");
 const verifyCodeNote = async (values, acceptableStrings) => {
     const codes = {
         0: 'Error',
@@ -19,41 +19,27 @@ const verifyCodeNote = async (values, acceptableStrings) => {
     const response = {
         employee: '',
         code: '',
-        message: '',
         time: 0,
         accepted: (0, message_1.message)(33),
     };
-    let resultCodes = await (0, select_1.select)(23, values);
-    console.log('resultCodes', resultCodes);
-    if (resultCodes === (0, message_1.message)(0)) {
-        return resultCodes = (0, message_1.message)(0);
-    }
-    if (!resultCodes) {
-        response.code = codes[6];
-        response.message = (0, message_1.message)(0);
-        response.accepted = (0, message_1.message)(1);
-        return response;
-    }
-    if (resultCodes.length > 0) {
-        response.time = resultCodes[0].DATAHORA;
+    let resultCodes = await (0, query_1.selectQuery)(23, values);
+    if (resultCodes.data.length > 0) {
+        response.time = resultCodes.data[0].DATAHORA;
         response.employee = values.FUNCIONARIO;
-        if (values.FUNCIONARIO !== resultCodes[0].USUARIO && resultCodes[0].CODAPONTA === 4) {
-            response.employee = resultCodes[0].USUARIO;
+        if (values.FUNCIONARIO !== resultCodes.data[0].USUARIO && resultCodes.data[0].CODAPONTA === 4) {
+            response.employee = resultCodes.data[0].USUARIO;
         }
-        Object.entries(codes).forEach(element => {
-            if (Number(element[0]) === resultCodes[0].CODAPONTA) {
-                response.code = element[1];
-            }
-        });
+        response.code = codes[String(resultCodes.data[0].CODAPONTA)];
         acceptableStrings?.forEach(acc => {
-            if (Number(resultCodes[0].CODAPONTA) === acc) {
+            if (Number(resultCodes.data[0].CODAPONTA) === acc) {
                 response.accepted = (0, message_1.message)(1);
             }
         });
         return response;
     }
     else {
-        response.accepted = (0, message_1.message)(33);
+        response.code = codes[6];
+        response.accepted = (0, message_1.message)(1);
         return response;
     }
 };

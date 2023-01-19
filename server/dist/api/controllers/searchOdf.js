@@ -38,39 +38,21 @@ const searchOdf = async (req, res) => {
     else if (!odf[i]) {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(6), data: (0, message_1.message)(6) });
     }
-    console.log('odf[i].QTDE_APONTADA', odf[i].QTDE_APONTADA);
     if (i <= 0) {
         odf[i].QTDE_LIB = odf[i].QTDE_ODF - odf[i].QTDE_APONTADA;
     }
     else if (i > 0) {
-        !odf[i].QTD_BOAS ? odf[i].QTD_BOAS = 0 : odf[i].QTD_BOAS;
-        const boasPassadas = odf[i - 1].QTD_BOAS || 0;
-        const boas = odf[i].QTD_BOAS || 0;
-        const ruins = odf[i].QTD_REFUGO || 0;
-        const retrabalhadas = odf[i].QTD_RETRABALHADA || 0;
-        const faltantes = odf[i].QTD_FALTANTE || 0;
-        const quantidadeTotal = boasPassadas - boas - ruins - retrabalhadas - faltantes;
-        console.log('QuantidadeTotal', quantidadeTotal);
-        console.log('boasPassadas', boasPassadas);
-        console.log('boas', boas);
-        console.log('ruins', ruins);
-        console.log('retrabalhadas', retrabalhadas);
-        odf[i].QTDE_LIB = boasPassadas - boas - ruins - retrabalhadas;
-        console.log('odf[i].QTDE_LIB: ', odf[i].QTDE_LIB);
+        odf[i].QTDE_LIB = (odf[i - 1].QTD_BOAS || 0) - (odf[i].QTD_BOAS || 0) - (odf[i].QTD_REFUGO || 0) - (odf[i].QTD_RETRABALHADA || 0);
     }
+    console.log('odf[i].QTDE_LIB', odf[i].QTDE_LIB);
     if (!odf[i].QTDE_LIB || odf[i].QTDE_LIB <= 0) {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(11), data: (0, message_1.message)(11) });
     }
     barcode.data.QTDE_LIB = odf[i].QTDE_LIB;
     barcode.data.CODIGO_PECA = odf[i].CODIGO_PECA;
     let resultComponents = await (0, selectIfHasP_1.selectToKnowIfHasP)(barcode);
-    console.log('resultComponents', resultComponents);
     if (resultComponents.message === (0, message_1.message)(13) || resultComponents.message === (0, message_1.message)(14) || resultComponents.message === (0, message_1.message)(15)) {
-        console.log('Gerar cookies...');
-        if (resultComponents.quantidade < odf[i].QTDE_LIB) {
-            barcode.data.QTDE_LIB = resultComponents.quantidade;
-            odf[i].QTDE_LIB = barcode.data.QTDE_LIB;
-        }
+        barcode.data.QTDE_LIB = resultComponents.quantidade < odf[i].QTDE_LIB ? resultComponents.quantidade : odf[i].QTDE_LIB;
         odf[i].condic = resultComponents.condic;
         odf[i].execut = resultComponents.execut;
         odf[i].childCode = resultComponents.childCode;
@@ -78,16 +60,14 @@ const searchOdf = async (req, res) => {
         await (0, update_1.update)(1, barcode.data);
     }
     else if (resultComponents === (0, message_1.message)(12)) {
-        console.log('await cookie cleaner in result componentes');
         await (0, clearCookie_1.cookieCleaner)(res);
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(11), data: (0, message_1.message)(11) });
     }
     else if (resultComponents === (0, message_1.message)(13)) {
-        console.log('updating in message 13');
         await (0, update_1.update)(1, barcode.data);
     }
     await (0, cookieGenerator_1.cookieGenerator)(res, odf[i]);
-    const resultVerifyCodeNote = await (0, verifyCodeNote_1.verifyCodeNote)(barcode.data, [1, 3, 6]);
+    const resultVerifyCodeNote = await (0, verifyCodeNote_1.verifyCodeNote)(barcode.data, [1, 3, 6, 9]);
     return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: resultVerifyCodeNote.code });
 };
 exports.searchOdf = searchOdf;

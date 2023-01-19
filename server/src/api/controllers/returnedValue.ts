@@ -12,7 +12,6 @@ import { selectQuery } from '../services/query';
 
 export const returnedValue: RequestHandler = async (req, res) => {
     const variables = await inicializer(req)
-    // console.log('variables', variables.body);
 
     if (!variables.body.supervisor || !variables.body.quantity || !variables.body.barcodeReturn ) {
         return res.json({ status: message(1), message: message(48), data: message(33) })
@@ -36,8 +35,6 @@ export const returnedValue: RequestHandler = async (req, res) => {
     variables.cookies.motives = null
     variables.cookies.tempoDecorrido = null
 
-    console.log('variables.body.valueStorage', variables.body.valueStorage);
-
     if (!variables.body.valueStorage) {
         return res.json({ status: message(1), message: message(26), data: message(33) })
     }
@@ -57,33 +54,23 @@ export const returnedValue: RequestHandler = async (req, res) => {
     }
 
     const valorTotal = Number(goodFeed + badFeed)
-    const groupOdf = await selectQuery(28, body.data)
+    const groupOdf: any = await selectQuery(28, body.data)
     const i: number = await odfIndex(groupOdf.data, String(body!.data.NUMERO_OPERACAO))
-    const lastIndex: number = groupOdf.data.findIndex((element: any) => element.QTDE_APONTADA === 0) - 1;
-    console.log('i', i);
-    console.log('lastIndex', lastIndex);
+    const lastIndex: number = groupOdf.data!.findIndex((element: any) => element.QTDE_APONTADA === 0) - 1;
 
     if (lastIndex !== i) {
-        console.log('uee');
         return res.json({ status: message(1), message: message(43), data: message(33) })
     }
 
-    let odf = groupOdf.data[i]
+    let odf = groupOdf.data![i]
 
-    if (i === groupOdf.data.length - 1) {
-        odf = groupOdf.data[groupOdf.data.length - 1]
+    if (i === groupOdf.data!.length - 1) {
+        odf = groupOdf.data![groupOdf.data!.length - 1]
     }
 
-    if (lastIndex === groupOdf.data.length - 1) {
-        odf = groupOdf.data[groupOdf.data.length - 1]
+    if (lastIndex === groupOdf.data!.length - 1) {
+        odf = groupOdf.data![groupOdf.data!.length - 1]
     }
-
-    console.log(' goood', goodFeed);
-    console.log('bad', badFeed);
-    console.log('valorTotal', valorTotal);
-    console.log('odf.QTDE_APONTADA', odf.QTDE_APONTADA);
-    console.log('odf.QTDE_LIB', odf.QTDE_LIB);
-    console.log('odf.odf.QTD_REFUGO', odf.QTD_REFUGO);
 
     if(goodFeed){
         if(!odf.QTD_BOAS || odf.QTD_BOAS <= 0 ){
@@ -94,10 +81,6 @@ export const returnedValue: RequestHandler = async (req, res) => {
             return res.json({ status: message(1), message: message(27), data: message(33) })
         }
     }
-
-    // if(!odf.QTD_BOAS || odf.QTD_BOAS <= 0 || !odf.QTD_REFUGO || odf.QTD_REFUGO <= 0){
-    //     return res.json({ status: message(1), message: message(27), data: message(33) })
-    // }
 
     if (odf.QTDE_APONTADA < valorTotal || odf.QTDE_APONTADA <= 0 || !odf.QTD_REFUGO && badFeed > 0) {
         return res.json({ status: message(1), message: message(27), data: message(33) })
@@ -115,29 +98,15 @@ export const returnedValue: RequestHandler = async (req, res) => {
         variables.cookies.qtdLib = qtdLib
 
         const selectSuper = await select(10, variables.body)
-        console.log('odf.QTD_FALTANTE', odf.QTD_FALTANTE);
-        console.log('variables.cookies.missingFeed', variables.cookies.missingFeed);
-        console.log('variables',  variables.cookies.valorApontado)
-        console.log(' variables.cookies.goodFeed',  variables.cookies.goodFeed);
-        console.log(' variables.cookies.faltante',  variables.cookies.faltante);
-        console.log(' variables.cookies.QTDE_LIB',  variables.cookies.QTDE_LIB);
-        console.log(' variables.cookies.badFeed',  variables.cookies.badFeed);
 
-        // variables.goodFeed
-        // variables.faltante
-        // variables.QTDE_LIB
-        // variables.badFeed
         variables.cookies.QTDE_APONTADA = valorApontado
         variables.cookies.NUMERO_ODF = body.data.NUMERO_ODF
         variables.cookies.NUMERO_OPERACAO = body.data.NUMERO_OPERACAO
         variables.cookies.CODIGO_MAQUINA = body.data.CODIGO_MAQUINA
-        variables.cookies.REVISAO = groupOdf.data[i].REVISAO
-        variables.cookies.QTDE_LIB = groupOdf.data[i].QTDE_LIB
+        variables.cookies.REVISAO = groupOdf.data![i].REVISAO
+        variables.cookies.QTDE_LIB = groupOdf.data![i].QTDE_LIB
         variables.cookies.valorTotal = valorTotal
-        variables.cookies.valorApontado = groupOdf.data[i].QTDE_APONTADA - valorApontado
-
-        console.log('groupOdf.data[i].QTDE_APONTADA', groupOdf.data[i].QTDE_APONTADA);
-        console.log('variables.cookies.valorApontado', variables.cookies.valorApontado);
+        variables.cookies.valorApontado = groupOdf.data![i].QTDE_APONTADA - valorApontado
 
         if (selectSuper.length > 0) {
             const insertHisCodReturned = await insertInto(variables.cookies)

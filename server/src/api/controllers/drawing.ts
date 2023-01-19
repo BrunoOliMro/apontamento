@@ -17,8 +17,8 @@ export const drawing: RequestHandler = async (req, res) => {
     const resultVerify = await verifyCodeNote(variables.cookies, [3, 4, 5, 7])
 
     if (resultVerify.accepted) {
-        const result = await selectQuery(19, variables.cookies)
-        for await (const [i, record] of result.data.entries()) {
+        const result: any = await selectQuery(19, variables.cookies)
+        for await (const [i, record] of result.data!.entries()) {
             const rec = await record;
             const path = await pictures.getPicturePath(rec['NUMPEC'], rec['IMAGEM'], variables.drawingString, String(i));
             valuesResult.push(path);

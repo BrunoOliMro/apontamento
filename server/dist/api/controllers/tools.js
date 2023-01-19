@@ -21,10 +21,8 @@ const tools = async (req, res) => {
     variables.cookies.motives = null;
     variables.cookies.tempoDecorrido = null;
     const codeNoteResult = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [6, 8, 9]);
-    console.log('result Code note --Tools.Ts-- ', codeNoteResult);
     if (codeNoteResult.code === (0, message_1.message)(38)) {
         toolsImg = await (0, query_1.selectQuery)(20, variables.cookies);
-        console.log('toolsImg', toolsImg);
         if (!toolsImg.data) {
             return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(16), data: (0, message_1.message)(33) });
         }
@@ -41,11 +39,9 @@ const tools = async (req, res) => {
         }
     }
     if (codeNoteResult.accepted || codeNoteResult.code === (0, message_1.message)(17)) {
-        console.log('InsertInto 1');
         const inserted = await (0, insert_1.insertInto)(variables.cookies);
         if (inserted === (0, message_1.message)(1)) {
             toolsImg = await (0, query_1.selectQuery)(20, variables.cookies);
-            console.log('toolsImg.data', toolsImg.data);
             if (!toolsImg.data) {
                 return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(16), data: (0, message_1.message)(33) });
             }
@@ -83,12 +79,10 @@ const selectedTools = async (req, res) => {
     const timeSpend = Number(new Date().getTime() - startSetupTime) || null;
     variables.cookies.tempoDecorrido = timeSpend;
     if (codeNoteResult.accepted) {
-        console.log('insert into 2');
         variables.cookies.pointedCodeDescription = ['Fin Setup'];
         variables.cookies.pointedCode = [2];
         const codApontamentoFinalSetup = await (0, insert_1.insertInto)(variables.cookies);
         if (codApontamentoFinalSetup !== (0, message_1.message)(0)) {
-            console.log('insert into 3');
             variables.cookies.pointedCode = [3];
             const codApontamentoInicioSetup = await (0, insert_1.insertInto)(variables.cookies);
             if (codApontamentoInicioSetup !== (0, message_1.message)(0)) {
@@ -104,9 +98,7 @@ const selectedTools = async (req, res) => {
     }
     else {
         const codeNoteResult = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [2]);
-        console.log('codeNoteResult segundooooo', codeNoteResult);
         if (codeNoteResult.accepted) {
-            console.log('insert into 3');
             variables.cookies.pointedCodeDescription = ['Ini Prod.'];
             variables.cookies.pointedCode = [3];
             const codApontamentoInicioSetup = await (0, insert_1.insertInto)(variables.cookies);

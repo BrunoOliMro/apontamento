@@ -8,10 +8,6 @@ const message_1 = require("../services/message");
 const select_1 = require("../services/select");
 const stopSupervisor = async (req, res) => {
     const variables = await (0, variableInicializer_1.inicializer)(req);
-    if (!variables) {
-        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
-    }
-    const resultVerifyCodeNote = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [7]);
     variables.cookies.goodFeed = null;
     variables.cookies.badFeed = null;
     variables.cookies.pointedCode = [3];
@@ -20,6 +16,13 @@ const stopSupervisor = async (req, res) => {
     variables.cookies.pointedCodeDescription = [`Ini Prod.`];
     variables.cookies.motives = null;
     variables.cookies.tempoDecorrido = null;
+    if (!variables.body.superMaqPar) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
+    }
+    const resultVerifyCodeNote = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [7]);
+    if (!resultVerifyCodeNote.accepted) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
+    }
     if (resultVerifyCodeNote.accepted) {
         const resource = await (0, select_1.select)(10, variables.body.superMaqPar);
         if (resource) {
@@ -30,9 +33,6 @@ const stopSupervisor = async (req, res) => {
             else {
                 return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(21), data: (0, message_1.message)(33) });
             }
-        }
-        else if (!resource) {
-            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(21), data: (0, message_1.message)(33) });
         }
         else {
             return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(21), data: (0, message_1.message)(33) });

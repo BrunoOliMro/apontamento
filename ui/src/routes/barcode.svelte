@@ -32,13 +32,14 @@
   let badge;
   const titleBarcode = "CÓDIGO DE BARRAS DA ODF";
   const titleEmployee = `COLABORADOR`;
+  let resultRedirect;
+  const redirectRoute = "/api/v1/clearAll";
 
   callReturnMotive();
 
   async function callReturnMotive() {
     const res = await fetch(apiCallMotiveReturn);
     motives = await res.json();
-    console.log("MOTIVES", motives);
     if (motives) {
       if (motives.message === messageQuery(1) && motives.data.data) {
         motives = motives.data.data.map((acc) => acc.DESCRICAO);
@@ -61,7 +62,6 @@
       if (res) {
         loader = false;
         if (res.status === messageQuery(1)) {
-          console.log('barcode', res);
 
           if(res.data === messageQuery(10)){
             return window.location.href = messageQuery(18)
@@ -184,15 +184,15 @@
     quantity = "";
     valueStorage = "";
     returnModal = false;
-    loader = false;
     if (res.message !== messageQuery(0)) {
+      loader = false;
       returnModal = false;
       message = res.message;
     }
     console.log("res", res);
   }
 
-  function redirectToBarcode(event) {
+  async function redirectToBarcode(event) {
     breadcrumbModal = false;
     barcodeModal = false;
     badgeModal = true;
@@ -200,7 +200,11 @@
     barcode = "";
     message = "";
     (badge = ""), (barcode = "");
-    window.location.href = messageQuery(20);
+    const res = await fetch(redirectRoute);
+      resultRedirect = await res.json();
+      if (resultRedirect.message === messageQuery(1)) {
+         window.location.href = messageQuery(20);
+      }
   }
 
   function close() {
@@ -210,7 +214,7 @@
     returnModal = false;
     message = "";
     location.reload();
-    loader = false;
+    // loader = false;
   }
 </script>
 

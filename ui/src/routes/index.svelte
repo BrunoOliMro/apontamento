@@ -4,7 +4,6 @@
    import Feed from "../components/components/feed.svelte";
    import Title from "../components/title/title.svelte";
    import messageQuery from "../utils/checkMessage";
-   import blockForbiddenChars from "../utils/presanitize";
    import Supervisor from "../components/components/supervisor.svelte";
    import { verifyStringLenght } from "../utils/verifyLength";
    import post from "../utils/postFunction";
@@ -26,39 +25,18 @@
       prodTime: [],
       image: [],
    };
-   // const e = getData();
-   // const i = getTempo();
-   // const z = getImagem();
    let message = "";
    let rip = false;
    let resulFetch;
    let result = getTempo() || "";
-   export let timeBar;
    let goBack = `Tentar novamente...`
    let superTitle = `Supervisor`
    let timeUp = `Tempo excecido...`
    let messageArea = false
 
-   // async function getResult(){
-
-   //    // await Promise.reject(getData()).then(res => console.log('res in reject', res))
-
-   //    // Promise.resolve(getData()).then(res => console.log('res in getData', res))
-   //    // Promise.resolve(getImagem()).then(res => console.log('res in getImagem', res))
-   //    // Promise.resolve(getTempo()).then(res => console.log('res in getTempo', res))
-   //    const x = await Promise.allSettled([getData(0), getTempo(), getImagem()]).then(res => console.log("res in", res)).catch((err) => console.log('err', err))
-   //    return x;
-   //    // if(x === 'rejected'){
-   //    //    return messageQuery(0)
-   //    // } else {
-   //    //    return messageQuery(1)
-   //    // }
-   // }
-
    async function redirect() {
       const res = await fetch(redirectRoute);
       resultRedirect = await res.json();
-      console.log('resultRedirect', resultRedirect);
       if (resultRedirect.message === messageQuery(1)) {
          window.location.href = messageQuery(20);
       }
@@ -67,22 +45,12 @@
    async function front() {
       const res = await fetch(veriFyIfPoin);
       resulFetch = await res.json();
-      console.log("resultFetch", resulFetch);
       if (resulFetch.status) {
          return (window.location.href = messageQuery(18));
       } else {
          message = "Odf não apontada";
       }
    }
-
-   // async function getData() {
-   //    const res = await fetch(callOdfData);
-   //    objData.codData = await res.json();
-   //    console.log('objData.codData', objData.codData);
-   //    if(objData.codData.code === messageQuery(10) ||  objData.codData.code ===  messageQuery(11)||  objData.codData.code === messageQuery(12)){
-   //       rip = true
-   //    }
-   // }
 
    async function getTempo() {
       const res = await fetch(statusUrlApi);
@@ -96,51 +64,25 @@
          rip = true
       }
 
-      console.log('objData.codData.supervisor', objData.codData.supervisor);
-      if(!objData.prodTime .supervisor){
+      console.log('objData.prodTime', objData.prodTime.supervisor);
+      if(!objData.prodTime.supervisor){
          if (objData.prodTime.data <= 0) {
             message = messageQuery(24);
          }
       }
 
-      console.log('objData.codData.data.odfSelecionada.QTDE.LIB', objData.codData.data.odfSelecionada.QTDE_LIB);
-
       if(objData.codData.data.odfSelecionada.QTDE_LIB <= 0){
          messageArea = true
          return message = messageQuery(4)
       }
-
-      console.log(" objData.codData", objData.codData);
-      console.log(" objData.prodTime", objData.prodTime);
-      console.log(" objData.image", objData.image);
    }
-
-   // async function getImagem() {
-   //    const res = await fetch(imageUrl);
-   //    objData.image = await res.json();
-   // }
 
    function close() {
       location.reload()
       message = messageQuery(0);
    }
 
-   // const postCallSupervisor = async (event) => {
-   //     const x = await verifyStringLenght(event, supervisor, 6, 8);
-   //     if (x === "Success") {
-   //         const res = await post(supervisorApi, supervisor);
-   //         if (res.message === "Supervisor encontrado") {
-   //             modalSuper = false;
-   //             clearInterval(barTime);
-   //         }
-   //     } else {
-   //         supervisor = "";
-   //         message = "Crachá inválido";
-   //     }
-   // };
-
    async function checkForSuper(event) {
-      console.log('eve', event);
 
       if(event.detail.text === 'Go Back!!!') {
          return redirect()
@@ -150,18 +92,17 @@
       if (res === messageQuery(1)) {
          loader = true;
          const res = await post(supervisorApi, { supervisor });
+         console.log('checkFOr', res);
          loader = false;
-         if (res.status === messageQuery(1) && res.data.length > 0) {
-            return (message = messageQuery(0));
-         } else if (res.data.length <= 0) {
+         if (res.status === messageQuery(1) && res.data.length <= 0) {
+            location.reload();
             return (message = messageQuery(25));
+         } else {
+            return (message = messageQuery(0));
          }
-      } else {
-         supervisor = messageQuery(0);
       }
    }
 
-   console.log("result", result);
 </script>
 
 {#if loader === true}

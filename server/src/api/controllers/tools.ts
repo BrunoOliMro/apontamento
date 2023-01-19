@@ -15,7 +15,7 @@ export const tools: RequestHandler = async (req, res) => {
     const variables = await inicializer(req)
     const toolString = String("_ferr")
     const result = [];
-    var toolsImg;
+    var toolsImg: any;
     variables.cookies.goodFeed = null
     variables.cookies.badFeed = null
     variables.cookies.pointedCode = [1]
@@ -27,11 +27,8 @@ export const tools: RequestHandler = async (req, res) => {
 
     const codeNoteResult = await verifyCodeNote(variables.cookies, [6, 8, 9])
 
-    console.log('result Code note --Tools.Ts-- ', codeNoteResult);
-
     if(codeNoteResult.code === message(38)){
         toolsImg = await selectQuery(20, variables.cookies)
-            console.log('toolsImg', toolsImg);
             if (!toolsImg.data) {
                 return res.json({ status: message(1), message: message(16), data: message(33) });
             } else if (toolsImg.data) {
@@ -47,11 +44,9 @@ export const tools: RequestHandler = async (req, res) => {
     }
 
     if (codeNoteResult.accepted || codeNoteResult.code === message(17)) {
-        console.log('InsertInto 1');
         const inserted = await insertInto(variables.cookies)
         if (inserted === message(1)) {
             toolsImg = await selectQuery(20, variables.cookies)
-            console.log('toolsImg.data', toolsImg.data);
             if (!toolsImg.data) {
                 return res.json({ status: message(1), message: message(16), data: message(33) });
             } else if (toolsImg.data) {
@@ -90,13 +85,11 @@ export const selectedTools: RequestHandler = async (req, res) => {
     variables.cookies.tempoDecorrido = timeSpend
 
     if (codeNoteResult.accepted) {
-        console.log('insert into 2');
         //INSERE EM CODAPONTA 2
         variables.cookies.pointedCodeDescription = ['Fin Setup'];
         variables.cookies.pointedCode = [2];
         const codApontamentoFinalSetup = await insertInto(variables.cookies);
         if (codApontamentoFinalSetup !== message(0)) {
-            console.log('insert into 3');
             //INSERE EM CODAPONTA 3
             variables.cookies.pointedCode = [3]
             const codApontamentoInicioSetup = await insertInto(variables.cookies)
@@ -111,10 +104,8 @@ export const selectedTools: RequestHandler = async (req, res) => {
         }
     } else {
         const codeNoteResult = await verifyCodeNote(variables.cookies, [2])
-        console.log('codeNoteResult segundooooo', codeNoteResult);
 
         if (codeNoteResult.accepted) {
-            console.log('insert into 3');
             //INSERE EM CODAPONTA 3
             variables.cookies.pointedCodeDescription = ['Ini Prod.']
             variables.cookies.pointedCode = [3]

@@ -30,7 +30,6 @@ const returnedValue = async (req, res) => {
     variables.cookies.pointedCodeDescription = ['Estorno'];
     variables.cookies.motives = null;
     variables.cookies.tempoDecorrido = null;
-    console.log('variables.body.valueStorage', variables.body.valueStorage);
     if (!variables.body.valueStorage) {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(26), data: (0, message_1.message)(33) });
     }
@@ -50,10 +49,7 @@ const returnedValue = async (req, res) => {
     const groupOdf = await (0, query_1.selectQuery)(28, body.data);
     const i = await (0, odfIndex_1.odfIndex)(groupOdf.data, String(body.data.NUMERO_OPERACAO));
     const lastIndex = groupOdf.data.findIndex((element) => element.QTDE_APONTADA === 0) - 1;
-    console.log('i', i);
-    console.log('lastIndex', lastIndex);
     if (lastIndex !== i) {
-        console.log('uee');
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(43), data: (0, message_1.message)(33) });
     }
     let odf = groupOdf.data[i];
@@ -63,12 +59,6 @@ const returnedValue = async (req, res) => {
     if (lastIndex === groupOdf.data.length - 1) {
         odf = groupOdf.data[groupOdf.data.length - 1];
     }
-    console.log(' goood', goodFeed);
-    console.log('bad', badFeed);
-    console.log('valorTotal', valorTotal);
-    console.log('odf.QTDE_APONTADA', odf.QTDE_APONTADA);
-    console.log('odf.QTDE_LIB', odf.QTDE_LIB);
-    console.log('odf.odf.QTD_REFUGO', odf.QTD_REFUGO);
     if (goodFeed) {
         if (!odf.QTD_BOAS || odf.QTD_BOAS <= 0) {
             return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(27), data: (0, message_1.message)(33) });
@@ -94,13 +84,6 @@ const returnedValue = async (req, res) => {
         variables.cookies.missingFeed = faltante;
         variables.cookies.qtdLib = qtdLib;
         const selectSuper = await (0, select_1.select)(10, variables.body);
-        console.log('odf.QTD_FALTANTE', odf.QTD_FALTANTE);
-        console.log('variables.cookies.missingFeed', variables.cookies.missingFeed);
-        console.log('variables', variables.cookies.valorApontado);
-        console.log(' variables.cookies.goodFeed', variables.cookies.goodFeed);
-        console.log(' variables.cookies.faltante', variables.cookies.faltante);
-        console.log(' variables.cookies.QTDE_LIB', variables.cookies.QTDE_LIB);
-        console.log(' variables.cookies.badFeed', variables.cookies.badFeed);
         variables.cookies.QTDE_APONTADA = valorApontado;
         variables.cookies.NUMERO_ODF = body.data.NUMERO_ODF;
         variables.cookies.NUMERO_OPERACAO = body.data.NUMERO_OPERACAO;
@@ -109,8 +92,6 @@ const returnedValue = async (req, res) => {
         variables.cookies.QTDE_LIB = groupOdf.data[i].QTDE_LIB;
         variables.cookies.valorTotal = valorTotal;
         variables.cookies.valorApontado = groupOdf.data[i].QTDE_APONTADA - valorApontado;
-        console.log('groupOdf.data[i].QTDE_APONTADA', groupOdf.data[i].QTDE_APONTADA);
-        console.log('variables.cookies.valorApontado', variables.cookies.valorApontado);
         if (selectSuper.length > 0) {
             const insertHisCodReturned = await (0, insert_1.insertInto)(variables.cookies);
             if (insertHisCodReturned) {

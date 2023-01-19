@@ -1,5 +1,6 @@
 <script>
   // @ts-nocheck
+  let loader = true;
   import ModalConfirmation from "../components/modal/modalConfirmation.svelte";
   import Message from "../components/components/message.svelte";
   import messageQuery from "../utils/checkMessage";
@@ -11,7 +12,6 @@
   let continuer = `Continuar`;
   let title = "Colaborador";
   let selectedTools = [];
-  let loader = true;
   let message = "";
   let tools = [];
   let array = [];

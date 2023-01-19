@@ -38,17 +38,10 @@ const select = async (chosenOption, values) => {
         28: `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, CODIGO_PECA, QTD_BOAS, QTD_REFUGO, QTD_FALTANTE, QTD_RETRABALHADA FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${values.NUMERO_ODF} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`,
         29: `SELECT TOP 1  * FROM HISREAL  WHERE 1 = 1 AND CODIGO = '${values.CODIGO_PECA}' ORDER BY DATA DESC`
     };
-    console.log("codes[chosenOption]:", codes[String(chosenOption)]);
-    var query = '';
-    for (const [key, value] of Object.entries(codes)) {
-        if (Number(key) === chosenOption) {
-            query = value;
-        }
-    }
     try {
-        if (query) {
+        if (codes[String(chosenOption)]) {
             const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-            const data = await connection.query(`${query}`).then((result) => result.recordset);
+            const data = await connection.query(`${codes[String(chosenOption)]}`).then((result) => result.recordset);
             await connection.close();
             if (data.length > 0) {
                 return data;

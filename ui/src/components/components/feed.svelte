@@ -13,7 +13,6 @@
     import Cod from "./cod.svelte";
     import ModalConfirmation from "../modal/modalConfirmation.svelte";
     import Supervisor from "./supervisor.svelte";
-    // let supervisorApi = `/api/v1/supervisor`;
     let urlBadFeedMotive = `/api/v1/badFeedMotives`;
     let supervisorStop = "api/v1/supervisorParada";
     let imageLoader = "/images/axonLoader.gif";
@@ -39,8 +38,6 @@
     let availableQuantity = 0
     let subTitle = ""
 
-    console.log('Feed', odfData.codData.data);
-
     if(!odfData.codData.data){
         odfData.codData.data = 'S/I'
     } else {
@@ -57,20 +54,12 @@
     }
 
     const postStop = async () => {
-        // @ts-ignore
-        // loader = true
-        // message = ''
         const res = await post(supervisorStop, supervisor);
         if (res) {
             if (res.message === messageQuery(1)) {
-                // loader = true;
                 callPost();
-                // message = "Apontamento Liberado";
             }
             if (res.message !== messageQuery(0)) {
-                // message = res.message;
-                // superParada = false;
-                // showmodal = false;
                 loader = false;
             }
         }
@@ -94,7 +83,6 @@
     }
 
     const callPost = async () => {
-        console.log("chamando call post")
         isRequesting = true
         loader = true;
         close();
@@ -121,26 +109,21 @@
                 window.location.href = messageQuery(20);
                 location.reload();
             } else if (res.message === "Saldo menor que o apontado") {
-                // message = "Saldo menor que o apontado";
                 balance = res.balance;
-                isRequesting = false;
             } else if (res.message === messageQuery(1)) {
                 getSpaceFunc();
             } else if (res.message === "Rip iniciated") {
                 window.location.href = messageQuery(18);
                 location.reload();
-            } else if (res.message === messageQuery(4)) {
-                isRequesting = false;
-            } else if (res.message !== messageQuery(0)) {
-                isRequesting = false;
+            }  else if (res.message !== messageQuery(0)) {
                 message = res.message;
             }
         }
     };
 
     async function getSpaceFunc() {
-        loader = true;
         isRequesting = true
+        loader = true;
         const res = await fetch(pointApi);
         getSpace = await res.json();
         console.log('getSpace', getSpace);
@@ -175,7 +158,6 @@
                 return (message ="Apontando apenas peças retrabalhadas e peças faltantes, confirma ?");
             } else if ((numberMissing > 0 && numberGoodFeed > 0 && numberGoodFeed < numberQtdAllowed && numberBadFeed + numberReworkFeed === 0) ||
                 (numberReworkFeed > 0 && numberGoodFeed > 0 && numberGoodFeed < numberQtdAllowed && numberBadFeed + numberMissing === 0)) {
-                    console.log('ibrbuiruiburbubrbu');
                 return (message = "Apontamento parcial");
             } else if (total > numberQtdAllowed) {
                 message = "Quantidade excedida";
@@ -202,12 +184,12 @@
         showConfirm = false;
     }
 
-    function closeRedirectBarcode() {
-        loader = true;
-        message = "";
-        address = false;
-        window.location.href =  messageQuery(20);
-    }
+    // function closeRedirectBarcode() {
+    //     loader = true;
+    //     message = "";
+    //     address = false;
+    //     window.location.href =  messageQuery(20);
+    // }
 
     function closeRedirect() {
         loader = true;

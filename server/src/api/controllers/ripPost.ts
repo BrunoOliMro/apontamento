@@ -23,10 +23,10 @@ export const ripPost: RequestHandler = async (req, res) => {
     var updateQtyQuery: string[] = [];
     var objectSanitized: { [key: string]: any; } = {}
     const pointCode = await verifyCodeNote(variables.cookies, [5])
-    console.log('pointCode', pointCode);
 
     var oldTimer = new Date(pointCode.time).getTime()
     var timeSpendRip = Number(new Date().getTime() - oldTimer) || null
+    variables.cookies.tempoDecorrido = timeSpendRip
     variables.cookies.goodFeed = null
     variables.cookies.badFeed = null
     variables.cookies.pointedCode = [6]
@@ -34,28 +34,22 @@ export const ripPost: RequestHandler = async (req, res) => {
     variables.cookies.reworkFeed = null
     variables.cookies.pointedCodeDescription = ['Rip Fin.']
     variables.cookies.motives = null
-    variables.cookies.tempoDecorrido = timeSpendRip
-
-    if (!pointCode.accepted) {
-        return res.json({ status: message(1), message: message(33), data: message(33), code: pointCode.code })
-    }
 
     const resultSelect=  await selectQuery(30, variables.cookies)
 
     if (Object.keys(variables.body).length <= 0) {
-        console.log('insert into 6');
         const insertedRipCode = await insertInto(variables.cookies)
         if (insertedRipCode) {
             const pointCode = await verifyCodeNote(variables.cookies, [5])
             const updatePcpProgResult = await update(0, variables.cookies)
             if (updatePcpProgResult === message(1)) {
                 await cookieCleaner(res)
-                return res.json({ status: message(1), message: message(1), data: message(33), code: pointCode.code, qtdelib: resultSelect.data[0].QTDE_LIB })
+                return res.json({ status: message(1), message: message(1), data: message(33), code: pointCode.code, qtdelib: resultSelect.data![0].QTDE_LIB })
             } else {
-                return res.json({ status: message(1), message: message(33), data: message(33), code: pointCode.code, qtdelib: resultSelect.data[0].QTDE_LIB })
+                return res.json({ status: message(1), message: message(33), data: message(33), code: pointCode.code, qtdelib: resultSelect.data![0].QTDE_LIB })
             }
         } else {
-            return res.json({ status: message(1), message: message(0), data: message(0), code: pointCode.code, qtdelib: resultSelect.data[0].QTDE_LIB })
+            return res.json({ status: message(1), message: message(0), data: message(0), code: pointCode.code, qtdelib: resultSelect.data![0].QTDE_LIB })
         }
     } else {
         for (const [key, value] of Object.entries(variables.body.values)) {
@@ -67,16 +61,14 @@ export const ripPost: RequestHandler = async (req, res) => {
 
     //Insere O CODAPONTA 6, Tempo da rip e atualizada o tempo em PCP
     try {
-        console.log('insert into 6');
         const insertedRipCode = await insertInto(variables.cookies)
-        console.log('insertedRipCode', insertedRipCode);
         if (!insertedRipCode) {
             return res.json({ status: message(1), message: message(33), data: message(33) })
         } else if (insertedRipCode) {
             try {
                 const resultUpdatePcpProg = await update(0, variables.cookies)
                 if (resultUpdatePcpProg !== message(1)) {
-                    return res.json({ status: message(1), message: message(33), data: message(33), code: pointCode.code, qtdelib: resultSelect.data[0].QTDE_LIB })
+                    return res.json({ status: message(1), message: message(33), data: message(33), code: pointCode.code, qtdelib: resultSelect.data![0].QTDE_LIB })
                 } else {
                     const resultSplitLines: { [k: string]: any; } = Object.keys(objectSanitized).reduce((acc: any, iterator: any) => {
                         const [col, lin] = iterator.split('-')
@@ -96,7 +88,6 @@ export const ripPost: RequestHandler = async (req, res) => {
                         try {
                             const connection = await mssql.connect(sqlConfig);
                             await connection.query(updateQtyQuery.join('\n'))
-                            console.log('cade o update');
                             await cookieCleaner(res)
                             return res.json({status: message(1), message: message(1), data: message(1), code: pointCode.code, qtdelib: resultSelect})
                         } catch (error) {

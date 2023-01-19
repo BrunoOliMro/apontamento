@@ -1,5 +1,5 @@
-export const message = (choosenOption: number) => {
-    const response: any = {
+export const message = (chosenOption: number) => {
+    const response: { [k: string]: string }  = {
         0: 'Algo deu errado',
         1: 'Success',
         2: 'Ocorreu um erro, tente novamente...',
@@ -49,11 +49,13 @@ export const message = (choosenOption: number) => {
         48: 'Preencha todos os campos', 
     }
 
-    for (const key in response) {
-        if (choosenOption === Number(key)) {
-            var answer = response[key]
-        }
-    }
+    return response[String(chosenOption)]
 
-    return answer
+    // for (const key in response) {
+    //     if (choosenOption === Number(key)) {
+    //         var answer = response[key]
+    //     }
+    // }
+
+    // return answer
 }

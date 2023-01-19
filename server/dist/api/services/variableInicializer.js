@@ -10,14 +10,12 @@ const inicializer = async (req) => {
     };
     if (Object.keys(req.body).length > 0) {
         for (const [key, value] of Object.entries(req.body.values)) {
-            const sanitizedValue = !(0, sanitize_1.sanitize)(value) ? null : (0, sanitize_1.sanitize)(value);
-            response.body[key] = sanitizedValue;
+            response.body[key] = !(0, sanitize_1.sanitize)(value) ? null : (0, sanitize_1.sanitize)(value);
         }
     }
     if (Object.keys(req.cookies).length > 0) {
         for (const [key, value] of Object.entries(req.cookies)) {
-            const sanitizedValue = !(0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(value)) ? null : (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(value));
-            response.cookies[key] = sanitizedValue;
+            response.cookies[key] = !(0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(value)) ? null : (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(value));
         }
     }
     return response;

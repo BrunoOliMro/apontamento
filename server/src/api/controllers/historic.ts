@@ -15,7 +15,7 @@ export const historic: RequestHandler = async (req, res) => {
     const resultVerifyCodeNote = await verifyCodeNote(variables.cookies, [3, 4, 5, 7])
 
     if (resultVerifyCodeNote.accepted) {
-        const detailHistoric = await selectQuery(5, variables.cookies)
+        const detailHistoric: any = await selectQuery(5, variables.cookies)
         const generalHistoric = await selectQuery(6, variables.cookies)
 
         console.log('detailHistoric', detailHistoric.data);

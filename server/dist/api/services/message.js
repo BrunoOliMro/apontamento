@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.message = void 0;
-const message = (choosenOption) => {
+const message = (chosenOption) => {
     const response = {
         0: 'Algo deu errado',
         1: 'Success',
@@ -51,12 +51,7 @@ const message = (choosenOption) => {
         47: 'Sem cookies',
         48: 'Preencha todos os campos',
     };
-    for (const key in response) {
-        if (choosenOption === Number(key)) {
-            var answer = response[key];
-        }
-    }
-    return answer;
+    return response[String(chosenOption)];
 };
 exports.message = message;
 //# sourceMappingURL=message.js.map

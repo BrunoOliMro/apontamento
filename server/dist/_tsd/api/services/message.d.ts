@@ -1,2 +1,2 @@
-export declare const message: (choosenOption: number) => any;
+export declare const message: (chosenOption: number) => string | undefined;
 //# sourceMappingURL=message.d.ts.map

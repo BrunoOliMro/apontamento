@@ -22,7 +22,6 @@ const statusImage = async (req, res) => {
                 const path = await pictures_1.pictures.getPicturePath(rec['NUMPEC'], rec['IMAGEM'], statuString, String(i));
                 valuesResult.push(path);
             }
-            console.log('valuesResult', valuesResult);
             if (valuesResult) {
                 return res.status(200).json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: valuesResult });
             }

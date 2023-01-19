@@ -24,9 +24,9 @@ const ripPost = async (req, res) => {
     var updateQtyQuery = [];
     var objectSanitized = {};
     const pointCode = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [5]);
-    console.log('pointCode', pointCode);
     var oldTimer = new Date(pointCode.time).getTime();
     var timeSpendRip = Number(new Date().getTime() - oldTimer) || null;
+    variables.cookies.tempoDecorrido = timeSpendRip;
     variables.cookies.goodFeed = null;
     variables.cookies.badFeed = null;
     variables.cookies.pointedCode = [6];
@@ -34,13 +34,8 @@ const ripPost = async (req, res) => {
     variables.cookies.reworkFeed = null;
     variables.cookies.pointedCodeDescription = ['Rip Fin.'];
     variables.cookies.motives = null;
-    variables.cookies.tempoDecorrido = timeSpendRip;
-    if (!pointCode.accepted) {
-        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33), code: pointCode.code });
-    }
     const resultSelect = await (0, query_1.selectQuery)(30, variables.cookies);
     if (Object.keys(variables.body).length <= 0) {
-        console.log('insert into 6');
         const insertedRipCode = await (0, insert_1.insertInto)(variables.cookies);
         if (insertedRipCode) {
             const pointCode = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [5]);
@@ -65,9 +60,7 @@ const ripPost = async (req, res) => {
         }
     }
     try {
-        console.log('insert into 6');
         const insertedRipCode = await (0, insert_1.insertInto)(variables.cookies);
-        console.log('insertedRipCode', insertedRipCode);
         if (!insertedRipCode) {
             return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33) });
         }
@@ -96,7 +89,6 @@ const ripPost = async (req, res) => {
                         try {
                             const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
                             await connection.query(updateQtyQuery.join('\n'));
-                            console.log('cade o update');
                             await (0, clearCookie_1.cookieCleaner)(res);
                             return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(1), code: pointCode.code, qtdelib: resultSelect });
                         }

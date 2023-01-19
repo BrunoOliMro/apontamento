@@ -1,7 +1,7 @@
 import { message } from "../services/message"
 
 export function unravelBarcode(obj: any) {
-    let response = {
+    let response: any = {
         message: '',
         data: {
             NUMERO_ODF: '',

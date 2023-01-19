@@ -1,8 +1,8 @@
+import { selectQuery } from "./query";
 import { message } from "./message";
-import { select } from "./select";
 
 export const verifyCodeNote = async (values: any, acceptableStrings?: number[]) => {
-    const codes = {
+    const codes: {[key: string]: string} = {
         0: 'Error',
         1: 'Pointed Iniciated',
         2: 'Fin Setup',
@@ -18,49 +18,32 @@ export const verifyCodeNote = async (values: any, acceptableStrings?: number[]) 
     const response: any = {
         employee: '',
         code: '',
-        message: '',
         time: 0,
         accepted: message(33),
     }
 
-    let resultCodes = await select(23, values)
-    console.log('resultCodes', resultCodes);
-    if(resultCodes === message(0)){
-        return resultCodes = message(0)
-    }
+    let resultCodes = await selectQuery(23, values)
 
-    if (!resultCodes) {
-        response.code = codes[6]
-        response.message = message(0)
-        response.accepted = message(1)
-        return response
-    }
-
-    if (resultCodes.length > 0) {
-        response.time = resultCodes[0].DATAHORA
+    if (resultCodes.data!.length > 0) {
+        response.time = resultCodes.data![0].DATAHORA
         response.employee = values.FUNCIONARIO
 
-        if (values.FUNCIONARIO !== resultCodes[0].USUARIO && resultCodes[0].CODAPONTA === 4) {
-            response.employee = resultCodes[0].USUARIO
+        if (values.FUNCIONARIO !== resultCodes.data![0].USUARIO && resultCodes.data![0].CODAPONTA === 4) {
+            response.employee = resultCodes.data![0].USUARIO
         }
 
-        Object.entries(codes).forEach(element => {
-            if(Number(element[0]) === resultCodes[0].CODAPONTA){
-                response.code = element[1]
-            }
-        })
-
+        response.code = codes[String(resultCodes.data![0].CODAPONTA)]
 
         acceptableStrings?.forEach(acc => {
-            if (Number(resultCodes[0].CODAPONTA) === acc) {
+            if (Number(resultCodes.data![0].CODAPONTA) === acc) {
                 response.accepted = message(1)
             }
         })
 
         return response
-
     } else {
-        response.accepted = message(33)
+        response.code = codes[6]
+        response.accepted = message(1)
         return response
     }
 }

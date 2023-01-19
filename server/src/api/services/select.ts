@@ -38,21 +38,21 @@ export const select: any = async (chosenOption: number, values?: any) => {
     29: `SELECT TOP 1  * FROM HISREAL  WHERE 1 = 1 AND CODIGO = '${values.CODIGO_PECA}' ORDER BY DATA DESC`
   }
 
-  console.log("codes[chosenOption]:", codes[String(chosenOption)]);
+  // console.log("codes[chosenOption]:", codes[String(chosenOption)]);
 
-  var query: string | any = '';
+  // var query: string | any = '';
 
-  for (const [key, value] of Object.entries(codes)) {
-    if (Number(key) === chosenOption) {
-      query = value
-    }
-  }
+  // for (const [key, value] of Object.entries(codes)) {
+  //   if (Number(key) === chosenOption) {
+  //     query = value
+  //   }
+  // }
 
   // console.log("query", query)
   try {
-    if (query) {
+    if (codes[String(chosenOption)]) {
       const connection = await mssql.connect(sqlConfig);
-      const data = await connection.query(`${query}`).then((result) => result.recordset)
+      const data = await connection.query(`${codes[String(chosenOption)]}`).then((result) => result.recordset)
       await connection.close()
       if (data.length > 0) {
         return data;

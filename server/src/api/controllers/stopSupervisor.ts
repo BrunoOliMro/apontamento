@@ -7,13 +7,6 @@ import { RequestHandler } from 'express';
 
 export const stopSupervisor: RequestHandler = async (req, res) => {
     const variables = await inicializer(req)
-
-    if (!variables) {
-        return res.json({ status: message(1), message: message(0), data: message(33) })
-    }
-
-    // const resultVerifyCodeNote = await ver
-    const resultVerifyCodeNote = await verifyCodeNote(variables.cookies, [7])
     variables.cookies.goodFeed = null
     variables.cookies.badFeed = null
     variables.cookies.pointedCode = [3]
@@ -22,6 +15,16 @@ export const stopSupervisor: RequestHandler = async (req, res) => {
     variables.cookies.pointedCodeDescription = [`Ini Prod.`]
     variables.cookies.motives = null
     variables.cookies.tempoDecorrido = null
+
+    if (!variables.body.superMaqPar) {
+        return res.json({ status: message(1), message: message(0), data: message(33) })
+    }
+
+    const resultVerifyCodeNote = await verifyCodeNote(variables.cookies, [7])
+
+    if (!resultVerifyCodeNote.accepted) {
+        return res.json({ status: message(1), message: message(0), data: message(33) })
+    }
 
     if (resultVerifyCodeNote.accepted) {
         const resource = await select(10, variables.body.superMaqPar)
@@ -32,8 +35,6 @@ export const stopSupervisor: RequestHandler = async (req, res) => {
             } else {
                 return res.json({ status: message(1), message: message(21), data: message(33) })
             }
-        } else if (!resource) {
-            return res.json({ status: message(1), message: message(21), data: message(33) })
         } else {
             return res.json({ status: message(1), message: message(21), data: message(33) })
         }

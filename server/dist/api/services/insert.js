@@ -9,7 +9,6 @@ const global_config_1 = require("../../global.config");
 const message_1 = require("./message");
 const insertInto = async (obj) => {
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    console.log('obj in insert: ', obj);
     try {
         const data = [];
         obj.pointedCode.forEach((element, i) => {

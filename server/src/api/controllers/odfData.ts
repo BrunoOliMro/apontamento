@@ -37,7 +37,7 @@ export const odfData: RequestHandler = async (req, res) => {
         console.log('Cookies', variables.cookies);
 
         // resultQuery.data[i].QTDE_LIB = resultQuery.data[i].QTDE_LIB - resultQuery.data[i].QTD_FALTANTE
-        response.odfSelecionada = resultQuery.data[i];
+        response.odfSelecionada = resultQuery.data![i];
         response.resEmployee = variables.cookies.FUNCIONARIO;
         response.message = message(1);
         return res.json({ status: message(1), message: message(1), data: response, code:resultVerifyCodeNote.code })

@@ -9,9 +9,7 @@ export const update = async (chosenOption: number, values?: any) => {
         chosenOption = 0
     }
 
-    console.log('values in update', values);
-
-    const obj = {
+    const codes : { [k: string]: string }  = {
         0: `UPDATE PCP_PROGRAMACAO_PRODUCAO SET TEMPO_APTO_TOTAL = GETDATE() WHERE 1 = 1 AND NUMERO_ODF = ${values.NUMERO_ODF} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${values.NUMERO_OPERACAO} AND CODIGO_MAQUINA = '${values.CODIGO_MAQUINA}'`,
         1: `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${values.QTDE_LIB} WHERE 1 = 1 AND NUMERO_ODF = ${values.NUMERO_ODF} AND NUMERO_OPERACAO = ${values.NUMERO_OPERACAO}`,
         2: `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA =  ${values.valorApontado}, QTD_BOAS = QTD_BOAS - ${values.goodFeed}, QTD_FALTANTE = ${values.missingFeed}, QTDE_LIB = ${values.QTDE_LIB}, QTD_REFUGO = QTD_REFUGO - ${values.badFeed}, QTD_ESTORNADA = COALESCE(QTD_ESTORNADA, 0 ) + ${values.valorTotal} WHERE 1 = 1 AND NUMERO_ODF = '${values.NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${Number(values.NUMERO_OPERACAO)} AND CODIGO_MAQUINA = '${values.CODIGO_MAQUINA}'`,
@@ -22,19 +20,10 @@ export const update = async (chosenOption: number, values?: any) => {
     }
 
     try {
-        // Can be used a loop or Object literal
-        var query;
-        for (const [key, value] of Object.entries(obj)) {
-            if (Number(key) === chosenOption) {
-                query = value
-            }
-        }
-        console.log('query', query);
         const connection = await mssql.connect(sqlConfig);
-        const data: any = await connection.query(`${query}`).then((result) => result.rowsAffected)
+        const data = await connection.query(`${codes[String(chosenOption)]}`).then((result) => result.rowsAffected)
         await connection.close()
-        if (data[0] > 0) {
-            console.log('Updated');
+        if (data[0]! > 0) {
             return message(1)
         } else {
             console.log('Error on update');
