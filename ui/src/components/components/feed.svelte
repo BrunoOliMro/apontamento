@@ -73,14 +73,14 @@
         }
     }
 
-    async function checkForSuper(event) {
+    async function checkForSuper(event, total, qtdLib) {
         const result = await verifyStringLenght(event, supervisor, 6, 14);
         if (result === messageQuery(1)) {
-            callPost();
+            callPost(total, qtdLib);
         } 
     }
 
-    const callPost = async () => {
+    const callPost = async (total, qtdLib) => {
         loader = true;
         isRequesting = true
         close();
@@ -93,6 +93,7 @@
             supervisor,
         });
         if (res) {
+            console.log('res in callPost', res);
             isRequesting = false
             loader = false
             if (res.message === "Apontamento parcial") {
@@ -108,7 +109,10 @@
             } else if (res.message === "Saldo menor que o apontado") {
                 balance = res.balance;
             } else if (res.message === messageQuery(1)) {
-                getSpaceFunc();
+                if(total < qtdLib ){
+                    return address = res.address
+                }
+                // getSpaceFunc();
             } else if (res.message === "Rip iniciated") {
                 window.location.href = messageQuery(18);
                 location.reload();
@@ -118,24 +122,24 @@
         }
     };
 
-    async function getSpaceFunc() {
-        isRequesting = true
-        loader = true;
-        const res = await fetch(pointApi);
-        getSpace = await res.json();
-        console.log('getSpace', getSpace);
-        if (getSpace) {
-            loader = false;
+    // async function getSpaceFunc() {
+    //     isRequesting = true
+    //     loader = true;
+    //     const res = await fetch(pointApi);
+    //     getSpace = await res.json();
+    //     console.log('getSpace', getSpace);
+    //     if (getSpace) {
+    //         loader = false;
 
-            if(getSpace.message === messageQuery(35)){
-                return window.location.href = messageQuery(18)
-            } else if (getSpace.message === messageQuery(1)) {
-                address = getSpace.address;
-            } else if (getSpace.message === messageQuery(4)) {
-                address = "5A01A01-11";
-            }
-        }
-    }
+    //         if(getSpace.message === messageQuery(35)){
+    //             return window.location.href = messageQuery(18)
+    //         } else if (getSpace.message === messageQuery(1)) {
+    //             address = getSpace.address;
+    //         } else if (getSpace.message === messageQuery(4)) {
+    //             address = "5A01A01-11";
+    //         }
+    //     }
+    // }
 
     async function checkPost(event) {
 
@@ -170,7 +174,7 @@
             } else if ( numberBadFeed + numberMissing + numberReworkFeed === 0 && numberGoodFeed > 0 && numberGoodFeed < numberQtdAllowed ) {
                 message = "Apontamento parcial";
             } else if ( numberBadFeed + numberMissing + numberReworkFeed === 0 && numberGoodFeed === numberQtdAllowed) {
-                callPost();
+                callPost(total, numberQtdAllowed );
             }
         } catch (error) {
             console.log('Error on CheckPost function checking sended Numbers', error)

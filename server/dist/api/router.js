@@ -16,7 +16,6 @@ const stopPost_1 = require("./controllers/stopPost");
 const tools_1 = require("./controllers/tools");
 const point_1 = require("./controllers/point");
 const searchBadge_1 = require("./controllers/searchBadge");
-const getPoint_1 = require("./controllers/getPoint");
 const supervisor_1 = require("./controllers/supervisor");
 const stopSupervisor_1 = require("./controllers/stopSupervisor");
 const clear_1 = require("./controllers/clear");
@@ -46,8 +45,7 @@ apiRouter.route('/status')
 apiRouter.route('/historic')
     .get(historic_1.historic);
 apiRouter.route('/point')
-    .post(point_1.point)
-    .get(getPoint_1.getPoint);
+    .post(point_1.point);
 apiRouter.route('/rip')
     .get(rip_1.rip);
 apiRouter.route('/pointRip')

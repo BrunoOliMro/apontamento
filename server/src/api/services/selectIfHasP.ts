@@ -120,7 +120,6 @@ export const selectToKnowIfHasP = async (obj: { message?: string; data: { [key: 
             console.log('linha 141 /selectHasP/', error);
             return response.message = message(0)
         } finally {
-            console.log('finalyyyyyy');
             response.condic = resultHasP.data![0].CONDIC
             obj.data['valorApontado'] = minToProd
             obj.data['QTDE_LIB'] = minToProd

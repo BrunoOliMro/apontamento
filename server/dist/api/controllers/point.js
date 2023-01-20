@@ -7,6 +7,7 @@ exports.point = void 0;
 const insertNewOrder_1 = require("../services/insertNewOrder");
 const variableInicializer_1 = require("../services/variableInicializer");
 const verifyCodeNote_1 = require("../services/verifyCodeNote");
+const getAddress_1 = require("../services/getAddress");
 const sendEmail_1 = require("../utils/sendEmail");
 const global_config_1 = require("../../global.config");
 const query_1 = require("../services/query");
@@ -72,6 +73,7 @@ const point = async (req, res) => {
             return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
         }
     }
+    var address;
     if (variables.cookies.condic === 'P') {
         try {
             if (!variables.cookies.childCode) {
@@ -81,10 +83,17 @@ const point = async (req, res) => {
             if (totalValue < Number(variables.cookies.QTDE_LIB)) {
                 try {
                     const updateSaldoReal = [];
+                    let valuesToReturnStorage = 0;
                     variables.cookies.childCode.split(',').forEach((codigoFilho, i) => {
+                        valuesToReturnStorage += variables.cookies.execut.split(',')[i] * Number(variables.cookies.QTDE_LIB) - totalValue * variables.cookies.execut.split(',')[i];
                         const stringUpdate = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${variables.cookies.execut.split(',')[i] * Number(variables.cookies.QTDE_LIB) - totalValue * variables.cookies.execut.split(',')[i]} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`;
                         updateSaldoReal.push(stringUpdate);
                     });
+                    if (valuesToReturnStorage) {
+                        address = await (0, getAddress_1.getAddress)(valuesToReturnStorage, variables, req);
+                        console.log('iewbgiuebirbibrb  address', address);
+                    }
+                    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
                     await connection.query(updateSaldoReal.join('\n')).then(result => result.rowsAffected);
                 }
                 catch (error) {
@@ -92,12 +101,14 @@ const point = async (req, res) => {
                     return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
                 }
             }
+            console.log('ieigbrirrbrb');
             try {
                 const deleteCstAlocacao = [];
                 variables.cookies.childCode.split(',').forEach((codigoFilho) => {
                     const stringUpdate = `DELETE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${variables.cookies.NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho}'`;
                     deleteCstAlocacao.push(stringUpdate);
                 });
+                const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
                 await connection.query(deleteCstAlocacao.join('\n')).then(result => result.rowsAffected);
             }
             catch (error) {
@@ -118,15 +129,11 @@ const point = async (req, res) => {
         await (0, sendEmail_1.createNewOrder)(variables.cookies.NUMERO_ODF, variables.cookies.NUMERO_OPERACAO, variables.cookies.CODIGO_MAQUINA, variables.body.reworkFeed, variables.body.missingFeed, variables.body.valorFeed, variables.body.badFeed, totalValue, resultSelectPcpProg.data[0].QTDE_ODF, resultSelectPcpProg.data[0].CODIGO_CLIENTE, variables.cookies.CODIGO_PECA);
         await (0, insertNewOrder_1.insertIntoNewOrder)(newOrderString);
     }
-    else if (!variables.body.missingFeed) {
-        variables.body.missingFeed = variables.cookies.QTDE_LIB - totalValue;
-    }
     variables.body.valorApontado = totalValue;
     variables.body.released = released;
     variables.body.NUMERO_OPERACAO = variables.cookies.NUMERO_OPERACAO;
     variables.body.CODIGO_MAQUINA = variables.cookies.CODIGO_MAQUINA;
     variables.body.NUMERO_ODF = variables.cookies.NUMERO_ODF;
-    variables.body.missingFeed = variables.cookies.QTDE_LIB - totalValue;
     variables.cookies.QTDE_LIB = Number(variables.cookies.QTDE_LIB);
     variables.cookies.pointedCodeDescription = ['Fin Prod.'];
     variables.cookies.tempoDecorrido = finalProdTimer;
@@ -135,9 +142,12 @@ const point = async (req, res) => {
     variables.cookies.badFeed = variables.body.badFeed || 0;
     variables.cookies.missingFeed = variables.body.missingFeed || 0;
     variables.cookies.reworkFeed = variables.body.reworkFeed || 0;
+    if ('00' + String(variables.cookies.NUMERO_OPERACAO.replaceAll(' ', '')) === '00999') {
+        address = (0, getAddress_1.getAddress)(totalValue, variables, req);
+    }
     await (0, update_1.update)(3, variables.body);
     await (0, insert_1.insertInto)(variables.cookies);
-    return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33) });
+    return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33), address: address });
 };
 exports.point = point;
 //# sourceMappingURL=point.js.map

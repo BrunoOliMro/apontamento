@@ -47,14 +47,13 @@ export const searchOdf: RequestHandler = async (req, res) => {
 
     if (i <= 0) {
         // ATENÇÃO olhar diferença entre quantidade apontada no processo anterior e no processo atual!!!!!!!!!!
-        odf[i].QTDE_LIB = odf[i].QTDE_ODF - odf[i].QTDE_APONTADA
+        odf[i].QTDE_LIB = odf[i].QTDE_ODF - odf[i].QTDE_APONTADA - odf[i].QTD_FALTANTE;
     } else if (i > 0) {
         // ATENÇÃO quantidade liberado é igual qtd_lib = boasProcessoPassado -  boas - ruins - retrabalhadas
         // Quantidade liberada é a diferença qtd_lib =  boasProcesso passado - boas - ruins - retrabalhadas
         odf[i].QTDE_LIB = (odf[i - 1].QTD_BOAS || 0) - (odf[i].QTD_BOAS || 0) - (odf[i].QTD_REFUGO || 0) - (odf[i].QTD_RETRABALHADA || 0)
     }
 
-    
     if (!odf[i].QTDE_LIB || odf[i].QTDE_LIB <= 0) {
         return res.json({ status: message(1), message: message(11), data: message(11) })
     }

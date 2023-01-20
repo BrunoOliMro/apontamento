@@ -1,6 +1,7 @@
 import { insertIntoNewOrder } from '../services/insertNewOrder';
 import { inicializer } from '../services/variableInicializer';
 import { verifyCodeNote } from '../services/verifyCodeNote';
+import { getAddress } from '../services/getAddress';
 import { createNewOrder } from '../utils/sendEmail';
 import { sqlConfig } from '../../global.config';
 import { selectQuery } from '../services/query';
@@ -33,7 +34,6 @@ export const point: RequestHandler = async (req, res) => {
     const valuesFromHisaponta = await selectQuery(9, variables.cookies)
     const startProd = new Date(resultVerifyCodeNote.time).getTime()
     const finalProdTimer = Number(new Date().getTime() - startProd) || null
-
 
     if (!totalValue) {
         return res.json(message(0))
@@ -68,7 +68,6 @@ export const point: RequestHandler = async (req, res) => {
         variables.cookies.missingEnd = null
         variables.cookies.reworkEnd = null
 
-
         // Insere os codigos faltantes no processo com o usuario antigo e inicia um novo processo
         const resultEndingProcess = await insertInto(variables.cookies)
         if (resultEndingProcess === message(1)) {
@@ -85,7 +84,7 @@ export const point: RequestHandler = async (req, res) => {
             return res.json({ status: message(1), message: message(0), data: message(33) })
         }
     }
-
+    var address
     // Caso haja 'P' faz update na quantidade de peças dos filhos
     if (variables.cookies.condic === 'P') {
         try {
@@ -97,16 +96,24 @@ export const point: RequestHandler = async (req, res) => {
             if (totalValue < Number(variables.cookies.QTDE_LIB)!) {
                 try {
                     const updateSaldoReal: string[] = [];
+                    let valuesToReturnStorage: number = 0
                     variables.cookies.childCode.split(',').forEach((codigoFilho: string, i: number) => {
-                        const stringUpdate = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${ variables.cookies.execut.split(',')[i] * Number(variables.cookies.QTDE_LIB)  - totalValue * variables.cookies.execut.split(',')[i]} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`
+                        valuesToReturnStorage += variables.cookies.execut.split(',')[i] * Number(variables.cookies.QTDE_LIB) - totalValue * variables.cookies.execut.split(',')[i]
+                        const stringUpdate = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${variables.cookies.execut.split(',')[i] * Number(variables.cookies.QTDE_LIB) - totalValue * variables.cookies.execut.split(',')[i]} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`
                         updateSaldoReal.push(stringUpdate)
                     });
+                    if (valuesToReturnStorage) {
+                        address = await getAddress(valuesToReturnStorage, variables, req)
+                        console.log('iewbgiuebirbibrb  address', address);
+                    }
+                    const connection = await mssql.connect(sqlConfig);
                     await connection.query(updateSaldoReal.join('\n')).then(result => result.rowsAffected)
                 } catch (error) {
                     console.log('linha 140  - Point.ts - ', error);
                     return res.json({ status: message(1), message: message(0), data: message(33) })
                 }
             }
+            console.log('ieigbrirrbrb');
             try {
                 // Loop para desconstar o saldo alocado
                 const deleteCstAlocacao: string[] = [];
@@ -114,6 +121,7 @@ export const point: RequestHandler = async (req, res) => {
                     const stringUpdate: string = `DELETE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${variables.cookies.NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho}'`
                     deleteCstAlocacao.push(stringUpdate)
                 });
+                const connection = await mssql.connect(sqlConfig);
                 await connection.query(deleteCstAlocacao.join('\n')).then(result => result.rowsAffected)
             } catch (error) {
                 console.log('linha 159  - Point.ts - ', error);
@@ -133,16 +141,12 @@ export const point: RequestHandler = async (req, res) => {
         await createNewOrder(variables.cookies.NUMERO_ODF, variables.cookies.NUMERO_OPERACAO, variables.cookies.CODIGO_MAQUINA, variables.body.reworkFeed, variables.body.missingFeed, variables.body.valorFeed, variables.body.badFeed, totalValue, resultSelectPcpProg.data![0].QTDE_ODF, resultSelectPcpProg.data![0].CODIGO_CLIENTE, variables.cookies.CODIGO_PECA)
         await insertIntoNewOrder(newOrderString)
     }
-    else if (!variables.body.missingFeed) {
-        variables.body.missingFeed = variables.cookies.QTDE_LIB - totalValue
-    }
 
     variables.body.valorApontado = totalValue
     variables.body.released = released
     variables.body.NUMERO_OPERACAO = variables.cookies.NUMERO_OPERACAO
     variables.body.CODIGO_MAQUINA = variables.cookies.CODIGO_MAQUINA
     variables.body.NUMERO_ODF = variables.cookies.NUMERO_ODF
-    variables.body.missingFeed = variables.cookies.QTDE_LIB - totalValue;
     variables.cookies.QTDE_LIB = Number(variables.cookies.QTDE_LIB)
     variables.cookies.pointedCodeDescription = ['Fin Prod.']
     variables.cookies.tempoDecorrido = finalProdTimer
@@ -151,7 +155,10 @@ export const point: RequestHandler = async (req, res) => {
     variables.cookies.badFeed = variables.body.badFeed || 0;
     variables.cookies.missingFeed = variables.body.missingFeed || 0;
     variables.cookies.reworkFeed = variables.body.reworkFeed || 0;
+    if ('00' + String(variables.cookies.NUMERO_OPERACAO!.replaceAll(' ', '')) === '00999') {
+        address = getAddress(totalValue, variables, req)
+    }
     await update(3, variables.body)
     await insertInto(variables.cookies)
-    return res.json({ status: message(1), message: message(1), data: message(33) })
+    return res.json({ status: message(1), message: message(1), data: message(33), address: address })
 }

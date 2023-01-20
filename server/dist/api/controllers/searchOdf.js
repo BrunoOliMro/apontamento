@@ -39,7 +39,7 @@ const searchOdf = async (req, res) => {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(6), data: (0, message_1.message)(6) });
     }
     if (i <= 0) {
-        odf[i].QTDE_LIB = odf[i].QTDE_ODF - odf[i].QTDE_APONTADA;
+        odf[i].QTDE_LIB = odf[i].QTDE_ODF - odf[i].QTDE_APONTADA - odf[i].QTD_FALTANTE;
     }
     else if (i > 0) {
         odf[i].QTDE_LIB = (odf[i - 1].QTD_BOAS || 0) - (odf[i].QTD_BOAS || 0) - (odf[i].QTD_REFUGO || 0) - (odf[i].QTD_RETRABALHADA || 0);

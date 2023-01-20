@@ -129,7 +129,6 @@ const selectToKnowIfHasP = async (obj) => {
             return response.message = (0, message_1.message)(0);
         }
         finally {
-            console.log('finalyyyyyy');
             response.condic = resultHasP.data[0].CONDIC;
             obj.data['valorApontado'] = minToProd;
             obj.data['QTDE_LIB'] = minToProd;

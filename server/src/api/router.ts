@@ -15,7 +15,7 @@ import { stopPost } from './controllers/stopPost';
 import { selectedTools, tools } from './controllers/tools';
 import { point } from './controllers/point';
 import { searchBagde } from './controllers/searchBadge';
-import { getPoint } from './controllers/getPoint';
+// import { getPoint } from './controllers/getPoint';
 import { supervisor } from './controllers/supervisor';
 import { stopSupervisor } from './controllers/stopSupervisor';
 import { clear } from './controllers/clear';
@@ -60,7 +60,7 @@ apiRouter.route('/historic')
 
 apiRouter.route('/point')
     .post(point)
-    .get(getPoint)
+    // .get(getPoint)
 
 apiRouter.route('/rip')
     .get(rip)
