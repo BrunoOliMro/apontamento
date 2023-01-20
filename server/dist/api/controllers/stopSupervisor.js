@@ -4,8 +4,8 @@ exports.stopSupervisor = void 0;
 const variableInicializer_1 = require("../services/variableInicializer");
 const verifyCodeNote_1 = require("../services/verifyCodeNote");
 const insert_1 = require("../services/insert");
+const query_1 = require("../services/query");
 const message_1 = require("../services/message");
-const select_1 = require("../services/select");
 const stopSupervisor = async (req, res) => {
     const variables = await (0, variableInicializer_1.inicializer)(req);
     variables.cookies.goodFeed = null;
@@ -16,7 +16,8 @@ const stopSupervisor = async (req, res) => {
     variables.cookies.pointedCodeDescription = [`Ini Prod.`];
     variables.cookies.motives = null;
     variables.cookies.tempoDecorrido = null;
-    if (!variables.body.superMaqPar) {
+    console.log('variables', variables.body);
+    if (!variables.body) {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
     }
     const resultVerifyCodeNote = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [7]);
@@ -24,8 +25,8 @@ const stopSupervisor = async (req, res) => {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
     }
     if (resultVerifyCodeNote.accepted) {
-        const resource = await (0, select_1.select)(10, variables.body.superMaqPar);
-        if (resource) {
+        const resource = await (0, query_1.selectQuery)(10, variables.body);
+        if (resource.data) {
             const insertPointCode = await (0, insert_1.insertInto)(variables.cookies);
             if (insertPointCode) {
                 return res.status(200).json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33) });

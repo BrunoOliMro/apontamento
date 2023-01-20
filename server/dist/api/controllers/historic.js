@@ -15,10 +15,6 @@ const historic = async (req, res) => {
     if (resultVerifyCodeNote.accepted) {
         const detailHistoric = await (0, query_1.selectQuery)(5, variables.cookies);
         const generalHistoric = await (0, query_1.selectQuery)(6, variables.cookies);
-        console.log('detailHistoric', detailHistoric.data);
-        console.log('generalHistoric', generalHistoric.data);
-        console.log('DETAIL', detailHistoric);
-        console.log('Genereal', generalHistoric);
         if (detailHistoric.data) {
             for (const iterator of detailHistoric.data) {
                 if (iterator.BOAS > 0) {

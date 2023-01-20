@@ -59,6 +59,7 @@
     if (verifyBarcode === messageQuery(1)) {
       loader = true;
       const res = await post(barcodeUrl, { barcode });
+      console.log('Barcode', res );
       if (res) {
         loader = false;
         if (res.status === messageQuery(1)) {

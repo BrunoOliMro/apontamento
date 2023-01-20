@@ -1,4 +1,4 @@
-export default function messageQuery(numberString) {
+export default function messageQuery(chosenOption) {
     let response;
     const query = {
         0: '',
@@ -43,13 +43,17 @@ export default function messageQuery(numberString) {
         39: 'ODF apontada',
         40: 'Exibir histórico',
         41: 'ODF parcialmente apontada',
+        42: 'Máquina já parada',
+        43: 'Máquina parada'
     }
 
-    Object.entries(query).forEach(element => {
-        if (Number(element[0]) === numberString) {
-            response = element[1]
-        }
-    })
+    return query[String(chosenOption)]
 
-    return response
+    // Object.entries(query).forEach(element => {
+    //     if (Number(element[0]) === chosenOption) {
+    //         response = element[1]
+    //     }
+    // })
+
+    // return response
 }

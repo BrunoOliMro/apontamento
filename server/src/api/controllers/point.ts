@@ -33,10 +33,7 @@ export const point: RequestHandler = async (req, res) => {
     const valuesFromHisaponta = await selectQuery(9, variables.cookies)
     const startProd = new Date(resultVerifyCodeNote.time).getTime()
     const finalProdTimer = Number(new Date().getTime() - startProd) || null
-    variables.body.missingFeed = variables.cookies.QTDE_LIB - totalValue;
-    variables.cookies.QTDE_LIB = Number(variables.cookies.QTDE_LIB)
-    variables.cookies.pointedCodeDescription = ['Fin Prod.']
-    variables.cookies.tempoDecorrido = finalProdTimer
+
 
     if (!totalValue) {
         return res.json(message(0))
@@ -101,11 +98,10 @@ export const point: RequestHandler = async (req, res) => {
                 try {
                     const updateSaldoReal: string[] = [];
                     variables.cookies.childCode.split(',').forEach((codigoFilho: string, i: number) => {
-                        const stringUpdate = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${variables.cookies.execut.split(",")[i]} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`
+                        const stringUpdate = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${ variables.cookies.execut.split(',')[i] * Number(variables.cookies.QTDE_LIB)  - totalValue * variables.cookies.execut.split(',')[i]} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`
                         updateSaldoReal.push(stringUpdate)
                     });
                     await connection.query(updateSaldoReal.join('\n')).then(result => result.rowsAffected)
-                    // console.log('update estoque saldoreal ');
                 } catch (error) {
                     console.log('linha 140  - Point.ts - ', error);
                     return res.json({ status: message(1), message: message(0), data: message(33) })
@@ -146,11 +142,16 @@ export const point: RequestHandler = async (req, res) => {
     variables.body.NUMERO_OPERACAO = variables.cookies.NUMERO_OPERACAO
     variables.body.CODIGO_MAQUINA = variables.cookies.CODIGO_MAQUINA
     variables.body.NUMERO_ODF = variables.cookies.NUMERO_ODF
-    await update(3, variables.body)
+    variables.body.missingFeed = variables.cookies.QTDE_LIB - totalValue;
+    variables.cookies.QTDE_LIB = Number(variables.cookies.QTDE_LIB)
+    variables.cookies.pointedCodeDescription = ['Fin Prod.']
+    variables.cookies.tempoDecorrido = finalProdTimer
+    variables.cookies.pointedCode = [4]
     variables.cookies.goodFeed = variables.body.valorFeed || 0;
     variables.cookies.badFeed = variables.body.badFeed || 0;
     variables.cookies.missingFeed = variables.body.missingFeed || 0;
     variables.cookies.reworkFeed = variables.body.reworkFeed || 0;
+    await update(3, variables.body)
     await insertInto(variables.cookies)
     return res.json({ status: message(1), message: message(1), data: message(33) })
 }

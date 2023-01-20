@@ -15,10 +15,6 @@ export const rip: RequestHandler = async (req, res) => {
 
     const resultVerifyCodeNote = await verifyCodeNote(variables.cookies, [4])
 
-    if(resultVerifyCodeNote.accepted){
-        return res.json({ status: message(1), message: message(0), data: message(0), code: message(33) })
-    }
-
     const oldTimer = new Date(resultVerifyCodeNote.time).getTime()
     const timeSpendStartRip = Number(new Date().getTime() - oldTimer) || null
     variables.cookies.tempoDecorrido = timeSpendStartRip
@@ -34,26 +30,13 @@ export const rip: RequestHandler = async (req, res) => {
     const ripDetails: any = await selectQuery( 14, variables.cookies)
 
     if (ripDetails.data!.length > 0) {
-        // In case there is response from select
-        const arrayNumope = ripDetails.data!.map((acc: { CST_NUMOPE: string; }) => {
-
-            if (acc.CST_NUMOPE === variables.cookies.CODIGO_MAQUINA) {
-                return acc
-            }
-
-        })
-
-        console.log('arrayNumope', arrayNumope);
-
-        // Set cookies to point later
-        const numopeFilter = arrayNumope.filter((acc: any) => acc)
-        res.cookie('cstNumope', numopeFilter.map((acc: { CST_NUMOPE: string; }) => acc.CST_NUMOPE))
-        res.cookie('numCar', numopeFilter.map((acc: { NUMCAR: any; }) => acc.NUMCAR))
-        res.cookie('descricao', numopeFilter.map((acc: { DESCRICAO: any; }) => acc.DESCRICAO))
-        res.cookie('especif', numopeFilter.map((acc: { ESPECIF: any; }) => acc.ESPECIF))
-        res.cookie('instrumento', numopeFilter.map((acc: { INSTRUMENTO: any; }) => acc.INSTRUMENTO))
-        res.cookie('lie', numopeFilter.map((acc: { LIE: any; }) => acc.LIE))
-        res.cookie('lse', numopeFilter.map((acc: { LSE: any; }) => acc.LSE))
+        res.cookie('cstNumope', ripDetails.data.map((acc: { CST_NUMOPE: string; }) => acc.CST_NUMOPE))
+        res.cookie('numCar', ripDetails.data.map((acc: { NUMCAR: any; }) => acc.NUMCAR))
+        res.cookie('descricao', ripDetails.data.map((acc: { DESCRICAO: any; }) => acc.DESCRICAO))
+        res.cookie('especif', ripDetails.data.map((acc: { ESPECIF: any; }) => acc.ESPECIF))
+        res.cookie('instrumento', ripDetails.data.map((acc: { INSTRUMENTO: any; }) => acc.INSTRUMENTO))
+        res.cookie('lie', ripDetails.data.map((acc: { LIE: any; }) => acc.LIE))
+        res.cookie('lse', ripDetails.data.map((acc: { LSE: any; }) => acc.LSE))
     }
 
     if (resultVerifyCodeNote.accepted) {
@@ -69,7 +52,6 @@ export const rip: RequestHandler = async (req, res) => {
         if(resultVerifyCodeNote.accepted){
             return res.json({ status: message(1), message: message(1), data: ripDetails.data, code: resultVerifyCodeNote.code })
         } else {
-            await cookieCleaner(res)
             return res.json({ status: message(1), message: message(1), data: message(33), code: resultVerifyCodeNote.code  })
         }
     }

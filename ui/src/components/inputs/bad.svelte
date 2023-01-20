@@ -1,7 +1,7 @@
 <script>
     import blockForbiddenChars from "../../utils/presanitize";
     let title = "RUINS";
-    let badFeed;
+    export let valueOfBadFeed;
 
     import { createEventDispatcher } from "svelte";
 
@@ -10,7 +10,7 @@
     async function callDispatch() {
         dispatch("message", {
             text: "badfeed!",
-            badFeed,
+            badFeed: valueOfBadFeed,
         });
     }
 </script>
@@ -24,7 +24,7 @@
             <!-- svelte-ignore a11y-positive-tabindex -->
             <!-- svelte-ignore a11y-autofocus -->
             <input
-                bind:value={badFeed}
+                bind:value={valueOfBadFeed}
                 on:input={callDispatch}
                 on:input={blockForbiddenChars}
                 tabindex="2"

@@ -19,9 +19,9 @@
     let pointApi = `/api/v1/point`;
     let showConfirm = false;
     let loader = false;
-    var address = "";
-    let supervisor = "";
-    let message = "";
+    var address = messageQuery(0);
+    let supervisor = messageQuery(0);
+    let message = messageQuery(0);
     let data = [];
     let badFeed;
     let missingFeed;
@@ -30,13 +30,12 @@
     let value;
     let getSpace;
     let balance;
-    let supervisorMaq;
     let isRequesting = false;
     let resultRefugo = motives();
     let arrayMotives = [];
     export let odfData;
     let availableQuantity = 0
-    let subTitle = ""
+    let subTitle = messageQuery(0)
 
     if(!odfData.codData.data){
         odfData.codData.data = 'S/I'
@@ -44,22 +43,21 @@
         availableQuantity = odfData.codData.data.odfSelecionada.QTDE_LIB;
     }
 
-
-
     async function checkStopMachine (event){
-        const res = await verifyStringLenght(event, supervisorMaq, 6, 14)
+        const res = await verifyStringLenght(event.detail.eventType, supervisor, 6, 14)
         if(res === messageQuery(1)){
             postStop();
         }
     }
 
     const postStop = async () => {
-        const res = await post(supervisorStop, supervisor);
+        loader = true
+        const res = await post(supervisorStop, {supervisor});
         if (res) {
+            console.log('res in postStop', res);
             if (res.message === messageQuery(1)) {
                 callPost();
-            }
-            if (res.message !== messageQuery(0)) {
+            } else if (res.message !== messageQuery(0)) {
                 loader = false;
             }
         }
@@ -83,8 +81,8 @@
     }
 
     const callPost = async () => {
-        isRequesting = true
         loader = true;
+        isRequesting = true
         close();
         const res = await post(pointApi, {
             valorFeed,
@@ -95,7 +93,6 @@
             supervisor,
         });
         if (res) {
-            console.log('res in callPost', res);
             isRequesting = false
             loader = false
             if (res.message === "Apontamento parcial") {
@@ -140,7 +137,12 @@
         }
     }
 
-    async function checkPost() {
+    async function checkPost(event) {
+
+        if (event.key !== "Enter" && event.type !== 'click') {
+            return
+        }
+
         isRequesting = true;
         const numberBadFeed = Number(badFeed || 0);
         const numberGoodFeed = Number(valorFeed || 0);
@@ -179,42 +181,16 @@
     }
 
     function close() {
-        address = "";
-        message = "";
+        address = messageQuery(0);
+        message = messageQuery(0);
         showConfirm = false;
     }
 
-    // function closeRedirectBarcode() {
-    //     loader = true;
-    //     message = "";
-    //     address = false;
-    //     window.location.href =  messageQuery(20);
-    // }
-
     function closeRedirect() {
         loader = true;
-        message = "";
+        message = messageQuery(0);
         address = false;
         window.location.href = messageQuery(18);
-    }
-
-    function callGoodFeed(event) {
-        valorFeed = event.detail.goodFeed;
-        if (event.key === "Enter") {
-            checkPost();
-        }
-    }
-
-    function callBadFeed(event) {
-        badFeed = event.detail.badFeed;
-    }
-
-    function callMissingFeed(event) {
-        missingFeed = event.detail.missingFeed;
-    }
-
-    function callReworkFeed(event) {
-        reworkFeed = event.detail.reworkFeed;
     }
 </script>
 
@@ -247,18 +223,18 @@
                     <GoodFeed
                         autofocus
                         tabindex="1"
-                        on:keypress={callGoodFeed}
-                        on:message={callGoodFeed}
+                        bind:goodFeed={valorFeed}
+                        on:message={checkPost}
                     />
                 </div>
                 <div class="feed-area-div">
-                    <Bad tabindex="2" on:message={callBadFeed} />
+                    <Bad tabindex="2" bind:valueOfBadFeed={badFeed}  on:message={checkPost} />
                 </div>
                 <div class="feed-area-div">
-                    <Missing tabindex="3" on:message={callMissingFeed} />
+                    <Missing tabindex="3" bind:missingFeed={missingFeed} on:message={checkPost} />
                 </div>
                 <div class="feed-area-div">
-                    <Rework tabindex="4" on:message={callReworkFeed} />
+                    <Rework tabindex="4" bind:reworkFeed={reworkFeed} on:message={checkPost} />
                 </div>
             </div>
             <div class="buttonApontar">
@@ -321,42 +297,21 @@
     {/await}
 
    {#if message === "Apontamento parcial"}
-        
         <Supervisor titleSupervisor={message} subTitle={subTitle}  bind:supervisor={supervisor} on:message={callPost}/>
-
-        <!-- <div class="background">
-            <div class="header">
-                <div class="content-area">
-                    <div class="modalTitle">
-                        <h3>{message}</h3>
-                    </div>
-                    <div class="modalContent">
-                        <div class="modalCenter">
-                            <h4>Informe o supervisor:</h4>
-                            <div class="input">
-                                <input
-                                    on:input={blockForbiddenChars}
-                                    on:keypress={checkForSuper}
-                                    bind:value={supervisor}
-                                    autofocus
-                                    class="supervisor"
-                                    type="text"
-                                    name="supervisor"
-                                    id="supervisor"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modalFooter">
-                        <button on:keypress={close} on:click={close}
-                            >Fechar</button
-                        >
-                    </div>
-                </div>
-            </div>
-        </div> -->
     {/if}
 
+    {#if message === "Apontando apenas peças retrabalhadas, confirma ?" || message === 'Apontar apenas faltantes, confirma?' || message === "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?"}
+        <Supervisor titleSupervisor={message} subTitle={subTitle}  bind:supervisor={supervisor} on:message={checkForSuper}/>
+    {/if}
+
+    <!-- {#if message === "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?"}
+        <Supervisor titleSupervisor={message} subTitle={subTitle}  bind:supervisor={supervisor} on:message={checkForSuper}/>
+    {/if} -->
+
+    {#if message === "Máquina parada"}
+        <Supervisor titleSupervisor={message} subTitle={subTitle}  bind:supervisor={supervisor} on:message={checkStopMachine}/>
+    {/if}
+<!-- 
     {#if message === "Apontando apenas peças retrabalhadas, confirma ?" || message === 'Apontar apenas faltantes, confirma?'}
         <div class="background">
             <div class="header">
@@ -389,9 +344,9 @@
                 </div>
             </div>
         </div>
-    {/if}
+    {/if} -->
 
-    {#if message === "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?"}
+    <!-- {#if message === "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?"}
         <div class="background">
             <div class="header">
                 <div class="content-area">
@@ -423,9 +378,9 @@
                 </div>
             </div>
         </div>
-    {/if}
+    {/if} -->
 
-    {#if message === "Máquina parada"}
+    <!-- {#if message === "Máquina parada"}
         <div class="background">
             <div class="header">
                 <div class="closed">
@@ -445,14 +400,14 @@
                             on:input={blockForbiddenChars}
                             on:keypress={checkStopMachine}
                             onkeyup="this.value = this.value.toUpperCase()"
-                            bind:value={supervisorMaq}
+                            bind:value={supervisor}
                         />
                     </div>
                 </div>
                 <button on:keypress={close} on:click={close}>fechar</button>
             </div>
         </div>
-    {/if}
+    {/if} -->
 
     {#if message === "Already pointed"}
         <div class="background">
@@ -470,37 +425,11 @@
         </div>
     {/if}
 
-    <!-- {#if message && message !== messageQuery(0) && message !== "Apontamento parcial" && message !== "Already pointed" && message !== "Máquina parada" && message !== "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?" && message !== "Apontando apenas peças retrabalhadas, confirma ?" && message !== 'Apontar apenas faltantes, confirma?'}
-        <div class="background">
-            <div class="header">
-                <div class="closed">
-                    <h2>{message}</h2>
-                </div>
-                <button tabindex="7" on:keypress={close} on:click={close}>Fechar</button>
-            </div>
-        </div>
-    {/if} -->
-
-    <!-- {#if message === messageQuery(4)}
-        <div class="background">
-            <div class="header">
-                <div class="closed">
-                    <h2>{message}</h2>
-                </div>
-                <button
-                    tabindex="7"
-                    on:keypress={closeRedirectBarcode}
-                    on:click={closeRedirectBarcode}>fechar</button
-                >
-            </div>
-        </div>
-    {/if} -->
-
     {#if message && message !== messageQuery(0) && message !== "Apontamento parcial" && message !== 'Máquina parada' }
         <ModalConfirmation on:message={close} message={message} title={message} on:message={close}/>
     {/if}
 
-    {#if address && address !== ""}
+    {#if address && address !== messageQuery(0)}
         <div class="background">
             <div class="header">
                 <div class="closed">
@@ -527,12 +456,6 @@
         text-align: left;
         text-align: left;
     }
-    h4 {
-        width: 100%;
-        font-size: 28px;
-        margin: 0%;
-        padding: 0%;
-    }
     .footer-area {
         display: flex;
         width: 100%;
@@ -557,16 +480,6 @@
         letter-spacing: 0.5px;
         width: 100%;
         height: 28px;
-    }
-    .modalTitle {
-        margin-left: 0px;
-        margin-bottom: 25px;
-        margin-right: 0px;
-        margin-top: 0px;
-        padding: 0%;
-        justify-content: left;
-        align-items: left;
-        text-align: left;
     }
     .loader {
         margin: 0%;
@@ -828,31 +741,6 @@
         }
     }
 
-    .content-area {
-        width: 100%;
-        margin: 0%;
-        padding: 0%;
-    }
-
-    .input {
-        display: flex;
-        text-align: center;
-        justify-content: center;
-        align-items: center;
-        margin: 0%;
-        width: 100%;
-        padding: 0%;
-    }
-
-    .modalTitle {
-        margin-left: 1%;
-        margin-bottom: 5%;
-        padding: 0%;
-        width: 100%;
-        justify-content: left;
-        align-items: left;
-        text-align: center;
-    }
     .modalFooter {
         margin: 0%;
         padding: 0%;
@@ -863,26 +751,6 @@
         justify-content: right;
     }
 
-    .modalContent {
-        margin: 0%;
-        padding: 0%;
-        width: 100%;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        text-align: center;
-    }
-
-    .modalCenter {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        width: 100%;
-        margin: 0%;
-        padding: 0%;
-    }
     .header {
         margin: 0%;
         padding: 0%;

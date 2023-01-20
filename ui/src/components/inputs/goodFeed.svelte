@@ -2,7 +2,7 @@
     // @ts-nocheck
     import blockForbiddenChars from "../../utils/presanitize";
     let title = "BOAS";
-    let goodFeed;
+    export let goodFeed;
 
     import { createEventDispatcher } from "svelte";
 
@@ -12,12 +12,12 @@
         if(event.key === 'Enter'){
             dispatch('submit', {
                 text: 'Manda pae',
-                goodFeed
+                goodFeed: goodFeed
             })
         } else {
             dispatch("message", {
                 text: "goodFeed!",
-                goodFeed,
+                goodFeed: goodFeed,
             });
         }
     }

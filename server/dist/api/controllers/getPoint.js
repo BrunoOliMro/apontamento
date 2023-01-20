@@ -5,14 +5,14 @@ const updateQuantityCstStorage_1 = require("../utils/updateQuantityCstStorage");
 const variableInicializer_1 = require("../services/variableInicializer");
 const verifyCodeNote_1 = require("../services/verifyCodeNote");
 const selectAddress_1 = require("../services/selectAddress");
+const query_1 = require("../services/query");
 const message_1 = require("../services/message");
-const select_1 = require("../services/select");
 const getPoint = async (req, res) => {
     const variables = await (0, variableInicializer_1.inicializer)(req);
     if (!variables) {
         return res.json((0, message_1.message)(33));
     }
-    const resultSelectPcpProg = await (0, select_1.select)(8, variables.cookies);
+    const resultSelectPcpProg = await (0, query_1.selectQuery)(8, variables.cookies);
     const hostname = req.get('host');
     const { networkInterfaces } = require('os');
     const nets = networkInterfaces();
@@ -28,11 +28,7 @@ const getPoint = async (req, res) => {
         }
     }
     const ip = String(Object.entries(results)[0][1]);
-    console.log('Ob', Object.entries(results));
-    console.log('ip', ip);
-    console.log('hostname', hostname);
-    const pointedCode = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [4, 5]);
-    console.log('pointedCode get Point.ts: ', pointedCode);
+    const pointedCode = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [4]);
     if (!pointedCode.accepted) {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33), address: (0, message_1.message)(33) });
     }
@@ -59,67 +55,47 @@ const getPoint = async (req, res) => {
                     add = await (0, selectAddress_1.selectAddress)(isNullCase, 7, comprimento, largura, peso);
                 }
             }
-            const pecas = await (0, select_1.select)(3);
-            const composicaoDeEstoque = await (0, select_1.select)(4);
-            if (composicaoDeEstoque.length <= 0 || pecas.length <= 0) {
-                console.log('ou auqiiiiiiiiiiiiiiiiiiiiiiii');
-                await (0, updateQuantityCstStorage_1.cstStorageUp)(variables.cookies.QTDE_LIB, add[0].ENDERECO, variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, resultSelectPcpProg[0].QTD_BOAS, variables.cookies.FUNCIONARIO, hostname, ip);
+            const pecas = await (0, query_1.selectQuery)(3);
+            const composicaoDeEstoque = await (0, query_1.selectQuery)(4);
+            if (composicaoDeEstoque.data.length <= 0 || pecas.data.length <= 0) {
+                await (0, updateQuantityCstStorage_1.cstStorageUp)(variables.cookies.QTDE_LIB, add[0].ENDERECO, variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, resultSelectPcpProg.data[0].QTD_BOAS, variables.cookies.FUNCIONARIO, hostname, ip);
                 return add[0].ENDERECO = (0, message_1.message)(46);
             }
-            const alturaDoEndereco = composicaoDeEstoque[0].ALTURA;
-            const maxTotalWeightParts = pecas[0].EXECUT * resultSelectPcpProg[0].QTD_BOAS;
-            const maxWeightStorage = composicaoDeEstoque[0].PESO;
-            const comprimentoPeca = pecas[0].COMPRIMENTO;
-            const comprimentoDoEndereco = composicaoDeEstoque[0].COMPRIMENTO;
-            const larguraPeca = pecas[0].LARGURA;
-            const larguraDoEndereco = composicaoDeEstoque[0].LARGURA;
-            const areaDaPeca = comprimentoPeca * larguraPeca;
-            const maxArea = composicaoDeEstoque[0].COMPRIMENTO * composicaoDeEstoque[0].LARGURA;
-            const dimesaoCubicaEstoque = comprimentoDoEndereco * larguraDoEndereco * alturaDoEndereco;
-            const dimensaoCubicaPeca = comprimentoPeca * larguraPeca * variables.cookies.QTDE_LIB;
-            const dimensaoLinearEstoque = comprimentoDoEndereco + composicaoDeEstoque[0].LARGURA;
-            const dimensaoLinearPeca = comprimentoPeca + larguraPeca;
             const array = [];
-            if (maxTotalWeightParts > maxWeightStorage) {
-                console.log('TA AQUI PESADAO');
-                peso = maxWeightStorage;
+            if (pecas.data[0].EXECUT * resultSelectPcpProg.data[0].QTD_BOAS > composicaoDeEstoque.data[0].PESO) {
+                peso = composicaoDeEstoque.data[0].PESO;
                 array.push(false);
             }
-            if (comprimentoPeca > comprimentoDoEndereco) {
-                console.log('comprimento errado');
-                comprimento = comprimentoDoEndereco;
+            else if (pecas.data[0].COMPRIMENTO > composicaoDeEstoque.data[0].COMPRIMENTO) {
+                comprimento = composicaoDeEstoque.data[0].COMPRIMENTO;
                 array.push(false);
             }
-            if (larguraPeca > larguraDoEndereco) {
-                console.log('larguraPeca errado');
-                largura = larguraDoEndereco;
+            else if (pecas.data[0].LARGURA > composicaoDeEstoque.data[0].LARGURA) {
+                largura = composicaoDeEstoque.data[0].LARGURA;
                 array.push(false);
             }
-            if (dimensaoLinearPeca > dimensaoLinearEstoque) {
-                console.log('dimensaoLinearPeca errado');
+            else if (pecas.data[0].COMPRIMENTO + pecas.data[0].LARGURA > composicaoDeEstoque.data[0].COMPRIMENTO + composicaoDeEstoque.data[0].LARGURA) {
                 array.push(false);
             }
-            if (dimensaoCubicaPeca > dimesaoCubicaEstoque) {
-                console.log('dimensaoCubicaPeca errado');
+            else if (pecas.data[0].COMPRIMENTO * pecas.data[0].LARGURA * variables.cookies.QTDE_LIB > composicaoDeEstoque.data[0].COMPRIMENTO * composicaoDeEstoque.data[0].LARGURA * composicaoDeEstoque.data[0].ALTURA) {
                 array.push(false);
             }
-            if (maxArea < areaDaPeca) {
-                console.log('maxArea errado');
+            else if (composicaoDeEstoque.data[0].COMPRIMENTO * composicaoDeEstoque.data[0].LARGURA < pecas.data[0].COMPRIMENTO * pecas.data[0].LARGURA) {
                 array.push(false);
             }
-            let casesFiltered = array.filter((element) => element === false);
-            if (casesFiltered[0] === false) {
-                callAddress();
-            }
+            array.filter((element) => {
+                if (element === false) {
+                    callAddress();
+                }
+            });
         }
-        await (0, updateQuantityCstStorage_1.cstStorageUp)(variables.cookies.QTDE_LIB, add[0].ENDERECO, variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, resultSelectPcpProg[0].QTD_BOAS, variables.cookies.FUNCIONARIO, hostname, ip);
+        await (0, updateQuantityCstStorage_1.cstStorageUp)(variables.cookies.QTDE_LIB, add[0].ENDERECO, variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, resultSelectPcpProg.data[0].QTD_BOAS, variables.cookies.FUNCIONARIO, hostname, ip);
         if (add[0].ENDERECO) {
-            console.log('chamando endereço');
             return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: add[0].ENDERECO, address: add[0].ENDERECO });
         }
     }
     else {
-        await (0, updateQuantityCstStorage_1.cstStorageUp)(variables.cookies.QTDE_LIB, add = (0, message_1.message)(46), variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, resultSelectPcpProg[0].QTD_BOAS, variables.cookies.FUNCIONARIO, hostname, ip);
+        await (0, updateQuantityCstStorage_1.cstStorageUp)(variables.cookies.QTDE_LIB, add = (0, message_1.message)(46), variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, resultSelectPcpProg.data[0].QTD_BOAS, variables.cookies.FUNCIONARIO, hostname, ip);
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(32), data: (0, message_1.message)(33), address: (0, message_1.message)(46) });
     }
 };

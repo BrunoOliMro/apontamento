@@ -28,12 +28,6 @@ const selectToKnowIfHasP = async (obj) => {
         const minQtdAllowed = Math.min(...resultHasP.data.map((element) => element.QTD_LIBERADA_PRODUZIR));
         const processItens = resultHasP.data.map((item) => item.NUMSEQ).filter((element) => element === String(String(obj.data['NUMERO_OPERACAO']).replaceAll(' ', '')).replaceAll('000', ''));
         const minToProd = minQtdAllowed < obj.data['QTDE_LIB'] ? minQtdAllowed : Number(obj.data['QTDE_LIB']);
-        if (!minToProd || minToProd <= 0) {
-            return response = (0, message_1.message)(12);
-        }
-        if (processItens.length <= 0) {
-            return response.message = (0, message_1.message)(13);
-        }
         const resultQuantityCst = await (0, query_1.selectQuery)(21, obj.data);
         if (resultQuantityCst.data[0]) {
             if (resultQuantityCst.data[0].hasOwnProperty('QUANTIDADE')) {
@@ -46,6 +40,12 @@ const selectToKnowIfHasP = async (obj) => {
                     return response;
                 }
             }
+        }
+        if (!minToProd || minToProd <= 0) {
+            return response = (0, message_1.message)(12);
+        }
+        if (processItens.length <= 0) {
+            return response.message = (0, message_1.message)(13);
         }
         try {
             const updateStorageQuery = [];

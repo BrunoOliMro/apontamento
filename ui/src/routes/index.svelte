@@ -59,12 +59,12 @@
       objData.image = await Id.json();
       const IA = await fetch(callOdfData);
       objData.codData = await IA.json();
+      console.log('objData.prodTime', objData.codData);
 
       if(objData.codData.code === messageQuery(10) ){
          rip = true
       }
 
-      console.log('objData.prodTime', objData.prodTime.supervisor);
       if(!objData.prodTime.supervisor){
          if (objData.prodTime.data <= 0) {
             message = messageQuery(24);

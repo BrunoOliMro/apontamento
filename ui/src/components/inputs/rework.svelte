@@ -1,7 +1,7 @@
 <script>
     import blockForbiddenChars from "../../utils/presanitize";
     let title = "RETRABALHAR";
-    let reworkFeed;
+    export let reworkFeed;
 
     import { createEventDispatcher } from "svelte";
 
@@ -10,7 +10,7 @@
     async function callDispatch() {
         dispatch("message", {
             text: "reworkFeed!",
-            reworkFeed,
+            reworkFeed: reworkFeed,
         });
     }
 </script>

@@ -44,19 +44,23 @@ const searchOdf = async (req, res) => {
     else if (i > 0) {
         odf[i].QTDE_LIB = (odf[i - 1].QTD_BOAS || 0) - (odf[i].QTD_BOAS || 0) - (odf[i].QTD_REFUGO || 0) - (odf[i].QTD_RETRABALHADA || 0);
     }
-    console.log('odf[i].QTDE_LIB', odf[i].QTDE_LIB);
     if (!odf[i].QTDE_LIB || odf[i].QTDE_LIB <= 0) {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(11), data: (0, message_1.message)(11) });
     }
     barcode.data.QTDE_LIB = odf[i].QTDE_LIB;
     barcode.data.CODIGO_PECA = odf[i].CODIGO_PECA;
     let resultComponents = await (0, selectIfHasP_1.selectToKnowIfHasP)(barcode);
+    console.log('resultComponents', resultComponents);
     if (resultComponents.message === (0, message_1.message)(13) || resultComponents.message === (0, message_1.message)(14) || resultComponents.message === (0, message_1.message)(15)) {
         barcode.data.QTDE_LIB = resultComponents.quantidade < odf[i].QTDE_LIB ? resultComponents.quantidade : odf[i].QTDE_LIB;
         odf[i].condic = resultComponents.condic;
         odf[i].execut = resultComponents.execut;
         odf[i].childCode = resultComponents.childCode;
         barcode.data.QTDE_LIB = resultComponents.quantidade;
+        console.log(' barcode.data.QTDE_LIB', barcode.data.QTDE_LIB);
+        if (!barcode.data.QTDE_LIB) {
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(11), data: (0, message_1.message)(11) });
+        }
         await (0, update_1.update)(1, barcode.data);
     }
     else if (resultComponents === (0, message_1.message)(12)) {

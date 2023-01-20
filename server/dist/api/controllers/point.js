@@ -29,10 +29,6 @@ const point = async (req, res) => {
     const valuesFromHisaponta = await (0, query_1.selectQuery)(9, variables.cookies);
     const startProd = new Date(resultVerifyCodeNote.time).getTime();
     const finalProdTimer = Number(new Date().getTime() - startProd) || null;
-    variables.body.missingFeed = variables.cookies.QTDE_LIB - totalValue;
-    variables.cookies.QTDE_LIB = Number(variables.cookies.QTDE_LIB);
-    variables.cookies.pointedCodeDescription = ['Fin Prod.'];
-    variables.cookies.tempoDecorrido = finalProdTimer;
     if (!totalValue) {
         return res.json((0, message_1.message)(0));
     }
@@ -86,7 +82,7 @@ const point = async (req, res) => {
                 try {
                     const updateSaldoReal = [];
                     variables.cookies.childCode.split(',').forEach((codigoFilho, i) => {
-                        const stringUpdate = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${variables.cookies.execut.split(",")[i]} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`;
+                        const stringUpdate = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${variables.cookies.execut.split(',')[i] * Number(variables.cookies.QTDE_LIB) - totalValue * variables.cookies.execut.split(',')[i]} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`;
                         updateSaldoReal.push(stringUpdate);
                     });
                     await connection.query(updateSaldoReal.join('\n')).then(result => result.rowsAffected);
@@ -130,11 +126,16 @@ const point = async (req, res) => {
     variables.body.NUMERO_OPERACAO = variables.cookies.NUMERO_OPERACAO;
     variables.body.CODIGO_MAQUINA = variables.cookies.CODIGO_MAQUINA;
     variables.body.NUMERO_ODF = variables.cookies.NUMERO_ODF;
-    await (0, update_1.update)(3, variables.body);
+    variables.body.missingFeed = variables.cookies.QTDE_LIB - totalValue;
+    variables.cookies.QTDE_LIB = Number(variables.cookies.QTDE_LIB);
+    variables.cookies.pointedCodeDescription = ['Fin Prod.'];
+    variables.cookies.tempoDecorrido = finalProdTimer;
+    variables.cookies.pointedCode = [4];
     variables.cookies.goodFeed = variables.body.valorFeed || 0;
     variables.cookies.badFeed = variables.body.badFeed || 0;
     variables.cookies.missingFeed = variables.body.missingFeed || 0;
     variables.cookies.reworkFeed = variables.body.reworkFeed || 0;
+    await (0, update_1.update)(3, variables.body);
     await (0, insert_1.insertInto)(variables.cookies);
     return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33) });
 };

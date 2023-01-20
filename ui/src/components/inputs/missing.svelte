@@ -1,7 +1,7 @@
 <script>
     import blockForbiddenChars from "../../utils/presanitize";
     let title = "FALTANTE";
-    let missingFeed;
+    export let missingFeed;
 
     import { createEventDispatcher } from "svelte";
 
@@ -10,7 +10,7 @@
     async function callDispatch() {
         dispatch("message", {
             text: "missingFeed!",
-            missingFeed,
+            missingFeed: missingFeed,
         });
     }
 </script>

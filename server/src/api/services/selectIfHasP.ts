@@ -23,16 +23,6 @@ export const selectToKnowIfHasP = async (obj: { message?: string; data: { [key: 
         const minQtdAllowed: number = Math.min(...resultHasP.data!.map((element: any) => element.QTD_LIBERADA_PRODUZIR))
         const processItens = resultHasP.data!.map((item: any) => item.NUMSEQ).filter((element: string) => element === String(String(obj.data['NUMERO_OPERACAO']!).replaceAll(' ', '')).replaceAll('000', ''))
         const minToProd: number = minQtdAllowed < obj.data['QTDE_LIB']! ? minQtdAllowed : Number(obj.data!['QTDE_LIB']);
-
-        if(!minToProd || minToProd <= 0 ){
-            return response = message(12)
-        }
-
-        // Check to see if it's to make a reservation
-        if (processItens.length <= 0) {
-            return response.message = message(13)
-        }
-
         const resultQuantityCst = await selectQuery(21, obj.data)
 
         // If there a values reserved
@@ -47,6 +37,15 @@ export const selectToKnowIfHasP = async (obj: { message?: string; data: { [key: 
                     return response;
                 }
             }
+        }
+
+        if (!minToProd || minToProd <= 0) {
+            return response = message(12)
+        }
+
+        // Check to see if it's to make a reservation
+        if (processItens.length <= 0) {
+            return response.message = message(13)
         }
 
         // Loop para atualizar os dados no DB

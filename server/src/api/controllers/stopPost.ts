@@ -6,13 +6,6 @@ import { RequestHandler } from 'express';
 
 export const stopPost: RequestHandler = async (req, res) => {
     const variables = await inicializer(req)
-    variables.cookies.goodFeed = null
-    variables.cookies.badFeed = null
-    variables.cookies.pointedCode = [7]
-    variables.cookies.missingFeed = null
-    variables.cookies.reworkFeed = null
-    variables.cookies.pointedCodeDescription = ['Parada']
-    variables.cookies.motives = null
     
     if (!variables.cookies) {
         return res.json({ status: message(1), message: message(0), data: message(33) })
@@ -22,14 +15,21 @@ export const stopPost: RequestHandler = async (req, res) => {
     const end = new Date().getTime() || 0;
     const timeSpend = Number(end - resultVerifyCodeNote.time!) || 0
     variables.cookies.tempoDecorrido = timeSpend
+    variables.cookies.goodFeed = null
+    variables.cookies.badFeed = null
+    variables.cookies.pointedCode = [7]
+    variables.cookies.missingFeed = null
+    variables.cookies.reworkFeed = null
+    variables.cookies.pointedCodeDescription = ['Parada']
+    variables.cookies.motives = null
 
     if (resultVerifyCodeNote.accepted) {
-        return res.json({ status: message(1), message: message(19), data: message(33) })
+        return res.json({ status: message(1), message: message(19), data: message(33), code: message(20) })
     } else {
         //Insere O CODAPONTA 7 de parada de máquina
         const resultInserted = await insertInto(variables.cookies)
         if (resultInserted) {
-            return res.status(200).json({ status: message(1), message: message(1), data: message(33) })
+            return res.status(200).json({ status: message(1), message: message(1), data: message(33), code: message(20) })
         } else if (!resultInserted) {
             return res.json({ status: message(1), message: message(0), data: message(33) })
         } else {

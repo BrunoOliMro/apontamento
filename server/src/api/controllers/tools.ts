@@ -26,7 +26,6 @@ export const tools: RequestHandler = async (req, res) => {
     variables.cookies.tempoDecorrido = null
 
     const codeNoteResult = await verifyCodeNote(variables.cookies, [6, 8, 9])
-
     if(codeNoteResult.code === message(38)){
         toolsImg = await selectQuery(20, variables.cookies)
             if (!toolsImg.data) {
@@ -77,9 +76,6 @@ export const selectedTools: RequestHandler = async (req, res) => {
     variables.cookies.motives = null
 
     const codeNoteResult = await verifyCodeNote(variables.cookies, [1])
-
-    console.log('codeNoteResult select', codeNoteResult);
-
     const startSetupTime = new Date(codeNoteResult.time).getTime()
     const timeSpend = Number(new Date().getTime() - startSetupTime) || null
     variables.cookies.tempoDecorrido = timeSpend
@@ -92,6 +88,7 @@ export const selectedTools: RequestHandler = async (req, res) => {
         if (codApontamentoFinalSetup !== message(0)) {
             //INSERE EM CODAPONTA 3
             variables.cookies.pointedCode = [3]
+            variables.cookies.pointedCodeDescription = ['Ini Prod.'];
             const codApontamentoInicioSetup = await insertInto(variables.cookies)
             if (codApontamentoInicioSetup !== message(0)) {
                 return res.json({ status: message(1), message: message(1), data: message(33) })

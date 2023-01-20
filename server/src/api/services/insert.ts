@@ -7,6 +7,7 @@ export const insertInto = async (obj: any) => {
     try {
         const data: any = [];
         obj.pointedCode.forEach((element: any, i: number) => {
+            console.log('element', element);
             let string = `INSERT INTO HISAPONTA (DATAHORA, USUARIO, ODF, PECA, REVISAO, NUMOPE, NUMSEQ, CONDIC, ITEM, QTD, PC_BOAS, PC_REFUGA, ID_APONTA, LOTE, CODAPONTA, CAMPO1, CAMPO2, TEMPO_SETUP, APT_TEMPO_OPERACAO, EMPRESA_RECNO, MOTIVO_REFUGO, CST_PC_FALTANTE, CST_QTD_RETRABALHADA ) VALUES (GETDATE(), '${obj.FUNCIONARIO}', ${obj.NUMERO_ODF}, UPPER('${obj.CODIGO_PECA}'), UPPER('${obj.REVISAO}'), '${obj.NUMERO_OPERACAO}', '${obj.NUMERO_OPERACAO}', 'D', '${obj.CODIGO_MAQUINA}', ${obj.QTDE_LIB}, ${obj.goodFeed || null}, ${obj.badFeed || null}, '${obj.FUNCIONARIO}', '0', ${element}, ${element}, '${obj.pointedCodeDescription![i]}', ${obj.tempoDecorrido || null}, ${obj.tempoDecorrido || null}, '1', UPPER('${obj.motives || null}'), ${obj.missingFeed || null}, ${obj.reworkFeed || null})`
             data.push(string)
         });

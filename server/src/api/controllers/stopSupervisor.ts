@@ -1,8 +1,8 @@
 import { inicializer } from '../services/variableInicializer';
 import { verifyCodeNote } from '../services/verifyCodeNote';
 import { insertInto } from '../services/insert';
+import { selectQuery } from '../services/query';
 import { message } from '../services/message';
-import { select } from '../services/select';
 import { RequestHandler } from 'express';
 
 export const stopSupervisor: RequestHandler = async (req, res) => {
@@ -16,7 +16,8 @@ export const stopSupervisor: RequestHandler = async (req, res) => {
     variables.cookies.motives = null
     variables.cookies.tempoDecorrido = null
 
-    if (!variables.body.superMaqPar) {
+    console.log('variables', variables.body);
+    if (!variables.body) {
         return res.json({ status: message(1), message: message(0), data: message(33) })
     }
 
@@ -27,8 +28,8 @@ export const stopSupervisor: RequestHandler = async (req, res) => {
     }
 
     if (resultVerifyCodeNote.accepted) {
-        const resource = await select(10, variables.body.superMaqPar)
-        if (resource) {
+        const resource = await selectQuery(10, variables.body)
+        if (resource.data) {
             const insertPointCode = await insertInto(variables.cookies)
             if (insertPointCode) {
                 return res.status(200).json({ status: message(1), message: message(1), data: message(33) })

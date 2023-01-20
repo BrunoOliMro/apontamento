@@ -18,10 +18,6 @@ export const historic: RequestHandler = async (req, res) => {
         const detailHistoric: any = await selectQuery(5, variables.cookies)
         const generalHistoric = await selectQuery(6, variables.cookies)
 
-        console.log('detailHistoric', detailHistoric.data);
-        console.log('generalHistoric', generalHistoric.data)
-        console.log('DETAIL', detailHistoric);
-        console.log('Genereal', generalHistoric );
         if(detailHistoric.data){
             for (const iterator of detailHistoric.data) {
                 if (iterator.BOAS > 0) {
