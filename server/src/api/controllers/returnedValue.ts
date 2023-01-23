@@ -5,7 +5,6 @@ import { unravelBarcode } from '../utils/unravelBarcode';
 import { insertInto } from '../services/insert';
 import { message } from '../services/message';
 import { odfIndex } from '../utils/odfIndex';
-import { select } from '../services/select';
 import { update } from '../services/update';
 import { RequestHandler } from 'express';
 import { selectQuery } from '../services/query';
@@ -97,7 +96,7 @@ export const returnedValue: RequestHandler = async (req, res) => {
         variables.cookies.missingFeed = faltante
         variables.cookies.qtdLib = qtdLib
 
-        const selectSuper = await select(10, variables.body)
+        const selectSuper = await selectQuery(10, variables.body)
 
         variables.cookies.QTDE_APONTADA = valorApontado
         variables.cookies.NUMERO_ODF = body.data.NUMERO_ODF
@@ -108,7 +107,7 @@ export const returnedValue: RequestHandler = async (req, res) => {
         variables.cookies.valorTotal = valorTotal
         variables.cookies.valorApontado = groupOdf.data![i].QTDE_APONTADA - valorApontado
 
-        if (selectSuper.length > 0) {
+        if (selectSuper.data!.length > 0) {
             const insertHisCodReturned = await insertInto(variables.cookies)
             if (insertHisCodReturned) {
                 const updateValuesOnPcp = await update(2, variables.cookies)

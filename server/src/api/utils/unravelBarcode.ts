@@ -13,11 +13,9 @@ export function unravelBarcode(obj: any) {
         },
     }
 
-    // if (!obj.barcode || obj.barcode.length <= 16 || obj.barcode.length > 18) {
-    //     console.log('neigbreibribnr');
-    //     return response.message = ''
-    // }
-    console.log('obj in unravel', obj);
+    if (!obj || obj.length <= 16 || obj.length > 18) {
+        return response.message = ''
+    }
 
     //Reatribuiu o codigo caso o cado de barras seja maior
     const dados: any = {

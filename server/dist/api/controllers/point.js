@@ -24,12 +24,25 @@ const point = async (req, res) => {
     if (!resultVerifyCodeNote.accepted) {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(5), data: (0, message_1.message)(33), code: resultVerifyCodeNote.code });
     }
-    const totalValue = (Number(variables.body.valorFeed) || 0) + (Number(variables.body.badFeed) || 0) + (Number(variables.body.reworkFeed) || 0);
+    const totalValue = (Number(variables.body.valorFeed) || 0) + (Number(variables.body.badFeed) || 0) + (Number(variables.body.reworkFeed) || 0) + (Number(variables.body.missingFeed) || 0);
     const released = Number(variables.cookies.QTDE_LIB) - totalValue;
     const resultSelectPcpProg = await (0, query_1.selectQuery)(8, variables.cookies);
     const valuesFromHisaponta = await (0, query_1.selectQuery)(9, variables.cookies);
     const startProd = new Date(resultVerifyCodeNote.time).getTime();
     const finalProdTimer = Number(new Date().getTime() - startProd) || null;
+    variables.body.valorApontado = totalValue;
+    variables.body.released = released;
+    variables.body.NUMERO_OPERACAO = variables.cookies.NUMERO_OPERACAO;
+    variables.body.CODIGO_MAQUINA = variables.cookies.CODIGO_MAQUINA;
+    variables.body.NUMERO_ODF = variables.cookies.NUMERO_ODF;
+    variables.cookies.QTDE_LIB = Number(variables.cookies.QTDE_LIB);
+    variables.cookies.pointedCodeDescription = ['Fin Prod.'];
+    variables.cookies.tempoDecorrido = finalProdTimer;
+    variables.cookies.pointedCode = [4];
+    variables.cookies.goodFeed = variables.body.valorFeed || 0;
+    variables.cookies.badFeed = variables.body.badFeed || 0;
+    variables.cookies.missingFeed = variables.body.missingFeed || 0;
+    variables.cookies.reworkFeed = variables.body.reworkFeed || 0;
     if (!totalValue) {
         return res.json((0, message_1.message)(0));
     }
@@ -45,7 +58,7 @@ const point = async (req, res) => {
         return res.json({ message: 'Quantidade apontada excede o limite' });
     }
     else if (variables.body.badFeed > 0) {
-        if (!variables.body.value) {
+        if (!variables.body.supervisor) {
             return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
         }
         const findSupervisor = await (0, query_1.selectQuery)(10, variables.body);
@@ -74,6 +87,7 @@ const point = async (req, res) => {
         }
     }
     var address;
+    var returnValueAddress;
     if (variables.cookies.condic === 'P') {
         try {
             if (!variables.cookies.childCode) {
@@ -90,8 +104,7 @@ const point = async (req, res) => {
                         updateSaldoReal.push(stringUpdate);
                     });
                     if (valuesToReturnStorage) {
-                        address = await (0, getAddress_1.getAddress)(valuesToReturnStorage, variables, req);
-                        console.log('iewbgiuebirbibrb  address', address);
+                        returnValueAddress = await (0, getAddress_1.getAddress)(valuesToReturnStorage, variables, req);
                     }
                     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
                     await connection.query(updateSaldoReal.join('\n')).then(result => result.rowsAffected);
@@ -101,7 +114,6 @@ const point = async (req, res) => {
                     return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
                 }
             }
-            console.log('ieigbrirrbrb');
             try {
                 const deleteCstAlocacao = [];
                 variables.cookies.childCode.split(',').forEach((codigoFilho) => {
@@ -129,25 +141,13 @@ const point = async (req, res) => {
         await (0, sendEmail_1.createNewOrder)(variables.cookies.NUMERO_ODF, variables.cookies.NUMERO_OPERACAO, variables.cookies.CODIGO_MAQUINA, variables.body.reworkFeed, variables.body.missingFeed, variables.body.valorFeed, variables.body.badFeed, totalValue, resultSelectPcpProg.data[0].QTDE_ODF, resultSelectPcpProg.data[0].CODIGO_CLIENTE, variables.cookies.CODIGO_PECA);
         await (0, insertNewOrder_1.insertIntoNewOrder)(newOrderString);
     }
-    variables.body.valorApontado = totalValue;
-    variables.body.released = released;
-    variables.body.NUMERO_OPERACAO = variables.cookies.NUMERO_OPERACAO;
-    variables.body.CODIGO_MAQUINA = variables.cookies.CODIGO_MAQUINA;
-    variables.body.NUMERO_ODF = variables.cookies.NUMERO_ODF;
-    variables.cookies.QTDE_LIB = Number(variables.cookies.QTDE_LIB);
-    variables.cookies.pointedCodeDescription = ['Fin Prod.'];
-    variables.cookies.tempoDecorrido = finalProdTimer;
-    variables.cookies.pointedCode = [4];
-    variables.cookies.goodFeed = variables.body.valorFeed || 0;
-    variables.cookies.badFeed = variables.body.badFeed || 0;
-    variables.cookies.missingFeed = variables.body.missingFeed || 0;
-    variables.cookies.reworkFeed = variables.body.reworkFeed || 0;
     if ('00' + String(variables.cookies.NUMERO_OPERACAO.replaceAll(' ', '')) === '00999') {
         address = (0, getAddress_1.getAddress)(totalValue, variables, req);
     }
     await (0, update_1.update)(3, variables.body);
     await (0, insert_1.insertInto)(variables.cookies);
-    return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33), address: address });
+    console.log('chegou ao fim');
+    return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33), address: address || (0, message_1.message)(33), returnValueAddress: returnValueAddress || (0, message_1.message)(33) });
 };
 exports.point = point;
 //# sourceMappingURL=point.js.map

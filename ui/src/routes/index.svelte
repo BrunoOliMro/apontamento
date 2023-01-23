@@ -7,7 +7,7 @@
    import Supervisor from "../components/components/supervisor.svelte";
    import { verifyStringLenght } from "../utils/verifyLength";
    import post from "../utils/postFunction";
-    import Message from "../components/components/message.svelte";
+   import Message from "../components/components/message.svelte";
    const veriFyIfPoin = `/api/v1/verifyCodeNote`;
    const imageLoader = "/images/axonLoader.gif";
    const back = "/images/icons8-go-back-24.png";
@@ -29,10 +29,10 @@
    let rip = false;
    let resulFetch;
    let result = getTempo() || "";
-   let goBack = `Tentar novamente...`
-   let superTitle = `Supervisor`
-   let timeUp = `Tempo excecido...`
-   let messageArea = false
+   let goBack = `Tentar novamente...`;
+   let superTitle = `Supervisor`;
+   let timeUp = `Tempo excecido...`;
+   let messageArea = false;
 
    async function redirect() {
       const res = await fetch(redirectRoute);
@@ -59,40 +59,45 @@
       objData.image = await Id.json();
       const IA = await fetch(callOdfData);
       objData.codData = await IA.json();
-      console.log('objData.prodTime', objData.codData);
 
-      if(objData.codData.code === messageQuery(10) ){
-         rip = true
+      if (
+         objData.codData.code === messageQuery(10) ||
+         objData.codData.code === messageQuery(11)
+      ) {
+         rip = true;
       }
 
-      if(!objData.prodTime.supervisor){
+      if (!objData.prodTime.supervisor) {
          if (objData.prodTime.data <= 0) {
             message = messageQuery(24);
          }
       }
 
-      if(objData.codData.data.odfSelecionada.QTDE_LIB <= 0){
-         messageArea = true
-         return message = messageQuery(4)
+      if (objData.codData.data.odfSelecionada.QTDE_LIB <= 0) {
+         messageArea = true;
+         return (message = messageQuery(4));
       }
    }
 
    function close() {
-      location.reload()
+      location.reload();
       message = messageQuery(0);
    }
 
    async function checkForSuper(event) {
-
-      if(event.detail.text === 'Go Back!!!') {
-         return redirect()
+      if (event.detail.text === "Go Back!!!") {
+         return redirect();
       }
 
-      const res = await verifyStringLenght( event.detail.eventType, supervisor, 6, 14);
+      const res = await verifyStringLenght(
+         event.detail.eventType,
+         supervisor,
+         6,
+         14
+      );
       if (res === messageQuery(1)) {
          loader = true;
          const res = await post(supervisorApi, { supervisor });
-         console.log('checkFOr', res);
          loader = false;
          if (res.status === messageQuery(1) && res.data.length <= 0) {
             location.reload();
@@ -102,7 +107,6 @@
          }
       }
    }
-
 </script>
 
 {#if loader === true}
@@ -112,28 +116,6 @@
       </div>
    </div>
 {/if}
-<!-- 
-{#if modalSuper === true}
-    <div class="background-modal">
-        <div class="modal-content">
-            <div class="modal-display">
-                <h2 class="modal-title">Tempo Excedido</h2>
-                <h3 class="modal-subtitle">
-                    Insira um supervisor para continuar
-                </h3>
-
-                <input
-                    autocomplete="off"
-                    autofocus
-                    bind:value={supervisor}
-                    on:keypress={checkForSuper}
-                    on:input={blockForbiddenChars}
-                    type="text"
-                />
-            </div>
-        </div>
-    </div>
-{/if} -->
 
 {#await result}
    <div class="image-loader">
@@ -182,20 +164,28 @@
          {/if}
       </div>
 
-      {#if messageArea === false }
-      <Title odfData={objData} />
-      <Feed odfData={objData} />
-         
+      {#if messageArea === false}
+         <Title odfData={objData} />
+         <Feed odfData={objData} />
       {/if}
    </div>
 {/await}
 
 {#if message === messageQuery(4) && messageArea === true}
-   <Message titleInMessage={message} btnInMessage={goBack} on:message={redirect} />
+   <Message
+      titleInMessage={message}
+      btnInMessage={goBack}
+      on:message={redirect}
+   />
 {/if}
 
 {#if message === messageQuery(24)}
-   <Supervisor bind:supervisor={supervisor} titleSupervisor={superTitle} subTitle={timeUp} on:message={checkForSuper} />
+   <Supervisor
+      bind:supervisor
+      titleSupervisor={superTitle}
+      subTitle={timeUp}
+      on:message={checkForSuper}
+   />
 {/if}
 
 {#if message && message !== messageQuery(0) && message !== messageQuery(24) && message !== messageQuery(4)}

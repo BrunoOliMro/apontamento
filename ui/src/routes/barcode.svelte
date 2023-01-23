@@ -2,20 +2,22 @@
   // @ts-nocheck
   import ModalConfirmation from "../../src/components/modal/modalConfirmation.svelte";
   import { verifyStringLenght } from "../utils/verifyLength";
-  import blockForbiddenChars from "../utils/presanitize";
   import post from "../utils/postFunction";
   import messageQuery from "../utils/checkMessage";
   import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
   import ReturnBarcode from "../components/components/returnBarcode.svelte";
   import InputArea from "../components/components/inputArea.svelte";
-  const returnedValueApi = `/api/v1/returnedValue`;
+  import ViewAddress from "../components/components/viewAddress.svelte";
+  import CallViewAddress from "../components/components/callViewAddress.svelte";
   const apiCallMotiveReturn = `/api/v1/returnMotives`;
+  const returnedValueApi = `/api/v1/returnedValue`;
+  const back = "/images/icons8-go-back-24.png";
   const imageLoader = "/images/axonLoader.gif";
+  const redirectRoute = "/api/v1/clearAll";
+  const breadcrumbTitle = "Colaborador";
   const urlBagde = `/api/v1/badge`;
   const barcodeUrl = `/api/v1/odf`;
-  const back = "/images/icons8-go-back-24.png";
   const title = "APONTAMENTO";
-  const breadcrumbTitle = "Colaborador";
   let returnModal = false;
   let badgeModal = true;
   let barcodeModal = false;
@@ -23,17 +25,19 @@
   let loader = false;
   let barcodeReturn = "";
   let barcode = "";
+  let message = "";
   let valueStorage;
   let supervisor;
   let quantity;
-  let message = "";
   let motive;
   let motives;
   let badge;
   const titleBarcode = "CÓDIGO DE BARRAS DA ODF";
   const titleEmployee = `COLABORADOR`;
   let resultRedirect;
-  const redirectRoute = "/api/v1/clearAll";
+  const addressApi = `/api/v1/adress`;
+  let address = false;
+  let resultAddress;
 
   callReturnMotive();
 
@@ -59,21 +63,22 @@
     if (verifyBarcode === messageQuery(1)) {
       loader = true;
       const res = await post(barcodeUrl, { barcode });
-      console.log('Barcode', res );
       if (res) {
         loader = false;
         if (res.status === messageQuery(1)) {
-
-          if(res.data === messageQuery(10)){
-            return window.location.href = messageQuery(18)
+          if (res.data === messageQuery(10)) {
+            return (window.location.href = messageQuery(18));
           }
 
-          if(res.data === messageQuery(16)){
-            return window.location.href = messageQuery(17)
+          if (res.data === messageQuery(16)) {
+            return (window.location.href = messageQuery(17));
           }
 
-          if(res.data === messageQuery(0) && res.message === messageQuery(39)){
-            return message = messageQuery(39)
+          if (
+            res.data === messageQuery(0) &&
+            res.message === messageQuery(39)
+          ) {
+            return (message = messageQuery(39));
           }
 
           if (res.data === messageQuery(10) || res.data === messageQuery(11)) {
@@ -84,7 +89,11 @@
             return (message = messageQuery(36));
           }
 
-          if (res.data === messageQuery(12) || res.data === messageQuery(13) || res.data === messageQuery(15)) {
+          if (
+            res.data === messageQuery(12) ||
+            res.data === messageQuery(13) ||
+            res.data === messageQuery(15)
+          ) {
             return (window.location.href = messageQuery(19));
           }
 
@@ -119,7 +128,12 @@
 
   async function checkBadge(event) {
     // console.log('event in Badge', event.detail.eventType);
-    const resultVerifyBadge = await verifyStringLenght( event.detail.eventType, badge, 6, 14);
+    const resultVerifyBadge = await verifyStringLenght(
+      event.detail.eventType,
+      badge,
+      6,
+      14
+    );
 
     if (resultVerifyBadge === messageQuery(1)) {
       loader = true;
@@ -153,22 +167,56 @@
   }
 
   function returnValue() {
-    
     if (returnModal === false) {
-      barcodeModal = false
+      barcodeModal = false;
       returnModal = true;
     } else {
-      barcodeModal = true
+      barcodeModal = true;
       returnModal = false;
     }
   }
 
-  async function returningValues(event) {
+  async function showBarcodeAddress() {
+    console.log("chamando", address);
+    console.log("barcode...", barcodeModal);
+    if (address === false) {
+      barcodeModal = false;
+      address = true;
+    } else {
+      barcodeModal = true;
+      address = false;
+    }
+  }
 
-    if(event.detail.text === 'CloseButton!'){
-      breadcrumbModal = true
-      badgeModal = false
-      barcodeModal = true
+  async function seeAddress(event) {
+    console.log('eeve', event.detail.text);
+
+    if (event.detail.text === "Close modal call view address") {
+      breadcrumbModal = true;
+      badgeModal = false;
+      returnModal = false;
+      barcode = "";
+      message = "";
+      barcodeModal = true;
+      badge = '';
+      address = false;
+    }
+
+    const resultVerifyBadge = await verifyStringLenght( event.detail.eventType, { supervisor }, 6, 14);
+
+    console.log('resultVerifyBadge', resultVerifyBadge);
+    if (resultVerifyBadge) {
+      const res = await fetch(addressApi);
+      resultAddress = await res.json();
+      console.log("resultAddress in barcode", resultAddress);
+    }
+  }
+
+  async function returningValues(event) {
+    if (event.detail.text === "CloseButton!") {
+      breadcrumbModal = true;
+      badgeModal = false;
+      barcodeModal = true;
       return returnValue();
     }
 
@@ -190,7 +238,6 @@
       returnModal = false;
       message = res.message;
     }
-    console.log("res", res);
   }
 
   async function redirectToBarcode(event) {
@@ -202,20 +249,18 @@
     message = "";
     (badge = ""), (barcode = "");
     const res = await fetch(redirectRoute);
-      resultRedirect = await res.json();
-      if (resultRedirect.message === messageQuery(1)) {
-         window.location.href = messageQuery(20);
-      }
+    resultRedirect = await res.json();
+    if (resultRedirect.message === messageQuery(1)) {
+      window.location.href = messageQuery(20);
+    }
   }
 
   function close() {
     (badge = ""), (barcode = "");
-    // barcodeModal = false
     loader = true;
     returnModal = false;
     message = "";
     location.reload();
-    // loader = false;
   }
 </script>
 
@@ -243,27 +288,69 @@
       {/if}
 
       {#if barcodeModal === true}
-        <div class="return">
-          <button on:keypress={returnValue} on:click={returnValue} class="btn">
-            Estornar Valores
-          </button>
+        <div class="btn-area">
+          <div class="return">
+            <button
+              on:click={showBarcodeAddress}
+              on:keypress={showBarcodeAddress}
+              class="btn"
+            >
+              Endereçamento
+            </button>
+          </div>
+
+          <div class="return">
+            <button
+              on:keypress={returnValue}
+              on:click={returnValue}
+              class="btn"
+            >
+              Estornar Valores
+            </button>
+          </div>
         </div>
       {/if}
     </div>
 
     {#if barcodeModal === true}
-      <InputArea titleInput={titleBarcode} on:message={verifyBarcode} bind:valueToBind={barcode}
+      <InputArea
+        titleInput={titleBarcode}
+        on:message={verifyBarcode}
+        bind:valueToBind={barcode}
       />
     {/if}
 
     {#if badgeModal === true}
-      <InputArea titleInput={titleEmployee} on:message={checkBadge} bind:valueToBind={badge}
+      <InputArea
+        titleInput={titleEmployee}
+        on:message={checkBadge}
+        bind:valueToBind={badge}
       />
     {/if}
   </div>
 
+  {#if resultAddress}
+    <ViewAddress odfdata={resultAddress} />
+  {/if}
+
+  {#if address === true}
+    <CallViewAddress
+      on:message={seeAddress}
+      bind:barcodeAddress={barcode}
+      bind:supervisorToCallAddress={supervisor}
+    />
+  {/if}
+
   {#if returnModal === true && barcodeModal === false}
-    <ReturnBarcode motiveToBind={motive} motivesToBind={motives}  bind:quantity={quantity} bind:supervisor={supervisor} bind:valueStorage={valueStorage} bind:barcodeReturn={barcodeReturn} on:message={returningValues} />
+    <ReturnBarcode
+      motiveToBind={motive}
+      motivesToBind={motives}
+      bind:quantity
+      bind:supervisor
+      bind:valueStorage
+      bind:barcodeReturn
+      on:message={returningValues}
+    />
     <!-- <div class="background-modal">
       <div class="modal-div">
         <div class="line">
@@ -351,6 +438,15 @@
 </main>
 
 <style>
+  .btn-area {
+    display: flex;
+    margin: 0%;
+    padding: 0%;
+    flex-direction: row;
+    justify-content: right;
+    text-align: right;
+    text-align: right;
+  }
   /* .line-btn {
     margin: 1%;
     padding: 0%;
@@ -491,6 +587,8 @@
 
   .return {
     display: flex;
+    margin-left: 1%;
+    padding: 0%;
     justify-content: flex-end;
     text-align: center;
     align-items: center;

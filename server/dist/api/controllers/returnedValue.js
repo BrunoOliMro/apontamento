@@ -7,7 +7,6 @@ const unravelBarcode_1 = require("../utils/unravelBarcode");
 const insert_1 = require("../services/insert");
 const message_1 = require("../services/message");
 const odfIndex_1 = require("../utils/odfIndex");
-const select_1 = require("../services/select");
 const update_1 = require("../services/update");
 const query_1 = require("../services/query");
 const returnedValue = async (req, res) => {
@@ -83,7 +82,7 @@ const returnedValue = async (req, res) => {
         variables.cookies.valorApontado = valorApontado;
         variables.cookies.missingFeed = faltante;
         variables.cookies.qtdLib = qtdLib;
-        const selectSuper = await (0, select_1.select)(10, variables.body);
+        const selectSuper = await (0, query_1.selectQuery)(10, variables.body);
         variables.cookies.QTDE_APONTADA = valorApontado;
         variables.cookies.NUMERO_ODF = body.data.NUMERO_ODF;
         variables.cookies.NUMERO_OPERACAO = body.data.NUMERO_OPERACAO;
@@ -92,7 +91,7 @@ const returnedValue = async (req, res) => {
         variables.cookies.QTDE_LIB = groupOdf.data[i].QTDE_LIB;
         variables.cookies.valorTotal = valorTotal;
         variables.cookies.valorApontado = groupOdf.data[i].QTDE_APONTADA - valorApontado;
-        if (selectSuper.length > 0) {
+        if (selectSuper.data.length > 0) {
             const insertHisCodReturned = await (0, insert_1.insertInto)(variables.cookies);
             if (insertHisCodReturned) {
                 const updateValuesOnPcp = await (0, update_1.update)(2, variables.cookies);

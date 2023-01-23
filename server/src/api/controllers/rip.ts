@@ -1,6 +1,5 @@
 import { inicializer } from '../services/variableInicializer';
 import { verifyCodeNote } from '../services/verifyCodeNote';
-import { cookieCleaner } from '../utils/clearCookie';
 import { insertInto } from '../services/insert';
 import { selectQuery } from '../services/query';
 import { message } from '../services/message';

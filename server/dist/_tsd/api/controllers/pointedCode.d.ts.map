@@ -1,1 +1,1 @@
-{"version":3,"file":"pointedCode.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/pointedCode.ts"],"names":[],"mappings":"AAGA,OAAO,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAEzC,eAAO,MAAM,WAAW,EAAE,cAgBzB,CAAA"}
+{"version":3,"file":"pointedCode.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/pointedCode.ts"],"names":[],"mappings":"AAGA,OAAO,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAEzC,eAAO,MAAM,WAAW,EAAE,cAczB,CAAA"}

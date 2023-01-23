@@ -12,8 +12,6 @@ export const pointedCode: RequestHandler = async (req, res) => {
 
     const pointedCode = await verifyCodeNote(variables.cookies, [4, 5])
 
-    console.log('pointedCode', pointedCode);
-
     if (pointedCode.accepted) {
         return res.status(200).json({ status: message(1), message: message(1), data: pointedCode.code })
     } else {

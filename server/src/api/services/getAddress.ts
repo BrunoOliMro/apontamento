@@ -45,7 +45,6 @@ export const getAddress = async (_valueOfParts: number, variables: any, req: any
         }
     }
 
-
     if ('00' + String(variables.cookies.NUMERO_OPERACAO!.replaceAll(' ', '')) === '00999') {
         const array = []
         if (pecas.data![0].EXECUT * resultSelectPcpProg.data![0].QTD_BOAS! > composicaoDeEstoque.data![0].PESO) {
@@ -72,7 +71,7 @@ export const getAddress = async (_valueOfParts: number, variables: any, req: any
         })
     }
 
-    await cstStorageUp(variables.cookies.QTDE_LIB, address![0].ENDERECO, variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, resultSelectPcpProg.data![0].QTD_BOAS, variables.cookies.FUNCIONARIO, hostname, ip)
+    await cstStorageUp(variables.cookies.QTDE_LIB, address![0].ENDERECO, variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, variables.cookies.goodFeed, variables.cookies.FUNCIONARIO, hostname, ip)
     if (address) {
         return { message: message(1), address: address }
     } else {

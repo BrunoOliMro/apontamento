@@ -10,7 +10,6 @@ const pointedCode = async (req, res) => {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
     }
     const pointedCode = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [4, 5]);
-    console.log('pointedCode', pointedCode);
     if (pointedCode.accepted) {
         return res.status(200).json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: pointedCode.code });
     }

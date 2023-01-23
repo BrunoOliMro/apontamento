@@ -15,30 +15,21 @@ const cstStorageUp = async (QTDE_LIB, address, CODIGO_PEÇA, NUMERO_ODF, goodFee
         address: ''
     };
     try {
-        console.log('update 4 quantity', QTDE_LIB);
-        console.log('update 4 address', address);
-        console.log('CODIGO_PEÇA', CODIGO_PEÇA);
         const values = {
             address: address,
             partCode: CODIGO_PEÇA,
             quantityToProduce: QTDE_LIB,
         };
         const resUpdate = await (0, update_1.update)(4, values);
-        console.log('resUpdate', resUpdate);
         if (resUpdate !== (0, message_1.message)(1)) {
-            console.log('inserindo em CST_ESTOQUE');
             await (0, update_1.update)(6, values);
         }
-        console.log("select 29");
         const resultQuery = await (0, query_1.selectQuery)(29, values);
-        console.log('resultQuery', resultQuery);
         if (!resultQuery.data) {
             return (0, message_1.message)(0);
         }
-        const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
         try {
-            console.log('inserindo em HISREAL', goodFeed);
-            console.log('address', address);
+            const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
             await connection.query(`
         INSERT INTO HISREAL
             (CODIGO, DOCUMEN, DTRECEB, QTRECEB, VALPAGO, FORMA, SALDO, DATA, LOTE, USUARIO, ODF, NOTA, LOCAL_ORIGEM, LOCAL_DESTINO, CUSTO_MEDIO, CUSTO_TOTAL, CUSTO_UNITARIO, CATEGORIA, DESCRICAO, EMPRESA_RECNO, ESTORNADO_APT_PRODUCAO, CST_ENDERECO, VERSAOSISTEMA, CST_SISTEMA,CST_HOSTNAME,CST_IP) 
@@ -48,13 +39,11 @@ const cstStorageUp = async (QTDE_LIB, address, CODIGO_PEÇA, NUMERO_ODF, goodFee
         WHERE 1 = 1 
         AND CODIGO = '${CODIGO_PEÇA}' 
         GROUP BY CODIGO`).then(result => result.rowsAffected);
+            await connection.close();
         }
         catch (error) {
             console.log('linha 194', error);
             return response.message = 'erro inserir em hisreal';
-        }
-        finally {
-            await connection.close();
         }
     }
     catch (error) {

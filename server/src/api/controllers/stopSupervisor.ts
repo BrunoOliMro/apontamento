@@ -16,7 +16,6 @@ export const stopSupervisor: RequestHandler = async (req, res) => {
     variables.cookies.motives = null
     variables.cookies.tempoDecorrido = null
 
-    console.log('variables', variables.body);
     if (!variables.body) {
         return res.json({ status: message(1), message: message(0), data: message(33) })
     }

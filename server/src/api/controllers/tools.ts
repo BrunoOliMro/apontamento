@@ -26,20 +26,20 @@ export const tools: RequestHandler = async (req, res) => {
     variables.cookies.tempoDecorrido = null
 
     const codeNoteResult = await verifyCodeNote(variables.cookies, [6, 8, 9])
-    if(codeNoteResult.code === message(38)){
+    if (codeNoteResult.code === message(38)) {
         toolsImg = await selectQuery(20, variables.cookies)
-            if (!toolsImg.data) {
-                return res.json({ status: message(1), message: message(16), data: message(33) });
-            } else if (toolsImg.data) {
-                for await (const [i, record] of toolsImg.data.entries()) {
-                    const rec = await record;
-                    const path = await pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], toolString, String(i));
-                    result.push(path);
-                }
-                return res.json({ status: message(1), message: message(1), data: result })
-            } else {
-                return res.json({ status: message(1), message: message(1), data: message(16) });
+        if (!toolsImg.data) {
+            return res.json({ status: message(1), message: message(16), data: message(33) });
+        } else if (toolsImg.data) {
+            for await (const [i, record] of toolsImg.data.entries()) {
+                const rec = await record;
+                const path = await pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], toolString, String(i));
+                result.push(path);
             }
+            return res.json({ status: message(1), message: message(1), data: result || message(33) })
+        } else {
+            return res.json({ status: message(1), message: message(1), data: message(16) });
+        }
     }
 
     if (codeNoteResult.accepted || codeNoteResult.code === message(17)) {
@@ -62,7 +62,7 @@ export const tools: RequestHandler = async (req, res) => {
             return res.json({ status: message(1), message: message(0), data: message(33) })
         }
     } else {
-        return res.json({ status: message(1), message: message(45), data: message(33) })
+        return res.json({ status: message(1), message: message(45), data: message(33), code: codeNoteResult.code || message(33) })
     }
 }
 
@@ -91,13 +91,13 @@ export const selectedTools: RequestHandler = async (req, res) => {
             variables.cookies.pointedCodeDescription = ['Ini Prod.'];
             const codApontamentoInicioSetup = await insertInto(variables.cookies)
             if (codApontamentoInicioSetup !== message(0)) {
-                return res.json({ status: message(1), message: message(1), data: message(33) })
+                return res.json({ status: message(1), message: message(1), data: message(33), code: codeNoteResult.code || message(33) })
             } else {
-                return res.json({ status: message(1), message: message(0), data: message(33) })
+                return res.json({ status: message(1), message: message(0), data: message(33), code: codeNoteResult.code || message(33) })
             }
         }
         else {
-            return res.json({ status: message(1), message: message(0), data: codeNoteResult.code })
+            return res.json({ status: message(1), message: message(0), data: message(33), code: codeNoteResult.code || message(33) })
         }
     } else {
         const codeNoteResult = await verifyCodeNote(variables.cookies, [2])
@@ -108,12 +108,12 @@ export const selectedTools: RequestHandler = async (req, res) => {
             variables.cookies.pointedCode = [3]
             const codApontamentoInicioSetup = await insertInto(variables.cookies)
             if (codApontamentoInicioSetup) {
-                return res.json({ status: message(1), message: message(1), data: message(33) })
+                return res.json({ status: message(1), message: message(1), data: message(33), code: codeNoteResult.code || message(33) })
             } else {
-                return res.json({ status: message(1), message: message(0), data: message(33) })
+                return res.json({ status: message(1), message: message(0), data: message(33), code: codeNoteResult.code || message(33) })
             }
         } else {
-            return res.json({ status: message(1), message: message(0), data: codeNoteResult.code })
+            return res.json({ status: message(1), message: message(0), data: message(33), code: codeNoteResult.code || message(33) })
         }
     }
 }

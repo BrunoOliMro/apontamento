@@ -44,7 +44,14 @@ export default function messageQuery(chosenOption) {
         40: 'Exibir histórico',
         41: 'ODF parcialmente apontada',
         42: 'Máquina já parada',
-        43: 'Máquina parada'
+        43: 'Máquina parada',
+        44: 'Turn back these values',
+        45: 'Apontamento vazio',
+        46: "Apontamento parcial",
+        47: 'Quantidade excedida',
+        48: 'Apontar apenas faltantes, confirma?',
+        49: "Apontando apenas peças retrabalhadas, confirma ?",
+        50: "Apontando apenas peças retrabalhad as e peças faltantes, confirma ?",
     }
 
     return query[String(chosenOption)]

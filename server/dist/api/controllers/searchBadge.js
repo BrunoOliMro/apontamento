@@ -7,7 +7,6 @@ const message_1 = require("../services/message");
 const query_1 = require("../services/query");
 const searchBagde = async (req, res) => {
     const variables = await (0, variableInicializer_1.inicializer)(req);
-    console.log('variables', variables);
     if (!variables.body.badge) {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(17), data: (0, message_1.message)(33) });
     }

@@ -1,2 +1,2 @@
-export declare const update: (chosenOption: number, values?: any) => Promise<string | undefined>;
+export declare const update: any;
 //# sourceMappingURL=update.d.ts.map

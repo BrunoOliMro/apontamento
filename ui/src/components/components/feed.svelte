@@ -28,7 +28,6 @@
     let reworkFeed;
     let valorFeed;
     let value;
-    let getSpace;
     let balance;
     let isRequesting = false;
     let resultRefugo = motives();
@@ -36,6 +35,7 @@
     export let odfData;
     let availableQuantity = 0
     let subTitle = messageQuery(0)
+    var returnValueAddress;
 
     if(!odfData.codData.data){
         odfData.codData.data = 'S/I'
@@ -54,7 +54,6 @@
         loader = true
         const res = await post(supervisorStop, {supervisor});
         if (res) {
-            console.log('res in postStop', res);
             if (res.message === messageQuery(1)) {
                 callPost();
             } else if (res.message !== messageQuery(0)) {
@@ -73,73 +72,52 @@
         }
     }
 
-    async function checkForSuper(event, total, qtdLib) {
+    async function checkForSuper(event) {
         const result = await verifyStringLenght(event, supervisor, 6, 14);
         if (result === messageQuery(1)) {
-            callPost(total, qtdLib);
+            callPost();
         } 
     }
 
-    const callPost = async (total, qtdLib) => {
+    const callPost = async () => {
         loader = true;
         isRequesting = true
         close();
-        const res = await post(pointApi, {
-            valorFeed,
-            badFeed,
-            missingFeed,
-            reworkFeed,
-            value,
-            supervisor,
-        });
-        if (res) {
-            console.log('res in callPost', res);
+        const res = await post(pointApi, { valorFeed, badFeed, missingFeed, reworkFeed, value, supervisor});
+        if (res.status) {
+            console.log('res.message in callPost.address', res.message);
+            console.log('res.address in callPost.address', res.address);
+            console.log('res.returnValueAddress in callPost.address', res.returnValueAddress);
+
             isRequesting = false
             loader = false
-            if (res.message === "Apontamento parcial") {
-                message = "Apontamento parcial";
-            } else if (res.message === "Pointed") {
+
+            if (res.message === messageQuery(46)) {
+                message = messageQuery(46);
+            } 
+            else if (res.message === messageQuery(10)) {
                 window.location.href =  messageQuery(18);
-                location.reload();
-            } else if (res.code === "Machine has stopped") {
-                message = "Máquina parada";
-            } else if (res.message === "Jumping steps") {
-                window.location.href = messageQuery(20);
-                location.reload();
-            } else if (res.message === "Saldo menor que o apontado") {
-                balance = res.balance;
-            } else if (res.message === messageQuery(1)) {
-                if(total < qtdLib ){
-                    return address = res.address
-                }
-                // getSpaceFunc();
-            } else if (res.message === "Rip iniciated") {
+            } 
+            else if (res.code === messageQuery(16)) {
+                message = messageQuery(43);
+            }
+            else if(res.message === messageQuery(1) && !res.address && !res.returnValueAddress.address[0]) {
+                return window.location.href = messageQuery(18);
+            }
+            else if (res.message === messageQuery(1) && !res.address !== messageQuery(0) && res.returnValueAddress.address[0]) {
+                returnValueAddress = res.returnValueAddress.address[0].ENDERECO
+                message = messageQuery(44)
+            } 
+            else if (res.message === messageQuery(11)) {
                 window.location.href = messageQuery(18);
-                location.reload();
-            }  else if (res.message !== messageQuery(0)) {
+            }  
+            else if (res.message !== messageQuery(0) && res.data !== messageQuery(0)) {
                 message = res.message;
             }
+        } else {
+            message = messageQuery(4)
         }
     };
-
-    // async function getSpaceFunc() {
-    //     isRequesting = true
-    //     loader = true;
-    //     const res = await fetch(pointApi);
-    //     getSpace = await res.json();
-    //     console.log('getSpace', getSpace);
-    //     if (getSpace) {
-    //         loader = false;
-
-    //         if(getSpace.message === messageQuery(35)){
-    //             return window.location.href = messageQuery(18)
-    //         } else if (getSpace.message === messageQuery(1)) {
-    //             address = getSpace.address;
-    //         } else if (getSpace.message === messageQuery(4)) {
-    //             address = "5A01A01-11";
-    //         }
-    //     }
-    // }
 
     async function checkPost(event) {
 
@@ -157,24 +135,32 @@
 
         try {
             if(numberMissing > 0 && numberBadFeed + numberGoodFeed + numberReworkFeed === 0){
-                return message = 'Apontar apenas faltantes, confirma?'
-            } else  if ( numberReworkFeed > 0 && numberBadFeed + numberGoodFeed + numberMissing === 0) {
-                return (message = "Apontando apenas peças retrabalhadas, confirma ?");
-            } else if ( numberReworkFeed > 0 && numberMissing > 0 && numberBadFeed + numberGoodFeed === 0) {
-                return (message ="Apontando apenas peças retrabalhadas e peças faltantes, confirma ?");
-            } else if ((numberMissing > 0 && numberGoodFeed > 0 && numberGoodFeed < numberQtdAllowed && numberBadFeed + numberReworkFeed === 0) ||
-                (numberReworkFeed > 0 && numberGoodFeed > 0 && numberGoodFeed < numberQtdAllowed && numberBadFeed + numberMissing === 0)) {
-                return (message = "Apontamento parcial");
-            } else if (total > numberQtdAllowed) {
-                message = "Quantidade excedida";
-            } else  if (numberBadFeed > 0 && total <= numberQtdAllowed) {
+                return message = messageQuery(48)
+            }
+            else  if ( numberReworkFeed > 0 && numberBadFeed + numberGoodFeed + numberMissing === 0) {
+                return (message = messageQuery(49));
+            } 
+            else if ( numberReworkFeed > 0 && numberMissing > 0 && numberBadFeed + numberGoodFeed === 0) {
+                return (message = messageQuery(50));
+            } 
+            else if ((numberMissing > 0 && numberGoodFeed > 0 && numberGoodFeed < numberQtdAllowed && numberBadFeed + numberReworkFeed === 0) ||
+                (numberReworkFeed > 0 && numberGoodFeed > 0 && numberGoodFeed < numberQtdAllowed && numberBadFeed + numberMissing === 0) ||
+                (numberGoodFeed > 0 && numberMissing > 0 && numberReworkFeed > 0 && numberBadFeed <= 0) ||
+                (numberBadFeed + numberMissing + numberReworkFeed === 0 && numberGoodFeed > 0 && numberGoodFeed < numberQtdAllowed)
+                ) {
+                return (message = messageQuery(46));
+            } 
+            else if (total > numberQtdAllowed) {
+                message = messageQuery(47);
+            } 
+            else  if (numberBadFeed > 0 && total <= numberQtdAllowed) {
                 showConfirm = true;
-            } else if (total === 0) {
-                message = "Apontamento vazio";
-            } else if ( numberBadFeed + numberMissing + numberReworkFeed === 0 && numberGoodFeed > 0 && numberGoodFeed < numberQtdAllowed ) {
-                message = "Apontamento parcial";
-            } else if ( numberBadFeed + numberMissing + numberReworkFeed === 0 && numberGoodFeed === numberQtdAllowed) {
-                callPost(total, numberQtdAllowed );
+            } 
+            else if (total === 0) {
+                message = messageQuery(45);
+            } 
+            else if ( numberBadFeed + numberMissing + numberReworkFeed === 0 && numberGoodFeed === numberQtdAllowed) {
+                callPost();
             }
         } catch (error) {
             console.log('Error on CheckPost function checking sended Numbers', error)
@@ -300,7 +286,7 @@
         {/if}
     {/await}
 
-   {#if message === "Apontamento parcial"}
+   {#if message === messageQuery(46)}
         <Supervisor titleSupervisor={message} subTitle={subTitle}  bind:supervisor={supervisor} on:message={callPost}/>
     {/if}
 
@@ -308,110 +294,9 @@
         <Supervisor titleSupervisor={message} subTitle={subTitle}  bind:supervisor={supervisor} on:message={checkForSuper}/>
     {/if}
 
-    <!-- {#if message === "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?"}
-        <Supervisor titleSupervisor={message} subTitle={subTitle}  bind:supervisor={supervisor} on:message={checkForSuper}/>
-    {/if} -->
-
     {#if message === "Máquina parada"}
         <Supervisor titleSupervisor={message} subTitle={subTitle}  bind:supervisor={supervisor} on:message={checkStopMachine}/>
     {/if}
-<!-- 
-    {#if message === "Apontando apenas peças retrabalhadas, confirma ?" || message === 'Apontar apenas faltantes, confirma?'}
-        <div class="background">
-            <div class="header">
-                <div class="content-area">
-                    <div class="modalTitle">
-                        <h3>{message}</h3>
-                    </div>
-                    <div class="modalContent">
-                        <div class="modalCenter">
-                            <h4>Informe o supervisor:</h4>
-                            <div class="input">
-                                <input
-                                    on:input={blockForbiddenChars}
-                                    on:keypress={checkForSuper}
-                                    bind:value={supervisor}
-                                    autofocus
-                                    class="supervisor"
-                                    type="text"
-                                    name="supervisor"
-                                    id="supervisor"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modalFooter">
-                        <button on:keypress={close} on:click={close}
-                            >Fechar</button
-                        >
-                    </div>
-                </div>
-            </div>
-        </div>
-    {/if} -->
-
-    <!-- {#if message === "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?"}
-        <div class="background">
-            <div class="header">
-                <div class="content-area">
-                    <div class="modalTitle">
-                        <h3>{message}</h3>
-                    </div>
-                    <div class="modalContent">
-                        <div class="modalCenter">
-                            <h4>Informe o supervisor:</h4>
-                            <div class="input">
-                                <input
-                                    on:input={blockForbiddenChars}
-                                    on:keypress={checkForSuper}
-                                    bind:value={supervisor}
-                                    autofocus
-                                    class="supervisor"
-                                    type="text"
-                                    name="supervisor"
-                                    id="supervisor"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modalFooter">
-                        <button on:keypress={close} on:click={close}
-                            >Fechar</button
-                        >
-                    </div>
-                </div>
-            </div>
-        </div>
-    {/if} -->
-
-    <!-- {#if message === "Máquina parada"}
-        <div class="background">
-            <div class="header">
-                <div class="closed">
-                    <h2>Máquina parada</h2>
-                </div>
-                <div>
-                    <div>
-                        <p>Chame um supervisor</p>
-                    </div>
-                    <div>
-                        <input
-                            autofocus
-                            tabindex="12"
-                            id="supervisor"
-                            name="supervisor"
-                            type="text"
-                            on:input={blockForbiddenChars}
-                            on:keypress={checkStopMachine}
-                            onkeyup="this.value = this.value.toUpperCase()"
-                            bind:value={supervisor}
-                        />
-                    </div>
-                </div>
-                <button on:keypress={close} on:click={close}>fechar</button>
-            </div>
-        </div>
-    {/if} -->
 
     {#if message === "Already pointed"}
         <div class="background">
@@ -429,8 +314,23 @@
         </div>
     {/if}
 
-    {#if message && message !== messageQuery(0) && message !== "Apontamento parcial" && message !== 'Máquina parada' }
+    {#if message && message !== messageQuery(0) && message !== messageQuery(46) && message !== 'Máquina parada' && message !== messageQuery(44) }
         <ModalConfirmation on:message={close} message={message} title={message} on:message={close}/>
+    {/if}
+
+    {#if message === messageQuery(44) && returnValueAddress}
+        <div class="background">
+            <div class="header">
+                <div class="closed">
+                    <h2>
+                        Devolva a quantidade restante no : {returnValueAddress} 
+                    </h2>
+                </div>
+                <button on:keypress={closeRedirect} on:click={closeRedirect}
+                    >Continuar</button
+                >
+            </div>
+        </div>
     {/if}
 
     {#if address && address !== messageQuery(0)}
@@ -438,7 +338,7 @@
             <div class="header">
                 <div class="closed">
                     <h2>
-                        Insira a quantidade apontada no endereço : {address}
+                        Insira a quantidade apontada no : {address}
                     </h2>
                 </div>
                 <button on:keypress={closeRedirect} on:click={closeRedirect}

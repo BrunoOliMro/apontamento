@@ -6,7 +6,6 @@ import { selectQuery } from '../services/query';
 
 export const searchBagde: RequestHandler = async (req, res) => {
     const variables = await inicializer(req)
-    console.log('variables', variables);
 
     if (!variables.body.badge) {
         return res.json({ status: message(1), message: message(17), data: message(33) });

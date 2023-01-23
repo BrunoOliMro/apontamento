@@ -16,7 +16,6 @@ const stopSupervisor = async (req, res) => {
     variables.cookies.pointedCodeDescription = [`Ini Prod.`];
     variables.cookies.motives = null;
     variables.cookies.tempoDecorrido = null;
-    console.log('variables', variables.body);
     if (!variables.body) {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
     }

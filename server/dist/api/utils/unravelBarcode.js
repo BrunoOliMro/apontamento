@@ -14,7 +14,9 @@ function unravelBarcode(obj) {
             CODIGO_PECA: '',
         },
     };
-    console.log('obj in unravel', obj);
+    if (!obj || obj.length <= 16 || obj.length > 18) {
+        return response.message = '';
+    }
     const dados = {
         numOdf: String(obj.slice(10)),
         numOper: String(obj.slice(0, 5)),

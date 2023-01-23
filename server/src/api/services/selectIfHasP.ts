@@ -24,15 +24,21 @@ export const selectToKnowIfHasP = async (obj: { message?: string; data: { [key: 
         const processItens = resultHasP.data!.map((item: any) => item.NUMSEQ).filter((element: string) => element === String(String(obj.data['NUMERO_OPERACAO']!).replaceAll(' ', '')).replaceAll('000', ''))
         const minToProd: number = minQtdAllowed < obj.data['QTDE_LIB']! ? minQtdAllowed : Number(obj.data!['QTDE_LIB']);
         const resultQuantityCst = await selectQuery(21, obj.data)
+        console.log('resultQuantityCst', resultQuantityCst);
 
         // If there a values reserved
         if (resultQuantityCst.data![0]) {
+            console.log('aqui');
             if (resultQuantityCst.data![0].hasOwnProperty('QUANTIDADE')) {
+                console.log('wqfwevve');
                 if (resultQuantityCst.data![0].QUANTIDADE > 0) {
-                    response.quantidade = Math.min(...execut);
-                    response.childCode = codigoFilho;
+                    console.log('iebvuebubeuvbuebv');
                     response.execut = execut;
                     response.condic = 'P';
+                    obj.data['valorApontado'] = minToProd
+                    obj.data['QTDE_LIB'] = minToProd
+                    response.childCode = codigoFilho
+                    response.quantidade = minToProd
                     response.message = message(15);
                     return response;
                 }

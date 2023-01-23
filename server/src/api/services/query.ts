@@ -6,7 +6,7 @@ export const selectQuery = async (chosenOption: number, values?: any) => {
     if (!values) {
         values = ""
     }
-    const codes: { [k: string]: string } = {
+    const codes: { [key: string]: string } = {
         0: `SELECT REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, CODIGO_PECA, QTD_BOAS, QTD_REFUGO, QTD_FALTANTE, QTD_RETRABALHADA FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${values.NUMERO_ODF} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`,
         1: `SELECT R_E_C_N_O_, DESCRICAO FROM CST_MOTIVO_REFUGO (NOLOCK) ORDER BY DESCRICAO ASC`,
         2: `SELECT DISTINCT [NUMPEC], [IMAGEM] FROM QA_LAYOUT (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${values.CODIGO_PECA}' AND REVISAO = ${values.REVISAO} AND IMAGEM IS NOT NULL`,
@@ -15,7 +15,7 @@ export const selectQuery = async (chosenOption: number, values?: any) => {
         5: `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO_DETALHADO WHERE 1 = 1 AND ODF = '${values.NUMERO_ODF}' ORDER BY DATAHORA DESC`,
         6: `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO WHERE 1 = 1 AND ODF = '${values.NUMERO_ODF}' ORDER BY OP ASC`,
         7: `SELECT CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB,  QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${values.NUMERO_ODF} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`,
-        8: `SELECT TOP 1 CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${values.NUMERO_ODF} AND NUMERO_OPERACAO = ${ values.NUMERO_OPERACAO} AND CODIGO_MAQUINA = '${values.CODIGO_MAQUINA}' AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`,
+        8: `SELECT TOP 1 CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB, QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP, QTD_BOAS FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${values.NUMERO_ODF} AND NUMERO_OPERACAO = ${values.NUMERO_OPERACAO} AND CODIGO_MAQUINA = '${values.CODIGO_MAQUINA}' AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`,
         9: `SELECT TOP 1 USUARIO FROM HISAPONTA WHERE 1 = 1 AND ODF = '${values.NUMERO_ODF}'  ORDER BY DATAHORA DESC`,
         10: `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${values.supervisor}'`,
         13: `SELECT DESCRICAO FROM MOTIVO_DEVOLUCAO`,
@@ -36,15 +36,11 @@ export const selectQuery = async (chosenOption: number, values?: any) => {
     }
 
     try {
-        if (codes[String(chosenOption)]) {
-            const connection = await mssql.connect(sqlConfig);
-            const data = await connection.query(`${codes[String(chosenOption)]}`).then((result) => result.recordset)
-            await connection.close()
-            if (data.length > 0) {
-                return { message: message(1), data: data }
-            } else {
-                return { message: message(1), data: message(33) }
-            }
+        const connection = await mssql.connect(sqlConfig);
+        const data = await connection.query(`${codes[String(chosenOption)]}`).then((result) => result.recordset)
+        await connection.close()
+        if (data.length > 0) {
+            return { message: message(1), data: data }
         } else {
             return { message: message(1), data: message(33) }
         }

@@ -40,16 +40,11 @@ const selectQuery = async (chosenOption, values) => {
         30: `SELECT TOP 1 QTDE_LIB FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND NUMERO_ODF = '${values.NUMERO_ODF}' AND CODIGO_MAQUINA = '${values.CODIGO_MAQUINA}' AND NUMERO_OPERACAO = '${values.NUMERO_OPERACAO}'  `
     };
     try {
-        if (codes[String(chosenOption)]) {
-            const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-            const data = await connection.query(`${codes[String(chosenOption)]}`).then((result) => result.recordset);
-            await connection.close();
-            if (data.length > 0) {
-                return { message: (0, message_1.message)(1), data: data };
-            }
-            else {
-                return { message: (0, message_1.message)(1), data: (0, message_1.message)(33) };
-            }
+        const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+        const data = await connection.query(`${codes[String(chosenOption)]}`).then((result) => result.recordset);
+        await connection.close();
+        if (data.length > 0) {
+            return { message: (0, message_1.message)(1), data: data };
         }
         else {
             return { message: (0, message_1.message)(1), data: (0, message_1.message)(33) };

@@ -72,7 +72,7 @@ const getAddress = async (_valueOfParts, variables, req) => {
             }
         });
     }
-    await (0, updateQuantityCstStorage_1.cstStorageUp)(variables.cookies.QTDE_LIB, address[0].ENDERECO, variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, resultSelectPcpProg.data[0].QTD_BOAS, variables.cookies.FUNCIONARIO, hostname, ip);
+    await (0, updateQuantityCstStorage_1.cstStorageUp)(variables.cookies.QTDE_LIB, address[0].ENDERECO, variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, variables.cookies.goodFeed, variables.cookies.FUNCIONARIO, hostname, ip);
     if (address) {
         return { message: (0, message_1.message)(1), address: address };
     }

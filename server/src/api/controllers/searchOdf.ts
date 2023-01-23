@@ -4,9 +4,9 @@ import { verifyCodeNote } from '../services/verifyCodeNote';
 import { cookieGenerator } from '../utils/cookieGenerator';
 import { unravelBarcode } from '../utils/unravelBarcode'
 import { cookieCleaner } from '../utils/clearCookie';
+import { selectQuery } from '../services/query';
 import { message } from '../services/message';
 import { odfIndex } from '../utils/odfIndex';
-import { select } from '../services/select';
 import { update } from '../services/update';
 import { RequestHandler } from 'express';
 
@@ -30,7 +30,8 @@ export const searchOdf: RequestHandler = async (req, res) => {
     }
 
     // Seleciona todos os itens da Odf
-    const odf = await select(0, barcode.data)
+    let groupOdf = await selectQuery(0, barcode.data)
+    let odf = groupOdf.data
 
     if (!odf) {
         return res.json({ status: message(1), message: message(6), data: message(8) })
@@ -51,8 +52,10 @@ export const searchOdf: RequestHandler = async (req, res) => {
     } else if (i > 0) {
         // ATENÇÃO quantidade liberado é igual qtd_lib = boasProcessoPassado -  boas - ruins - retrabalhadas
         // Quantidade liberada é a diferença qtd_lib =  boasProcesso passado - boas - ruins - retrabalhadas
-        odf[i].QTDE_LIB = (odf[i - 1].QTD_BOAS || 0) - (odf[i].QTD_BOAS || 0) - (odf[i].QTD_REFUGO || 0) - (odf[i].QTD_RETRABALHADA || 0)
+        odf[i].QTDE_LIB = (odf[i - 1].QTD_BOAS || 0) - (odf[i].QTD_BOAS || 0) - (odf[i].QTD_REFUGO || 0) - (odf[i].QTD_RETRABALHADA || 0) - (odf[i].QTD_FALTANTE || 0)
     }
+
+    console.log('odf[i].QTDE_LIB', odf[i].QTDE_LIB);
 
     if (!odf[i].QTDE_LIB || odf[i].QTDE_LIB <= 0) {
         return res.json({ status: message(1), message: message(11), data: message(11) })
@@ -61,7 +64,7 @@ export const searchOdf: RequestHandler = async (req, res) => {
     // Generate cookie that is gonna be used later;
     barcode.data.QTDE_LIB = odf[i].QTDE_LIB
     barcode.data.CODIGO_PECA = odf[i].CODIGO_PECA
-    let resultComponents = await selectToKnowIfHasP(barcode)
+    const resultComponents = await selectToKnowIfHasP(barcode)
     console.log('resultComponents', resultComponents);
     
     if (resultComponents.message === message(13) || resultComponents.message === message(14) || resultComponents.message === message(15)) {
@@ -70,7 +73,6 @@ export const searchOdf: RequestHandler = async (req, res) => {
         odf[i].execut = resultComponents.execut
         odf[i].childCode = resultComponents.childCode
         barcode.data.QTDE_LIB = resultComponents.quantidade
-        console.log(' barcode.data.QTDE_LIB',  barcode.data.QTDE_LIB);
         if (!barcode.data.QTDE_LIB) {
             return res.json({ status: message(1), message: message(11), data: message(11) })
         }

@@ -32,7 +32,7 @@ const tools = async (req, res) => {
                 const path = await pictures_1.pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], toolString, String(i));
                 result.push(path);
             }
-            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: result });
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: result || (0, message_1.message)(33) });
         }
         else {
             return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(16) });
@@ -62,7 +62,7 @@ const tools = async (req, res) => {
         }
     }
     else {
-        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(45), data: (0, message_1.message)(33) });
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(45), data: (0, message_1.message)(33), code: codeNoteResult.code || (0, message_1.message)(33) });
     }
 };
 exports.tools = tools;
@@ -86,14 +86,14 @@ const selectedTools = async (req, res) => {
             variables.cookies.pointedCodeDescription = ['Ini Prod.'];
             const codApontamentoInicioSetup = await (0, insert_1.insertInto)(variables.cookies);
             if (codApontamentoInicioSetup !== (0, message_1.message)(0)) {
-                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33) });
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33), code: codeNoteResult.code || (0, message_1.message)(33) });
             }
             else {
-                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33), code: codeNoteResult.code || (0, message_1.message)(33) });
             }
         }
         else {
-            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: codeNoteResult.code });
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33), code: codeNoteResult.code || (0, message_1.message)(33) });
         }
     }
     else {
@@ -103,14 +103,14 @@ const selectedTools = async (req, res) => {
             variables.cookies.pointedCode = [3];
             const codApontamentoInicioSetup = await (0, insert_1.insertInto)(variables.cookies);
             if (codApontamentoInicioSetup) {
-                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33) });
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33), code: codeNoteResult.code || (0, message_1.message)(33) });
             }
             else {
-                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33), code: codeNoteResult.code || (0, message_1.message)(33) });
             }
         }
         else {
-            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: codeNoteResult.code });
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33), code: codeNoteResult.code || (0, message_1.message)(33) });
         }
     }
 };
