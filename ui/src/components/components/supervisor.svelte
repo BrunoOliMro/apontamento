@@ -3,57 +3,108 @@
     import blockForbiddenChars from "../../utils/presanitize";
     import { createEventDispatcher } from "svelte";
 
-    export let supervisor;
-    export let titleSupervisor;
+    export let supervisor = '';
+    export let titleSupervisor = '';
     export let subTitle = "";
 
     const dispatch = createEventDispatcher();
 
     async function makeRequest(event) {
-        console.log('evente in supervisor', event.key);
-            dispatch("message", {
-                eventType: event,
-                text: "Check for super",
-            });
+        dispatch("message", {
+            eventType: event,
+            text: "Check for super",
+        });
     }
 
     async function close(event) {
-        console.log('evente in supervisor', event.key);
-            dispatch("message", {
-                eventType: event,
-                text: "Go Back!!!",
-            });
+        dispatch("message", {
+            eventType: event,
+            text: "Go Back!!!",
+        });
     }
 </script>
 
 <div class="background">
     <div class="modal-content">
-        <h3>{titleSupervisor}</h3>
+        <h3 class="title-supervisor">{titleSupervisor}</h3>
 
-        <h4>{subTitle}</h4>
+        <h4 class="subTitle-supervisor">{subTitle}</h4>
 
-        <!-- on:keypress={makeRequest} -->
-        <!-- on:keypress|preventDefault={makeRequest} -->
+        <!-- svelte-ignore a11y-autofocus -->
         <input
-                autocomplete="off"
-                autofocus
-                on:input|preventDefault={blockForbiddenChars}
-                bind:value={supervisor}
-                onkeyup="this.value = this.value.toUpperCase()"
-                type="text"
-            />
-            
+            autocomplete="off"
+            autofocus
+            on:input|preventDefault={blockForbiddenChars}
+            bind:value={supervisor}
+            onkeyup="this.value = this.value.toUpperCase()"
+            type="text"
+        />
         <!-- svelte-ignore a11y-positive-tabindex -->
-        <button tabindex="20" on:click={makeRequest} on:keypress={makeRequest}
-            >Confirmar</button
-        >
-        <button tabindex="20" on:click={close} on:keypress={close}
-            >Voltar</button
-        >
+        <div class="line-btn">
+            <button
+                class="btn"
+                tabindex="20"
+                on:click={close}
+                on:keypress={close}>Voltar</button
+            >
+            <button
+                class="btn"
+                tabindex="20"
+                on:click={makeRequest}
+                on:keypress={makeRequest}>Confirmar</button
+            >
+        </div>
     </div>
 </div>
 
 <style>
+    .title-supervisor{
+        font-size: 45px;
+        margin: 1%;
+        padding: 0%;
+    }
+    .subTitle-supervisor{
+        font-size: 32px;
+        margin: 1%;
+        padding: 0%;
+    }
+    .btn {
+        font-size: 20px;
+        margin: 1%;
+        padding: 0%;
+        width: 200px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        text-align: center;
+        justify-content: center;
+        border-radius: 10px;
+        background-color: #fff;
+        border: none;
+        letter-spacing: 1px;
+        box-shadow: grey;
+        color: #252525;
+    }
+
+    .btn:hover {
+        background-color: #fff;
+        transition: all 0.7s;
+    }
+    .line-btn {
+        display: flex;
+        margin: 1%;
+        padding: 0%;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        text-align: center;
+    }
+    h3 {
+        font-size: 35px;
+    }
+    h4 {
+        font-size: 30px;
+    }
     .background {
         position: fixed;
         top: 0;
@@ -69,9 +120,9 @@
     }
     .modal-content {
         color: white;
-        background-color: black;
-        width: 500px;
-        height: 300px;
+        background-color: #252525;
+        width: 600px;
+        height: 350px;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -81,8 +132,11 @@
         z-index: 99999999999;
     }
     input {
-        width: 300px;
-        border-radius: 8px;
+        padding: 0%;
+        margin: 1%;
+        width: 320px;
+        height: 35px;
+        border-radius: 10px;
         z-index: 999999999999999999;
     }
 </style>

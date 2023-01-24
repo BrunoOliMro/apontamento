@@ -28,6 +28,7 @@ export const tools: RequestHandler = async (req, res) => {
     const codeNoteResult = await verifyCodeNote(variables.cookies, [6, 8, 9])
     if (codeNoteResult.code === message(38)) {
         toolsImg = await selectQuery(20, variables.cookies)
+        console.log('toolsImg', toolsImg);
         if (!toolsImg.data) {
             return res.json({ status: message(1), message: message(16), data: message(33) });
         } else if (toolsImg.data) {
@@ -36,6 +37,7 @@ export const tools: RequestHandler = async (req, res) => {
                 const path = await pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], toolString, String(i));
                 result.push(path);
             }
+            console.log('result', result);
             return res.json({ status: message(1), message: message(1), data: result || message(33) })
         } else {
             return res.json({ status: message(1), message: message(1), data: message(16) });
@@ -46,6 +48,7 @@ export const tools: RequestHandler = async (req, res) => {
         const inserted = await insertInto(variables.cookies)
         if (inserted === message(1)) {
             toolsImg = await selectQuery(20, variables.cookies)
+            console.log('toolsImg', toolsImg);
             if (!toolsImg.data) {
                 return res.json({ status: message(1), message: message(16), data: message(33) });
             } else if (toolsImg.data) {
@@ -54,6 +57,7 @@ export const tools: RequestHandler = async (req, res) => {
                     const path = await pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], toolString, String(i));
                     result.push(path);
                 }
+                console.log('result', result);
                 return res.json({ status: message(1), message: message(1), data: result })
             } else {
                 return res.json({ status: message(1), message: message(1), data: message(16) });

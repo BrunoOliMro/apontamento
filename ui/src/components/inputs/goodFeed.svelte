@@ -49,6 +49,7 @@
         font-size: 37px;
     }
     .content {
+        font-weight: 500;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -61,7 +62,7 @@
     }
 
     input {
-        width: 115px;
+        width: 105px;
         height: 40px;
         margin: 0%;
         padding: 0%;

@@ -10,8 +10,6 @@
     let timeSpend = 0;
     let image = [];
 
-    console.log("status.svelte", odfData);
-
     if (!odfData.codData.data) {
         odfData.codData.data = "";
     } else {

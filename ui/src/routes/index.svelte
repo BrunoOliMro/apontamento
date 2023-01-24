@@ -30,8 +30,8 @@
    let resulFetch;
    let result = getTempo() || "";
    let goBack = `Tentar novamente...`;
-   let superTitle = `Supervisor`;
-   let timeUp = `Tempo excecido...`;
+   let superTitle = `Supervisor!`;
+   let timeUp = `Tempo de produção excedido!`;
    let messageArea = false;
 
    async function redirect() {
@@ -73,7 +73,7 @@
          }
       }
 
-      if (objData.codData.data.odfSelecionada.QTDE_LIB <= 0) {
+      if (objData.codData.data.QTDE_LIB <= 0) {
          messageArea = true;
          return (message = messageQuery(4));
       }

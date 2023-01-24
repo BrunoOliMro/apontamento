@@ -13,13 +13,13 @@
     if (!odfData.codData.data) {
         odfData.codData.data = "S/I";
     } else {
-        numeroOdf = odfData.codData.data.odfSelecionada.NUMERO_ODF;
-        codigoPeca = odfData.codData.data.odfSelecionada.CODIGO_PECA;
-        codigoCliente = odfData.codData.data.odfSelecionada.CODIGO_CLIENTE;
-        machineCode = odfData.codData.data.odfSelecionada.CODIGO_MAQUINA;
-        qtdeOdf = odfData.codData.data.odfSelecionada.QTDE_LIB;
-        funcionario = odfData.codData.data.resEmployee;
-        operationNumber = odfData.codData.data.odfSelecionada.NUMERO_OPERACAO;
+        numeroOdf = odfData.codData.data.NUMERO_ODF;
+        codigoPeca = odfData.codData.data.CODIGO_PECA;
+        codigoCliente = odfData.codData.data.CODIGO_CLIENTE;
+        machineCode = odfData.codData.data.CODIGO_MAQUINA;
+        qtdeOdf = odfData.codData.data.QTDE_ODF;
+        funcionario = odfData.codData.data.FUNCIONARIO;
+        operationNumber = odfData.codData.data.NUMERO_OPERACAO;
     }
 </script>
 

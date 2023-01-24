@@ -8,6 +8,7 @@ import { odfIndex } from '../utils/odfIndex';
 import { update } from '../services/update';
 import { RequestHandler } from 'express';
 import { selectQuery } from '../services/query';
+import { getChildrenValuesBack } from '../services/valuesFromChildren';
 
 export const returnedValue: RequestHandler = async (req, res) => {
     const variables = await inicializer(req)
@@ -108,6 +109,10 @@ export const returnedValue: RequestHandler = async (req, res) => {
         variables.cookies.valorApontado = groupOdf.data![i].QTDE_APONTADA - valorApontado
 
         if (selectSuper.data!.length > 0) {
+            
+            const resultFromChildren = await getChildrenValuesBack(variables, req)
+            console.log('resultFromChildren in return values: ', resultFromChildren);
+
             const insertHisCodReturned = await insertInto(variables.cookies)
             if (insertHisCodReturned) {
                 const updateValuesOnPcp = await update(2, variables.cookies)

@@ -1,6 +1,6 @@
 <script>
     import blockForbiddenChars from "../../utils/presanitize";
-    let title = "RETRABALHAR";
+    let title = "RETRABALHADAS";
     export let reworkFeed;
 
     import { createEventDispatcher } from "svelte";
@@ -21,7 +21,6 @@
     </div>
     <div>
         <!-- svelte-ignore a11y-positive-tabindex -->
-        <!-- svelte-ignore a11y-autofocus -->
         <input
             bind:value={reworkFeed}
             on:input={callDispatch}
@@ -39,6 +38,7 @@
         font-size: 37px;
     }
     .content {
+        font-weight: 500;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -51,7 +51,7 @@
     }
 
     input {
-        width: 115px;
+        width: 105px;
         height: 40px;
         margin: 0%;
         padding: 0%;

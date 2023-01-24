@@ -64,76 +64,63 @@
       loader = true;
       const res = await post(barcodeUrl, { barcode });
       if (res) {
+        console.log('Barcode', res);
+
         loader = false;
+
         if (res.status === messageQuery(1)) {
-          if (res.data === messageQuery(10)) {
+
+          if(res.data === messageQuery(36) && res.code === messageQuery(10)){
+            return window.location.href = messageQuery(18)
+          }
+
+          if (res.code === messageQuery(10)) {
             return (window.location.href = messageQuery(18));
           }
 
-          if (res.data === messageQuery(16)) {
+          if (res.code === messageQuery(16)) {
             return (window.location.href = messageQuery(17));
           }
 
-          if (
-            res.data === messageQuery(0) &&
-            res.message === messageQuery(39)
-          ) {
+          if ( res.code === messageQuery(0) && res.message === messageQuery(39)) {
             return (message = messageQuery(39));
           }
 
-          if (res.data === messageQuery(10) || res.data === messageQuery(11)) {
+          if (res.code === messageQuery(10) || res.code === messageQuery(11)) {
             return (window.location.href = messageQuery(18));
           }
 
-          if (res.data === messageQuery(36)) {
+          if (res.code === messageQuery(36)) {
             return (message = messageQuery(36));
           }
 
-          if (
-            res.data === messageQuery(12) ||
-            res.data === messageQuery(13) ||
-            res.data === messageQuery(15)
-          ) {
+          if ( res.code === messageQuery(12) || res.code === messageQuery(13) || res.code === messageQuery(15)) {
             return (window.location.href = messageQuery(19));
           }
 
-          if (res.data === messageQuery(27)) {
+          if (res.code === messageQuery(27)) {
             return (window.location.href = messageQuery(17));
           }
 
-          if (res.data !== messageQuery(0)) {
-            return (message = res.data);
+          if (res.code !== messageQuery(0)) {
+            return (message = res.code);
           }
-        } else if (
-          res.data === messageQuery(11) ||
-          res.data === messageQuery(10)
-        ) {
-          window.location.href = messageQuery(18);
-        } else if (
-          res.data === messageQuery(12) ||
-          res.data === messageQuery(13) ||
-          res.data === messageQuery(14) ||
-          res.data === messageQuery(15)
-        ) {
+        } 
+        else if ( res.code === messageQuery(12) || res.code === messageQuery(13) || res.code === messageQuery(14) || res.code === messageQuery(15)) {
           window.location.href = messageQuery(19);
-        } else if (res.data === messageQuery(16)) {
+        } 
+        else if (res.code === messageQuery(16)) {
           window.location.href = messageQuery(17);
-        } else if (res.data !== messageQuery(0)) {
-          loader = false;
-          message = res.data;
+        } 
+        else if (res.code !== messageQuery(0)) {
+          message = res.message;
         }
       }
     }
   }
 
   async function checkBadge(event) {
-    // console.log('event in Badge', event.detail.eventType);
-    const resultVerifyBadge = await verifyStringLenght(
-      event.detail.eventType,
-      badge,
-      6,
-      14
-    );
+    const resultVerifyBadge = await verifyStringLenght( event.detail.eventType, badge, 6, 14);
 
     if (resultVerifyBadge === messageQuery(1)) {
       loader = true;
@@ -177,8 +164,6 @@
   }
 
   async function showBarcodeAddress() {
-    console.log("chamando", address);
-    console.log("barcode...", barcodeModal);
     if (address === false) {
       barcodeModal = false;
       address = true;
@@ -189,7 +174,6 @@
   }
 
   async function seeAddress(event) {
-    console.log('eeve', event.detail.text);
 
     if (event.detail.text === "Close modal call view address") {
       breadcrumbModal = true;
@@ -204,7 +188,6 @@
 
     const resultVerifyBadge = await verifyStringLenght( event.detail.eventType, { supervisor }, 6, 14);
 
-    console.log('resultVerifyBadge', resultVerifyBadge);
     if (resultVerifyBadge) {
       const res = await fetch(addressApi);
       resultAddress = await res.json();
@@ -241,6 +224,7 @@
   }
 
   async function redirectToBarcode(event) {
+    address = false;
     breadcrumbModal = false;
     barcodeModal = false;
     badgeModal = true;
@@ -351,85 +335,6 @@
       bind:barcodeReturn
       on:message={returningValues}
     />
-    <!-- <div class="background-modal">
-      <div class="modal-div">
-        <div class="line">
-          <p>Código de barras da ODF:</p>
-          <input
-            on:input={blockForbiddenChars}
-            bind:value={barcodeReturn}
-            autofocus
-            autocomplete="off"
-            class="return-input"
-            onkeyup="this.value = this.value.toUpperCase()"
-            type="text"
-            tabindex="14"
-          />
-        </div>
-
-        <div class="line">
-          <p>Insira a quantidade que deseja estornar:</p>
-          <input
-            on:input={blockForbiddenChars}
-            bind:value={quantity}
-            autocomplete="off"
-            class="return-input"
-            onkeyup="this.value = this.value.toUpperCase()"
-            type="text"
-            tabindex="15"
-          />
-        </div>
-
-        <div class="line">
-          <p>Crachá do Supervisor:</p>
-          <input
-            bind:value={supervisor}
-            on:input={blockForbiddenChars}
-            autocomplete="off"
-            tabindex="16"
-            class="return-input"
-            onkeyup="this.value = this.value.toUpperCase()"
-            type="text"
-          />
-        </div>
-
-        <div class="line">
-          <p>Qual irá retornar:</p>
-          <div class="options">
-            <select tabindex="17" bind:value={valueStorage}>
-              <option>BOAS</option>
-              <option>RUINS</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="line">
-          <p>Qual o motivo do estorno:</p>
-          <select bind:value={motive}>
-            {#each motives as item}
-              <option>{item}</option>
-            {/each}
-          </select>
-        </div>
-
-        <div class="line-btn">
-          <p
-            tabindex="19"
-            on:keypress|preventDefault={close}
-            on:click|preventDefault={close}
-          >
-            Fechar
-          </p>
-          <p
-            tabindex="18"
-            on:keypress|preventDefault={returningValues}
-            on:click|preventDefault={returningValues}
-          >
-            Confirmar
-          </p>
-        </div>
-      </div>
-    </div> -->
   {/if}
 
   {#if message && message !== messageQuery(0)}
@@ -447,58 +352,6 @@
     text-align: right;
     text-align: right;
   }
-  /* .line-btn {
-    margin: 1%;
-    padding: 0%;
-    display: flex;
-    flex-direction: row;
-    justify-content: right;
-    align-items: right;
-    text-align: right;
-    width: 100%;
-    height: 100px;
-  }
-  .line {
-    margin: 0%;
-    padding: 0%;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    width: 100%;
-    height: 100px;
-  } */
-  /* .modal-div {
-    margin: 0%;
-    padding: 0%;
-    color: white;
-    background-color: black;
-    width: 850px;
-    height: 500px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    border-radius: 10px;
-    z-index: 9;
-  }
-  a {
-    color: #252525;
-    font-size: 20px;
-  } */
-
-  /* a:hover {
-    opacity: 0.5s;
-    transition: all 1s;
-  }
-  .breadcrumb {
-    margin-top: 5px;
-    margin-left: 0%;
-    margin-bottom: 0%;
-    text-decoration: underline;
-  } */
   .loader {
     margin: 0%;
     position: relative;
@@ -533,58 +386,6 @@
     justify-content: center;
     z-index: 999999999999;
   }
-  /* input {
-    margin: 1%;
-    padding: 0%;
-    border-radius: 8px;
-  }
-
-  select {
-    margin: 1%;
-    padding: 0%;
-    width: 120px;
-    border-radius: 8px;
-    color: #fff;
-    background-color: #252525;
-  } */
-  /* .return-input {
-    margin: 0%;
-    padding: 0%;
-    height: 30px;
-    width: 250px;
-    border-radius: 8px;
-  }
-  p {
-    font-size: 30px;
-    margin: 1%;
-    padding: 0%;
-    display: flex;
-    justify-content: center;
-    text-decoration: none;
-    color: #fff;
-  } */
-  /* .form-div {
-    height: 180px;
-    letter-spacing: 1px;
-    border-color: grey;
-    box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
-  }
-  .background-modal {
-    margin: 0%;
-    padding: 0%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    background-color: rgba(17, 17, 17, 0.618);
-    height: 100vh;
-    width: 100vw;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    z-index: 8;
-  } */
-
   .return {
     display: flex;
     margin-left: 1%;
@@ -625,17 +426,4 @@
   main {
     margin: 1%;
   }
-
-  /* #pop-up-badge {
-    margin: 1%;
-    padding: 0%;
-    padding: 15px;
-    height: 180px;
-    font-size: 35px;
-    border-radius: 5px;
-    color: black;
-    justify-content: center;
-    text-align: center;
-    align-items: center;
-  } */
 </style>

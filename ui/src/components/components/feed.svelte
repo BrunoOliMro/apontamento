@@ -40,7 +40,7 @@
     if(!odfData.codData.data){
         odfData.codData.data = 'S/I'
     } else {
-        availableQuantity = odfData.codData.data.odfSelecionada.QTDE_LIB;
+        availableQuantity = odfData.codData.data.QTDE_LIB;
     }
 
     async function checkStopMachine (event){
@@ -85,9 +85,7 @@
         close();
         const res = await post(pointApi, { valorFeed, badFeed, missingFeed, reworkFeed, value, supervisor});
         if (res.status) {
-            console.log('res.message in callPost.address', res.message);
-            console.log('res.address in callPost.address', res.address);
-            console.log('res.returnValueAddress in callPost.address', res.returnValueAddress);
+            console.log('res.message in callPost.address', res);
 
             isRequesting = false
             loader = false
@@ -101,10 +99,10 @@
             else if (res.code === messageQuery(16)) {
                 message = messageQuery(43);
             }
-            else if(res.message === messageQuery(1) && !res.address && !res.returnValueAddress.address[0]) {
+            else if(res.message === messageQuery(1) && !res.address && !res.returnValueAddress.address) {
                 return window.location.href = messageQuery(18);
             }
-            else if (res.message === messageQuery(1) && !res.address !== messageQuery(0) && res.returnValueAddress.address[0]) {
+            else if (res.message === messageQuery(1) && !res.address !== messageQuery(0) && res.returnValueAddress.address) {
                 returnValueAddress = res.returnValueAddress.address[0].ENDERECO
                 message = messageQuery(44)
             } 

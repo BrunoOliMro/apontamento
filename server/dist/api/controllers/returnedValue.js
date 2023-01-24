@@ -9,6 +9,7 @@ const message_1 = require("../services/message");
 const odfIndex_1 = require("../utils/odfIndex");
 const update_1 = require("../services/update");
 const query_1 = require("../services/query");
+const valuesFromChildren_1 = require("../services/valuesFromChildren");
 const returnedValue = async (req, res) => {
     const variables = await (0, variableInicializer_1.inicializer)(req);
     if (!variables.body.supervisor || !variables.body.quantity || !variables.body.barcodeReturn) {
@@ -92,6 +93,8 @@ const returnedValue = async (req, res) => {
         variables.cookies.valorTotal = valorTotal;
         variables.cookies.valorApontado = groupOdf.data[i].QTDE_APONTADA - valorApontado;
         if (selectSuper.data.length > 0) {
+            const resultFromChildren = await (0, valuesFromChildren_1.getChildrenValuesBack)(variables, req);
+            console.log('resultFromChildren in return values: ', resultFromChildren);
             const insertHisCodReturned = await (0, insert_1.insertInto)(variables.cookies);
             if (insertHisCodReturned) {
                 const updateValuesOnPcp = await (0, update_1.update)(2, variables.cookies);

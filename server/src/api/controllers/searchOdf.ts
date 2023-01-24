@@ -13,7 +13,12 @@ import { RequestHandler } from 'express';
 export const searchOdf: RequestHandler = async (req, res) => {
     const variables = await inicializer(req)
     const barcode = unravelBarcode(variables.body.barcode) || null
-    barcode!.data.FUNCIONARIO = variables.cookies.FUNCIONARIO
+
+    if(!barcode){
+        return res.json({ status: message(1), message: message(0), data: message(33) })
+    }
+
+    barcode!.data!.FUNCIONARIO! = variables.cookies.FUNCIONARIO
 
     // Alguma variavel não reconhecida
     if (!variables) {
@@ -55,17 +60,17 @@ export const searchOdf: RequestHandler = async (req, res) => {
         odf[i].QTDE_LIB = (odf[i - 1].QTD_BOAS || 0) - (odf[i].QTD_BOAS || 0) - (odf[i].QTD_REFUGO || 0) - (odf[i].QTD_RETRABALHADA || 0) - (odf[i].QTD_FALTANTE || 0)
     }
 
-    console.log('odf[i].QTDE_LIB', odf[i].QTDE_LIB);
+    const resultVerifyCodeNote = await verifyCodeNote(barcode.data, [1, 3, 6, 9])
 
     if (!odf[i].QTDE_LIB || odf[i].QTDE_LIB <= 0) {
-        return res.json({ status: message(1), message: message(11), data: message(11) })
+        await cookieGenerator(res, odf[i])
+        return res.json({ status: message(1), message: message(11),  data: message(11), code: resultVerifyCodeNote.code || message(33) })
     }
 
     // Generate cookie that is gonna be used later;
     barcode.data.QTDE_LIB = odf[i].QTDE_LIB
     barcode.data.CODIGO_PECA = odf[i].CODIGO_PECA
     const resultComponents = await selectToKnowIfHasP(barcode)
-    console.log('resultComponents', resultComponents);
     
     if (resultComponents.message === message(13) || resultComponents.message === message(14) || resultComponents.message === message(15)) {
         barcode.data.QTDE_LIB = resultComponents.quantidade < odf[i].QTDE_LIB ? resultComponents.quantidade : odf[i].QTDE_LIB
@@ -73,9 +78,6 @@ export const searchOdf: RequestHandler = async (req, res) => {
         odf[i].execut = resultComponents.execut
         odf[i].childCode = resultComponents.childCode
         barcode.data.QTDE_LIB = resultComponents.quantidade
-        if (!barcode.data.QTDE_LIB) {
-            return res.json({ status: message(1), message: message(11), data: message(11) })
-        }
         await update(1, barcode.data)
     } else if (resultComponents === message(12)) {
         await cookieCleaner(res)
@@ -85,8 +87,11 @@ export const searchOdf: RequestHandler = async (req, res) => {
     }
 
     await cookieGenerator(res, odf[i])
-    const resultVerifyCodeNote = await verifyCodeNote(barcode.data, [1, 3, 6, 9])
-    return res.json({ status: message(1), message: message(1), data: resultVerifyCodeNote.code })
+    if (!barcode.data.QTDE_LIB) {
+        return res.json({ status: message(1), message: message(11), data: message(33), code: resultVerifyCodeNote.code || message(33)  })
+    } else {
+        return res.json({ status: message(1), message: message(1), data: message(1), code: resultVerifyCodeNote.code || message(33) })
+    }
 }
 
 // res.cookie('encodedOdfNumber', encoded(String(odf[i].NUMERO_ODF)), { httpOnly: true })

@@ -3,12 +3,11 @@
     const title = "Quantidade liberada: ";
     let quantityAvailableProd;
     export let odfData;
-    console.log('odffffffffff', odfData);
 
     if (!odfData.codData.data) {
         odfData.codData.data = "";
     } else {
-        quantityAvailableProd = odfData.codData.data.odfSelecionada.QTDE_LIB;
+        quantityAvailableProd = odfData.codData.data.QTDE_LIB;
     }
 </script>
 

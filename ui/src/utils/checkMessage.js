@@ -1,5 +1,4 @@
 export default function messageQuery(chosenOption) {
-    let response;
     const query = {
         0: '',
         1: 'Success',
@@ -55,12 +54,4 @@ export default function messageQuery(chosenOption) {
     }
 
     return query[String(chosenOption)]
-
-    // Object.entries(query).forEach(element => {
-    //     if (Number(element[0]) === chosenOption) {
-    //         response = element[1]
-    //     }
-    // })
-
-    // return response
 }

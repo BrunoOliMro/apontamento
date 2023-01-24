@@ -10,6 +10,7 @@ import { message } from '../services/message';
 import { update } from '../services/update';
 import { RequestHandler } from 'express';
 import mssql from 'mssql';
+import { getChildrenValuesBack } from '../services/valuesFromChildren';
 // import { decodedBuffer } from '../utils/decodeOdf';
 // var decodedOdfNumber = Number(decodedBuffer(String(req.cookies['encodedOdfNumber'])))
 // var decodedOperationNumber = Number(decodedBuffer(String(req.cookies['encodedOperationNuber'])))
@@ -25,7 +26,7 @@ export const point: RequestHandler = async (req, res) => {
     const resultVerifyCodeNote = await verifyCodeNote(variables.cookies, [3])
 
     if (!resultVerifyCodeNote.accepted) {
-        return res.json({ status: message(1), message: message(5), data: message(33), code: resultVerifyCodeNote.code })
+        return res.json({ status: message(1), message: message(5), data: message(33), code: resultVerifyCodeNote.code, address: message(33), returnValueAddress: message(33) })
     }
 
     const totalValue = (Number(variables.body.valorFeed) || 0) + (Number(variables.body.badFeed) || 0) + (Number(variables.body.reworkFeed) || 0) + (Number(variables.body.missingFeed) || 0) ;
@@ -49,12 +50,12 @@ export const point: RequestHandler = async (req, res) => {
     variables.cookies.reworkFeed = variables.body.reworkFeed || 0;
 
     if (!totalValue) {
-        return res.json(message(0))
+        return res.json({ status: message(1), message: message(0), data: message(33), code: resultVerifyCodeNote.code,  address: message(33), returnValueAddress: message(33) })
     }
     else if (!variables.body.supervisor && totalValue === variables.cookies.QTDE_LIB) {
 
         if (variables.body.badFeed! > 0) {
-            return res.json({ status: message(1), message: message(21), data: message(33) })
+            return res.json({ status: message(1), message: message(21), data: message(33), code: resultVerifyCodeNote.code,  address: message(33), returnValueAddress: message(33) })
         } else {
             variables.body.supervisor = '004067'
         }
@@ -65,11 +66,11 @@ export const point: RequestHandler = async (req, res) => {
     else if (variables.body.badFeed! > 0) {
         // Se houver refugo, verifica se o supervisor esta correto
         if (!variables.body.supervisor) {
-            return res.json({ status: message(1), message: message(0), data: message(33) })
+            return res.json({ status: message(1), message: message(0), data: message(33), code: resultVerifyCodeNote.code,  address: message(33), returnValueAddress: message(33) })
         }
         const findSupervisor = await selectQuery(10, variables.body)
         if (!findSupervisor.message) {
-            return res.json({ status: message(1), message: message(17), data: message(33) })
+            return res.json({ status: message(1), message: message(17), data: message(33), code: resultVerifyCodeNote.code,  address: message(33), returnValueAddress: message(33) })
         }
     }
 
@@ -92,60 +93,63 @@ export const point: RequestHandler = async (req, res) => {
 
             const resultNewProcess = await insertInto(variables.cookies)
             if (resultNewProcess !== message(1)) {
-                return res.json({ status: message(1), message: message(0), data: message(33) })
+                return res.json({ status: message(1), message: message(0), data: message(33), code: resultVerifyCodeNote.code,  address: message(33), returnValueAddress: message(33) })
             }
         } else {
-            return res.json({ status: message(1), message: message(0), data: message(33) })
+            return res.json({ status: message(1), message: message(0), data: message(33), code: resultVerifyCodeNote.code,  address: message(33), returnValueAddress: message(33) })
         }
     }
-    var address
-    var returnValueAddress;
+
+    var resFromChildren: any;
     // Caso haja 'P' faz update na quantidade de peças dos filhos
     if (variables.cookies.condic === 'P') {
-        try {
-            if (!variables.cookies.childCode) {
-                return res.json({ status: message(1), message: message(0), data: message(33) })
-            }
-            // Loop para atualizar o estoque
-            const connection = await mssql.connect(sqlConfig);
-            if (totalValue < Number(variables.cookies.QTDE_LIB)!) {
-                try {
-                    const updateSaldoReal: string[] = [];
-                    let valuesToReturnStorage: number = 0
-                    variables.cookies.childCode.split(',').forEach((codigoFilho: string, i: number) => {
-                        valuesToReturnStorage += variables.cookies.execut.split(',')[i] * Number(variables.cookies.QTDE_LIB) - totalValue * variables.cookies.execut.split(',')[i]
-                        const stringUpdate = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${variables.cookies.execut.split(',')[i] * Number(variables.cookies.QTDE_LIB) - totalValue * variables.cookies.execut.split(',')[i]} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`
-                        updateSaldoReal.push(stringUpdate)
-                    });
-                    if (valuesToReturnStorage) {
-                        returnValueAddress = await getAddress(valuesToReturnStorage, variables, req)
-                    }
-                    const connection = await mssql.connect(sqlConfig);
-                    await connection.query(updateSaldoReal.join('\n')).then(result => result.rowsAffected)
-                } catch (error) {
-                    console.log('linha 140  - Point.ts - ', error);
-                    return res.json({ status: message(1), message: message(0), data: message(33) })
-                }
-            }
-            try {
-                // Loop para desconstar o saldo alocado
-                const deleteCstAlocacao: string[] = [];
-                variables.cookies.childCode.split(',').forEach((codigoFilho: string) => {
-                    const stringUpdate: string = `DELETE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${variables.cookies.NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho}'`
-                    deleteCstAlocacao.push(stringUpdate)
-                });
-                const connection = await mssql.connect(sqlConfig);
-                await connection.query(deleteCstAlocacao.join('\n')).then(result => result.rowsAffected)
-            } catch (error) {
-                console.log('linha 159  - Point.ts - ', error);
-                return res.json({ status: message(1), message: message(0), data: message(33) })
-            } finally {
-                await connection.close()
-            }
-        } catch (error) {
-            console.log('linha 165  - Point.ts - ', error);
-            return res.json({ status: message(1), message: message(0), data: message(33) })
-        }
+        variables.cookies.totalValue = totalValue
+        resFromChildren = await getChildrenValuesBack(variables, req)
+        console.log('resFromChildren', resFromChildren.returnValueAddress.address);
+        // try {
+        //     if (!variables.cookies.childCode) {
+        //         return res.json({ status: message(1), message: message(0), data: message(33), code: resultVerifyCodeNote.code,  address: message(33), returnValueAddress: message(33) })
+        //     }
+        //     // Loop para atualizar o estoque
+        //     const connection = await mssql.connect(sqlConfig);
+        //     if (totalValue < Number(variables.cookies.QTDE_LIB)!) {
+        //         try {
+        //             const updateSaldoReal: string[] = [];
+        //             let valuesToReturnStorage: number = 0
+        //             variables.cookies.childCode.split(',').forEach((codigoFilho: string, i: number) => {
+        //                 valuesToReturnStorage += variables.cookies.execut.split(',')[i] * Number(variables.cookies.QTDE_LIB) - totalValue * variables.cookies.execut.split(',')[i]
+        //                 const stringUpdate = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${variables.cookies.execut.split(',')[i] * Number(variables.cookies.QTDE_LIB) - totalValue * variables.cookies.execut.split(',')[i]} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`
+        //                 updateSaldoReal.push(stringUpdate)
+        //             });
+        //             if (valuesToReturnStorage) {
+        //                 returnValueAddress = await getAddress(valuesToReturnStorage, variables, req)
+        //             }
+        //             const connection = await mssql.connect(sqlConfig);
+        //             await connection.query(updateSaldoReal.join('\n')).then(result => result.rowsAffected)
+        //         } catch (error) {
+        //             console.log('linha 140  - Point.ts - ', error);
+        //             return res.json({ status: message(1), message: message(0), data: message(33), code: resultVerifyCodeNote.code,  address: message(33), returnValueAddress: message(33) })
+        //         }
+        //     }
+        //     try {
+        //         // Loop para desconstar o saldo alocado
+        //         const deleteCstAlocacao: string[] = [];
+        //         variables.cookies.childCode.split(',').forEach((codigoFilho: string) => {
+        //             const stringUpdate: string = `DELETE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${variables.cookies.NUMERO_ODF}' AND CODIGO_FILHO = '${codigoFilho}'`
+        //             deleteCstAlocacao.push(stringUpdate)
+        //         });
+        //         const connection = await mssql.connect(sqlConfig);
+        //         await connection.query(deleteCstAlocacao.join('\n')).then(result => result.rowsAffected)
+        //     } catch (error) {
+        //         console.log('linha 159  - Point.ts - ', error);
+        //         return res.json({ status: message(1), message: message(0), data: message(33), code: resultVerifyCodeNote.code,  address: message(33), returnValueAddress: message(33) })
+        //     } finally {
+        //         await connection.close()
+        //     }
+        // } catch (error) {
+        //     console.log('linha 165  - Point.ts - ', error);
+        //     return res.json({ status: message(1), message: message(0), data: message(33), code: resultVerifyCodeNote.code,  address: message(33), returnValueAddress: message(33) })
+        // }
     }
 
     // Caso tenha retrabalhas apontados ou faltantes, faz insert em NOVA_ORDEM
@@ -155,12 +159,13 @@ export const point: RequestHandler = async (req, res) => {
         await insertIntoNewOrder(newOrderString)
     }
 
+    var address;
     if ('00' + String(variables.cookies.NUMERO_OPERACAO!.replaceAll(' ', '')) === '00999') {
         address = getAddress(totalValue, variables, req)
     }
-    
+
     await update(3, variables.body)
     await insertInto(variables.cookies)
     console.log('chegou ao fim');
-    return res.json({ status: message(1), message: message(1), data: message(33), address: address || message(33), returnValueAddress: returnValueAddress || message(33)})
+    return res.json({ status: message(1), message: message(1), data: message(33), code: resultVerifyCodeNote.code ,  address: address || message(33), returnValueAddress: resFromChildren.returnValueAddress || message(33)})
 }

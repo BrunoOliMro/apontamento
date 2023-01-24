@@ -24,9 +24,9 @@
     if (odfData.codData.message === messageQuery(4)) {
       odfData = "S/I";
     } else if (odfData.codData.data) {
-      let odf = odfData.codData.data.odfSelecionada;
+      let odf = odfData.codData.data;
 
-      modifyObj(Object.keys(odfData.codData.data.odfSelecionada), odf);
+      modifyObj(Object.keys(odfData.codData.data), odf);
 
       dataInicio = odf.DT_INICIO_OP.slice(6, 8);
 

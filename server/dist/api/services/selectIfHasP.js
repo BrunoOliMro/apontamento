@@ -29,13 +29,9 @@ const selectToKnowIfHasP = async (obj) => {
         const processItens = resultHasP.data.map((item) => item.NUMSEQ).filter((element) => element === String(String(obj.data['NUMERO_OPERACAO']).replaceAll(' ', '')).replaceAll('000', ''));
         const minToProd = minQtdAllowed < obj.data['QTDE_LIB'] ? minQtdAllowed : Number(obj.data['QTDE_LIB']);
         const resultQuantityCst = await (0, query_1.selectQuery)(21, obj.data);
-        console.log('resultQuantityCst', resultQuantityCst);
         if (resultQuantityCst.data[0]) {
-            console.log('aqui');
             if (resultQuantityCst.data[0].hasOwnProperty('QUANTIDADE')) {
-                console.log('wqfwevve');
                 if (resultQuantityCst.data[0].QUANTIDADE > 0) {
-                    console.log('iebvuebubeuvbuebv');
                     response.execut = execut;
                     response.condic = 'P';
                     obj.data['valorApontado'] = minToProd;
@@ -82,7 +78,6 @@ const selectToKnowIfHasP = async (obj) => {
                                     try {
                                         const resultUpdate = await (0, update_1.update)(5, obj.data);
                                         if (resultUpdate === (0, message_1.message)(1)) {
-                                            console.log('quero ver');
                                             response.message = (0, message_1.message)(14);
                                             return response;
                                         }

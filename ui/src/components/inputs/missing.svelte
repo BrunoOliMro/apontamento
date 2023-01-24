@@ -1,6 +1,6 @@
 <script>
     import blockForbiddenChars from "../../utils/presanitize";
-    let title = "FALTANTE";
+    let title = "FALTANTES";
     export let missingFeed;
 
     import { createEventDispatcher } from "svelte";
@@ -39,19 +39,19 @@
         font-size: 37px;
     }
     .content {
+        font-weight: 500;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         text-align: center;
-        /* height: 10px; */
         width: fit-content;
         padding: 0%;
         margin: 0%;
     }
 
     input {
-        width: 115px;
+        width: 105px;
         height: 40px;
         margin-left: 0%;
         padding: 0%;

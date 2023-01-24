@@ -95,7 +95,7 @@
 
         <div class="line-btn">
             <!-- svelte-ignore a11y-positive-tabindex -->
-            <p
+            <p class="btn"
                 tabindex="19"
                 on:keypress|preventDefault={callClose}
                 on:click|preventDefault={callClose}
@@ -103,7 +103,7 @@
                 Fechar
             </p>
             <!-- svelte-ignore a11y-positive-tabindex -->
-            <p
+            <p class="btn"
                 tabindex="18"
                 on:keypress|preventDefault={callDispatch}
                 on:click|preventDefault={callDispatch}
@@ -113,3 +113,80 @@
         </div>
     </div>
 </div>
+
+<style>
+    select{
+        font-size: 30px;
+        width: 275px;
+        height: 40px;
+        margin: 0%;
+        padding: 0%;
+        border-radius: 10px;
+        text-align: center;
+        justify-content: center;
+        align-items: center;
+    }
+    option{
+        border-radius: 10px;
+    }
+    p{
+        margin: 1%;
+        padding: 0%;
+        font-size: 35px;
+        font-weight: 500;
+    }
+    input{
+        border-radius: 8px;
+        width: 300px;
+        height: 40px;
+        margin: 0%;
+        padding: 0%;
+        font-weight: 500;
+        text-align: center;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .btn{
+        font-size: 22px;
+        margin: 1%;
+        padding: 0%;
+        width: 275px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        text-align: center;
+        justify-content: center;
+        border-radius: 10px;
+        background-color: transparent;
+        border: none;
+        letter-spacing: 1px;
+        box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
+        color: black;
+    }
+
+    .btn:hover{
+        color: #fff;
+        background-color: #252525;
+        transition: all 0.7s;
+    }
+    .line-btn{
+        display: flex;
+        margin: 1%;
+        padding: 0%;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        text-align: center;
+    }
+
+    .line{
+        margin: 1%;
+        padding: 0%;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        text-align: center;
+        align-items: center;
+    }
+</style>
