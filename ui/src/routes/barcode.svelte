@@ -35,9 +35,9 @@
   const titleBarcode = "CÓDIGO DE BARRAS DA ODF";
   const titleEmployee = `COLABORADOR`;
   let resultRedirect;
-  const addressApi = `/api/v1/adress`;
+  const addressApi = `/api/v1/address`;
   let address = false;
-  let resultAddress;
+  let resultAddress = null;
 
   callReturnMotive();
 
@@ -64,14 +64,11 @@
       loader = true;
       const res = await post(barcodeUrl, { barcode });
       if (res) {
-        console.log('Barcode', res);
-
         loader = false;
 
         if (res.status === messageQuery(1)) {
-
-          if(res.data === messageQuery(36) && res.code === messageQuery(10)){
-            return window.location.href = messageQuery(18)
+          if (res.data === messageQuery(36) && res.code === messageQuery(10)) {
+            return (window.location.href = messageQuery(18));
           }
 
           if (res.code === messageQuery(10)) {
@@ -82,7 +79,10 @@
             return (window.location.href = messageQuery(17));
           }
 
-          if ( res.code === messageQuery(0) && res.message === messageQuery(39)) {
+          if (
+            res.code === messageQuery(0) &&
+            res.message === messageQuery(39)
+          ) {
             return (message = messageQuery(39));
           }
 
@@ -94,7 +94,11 @@
             return (message = messageQuery(36));
           }
 
-          if ( res.code === messageQuery(12) || res.code === messageQuery(13) || res.code === messageQuery(15)) {
+          if (
+            res.code === messageQuery(12) ||
+            res.code === messageQuery(13) ||
+            res.code === messageQuery(15)
+          ) {
             return (window.location.href = messageQuery(19));
           }
 
@@ -105,14 +109,16 @@
           if (res.code !== messageQuery(0)) {
             return (message = res.code);
           }
-        } 
-        else if ( res.code === messageQuery(12) || res.code === messageQuery(13) || res.code === messageQuery(14) || res.code === messageQuery(15)) {
+        } else if (
+          res.code === messageQuery(12) ||
+          res.code === messageQuery(13) ||
+          res.code === messageQuery(14) ||
+          res.code === messageQuery(15)
+        ) {
           window.location.href = messageQuery(19);
-        } 
-        else if (res.code === messageQuery(16)) {
+        } else if (res.code === messageQuery(16)) {
           window.location.href = messageQuery(17);
-        } 
-        else if (res.code !== messageQuery(0)) {
+        } else if (res.code !== messageQuery(0)) {
           message = res.message;
         }
       }
@@ -120,7 +126,12 @@
   }
 
   async function checkBadge(event) {
-    const resultVerifyBadge = await verifyStringLenght( event.detail.eventType, badge, 6, 14);
+    const resultVerifyBadge = await verifyStringLenght(
+      event.detail.eventType,
+      badge,
+      6,
+      14
+    );
 
     if (resultVerifyBadge === messageQuery(1)) {
       loader = true;
@@ -170,28 +181,35 @@
     } else {
       barcodeModal = true;
       address = false;
+      resultAddress = null;
     }
   }
 
   async function seeAddress(event) {
-
     if (event.detail.text === "Close modal call view address") {
       breadcrumbModal = true;
       badgeModal = false;
       returnModal = false;
-      barcode = "";
       message = "";
       barcodeModal = true;
-      badge = '';
       address = false;
+      resultAddress = null;
+      address = false;
+      resultAddress = "";
+      supervisor = "";
+      badge = "",
+      barcode = ""
     }
 
-    const resultVerifyBadge = await verifyStringLenght( event.detail.eventType, { supervisor }, 6, 14);
+    const resultVerifyBadge = await verifyStringLenght(
+      event.detail.eventType,
+      supervisor,
+      6,
+      14
+    );
 
     if (resultVerifyBadge) {
-      const res = await fetch(addressApi);
-      resultAddress = await res.json();
-      console.log("resultAddress in barcode", resultAddress);
+      resultAddress = await post(addressApi, { barcode, supervisor });
     }
   }
 
@@ -229,9 +247,10 @@
     barcodeModal = false;
     badgeModal = true;
     returnModal = false;
+    resultAddress = null;
     barcode = "";
     message = "";
-    (badge = ""), (barcode = "");
+    (supervisor = ""((badge = ""))), (barcode = "");
     const res = await fetch(redirectRoute);
     resultRedirect = await res.json();
     if (resultRedirect.message === messageQuery(1)) {
@@ -313,8 +332,8 @@
     {/if}
   </div>
 
-  {#if resultAddress}
-    <ViewAddress odfdata={resultAddress} />
+  {#if resultAddress && resultAddress !== ""}
+    <ViewAddress odfData={resultAddress} />
   {/if}
 
   {#if address === true}

@@ -6,8 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getChildrenValuesBack = void 0;
 const global_config_1 = require("../../global.config");
 const getAddress_1 = require("./getAddress");
-const mssql_1 = __importDefault(require("mssql"));
 const message_1 = require("./message");
+const mssql_1 = __importDefault(require("mssql"));
 const getChildrenValuesBack = async (variables, req) => {
     var returnValueAddress;
     try {
@@ -24,16 +24,33 @@ const getChildrenValuesBack = async (variables, req) => {
                     const stringUpdate = `UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${variables.cookies.execut.split(',')[i] * Number(variables.cookies.QTDE_LIB) - variables.cookies.totalValue * variables.cookies.execut.split(',')[i]} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`;
                     updateSaldoReal.push(stringUpdate);
                 });
+                const insertEveryAddress = [];
                 if (valuesToReturnStorage) {
                     returnValueAddress = await (0, getAddress_1.getAddress)(valuesToReturnStorage, variables, req);
                 }
+                variables.cookies.childCode.split(',').forEach((element, i) => {
+                    insertEveryAddress.push(`INSERT INTO HISTORICO_ENDERECO (DATAHORA, ODF, QUANTIDADE, CODIGO_PECA, CODIGO_FILHO, ENDERECO_ATUAL, STATUS, NUMERO_OPERACAO) VALUES (GETDATE(), '${variables.cookies.NUMERO_ODF}', ${variables.cookies.execut.split(',')[i] * Number(variables.cookies.QTDE_LIB) - variables.cookies.totalValue * variables.cookies.execut.split(',')[i]} ,'${variables.cookies.CODIGO_PECA}', '${element}', '${returnValueAddress.address[0].ENDERECO || null}', 'DEVOLUÇÃO', '${variables.cookies.NUMERO_OPERACAO}')`);
+                });
                 const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
                 await connection.query(updateSaldoReal.join('\n')).then(result => result.rowsAffected);
+                await connection.query(insertEveryAddress.join('\n')).then(result => result.rowsAffected);
             }
             catch (error) {
                 console.log('linha 140  - Point.ts - ', error);
                 return { message: (0, message_1.message)(0) };
             }
+        }
+        try {
+            const insertEveryAddress = [];
+            variables.cookies.childCode.split(',').forEach((element) => {
+                insertEveryAddress.push(`INSERT INTO HISTORICO_ENDERECO (DATAHORA, ODF, QUANTIDADE, CODIGO_PECA, CODIGO_FILHO, ENDERECO_ATUAL, STATUS, NUMERO_OPERACAO) VALUES (GETDATE(), '${variables.cookies.NUMERO_ODF}', ${Number(variables.cookies.goodFeed)} ,'${variables.cookies.CODIGO_PECA}', '${element}', '${returnValueAddress.address[0].ENDERECO || null}', 'APONTADO', '${variables.cookies.NUMERO_OPERACAO}')`);
+            });
+            const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+            await connection.query(insertEveryAddress.join('\n')).then(result => result.rowsAffected);
+        }
+        catch (error) {
+            console.log('Error in insert addres', error);
+            return { message: (0, message_1.message)(4) };
         }
         try {
             const deleteCstAlocacao = [];

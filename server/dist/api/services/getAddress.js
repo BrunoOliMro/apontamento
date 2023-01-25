@@ -1,10 +1,15 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAddress = void 0;
 const updateQuantityCstStorage_1 = require("../utils/updateQuantityCstStorage");
 const selectAddress_1 = require("./selectAddress");
+const global_config_1 = require("../../global.config");
 const query_1 = require("./query");
 const message_1 = require("./message");
+const mssql_1 = __importDefault(require("mssql"));
 const getAddress = async (_valueOfParts, variables, req) => {
     variables.cookies.ENDERECO = '5A01A02-8';
     const resultSelectPcpProg = await (0, query_1.selectQuery)(8, variables.cookies);
@@ -73,6 +78,18 @@ const getAddress = async (_valueOfParts, variables, req) => {
         });
     }
     await (0, updateQuantityCstStorage_1.cstStorageUp)(variables.cookies.QTDE_LIB, address[0].ENDERECO, variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, variables.cookies.goodFeed, variables.cookies.FUNCIONARIO, hostname, ip);
+    try {
+        const insertEveryAddress = [];
+        variables.cookies.childCode.split(',').forEach((element) => {
+            insertEveryAddress.push(`INSERT INTO HISTORICO_ENDERECO (DATAHORA, ODF, QUANTIDADE, CODIGO_PECA, CODIGO_FILHO, ENDERECO_ATUAL, STATUS, NUMERO_OPERACAO) VALUES (GETDATE(), '${variables.cookies.NUMERO_ODF}', ${Number(variables.cookies.goodFeed)} ,'${variables.cookies.CODIGO_PECA}', '${element}', '${address[0].ENDERECO}', 'APONTADO', '${variables.cookies.NUMERO_OPERACAO}')`);
+        });
+        const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+        await connection.query(insertEveryAddress.join('\n')).then(result => result.rowsAffected);
+    }
+    catch (error) {
+        console.log('Error in insert addres', error);
+        return { message: (0, message_1.message)(4) };
+    }
     if (address) {
         return { message: (0, message_1.message)(1), address: address };
     }

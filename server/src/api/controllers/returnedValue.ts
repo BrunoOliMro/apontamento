@@ -1,25 +1,29 @@
 // const updateQuery = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = ${valorApontado}, QTD_BOAS = QTD_BOAS - ${goodFeed}, QTD_FALTANTE = ${faltante}, QTDE_LIB = ${qtdLib}, QTD_REFUGO = QTD_REFUGO - ${badFeed}, QTD_ESTORNADA = COALESCE(QTD_ESTORNADA, 0 ) + ${valorTotal} WHERE 1 = 1 AND NUMERO_ODF = '${data.data.odfNumber}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${Number(data?.data.opNumber)}' AND CODIGO_MAQUINA = '${data.data.machineCod}'`
+import { getChildrenValuesBack } from '../services/valuesFromChildren';
 import { inicializer } from '../services/variableInicializer';
 import { verifyCodeNote } from '../services/verifyCodeNote';
 import { unravelBarcode } from '../utils/unravelBarcode';
+import { sqlConfig } from '../../global.config';
+import { selectQuery } from '../services/query';
 import { insertInto } from '../services/insert';
 import { message } from '../services/message';
 import { odfIndex } from '../utils/odfIndex';
 import { update } from '../services/update';
 import { RequestHandler } from 'express';
-import { selectQuery } from '../services/query';
-import { getChildrenValuesBack } from '../services/valuesFromChildren';
+import mssql from 'mssql';
+
+
 
 export const returnedValue: RequestHandler = async (req, res) => {
     const variables = await inicializer(req)
 
-    if (!variables.body.supervisor || !variables.body.quantity || !variables.body.barcodeReturn ) {
+    if (!variables.body.supervisor || !variables.body.quantity || !variables.body.barcodeReturn) {
         return res.json({ status: message(1), message: message(48), data: message(33) })
     }
 
     const body = unravelBarcode(variables.body.barcodeReturn) || null;
 
-    if(!body.data){
+    if (!body.data) {
         return res.json({ status: message(1), message: message(0), data: message(33) })
     }
 
@@ -40,9 +44,9 @@ export const returnedValue: RequestHandler = async (req, res) => {
     }
 
     if (variables.body.valueStorage === 'BOAS') {
-        goodFeed = Number(!variables.body.valueStorage ? 0 : variables.body.quantity)
+        variables.cookies.goodFeed = Number(!variables.body.valueStorage ? 0 : variables.body.quantity)
     } else if (variables.body.valueStorage === 'RUINS') {
-        badFeed = Number(!variables.body.valueStorage ? 0 : variables.body.quantity)
+        variables.cookies.badFeed = Number(!variables.body.valueStorage ? 0 : variables.body.quantity)
     }
 
 
@@ -59,7 +63,7 @@ export const returnedValue: RequestHandler = async (req, res) => {
     const lastIndex: number = groupOdf.data!.findIndex((element: any) => element.QTDE_APONTADA === 0) - 1;
 
     if (lastIndex !== i) {
-        return res.json({ status: message(1), message: message(43), data: message(33) })
+        return res.json({ status: message(1), message: message(43), data: message(33), code: codeNoteResult.code })
     }
 
     let odf = groupOdf.data![i]
@@ -72,36 +76,45 @@ export const returnedValue: RequestHandler = async (req, res) => {
         odf = groupOdf.data![groupOdf.data!.length - 1]
     }
 
-    if(goodFeed){
-        if(!odf.QTD_BOAS || odf.QTD_BOAS <= 0 ){
-            return res.json({ status: message(1), message: message(27), data: message(33) })
+    if (goodFeed) {
+        if (!odf.QTD_BOAS || odf.QTD_BOAS <= 0) {
+            return res.json({ status: message(1), message: message(27), data: message(33), code: codeNoteResult.code })
         }
-    } else if(badFeed){
-        if(!odf.QTD_REFUGO || odf.QTD_REFUGO <= 0){
-            return res.json({ status: message(1), message: message(27), data: message(33) })
+    } else if (badFeed) {
+        if (!odf.QTD_REFUGO || odf.QTD_REFUGO <= 0) {
+            return res.json({ status: message(1), message: message(27), data: message(33), code: codeNoteResult.code })
         }
     }
 
     if (odf.QTDE_APONTADA < valorTotal || odf.QTDE_APONTADA <= 0 || !odf.QTD_REFUGO && badFeed > 0) {
-        return res.json({ status: message(1), message: message(27), data: message(33) })
+        return res.json({ status: message(1), message: message(27), data: message(33), code: codeNoteResult.code })
     } else if (!odf || '00' + odf.NUMERO_OPERACAO.replaceAll(' ', '0') !== body?.data.NUMERO_OPERACAO) {
-        return res.json({ status: message(1), message: message(29), data: message(33) })
+        return res.json({ status: message(1), message: message(29), data: message(33), code: codeNoteResult.code })
     } else {
 
+        if (i <= 0) {
+            // ATENÇÃO olhar diferença entre quantidade apontada no processo anterior e no processo atual!!!!!!!!!!
+            odf.QTDE_LIB = odf.QTDE_ODF - odf.QTDE_APONTADA - odf.QTD_FALTANTE;
+        } else if (i > 0) {
+            // ATENÇÃO quantidade liberado é igual qtd_lib = boasProcessoPassado -  boas - ruins - retrabalhadas
+            // Quantidade liberada é a diferença qtd_lib =  boasProcesso passado - boas - ruins - retrabalhadas
+            odf.QTDE_LIB = (odf.QTD_BOAS || 0) - (odf.QTD_BOAS || 0) - (odf.QTD_REFUGO || 0) - (odf.QTD_RETRABALHADA || 0) - (odf.QTD_FALTANTE || 0)
+        }
+
+
         const valorApontado = Number(odf.QTDE_APONTADA - valorTotal)
-        const faltante = Number(odf.QTD_FALTANTE || 0 ) + valorTotal
-        const qtdLib = Number(odf.QTDE_LIB + valorTotal)
+        // const qtdLib = Number(odf.QTDE_LIB + valorTotal)
 
         variables.cookies.reworkFeed = null
         variables.cookies.valorApontado = valorApontado
-        variables.cookies.missingFeed = faltante
-        variables.cookies.qtdLib = qtdLib
+        variables.cookies.missingFeed = null
+        variables.cookies.qtdLib = odf.QTDE_LIB
 
         const selectSuper = await selectQuery(10, variables.body)
 
         variables.cookies.QTDE_APONTADA = valorApontado
         variables.cookies.NUMERO_ODF = body.data.NUMERO_ODF
-        variables.cookies.NUMERO_OPERACAO = body.data.NUMERO_OPERACAO
+        variables.cookies.NUMERO_OPERACAO = body.data.NUMERO_OPERACAO.replaceAll(' ', '').replaceAll('000', '')
         variables.cookies.CODIGO_MAQUINA = body.data.CODIGO_MAQUINA
         variables.cookies.REVISAO = groupOdf.data![i].REVISAO
         variables.cookies.QTDE_LIB = groupOdf.data![i].QTDE_LIB
@@ -109,23 +122,35 @@ export const returnedValue: RequestHandler = async (req, res) => {
         variables.cookies.valorApontado = groupOdf.data![i].QTDE_APONTADA - valorApontado
 
         if (selectSuper.data!.length > 0) {
-            
-            const resultFromChildren = await getChildrenValuesBack(variables, req)
-            console.log('resultFromChildren in return values: ', resultFromChildren);
+
+            const resultHasP: any = await selectQuery(22, body.data)
+            const execut = resultHasP.data!.map((element: any) => element.EXECUT)
+            const codigoFilho: string[] = resultHasP.data!.map((item: any) => item.NUMITE)
+            const processItens = resultHasP.data!.map((item: any) => item.NUMSEQ).filter((element: string) => element === String(String(body.data['NUMERO_OPERACAO']!).replaceAll(' ', '')).replaceAll('000', ''))
+
+            if (processItens.length > 0) {
+                const updateStorageQuery: string[] = [];
+                codigoFilho.forEach((element: string, i: number) => {
+                    updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${variables.body.quantity * execut[i]} WHERE 1 = 1 AND CODIGO = '${element}'`);
+                });
+                const connection = await mssql.connect(sqlConfig);
+                await connection.query(updateStorageQuery.join('\n')).then(result => result.rowsAffected)
+            }
+
 
             const insertHisCodReturned = await insertInto(variables.cookies)
             if (insertHisCodReturned) {
                 const updateValuesOnPcp = await update(2, variables.cookies)
                 if (updateValuesOnPcp === message(1)) {
-                    return res.status(200).json({ status: message(1), message: message(31), data: message(31) })
+                    return res.status(200).json({ status: message(1), message: message(31), data: message(31), code: codeNoteResult.code })
                 } else {
-                    return res.json({ status: message(1), message: message(0), data: message(33) })
+                    return res.json({ status: message(1), message: message(0), data: message(33), code: codeNoteResult.code })
                 }
             } else {
-                return res.json({ status: message(1), message: message(0), data: message(33) })
+                return res.json({ status: message(1), message: message(0), data: message(33), code: codeNoteResult.code })
             }
         } else {
-            return res.json({ status: message(1), message: message(0), data: message(33) })
+            return res.json({ status: message(1), message: message(0), data: message(33), code: codeNoteResult.code })
         }
     }
 }

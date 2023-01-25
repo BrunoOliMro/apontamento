@@ -4,7 +4,7 @@ import { message } from './message';
 import { update } from './update';
 import mssql from 'mssql';
 
-export const selectToKnowIfHasP = async (obj: { message?: string; data: { [key: string]: string | number } }) => {
+export const selectToKnowIfHasP = async (obj: { message?: string; data: { [key: string]: any } }) => {
     let response: any = {
         message: '',
         quantidade: obj.data['QTDE_LIB'],
@@ -52,13 +52,21 @@ export const selectToKnowIfHasP = async (obj: { message?: string; data: { [key: 
 
         // Loop para atualizar os dados no DB
         try {
-            const updateStorageQuery: string[] = [];
             const updateAlocacaoQuery: string[] = [];
             const insertAlocaoQuery: string[] = [];
+            const updateStorageQuery: string[] = [];
+            const insertAddressUpdate: string[] = [];
+
+            const connection = await mssql.connect(sqlConfig);
+            codigoFilho.forEach((element) => {
+                insertAddressUpdate.push(`INSERT INTO HISTORICO_ENDERECO (DATAHORA, ODF, QUANTIDADE, CODIGO_PECA, CODIGO_FILHO, ENDERECO_ATUAL, STATUS, NUMERO_OPERACAO) VALUES (GETDATE(), '${obj.data['NUMERO_ODF']}', ${minToProd} ,'${obj.data['CODIGO_PECA']}', '${element}', '${ '999' + element}', 'RESERVA', '${obj.data['NUMERO_OPERACAO']!.replaceAll('000', '')}')`)
+            })
+            await connection.query(insertAddressUpdate.join('\n')).then(result => result.rowsAffected)
+
+
             codigoFilho.forEach((element: string, i: number) => {
                 updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${minToProd * execut[i]} WHERE 1 = 1 AND CODIGO = '${element}'`);
             });
-            const connection = await mssql.connect(sqlConfig);
             let updateStorage = Math.min(...await connection.query(updateStorageQuery.join('\n')).then(result => result.rowsAffected));
             if (updateStorage > 0) {
                 try {

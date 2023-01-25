@@ -11,7 +11,7 @@ const selectAddress = async (condicional, percentage, comprimento, largura, peso
     const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
     try {
         const data = await connection.query(`
-        SELECT TOP 1 
+        SELECT TOP 1
         EE.CODIGO AS COD_PRODUTO,
         NULL AS COD_PRODUTO_EST, 
         CE.CODIGO,

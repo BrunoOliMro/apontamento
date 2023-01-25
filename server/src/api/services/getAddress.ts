@@ -1,7 +1,9 @@
 import { cstStorageUp } from "../utils/updateQuantityCstStorage";
 import { selectAddress } from "./selectAddress";
+import { sqlConfig } from '../../global.config'
 import { selectQuery } from "./query";
-import { message } from "./message"
+import { message } from './message';
+import mssql from 'mssql';
 
 export const getAddress = async (_valueOfParts: number, variables: any, req: any) => {
     variables.cookies.ENDERECO = '5A01A02-8'
@@ -18,7 +20,6 @@ export const getAddress = async (_valueOfParts: number, variables: any, req: any
     const partCodeCase = `= '${variables.cookies.CODIGO_PECA}'`
     const isNullCase = `IS NULL`
     let address: any;
-    // let address = await selectAddress(partCodeCase, 5, comprimento, largura, peso);
 
     for (const name of Object.keys(nets)) {
         for (const net of nets[name]) {
@@ -72,6 +73,20 @@ export const getAddress = async (_valueOfParts: number, variables: any, req: any
     }
 
     await cstStorageUp(variables.cookies.QTDE_LIB, address![0].ENDERECO, variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, variables.cookies.goodFeed, variables.cookies.FUNCIONARIO, hostname, ip)
+    try {
+        // Insert loop to log every address in odf
+        const insertEveryAddress: string[] = []
+        // Insert to HISTORICO_ENDERECO
+        variables.cookies.childCode.split(',').forEach((element: string) => {
+            insertEveryAddress.push(`INSERT INTO HISTORICO_ENDERECO (DATAHORA, ODF, QUANTIDADE, CODIGO_PECA, CODIGO_FILHO, ENDERECO_ATUAL, STATUS, NUMERO_OPERACAO) VALUES (GETDATE(), '${variables.cookies.NUMERO_ODF}', ${Number(variables.cookies.goodFeed)} ,'${variables.cookies.CODIGO_PECA}', '${element}', '${address[0].ENDERECO}', 'APONTADO', '${variables.cookies.NUMERO_OPERACAO}')`)
+        });
+        const connection = await mssql.connect(sqlConfig);
+        await connection.query(insertEveryAddress.join('\n')).then(result => result.rowsAffected)
+    } catch (error) {
+        console.log('Error in insert addres', error);
+        return { message: message(4) }
+    }
+
     if (address) {
         return { message: message(1), address: address }
     } else {

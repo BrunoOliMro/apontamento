@@ -1,1 +1,1 @@
-{"version":3,"file":"point.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/point.ts"],"names":[],"mappings":"AAUA,OAAO,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAQzC,eAAO,MAAM,KAAK,EAAE,cAwJnB,CAAA"}
+{"version":3,"file":"point.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/point.ts"],"names":[],"mappings":"AASA,OAAO,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAOzC,eAAO,MAAM,KAAK,EAAE,cA0GnB,CAAA"}

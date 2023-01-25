@@ -86,7 +86,6 @@ const point = async (req, res) => {
     if (variables.cookies.condic === 'P') {
         variables.cookies.totalValue = totalValue;
         resFromChildren = await (0, valuesFromChildren_1.getChildrenValuesBack)(variables, req);
-        console.log('resFromChildren', resFromChildren.returnValueAddress.address);
     }
     if (variables.body.reworkFeed > 0 || variables.body.missingFeed > 0) {
         const newOrderString = `INSERT INTO NOVA_ORDEM (NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_LIB, QTDE_APONTADA, QTD_REFUGO, QTD_BOAS, QTD_RETRABALHADA, QTD_FALTANTE, CODIGO_PECA, CODIGO_CLIENTE, USUARIO, REVISAO) VALUES('${variables.cookies.NUMERO_ODF}', '${variables.cookies.NUMERO_OPERACAO}', '${variables.cookies.CODIGO_MAQUINA}', ${resultSelectPcpProg.data[0].QTDE_ODF}, ${released},${totalValue}, ${variables.body.badFeed || null}, ${variables.body.valorFeed || null},  ${variables.body.reworkFeed || null}, ${variables.body.missingFeed || null}, '${variables.cookies.CODIGO_PECA}', '${resultSelectPcpProg.data[0].CODIGO_CLIENTE}', '${variables.cookies.FUNCIONARIO}', '${variables.cookies.REVISAO}')`;
@@ -99,7 +98,6 @@ const point = async (req, res) => {
     }
     await (0, update_1.update)(3, variables.body);
     await (0, insert_1.insertInto)(variables.cookies);
-    console.log('chegou ao fim');
     return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33), code: resultVerifyCodeNote.code, address: address || (0, message_1.message)(33), returnValueAddress: resFromChildren.returnValueAddress || (0, message_1.message)(33) });
 };
 exports.point = point;

@@ -28,7 +28,6 @@
     let reworkFeed;
     let valorFeed;
     let value;
-    let balance;
     let isRequesting = false;
     let resultRefugo = motives();
     let arrayMotives = [];
@@ -85,7 +84,6 @@
         close();
         const res = await post(pointApi, { valorFeed, badFeed, missingFeed, reworkFeed, value, supervisor});
         if (res.status) {
-            console.log('res.message in callPost.address', res);
 
             isRequesting = false
             loader = false

@@ -21,9 +21,13 @@ import { stopSupervisor } from './controllers/stopSupervisor';
 import { clear } from './controllers/clear';
 import { returnMotives } from './controllers/returnMotives';
 import { pointedCode } from './controllers/pointedCode';
+import { addressLog } from './controllers/addressLog';
 
 // /api/v1/
 const apiRouter = Router();
+
+apiRouter.route('/address')
+    .post(addressLog)
 
 apiRouter.route('/returnMotives')
     .get(returnMotives)

@@ -6,7 +6,7 @@ export const selectAddress = async (condicional: string, percentage: number, com
     const connection = await mssql.connect(sqlConfig);
     try {
         const data = await connection.query(`
-        SELECT TOP 1 
+        SELECT TOP 1
         EE.CODIGO AS COD_PRODUTO,
         NULL AS COD_PRODUTO_EST, 
         CE.CODIGO,

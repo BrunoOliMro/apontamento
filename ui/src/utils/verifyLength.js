@@ -5,8 +5,8 @@ export async function verifyStringLenght(event, string, lengthMin, lengthMax) {
         message : '',
     }
 
-    // console.log('event.key', event.key);
-    // console.log('string', string);
+    console.log('event.key', event.key);
+    console.log('string', string);
     if (string) {
         if ((event.key === "Enter" || event.type === 'click') && string.length < lengthMin || string.length >= lengthMax) {
             return response.message = 'Não atende aos requisitos de caracteres'

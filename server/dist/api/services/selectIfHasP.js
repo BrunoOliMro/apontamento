@@ -50,13 +50,18 @@ const selectToKnowIfHasP = async (obj) => {
             return response.message = (0, message_1.message)(13);
         }
         try {
-            const updateStorageQuery = [];
             const updateAlocacaoQuery = [];
             const insertAlocaoQuery = [];
+            const updateStorageQuery = [];
+            const insertAddressUpdate = [];
+            const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+            codigoFilho.forEach((element) => {
+                insertAddressUpdate.push(`INSERT INTO HISTORICO_ENDERECO (DATAHORA, ODF, QUANTIDADE, CODIGO_PECA, CODIGO_FILHO, ENDERECO_ATUAL, STATUS, NUMERO_OPERACAO) VALUES (GETDATE(), '${obj.data['NUMERO_ODF']}', ${minToProd} ,'${obj.data['CODIGO_PECA']}', '${element}', '${'999' + element}', 'RESERVA', '${obj.data['NUMERO_OPERACAO'].replaceAll('000', '')}')`);
+            });
+            await connection.query(insertAddressUpdate.join('\n')).then(result => result.rowsAffected);
             codigoFilho.forEach((element, i) => {
                 updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL - ${minToProd * execut[i]} WHERE 1 = 1 AND CODIGO = '${element}'`);
             });
-            const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
             let updateStorage = Math.min(...await connection.query(updateStorageQuery.join('\n')).then(result => result.rowsAffected));
             if (updateStorage > 0) {
                 try {

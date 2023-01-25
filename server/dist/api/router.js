@@ -21,7 +21,10 @@ const stopSupervisor_1 = require("./controllers/stopSupervisor");
 const clear_1 = require("./controllers/clear");
 const returnMotives_1 = require("./controllers/returnMotives");
 const pointedCode_1 = require("./controllers/pointedCode");
+const addressLog_1 = require("./controllers/addressLog");
 const apiRouter = (0, express_1.Router)();
+apiRouter.route('/address')
+    .post(addressLog_1.addressLog);
 apiRouter.route('/returnMotives')
     .get(returnMotives_1.returnMotives);
 apiRouter.route('/clearAll')

@@ -2,7 +2,7 @@ import { message } from './message';
 export declare const selectToKnowIfHasP: (obj: {
     message?: string;
     data: {
-        [key: string]: string | number;
+        [key: string]: any;
     };
 }) => Promise<any>;
 //# sourceMappingURL=selectIfHasP.d.ts.map
