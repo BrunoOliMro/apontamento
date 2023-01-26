@@ -38,6 +38,7 @@
     }
 
     .form-div {
+        border-radius: 10px;
         height: 180px;
         letter-spacing: 1px;
         border-color: grey;

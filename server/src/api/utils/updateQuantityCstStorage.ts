@@ -5,7 +5,7 @@ import mssql from 'mssql';
 import { selectQuery } from "../services/query";
 
 
-export const cstStorageUp = async (QTDE_LIB: any, address: any, CODIGO_PEÇA: any, NUMERO_ODF: any, goodFeed: any, FUNCIONARIO: any, hostname: any, ip: any) => {
+export const cstStorageUp = async (QTDE_LIB: any, address: any, CODIGO_PEÇA: any, NUMERO_ODF: any, goodFeed: any, FUNCIONARIO: any, hostname: any, ip: any, codigoFilho?: string[]) => {
     const response = {
         message: '',
         address: ''
@@ -21,7 +21,15 @@ export const cstStorageUp = async (QTDE_LIB: any, address: any, CODIGO_PEÇA: an
         if (resUpdate !== message(1)) {
             // const y = `INSERT INTO CST_ESTOQUE_ENDERECOS(ENDERECO, CODIGO ,QUANTIDADE) VALUES ('${address}','${CODIGO_PEÇA}' , ${QTDE_LIB})`
             // INSERT INTO!!!!!!!!!!!
-            await update(6, values )
+            const z: string[] = []
+            codigoFilho!.forEach(element => {
+                console.log('CST ESTOQUE - ', element );
+                z.push(`INSERT INTO CST_ESTOQUE_ENDERECOS (CODIGO, ENDERECO, QUANTIDADE, ODF, DATAHORA) VALUES ('${element}',  '${address}',  ${QTDE_LIB}, ${NUMERO_ODF}, GETDATE())`)
+            });
+            // const x  = await update(6, values )
+            const connection = await mssql.connect(sqlConfig);
+            await connection.query(z.join('\n')).then(result => result.rowsAffected)
+            // console.log('x linha 25', x);
         }
         // const lookForHisReal = `SELECT TOP 1  * FROM HISREAL  WHERE 1 = 1 AND CODIGO = '${partCode}' ORDER BY DATA DESC`
         const resultQuery = await selectQuery(29, values)

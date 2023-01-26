@@ -21,7 +21,6 @@ const update = async (chosenOption, values) => {
         3: `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = COALESCE(QTDE_APONTADA, 0) + ${values.valorApontado || 0}, QTD_REFUGO = COALESCE(QTD_REFUGO, 0) + ${values.badFeed || 0}, QTDE_LIB = ${values.released || 0}, QTD_FALTANTE = ${values.missingFeed || 0}, QTD_BOAS = COALESCE(QTD_BOAS, 0) + ${values.valorFeed || 0}, QTD_RETRABALHADA = COALESCE(QTD_RETRABALHADA, 0) + ${values.reworkFeed || null} WHERE 1 = 1 AND NUMERO_ODF = ${values.NUMERO_ODF || null} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = ${values.NUMERO_OPERACAO || null} AND CODIGO_MAQUINA = '${values.CODIGO_MAQUINA || null}'`,
         4: `UPDATE CST_ESTOQUE_ENDERECOS SET QUANTIDADE = COALESCE(QUANTIDADE, 0) + ${values.quantityToProduce}, DATAHORA = GETDATE() WHERE 1 = 1 AND ENDERECO = '${values.address}'`,
         5: `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_LIB = ${values.QTDE_LIB} WHERE 1 = 1 AND NUMERO_ODF = '${values.NUMERO_ODF}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${Number(values.NUMERO_OPERACAO)}' AND CODIGO_MAQUINA = '${values.CODIGO_MAQUINA}'`,
-        6: `INSERT INTO CST_ESTOQUE_ENDERECOS(ENDERECO, CODIGO ,QUANTIDADE) VALUES ('${values.address}','${values.partCode}', ${values.quantityToProduce})`,
     };
     try {
         const connection = await mssql_1.default.connect(global_config_1.sqlConfig);

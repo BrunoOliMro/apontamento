@@ -16,11 +16,9 @@
   async function getHistorico() {
     const res = await fetch(urlString);
     historic = await res.json();
-    console.log('Historic', historic);
     if(historic.data.resourceDetail === messageQuery(0)){
       return message = "Não há exibir histórico"
     }
-    // console.log('erburu', historic.data.resource)
     if (historic.message === messageQuery(40)) {
       message = historic.message;
     }
@@ -152,7 +150,6 @@
     position: relative;
     left: 0;
     top: 0;
-    /* background-color: rebeccapurple; */
     align-items: center;
     justify-content: center;
   }
@@ -166,11 +163,6 @@
     margin-bottom: 0%;
     margin-right: 0%;
   }
-
-  /* #table-body {
-    height: 250px;
-    background-color: rebeccapurple;
-  } */
 
   a:hover {
     transition: all 1s;

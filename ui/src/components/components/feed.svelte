@@ -83,6 +83,7 @@
         isRequesting = true
         close();
         const res = await post(pointApi, { valorFeed, badFeed, missingFeed, reworkFeed, value, supervisor});
+        console.log('Call post response: ', res);
         if (res.status) {
 
             isRequesting = false

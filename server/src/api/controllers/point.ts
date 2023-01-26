@@ -1,3 +1,4 @@
+import { getChildrenValuesBack } from '../services/valuesFromChildren';
 import { insertIntoNewOrder } from '../services/insertNewOrder';
 import { inicializer } from '../services/variableInicializer';
 import { verifyCodeNote } from '../services/verifyCodeNote';
@@ -8,7 +9,8 @@ import { insertInto } from '../services/insert';
 import { message } from '../services/message';
 import { update } from '../services/update';
 import { RequestHandler } from 'express';
-import { getChildrenValuesBack } from '../services/valuesFromChildren';
+import { sqlConfig } from '../../global.config'
+import mssql from 'mssql';
 // import { decodedBuffer } from '../utils/decodeOdf';
 // var decodedOdfNumber = Number(decodedBuffer(String(req.cookies['encodedOdfNumber'])))
 // var decodedOperationNumber = Number(decodedBuffer(String(req.cookies['encodedOperationNuber'])))
@@ -112,12 +114,25 @@ export const point: RequestHandler = async (req, res) => {
         await insertIntoNewOrder(newOrderString)
     }
 
-    var address;
+    var address: any;
     if ('00' + String(variables.cookies.NUMERO_OPERACAO!.replaceAll(' ', '')) === '00999') {
         address = getAddress(totalValue, variables, req)
     }
 
+    console.log('resFromChildren.returnValueAddress.address[0].ENDERECO', resFromChildren);
+    if (variables.cookies.condic === 'P') {
+        // Insert loop to log every address in odf
+        const insertEveryAddress: string[] = []
+        // Insert to HISTORICO_ENDERECO
+        console.log('historico linha 126');
+        variables.cookies.childCode.split(',').forEach((element: string) => {
+            insertEveryAddress.push(`INSERT INTO HISTORICO_ENDERECO (DATAHORA, ODF, QUANTIDADE, CODIGO_PECA, CODIGO_FILHO, ENDERECO_ATUAL, STATUS, NUMERO_OPERACAO) VALUES (GETDATE(), '${variables.cookies.NUMERO_ODF}', ${Number(variables.cookies.goodFeed)} ,'${variables.cookies.CODIGO_PECA}', '${element}', '${ !resFromChildren ? message(33) : resFromChildren.returnValueAddress.address[0].ENDERECO }', 'APONTADO', '${variables.cookies.NUMERO_OPERACAO}')`)
+        });
+        const connection = await mssql.connect(sqlConfig);
+        await connection.query(insertEveryAddress.join('\n')).then(result => result.rowsAffected)
+    }
+    
     await update(3, variables.body)
     await insertInto(variables.cookies)
-    return res.json({ status: message(1), message: message(1), data: message(33), code: resultVerifyCodeNote.code, address: address || message(33), returnValueAddress: resFromChildren.returnValueAddress || message(33) })
+    return res.json({ status: message(1), message: message(1), data: message(33), code: resultVerifyCodeNote.code, address: !address ? message(33) : address, returnValueAddress: !resFromChildren ? message(33) : resFromChildren.returnValueAddress.address[0].ENDERECO })
 }

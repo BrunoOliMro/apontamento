@@ -1,6 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.point = void 0;
+const valuesFromChildren_1 = require("../services/valuesFromChildren");
 const insertNewOrder_1 = require("../services/insertNewOrder");
 const variableInicializer_1 = require("../services/variableInicializer");
 const verifyCodeNote_1 = require("../services/verifyCodeNote");
@@ -10,7 +14,8 @@ const query_1 = require("../services/query");
 const insert_1 = require("../services/insert");
 const message_1 = require("../services/message");
 const update_1 = require("../services/update");
-const valuesFromChildren_1 = require("../services/valuesFromChildren");
+const global_config_1 = require("../../global.config");
+const mssql_1 = __importDefault(require("mssql"));
 const point = async (req, res) => {
     const variables = await (0, variableInicializer_1.inicializer)(req);
     if (!variables.body) {
@@ -96,9 +101,19 @@ const point = async (req, res) => {
     if ('00' + String(variables.cookies.NUMERO_OPERACAO.replaceAll(' ', '')) === '00999') {
         address = (0, getAddress_1.getAddress)(totalValue, variables, req);
     }
+    console.log('resFromChildren.returnValueAddress.address[0].ENDERECO', resFromChildren);
+    if (variables.cookies.condic === 'P') {
+        const insertEveryAddress = [];
+        console.log('historico linha 126');
+        variables.cookies.childCode.split(',').forEach((element) => {
+            insertEveryAddress.push(`INSERT INTO HISTORICO_ENDERECO (DATAHORA, ODF, QUANTIDADE, CODIGO_PECA, CODIGO_FILHO, ENDERECO_ATUAL, STATUS, NUMERO_OPERACAO) VALUES (GETDATE(), '${variables.cookies.NUMERO_ODF}', ${Number(variables.cookies.goodFeed)} ,'${variables.cookies.CODIGO_PECA}', '${element}', '${!resFromChildren ? (0, message_1.message)(33) : resFromChildren.returnValueAddress.address[0].ENDERECO}', 'APONTADO', '${variables.cookies.NUMERO_OPERACAO}')`);
+        });
+        const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+        await connection.query(insertEveryAddress.join('\n')).then(result => result.rowsAffected);
+    }
     await (0, update_1.update)(3, variables.body);
     await (0, insert_1.insertInto)(variables.cookies);
-    return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33), code: resultVerifyCodeNote.code, address: address || (0, message_1.message)(33), returnValueAddress: resFromChildren.returnValueAddress || (0, message_1.message)(33) });
+    return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33), code: resultVerifyCodeNote.code, address: !address ? (0, message_1.message)(33) : address, returnValueAddress: !resFromChildren ? (0, message_1.message)(33) : resFromChildren.returnValueAddress.address[0].ENDERECO });
 };
 exports.point = point;
 //# sourceMappingURL=point.js.map

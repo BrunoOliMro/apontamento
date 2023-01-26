@@ -209,7 +209,12 @@
     );
 
     if (resultVerifyBadge) {
-      resultAddress = await post(addressApi, { barcode, supervisor });
+      if(barcode){
+        loader = true
+        resultAddress = await post(addressApi, { barcode, supervisor });
+        address = false;
+        loader = false
+      }
     }
   }
 
@@ -265,6 +270,17 @@
     message = "";
     location.reload();
   }
+
+  function closeModal () {
+    barcode = '';
+    supervisor = '';
+    resultAddress = '';
+    if(address === false){
+      address = true
+    } else {
+      address = false
+    }
+  }
 </script>
 
 <main>
@@ -298,7 +314,7 @@
               on:keypress={showBarcodeAddress}
               class="btn"
             >
-              Endereçamento
+              Endereço
             </button>
           </div>
 
@@ -308,7 +324,7 @@
               on:click={returnValue}
               class="btn"
             >
-              Estornar Valores
+              Estornar apontamento
             </button>
           </div>
         </div>
@@ -332,10 +348,6 @@
     {/if}
   </div>
 
-  {#if resultAddress && resultAddress !== ""}
-    <ViewAddress odfData={resultAddress} />
-  {/if}
-
   {#if address === true}
     <CallViewAddress
       on:message={seeAddress}
@@ -343,6 +355,11 @@
       bind:supervisorToCallAddress={supervisor}
     />
   {/if}
+
+  {#if resultAddress && resultAddress !== ""}
+    <ViewAddress odfData={resultAddress} on:message={closeModal}/>
+  {/if}
+
 
   {#if returnModal === true && barcodeModal === false}
     <ReturnBarcode

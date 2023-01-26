@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 
-export const createNewOrder: any = async (odfNumber: number, operationNumber: number, machineCode: string, reworkFeed: number, missingFeed: number, goodFeed: number, badFeed: number, totalPointed: number, qtdOdf: number, clientCode: string, partCode: string) => {
+export const createNewOrder: any = async (odfNumber: number | 'S/I', operationNumber: number | 'S/I', machineCode: string | 'S/I', reworkFeed: number | 'S/I', missingFeed: number | 'S/I', goodFeed: number | 'S/I', badFeed: number | 'S/I', totalPointed: number | 'S/I', qtdOdf: number | 'S/I', clientCode: string | 'S/I', partCode: string | 'S/I') => {
     // const account = {
     //     user: 'cim@martiaco.com.br',
     //     pass: 'Muc86421'

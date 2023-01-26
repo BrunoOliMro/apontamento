@@ -45,7 +45,7 @@
         letter-spacing: 1px;
         border-color: grey;
         box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
-        border-radius: 4px;
+        border-radius: 10px;
     }
 
     .btn {
@@ -53,7 +53,7 @@
         margin: 0%;
         padding: 0%;
         width: 300px;
-        height: 30px;
+        height: 35px;
         display: flex;
         justify-content: center;
         text-align: center;

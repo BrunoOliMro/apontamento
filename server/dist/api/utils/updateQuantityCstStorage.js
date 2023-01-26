@@ -9,7 +9,7 @@ const message_1 = require("../services/message");
 const update_1 = require("../services/update");
 const mssql_1 = __importDefault(require("mssql"));
 const query_1 = require("../services/query");
-const cstStorageUp = async (QTDE_LIB, address, CODIGO_PEÇA, NUMERO_ODF, goodFeed, FUNCIONARIO, hostname, ip) => {
+const cstStorageUp = async (QTDE_LIB, address, CODIGO_PEÇA, NUMERO_ODF, goodFeed, FUNCIONARIO, hostname, ip, codigoFilho) => {
     const response = {
         message: '',
         address: ''
@@ -22,7 +22,13 @@ const cstStorageUp = async (QTDE_LIB, address, CODIGO_PEÇA, NUMERO_ODF, goodFee
         };
         const resUpdate = await (0, update_1.update)(4, values);
         if (resUpdate !== (0, message_1.message)(1)) {
-            await (0, update_1.update)(6, values);
+            const z = [];
+            codigoFilho.forEach(element => {
+                console.log('CST ESTOQUE - ', element);
+                z.push(`INSERT INTO CST_ESTOQUE_ENDERECOS (CODIGO, ENDERECO, QUANTIDADE, ODF, DATAHORA) VALUES ('${element}',  '${address}',  ${QTDE_LIB}, ${NUMERO_ODF}, GETDATE())`);
+            });
+            const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
+            await connection.query(z.join('\n')).then(result => result.rowsAffected);
         }
         const resultQuery = await (0, query_1.selectQuery)(29, values);
         if (!resultQuery.data) {

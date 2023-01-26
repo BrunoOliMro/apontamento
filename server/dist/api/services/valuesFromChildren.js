@@ -36,21 +36,9 @@ const getChildrenValuesBack = async (variables, req) => {
                 await connection.query(insertEveryAddress.join('\n')).then(result => result.rowsAffected);
             }
             catch (error) {
-                console.log('linha 140  - Point.ts - ', error);
+                console.log('linha 36  - valuesFromChildren.ts - ', error);
                 return { message: (0, message_1.message)(0) };
             }
-        }
-        try {
-            const insertEveryAddress = [];
-            variables.cookies.childCode.split(',').forEach((element) => {
-                insertEveryAddress.push(`INSERT INTO HISTORICO_ENDERECO (DATAHORA, ODF, QUANTIDADE, CODIGO_PECA, CODIGO_FILHO, ENDERECO_ATUAL, STATUS, NUMERO_OPERACAO) VALUES (GETDATE(), '${variables.cookies.NUMERO_ODF}', ${Number(variables.cookies.goodFeed)} ,'${variables.cookies.CODIGO_PECA}', '${element}', '${returnValueAddress.address[0].ENDERECO || null}', 'APONTADO', '${variables.cookies.NUMERO_OPERACAO}')`);
-            });
-            const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-            await connection.query(insertEveryAddress.join('\n')).then(result => result.rowsAffected);
-        }
-        catch (error) {
-            console.log('Error in insert addres', error);
-            return { message: (0, message_1.message)(4) };
         }
         try {
             const deleteCstAlocacao = [];
@@ -68,7 +56,7 @@ const getChildrenValuesBack = async (variables, req) => {
             }
         }
         catch (error) {
-            console.log('linha 159  - Point.ts - ', error);
+            console.log('linha 70  - valuesFromChildren.ts - ', error);
             return;
         }
         finally {
@@ -76,7 +64,7 @@ const getChildrenValuesBack = async (variables, req) => {
         }
     }
     catch (error) {
-        console.log('linha 165  - Point.ts - ', error);
+        console.log('linha 76  - valuesFromChildren.ts - ', error);
         return { message: (0, message_1.message)(0) };
     }
 };

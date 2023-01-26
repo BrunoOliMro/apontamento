@@ -59,7 +59,7 @@
       objData.image = await Id.json();
       const IA = await fetch(callOdfData);
       objData.codData = await IA.json();
-
+      console.log('objData', objData);
       if (
          objData.codData.code === messageQuery(10) ||
          objData.codData.code === messageQuery(11)
