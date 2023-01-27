@@ -5,6 +5,8 @@
     export let totalItens;
     export let totalPages;
     export let currentPage;
+    export let min;
+    export let max;
 
     let date;
     if (data) {
@@ -18,7 +20,7 @@
 
 </script>
 
-{#if index > currentPage * 0 && index < currentPage * 11 }
+{#if index > min && index < max }
     <tr class="tabelahistorico">
         <td>{!index ? "S/I" : index}</td>
         <td>{!date ? "S/I" : date}</td>

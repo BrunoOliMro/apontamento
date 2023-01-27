@@ -16,10 +16,15 @@
         });
     }
 
+    let minValue = 0
+    let maxValue = 11
+
     function callNextPage() {
         if (currentPage <= 0) {
             currentPage = 1;
         } else {
+            maxValue = maxValue + 11
+            minValue = minValue + 11
             currentPage += 1;
         }
     }
@@ -28,6 +33,8 @@
         if (currentPage <= 0) {
             currentPage = 1;
         } else {
+            minValue = minValue - 11
+            maxValue = maxValue - 11
             currentPage -= 1;
         }
     }
@@ -53,6 +60,8 @@
                         <TableAddress
                             perPage={10}
                             index={i + 1}
+                            min={minValue}
+                            max={maxValue}
                             data={address}
                             totalItens={odfData.data.length}
                             {totalPages}
