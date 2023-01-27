@@ -9,12 +9,13 @@ import { message } from '../services/message';
 import { odfIndex } from '../utils/odfIndex';
 import { update } from '../services/update';
 import { RequestHandler } from 'express';
+import { sequenciamentoView } from '../services/sequenciamento';
 
 export const searchOdf: RequestHandler = async (req, res) => {
     const variables = await inicializer(req)
     const barcode = unravelBarcode(variables.body.barcode) || null
 
-    if(!barcode){
+    if (!barcode) {
         return res.json({ status: message(1), message: message(0), data: message(33) })
     }
 
@@ -53,25 +54,32 @@ export const searchOdf: RequestHandler = async (req, res) => {
 
     if (i <= 0) {
         // ATENÇÃO olhar diferença entre quantidade apontada no processo anterior e no processo atual!!!!!!!!!!
-        odf[i].QTDE_LIB = odf[i].QTDE_ODF - odf[i].QTDE_APONTADA - odf[i].QTD_FALTANTE;
+        odf[i].QTDE_LIB = odf[i].QTDE_ODF - ((odf[i].QTD_BOAS || 0) + (odf[i].QTD_REFUGO || 0) + (odf[i].QTD_RETRABALHADA || 0) + (odf[i].QTD_FALTANTE || 0))
     } else if (i > 0) {
         // ATENÇÃO quantidade liberado é igual qtd_lib = boasProcessoPassado -  boas - ruins - retrabalhadas
         // Quantidade liberada é a diferença qtd_lib =  boasProcesso passado - boas - ruins - retrabalhadas
         odf[i].QTDE_LIB = (odf[i - 1].QTD_BOAS || 0) - (odf[i].QTD_BOAS || 0) - (odf[i].QTD_REFUGO || 0) - (odf[i].QTD_RETRABALHADA || 0) - (odf[i].QTD_FALTANTE || 0)
     }
 
+    console.log('odf[i].QTDE_LIB', odf[i].QTDE_LIB);
     const resultVerifyCodeNote = await verifyCodeNote(barcode.data, [1, 3, 6, 9])
 
     if (!odf[i].QTDE_LIB || odf[i].QTDE_LIB <= 0) {
         await cookieGenerator(res, odf[i])
-        return res.json({ status: message(1), message: message(11),  data: message(11), code: resultVerifyCodeNote.code || message(33) })
+        return res.json({ status: message(1), message: message(11), data: message(11), code: resultVerifyCodeNote.code || message(33) })
+    }
+
+    const verifySequenciamento: any = await sequenciamentoView(barcode!.data!)
+    console.log('verifySequenciamento', verifySequenciamento);
+    if(!verifySequenciamento!.message){
+        return res.json({status: message(1), message: 'Não é a máquina a operar', machine: verifySequenciamento.machine})
     }
 
     // Generate cookie that is gonna be used later;
     barcode.data.QTDE_LIB = odf[i].QTDE_LIB
     barcode.data.CODIGO_PECA = odf[i].CODIGO_PECA
     const resultComponents = await selectToKnowIfHasP(barcode)
-    
+
     if (resultComponents.message === message(13) || resultComponents.message === message(14) || resultComponents.message === message(15)) {
         barcode.data.QTDE_LIB = resultComponents.quantidade < odf[i].QTDE_LIB ? resultComponents.quantidade : odf[i].QTDE_LIB
         odf[i].condic = resultComponents.condic
@@ -88,7 +96,7 @@ export const searchOdf: RequestHandler = async (req, res) => {
 
     await cookieGenerator(res, odf[i])
     if (!barcode.data.QTDE_LIB) {
-        return res.json({ status: message(1), message: message(11), data: message(33), code: resultVerifyCodeNote.code || message(33)  })
+        return res.json({ status: message(1), message: message(11), data: message(33), code: resultVerifyCodeNote.code || message(33) })
     } else {
         return res.json({ status: message(1), message: message(1), data: message(1), code: resultVerifyCodeNote.code || message(33) })
     }

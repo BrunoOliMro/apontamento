@@ -11,6 +11,7 @@ const query_1 = require("../services/query");
 const message_1 = require("../services/message");
 const odfIndex_1 = require("../utils/odfIndex");
 const update_1 = require("../services/update");
+const sequenciamento_1 = require("../services/sequenciamento");
 const searchOdf = async (req, res) => {
     const variables = await (0, variableInicializer_1.inicializer)(req);
     const barcode = (0, unravelBarcode_1.unravelBarcode)(variables.body.barcode) || null;
@@ -43,15 +44,21 @@ const searchOdf = async (req, res) => {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(6), data: (0, message_1.message)(6) });
     }
     if (i <= 0) {
-        odf[i].QTDE_LIB = odf[i].QTDE_ODF - odf[i].QTDE_APONTADA - odf[i].QTD_FALTANTE;
+        odf[i].QTDE_LIB = odf[i].QTDE_ODF - ((odf[i].QTD_BOAS || 0) + (odf[i].QTD_REFUGO || 0) + (odf[i].QTD_RETRABALHADA || 0) + (odf[i].QTD_FALTANTE || 0));
     }
     else if (i > 0) {
         odf[i].QTDE_LIB = (odf[i - 1].QTD_BOAS || 0) - (odf[i].QTD_BOAS || 0) - (odf[i].QTD_REFUGO || 0) - (odf[i].QTD_RETRABALHADA || 0) - (odf[i].QTD_FALTANTE || 0);
     }
+    console.log('odf[i].QTDE_LIB', odf[i].QTDE_LIB);
     const resultVerifyCodeNote = await (0, verifyCodeNote_1.verifyCodeNote)(barcode.data, [1, 3, 6, 9]);
     if (!odf[i].QTDE_LIB || odf[i].QTDE_LIB <= 0) {
         await (0, cookieGenerator_1.cookieGenerator)(res, odf[i]);
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(11), data: (0, message_1.message)(11), code: resultVerifyCodeNote.code || (0, message_1.message)(33) });
+    }
+    const verifySequenciamento = await (0, sequenciamento_1.sequenciamentoView)(barcode.data);
+    console.log('verifySequenciamento', verifySequenciamento);
+    if (!verifySequenciamento.message) {
+        return res.json({ status: (0, message_1.message)(1), message: 'Não é a máquina a operar', machine: verifySequenciamento.machine });
     }
     barcode.data.QTDE_LIB = odf[i].QTDE_LIB;
     barcode.data.CODIGO_PECA = odf[i].CODIGO_PECA;

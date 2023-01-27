@@ -38,8 +38,16 @@
   const addressApi = `/api/v1/address`;
   let address = false;
   let resultAddress = null;
-
+ const apiConnect = `http://192.168.97.108:3000/back/api/v1/stop/machine`
   callReturnMotive();
+  // callConnect ()
+  let connect;
+
+
+  async function callConnect (connect){
+    const res = await post(apiConnect,  {connect} );
+    console.log('res', res);
+  }
 
   async function callReturnMotive() {
     const res = await fetch(apiCallMotiveReturn);
@@ -67,6 +75,14 @@
         loader = false;
 
         if (res.status === messageQuery(1)) {
+          console.log('barcode', res);
+
+          if(res.status && res.message === 'Não é a máquina a operar'){
+            console.log('rinvbirbniribn');
+            connect = { message: res.message, machine : res.machine}
+            return callConnect(connect)
+          }
+
           if (res.data === messageQuery(36) && res.code === messageQuery(10)) {
             return (window.location.href = messageQuery(18));
           }
@@ -281,6 +297,8 @@
       address = false
     }
   }
+
+
 </script>
 
 <main>

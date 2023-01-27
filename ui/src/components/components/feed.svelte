@@ -35,6 +35,7 @@
     let availableQuantity = 0
     let subTitle = messageQuery(0)
     var returnValueAddress;
+    let rip = false
 
     if(!odfData.codData.data){
         odfData.codData.data = 'S/I'
@@ -83,11 +84,13 @@
         isRequesting = true
         close();
         const res = await post(pointApi, { valorFeed, badFeed, missingFeed, reworkFeed, value, supervisor});
-        console.log('Call post response: ', res);
         if (res.status) {
 
             isRequesting = false
             loader = false
+            if(res.code){
+                rip = true
+            }
 
             if (res.message === messageQuery(46)) {
                 message = messageQuery(46);
@@ -98,13 +101,16 @@
             else if (res.code === messageQuery(16)) {
                 message = messageQuery(43);
             }
+            else if(res.message === messageQuery(1) && res.address && !res.returnValueAddress.address) {
+                address = res.address.address[0].ENDERECO
+            }
+            else if (res.message === messageQuery(1) && !res.address && res.returnValueAddress) {
+                returnValueAddress = res.returnValueAddress
+                message = messageQuery(44)
+            } 
             else if(res.message === messageQuery(1) && !res.address && !res.returnValueAddress.address) {
                 return window.location.href = messageQuery(18);
             }
-            else if (res.message === messageQuery(1) && !res.address !== messageQuery(0) && res.returnValueAddress.address) {
-                returnValueAddress = res.returnValueAddress.address[0].ENDERECO
-                message = messageQuery(44)
-            } 
             else if (res.message === messageQuery(11)) {
                 window.location.href = messageQuery(18);
             }  

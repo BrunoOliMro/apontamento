@@ -50,6 +50,7 @@ const message = (chosenOption) => {
         46: '5A01A01-11',
         47: 'Sem cookies',
         48: 'Preencha todos os campos',
+        49: 'Pointed',
     };
     return response[String(chosenOption)];
 };

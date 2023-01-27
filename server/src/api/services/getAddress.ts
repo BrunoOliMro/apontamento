@@ -72,6 +72,7 @@ export const getAddress = async (_valueOfParts: number, variables: any, req: any
         })
     }
 
+    console.log('chama cstStorage');
     await cstStorageUp(variables.cookies.QTDE_LIB, address![0].ENDERECO, variables.cookies.CODIGO_PECA, variables.cookies.NUMERO_ODF, variables.cookies.goodFeed, variables.cookies.FUNCIONARIO, hostname, ip)
     // try {
     //     // Insert loop to log every address in odf

@@ -1,11 +1,13 @@
 <script>
     import TableAddress from "../Tables/tableAddress.svelte";
-    export let odfData = null;
-    let currentPage = 1;
-    // @ts-ignore
-    let totalPages = Math.ceil(odfData.data.length / 10);
-
     import { createEventDispatcher } from "svelte";
+    export let odfData = null;
+    // @ts-ignore
+    let totalPages = Math.round(odfData.data.length / 11);
+    let currentPage = 1;
+    let minValue = 0;
+    let maxValue = 11;
+    let message = "";
 
     const dispatch = createEventDispatcher();
 
@@ -16,15 +18,12 @@
         });
     }
 
-    let minValue = 0
-    let maxValue = 11
-
     function callNextPage() {
         if (currentPage <= 0) {
             currentPage = 1;
         } else {
-            maxValue = maxValue + 11
-            minValue = minValue + 11
+            maxValue = maxValue + 10;
+            minValue = minValue + 10;
             currentPage += 1;
         }
     }
@@ -33,19 +32,26 @@
         if (currentPage <= 0) {
             currentPage = 1;
         } else {
-            minValue = minValue - 11
-            maxValue = maxValue - 11
+            minValue = minValue - 10;
+            maxValue = maxValue - 10;
             currentPage -= 1;
         }
     }
+
+    // @ts-ignore
+    if (!odfData.data) {
+        message = "Error";
+    }
 </script>
 
-{#if odfData && odfData !== ""},
+{#if (odfData && odfData !== "") || message !== ""}
     <div class="background">
         <div class="modal-content">
             <h2>Histórico de endereçamento</h2>
             <div class="address-area">
                 <table>
+                    
+                    {#if message === ""}
                     <tr id="header">
                         <th scope="col">INDICE</th>
                         <th scope="col">DATA</th>
@@ -56,24 +62,25 @@
                         <th scope="col">QUANTIDADE</th>
                     </tr>
 
-                    {#each odfData.data as address, i}
-                        <TableAddress
-                            perPage={10}
-                            index={i + 1}
-                            min={minValue}
-                            max={maxValue}
-                            data={address}
-                            totalItens={odfData.data.length}
-                            {totalPages}
-                            {currentPage}
-                        />
-                    {/each}
+                        {#each odfData.data as address, i}
+                            <TableAddress
+                                index={i + 1}
+                                min={minValue}
+                                max={maxValue}
+                                data={address}
+                            />
+                        {/each}
+                    {/if}
+
+                    {#if message && message !== ""}
+                        <div>Sem historico a exibir</div>
+                    {/if}
                 </table>
             </div>
         </div>
 
         <div class="pagination-area">
-            {#if odfData.data.length > 11}
+            {#if odfData.data.length - 1 > 11}
                 <button
                     disabled={currentPage <= 1}
                     class="btn"
@@ -81,10 +88,10 @@
                     on:keypress={callPreviousPage}>Anterior</button
                 >
 
-                <span>{currentPage}</span>
+                <span>{currentPage}</span>-<span>{totalPages}</span>
 
                 <button
-                    disabled={currentPage >= totalPages}
+                    disabled={currentPage === totalPages}
                     class="btn"
                     on:click={callNextPage}
                     on:keypress={callNextPage}>Proxima</button

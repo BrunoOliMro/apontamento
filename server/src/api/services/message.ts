@@ -46,16 +46,9 @@ export const message = (chosenOption: number) => {
         45: 'Sem ferramentas',
         46: '5A01A01-11',
         47: 'Sem cookies', 
-        48: 'Preencha todos os campos', 
+        48: 'Preencha todos os campos',
+        49: 'Pointed',
     }
 
     return response[String(chosenOption)]
-
-    // for (const key in response) {
-    //     if (choosenOption === Number(key)) {
-    //         var answer = response[key]
-    //     }
-    // }
-
-    // return answer
 }

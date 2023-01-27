@@ -1,10 +1,6 @@
 <script>
     export let data;
     export let index;
-    export let perPage;
-    export let totalItens;
-    export let totalPages;
-    export let currentPage;
     export let min;
     export let max;
 
@@ -32,29 +28,6 @@
     </tr>
 {/if}
 
-<!-- {#if totalItens > perPage && index > 11  && index < 22 && currentPage === 2}
-    <tr class="tabelahistorico">
-        <td>{!index ? "S/I" : index}</td>
-        <td>{!date ? "S/I" : date}</td>
-        <td>{!data.ODF ? "S/I" : data.ODF}</td>
-        <td>{!data.CODIGO_FILHO ? "S/I" : data.CODIGO_FILHO}</td>
-        <td>{!data.ENDERECO_ATUAL ? "S/I" : data.ENDERECO_ATUAL}</td>
-        <td>{!data.STATUS ? "S/I" : data.STATUS}</td>
-        <td>{!data.QUANTIDADE ? "S/I" : data.QUANTIDADE}</td>
-    </tr>
-{/if}
-
-{#if totalItens > perPage && index > 22 && currentPage === 3}
-    <tr class="tabelahistorico">
-        <td>{!index ? "S/I" : index}</td>
-        <td>{!date ? "S/I" : date}</td>
-        <td>{!data.ODF ? "S/I" : data.ODF}</td>
-        <td>{!data.CODIGO_FILHO ? "S/I" : data.CODIGO_FILHO}</td>
-        <td>{!data.ENDERECO_ATUAL ? "S/I" : data.ENDERECO_ATUAL}</td>
-        <td>{!data.STATUS ? "S/I" : data.STATUS}</td>
-        <td>{!data.QUANTIDADE ? "S/I" : data.QUANTIDADE}</td>
-    </tr>
-{/if} -->
 <style>
     *:focus {
         outline: none;

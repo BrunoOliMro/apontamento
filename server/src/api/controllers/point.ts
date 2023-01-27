@@ -48,7 +48,6 @@ export const point: RequestHandler = async (req, res) => {
     variables.cookies.badFeed = variables.body.badFeed || 0;
     variables.cookies.missingFeed = variables.body.missingFeed || 0;
     variables.cookies.reworkFeed = variables.body.reworkFeed || 0;
-
     if (!totalValue) {
         return res.json({ status: message(1), message: message(0), data: message(33), code: resultVerifyCodeNote.code, address: message(33), returnValueAddress: message(33) })
     }
@@ -100,11 +99,15 @@ export const point: RequestHandler = async (req, res) => {
         }
     }
 
-    var resFromChildren: any;
+    var resFromChildren: any = ''
     // Caso haja 'P' faz update na quantidade de peças dos filhos
     if (variables.cookies.condic === 'P') {
         variables.cookies.totalValue = totalValue
         resFromChildren = await getChildrenValuesBack(variables, req)
+    }
+
+    if (variables.cookies.totalValue < Number(variables.cookies.QTDE_LIB)!) {
+        
     }
 
     // Caso tenha retrabalhas apontados ou faltantes, faz insert em NOVA_ORDEM
@@ -116,23 +119,24 @@ export const point: RequestHandler = async (req, res) => {
 
     var address: any;
     if ('00' + String(variables.cookies.NUMERO_OPERACAO!.replaceAll(' ', '')) === '00999') {
-        address = getAddress(totalValue, variables, req)
+        address = await getAddress(totalValue, variables, req)
     }
 
-    console.log('resFromChildren.returnValueAddress.address[0].ENDERECO', resFromChildren);
     if (variables.cookies.condic === 'P') {
         // Insert loop to log every address in odf
         const insertEveryAddress: string[] = []
         // Insert to HISTORICO_ENDERECO
-        console.log('historico linha 126');
         variables.cookies.childCode.split(',').forEach((element: string) => {
-            insertEveryAddress.push(`INSERT INTO HISTORICO_ENDERECO (DATAHORA, ODF, QUANTIDADE, CODIGO_PECA, CODIGO_FILHO, ENDERECO_ATUAL, STATUS, NUMERO_OPERACAO) VALUES (GETDATE(), '${variables.cookies.NUMERO_ODF}', ${Number(variables.cookies.goodFeed)} ,'${variables.cookies.CODIGO_PECA}', '${element}', '${ !resFromChildren ? message(33) : resFromChildren.returnValueAddress.address[0].ENDERECO }', 'APONTADO', '${variables.cookies.NUMERO_OPERACAO}')`)
+            insertEveryAddress.push(`INSERT INTO HISTORICO_ENDERECO (DATAHORA, ODF, QUANTIDADE, CODIGO_PECA, CODIGO_FILHO, ENDERECO_ATUAL, STATUS, NUMERO_OPERACAO) VALUES (GETDATE(), '${variables.cookies.NUMERO_ODF}', ${Number(variables.cookies.goodFeed)} ,'${variables.cookies.CODIGO_PECA}', '${element}', '${ !resFromChildren.returnValueAddress ? message(33) : resFromChildren.returnValueAddress.address[0].ENDERECO }', 'APONTADO', '${variables.cookies.NUMERO_OPERACAO}')`)
         });
         const connection = await mssql.connect(sqlConfig);
         await connection.query(insertEveryAddress.join('\n')).then(result => result.rowsAffected)
     }
-    
+    console.log('OU AQUIII', address);
+    // console.log('resFromChildren.returnValueAddress', !resFromChildren.hasOwnProperty('returnValueAddress')  ? message(33) : resFromChildren.returnValueAddress.address[0].ENDERECO );
+    console.log('aaa', !resFromChildren.returnValueAddress ? message(33) : resFromChildren.returnValueAddress.address[0].ENDERECO);
+
     await update(3, variables.body)
     await insertInto(variables.cookies)
-    return res.json({ status: message(1), message: message(1), data: message(33), code: resultVerifyCodeNote.code, address: !address ? message(33) : address, returnValueAddress: !resFromChildren ? message(33) : resFromChildren.returnValueAddress.address[0].ENDERECO })
+    return res.json({ status: message(1), message: message(1), data: message(33), code: message(49), address: !address ? message(33) : address, returnValueAddress: !resFromChildren.returnValueAddress ? message(33) : resFromChildren.returnValueAddress.address[0].ENDERECO })
 }
