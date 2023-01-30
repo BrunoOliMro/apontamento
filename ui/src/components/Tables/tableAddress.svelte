@@ -17,7 +17,7 @@
 </script>
 
 {#if index > min && index < max }
-    <tr class="tabelahistorico">
+    <tr class="table-area">
         <td>{!index ? "S/I" : index}</td>
         <td>{!date ? "S/I" : date}</td>
         <td>{!data.ODF ? "S/I" : data.ODF}</td>
@@ -33,7 +33,7 @@
         outline: none;
     }
 
-    .tabelahistorico {
+    .table-area {
         font-size: 25px;
     }
 

@@ -78,7 +78,6 @@
           console.log('barcode', res);
 
           if(res.status && res.message === 'Não é a máquina a operar'){
-            console.log('rinvbirbniribn');
             connect = { message: res.message, machine : res.machine}
             return callConnect(connect)
           }

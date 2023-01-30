@@ -8,6 +8,8 @@
     let minValue = 0;
     let maxValue = 11;
     let message = "";
+    let list = false;
+    let openListString = "Abrir lista completa";
 
     const dispatch = createEventDispatcher();
 
@@ -16,6 +18,21 @@
             text: "Close Modal Historico",
             eventType: event,
         });
+    }
+
+    function callOpenList() {
+        currentPage = 1;
+        if (list === true) {
+            openListString = "Abrir lista completa";
+            list = false;
+            maxValue = 11;
+            minValue = 0;
+        } else {
+            list = true;
+            openListString = "Fechar lista completa";
+            maxValue = odfData.data.length;
+            minValue = 0;
+        }
     }
 
     function callNextPage() {
@@ -44,23 +61,38 @@
     }
 </script>
 
+<div class="btns-control-page-area">
+    <div class="btn-area">
+        <button
+            class="btn"
+            on:click={callOpenList}
+            on:keypress={callOpenList}>{openListString}</button
+        >
+    </div>
+    
+    <div class="btn-area">
+        <button class="btn" on:click={close} on:keypress={close}
+            >Voltar</button
+        >
+    </div>
+</div>
+
 {#if (odfData && odfData !== "") || message !== ""}
     <div class="background">
         <div class="modal-content">
             <h2>Histórico de endereçamento</h2>
             <div class="address-area">
                 <table>
-                    
                     {#if message === ""}
-                    <tr id="header">
-                        <th scope="col">INDICE</th>
-                        <th scope="col">DATA</th>
-                        <th scope="col">ODF</th>
-                        <th scope="col">CODIGO DA PEÇA</th>
-                        <th scope="col">ENDEREÇO</th>
-                        <th scope="col">STATUS</th>
-                        <th scope="col">QUANTIDADE</th>
-                    </tr>
+                        <tr id="header">
+                            <th scope="col">INDICE</th>
+                            <th scope="col">DATA</th>
+                            <th scope="col">ODF</th>
+                            <th scope="col">CODIGO DA PEÇA</th>
+                            <th scope="col">ENDEREÇO</th>
+                            <th scope="col">STATUS</th>
+                            <th scope="col">QUANTIDADE</th>
+                        </tr>
 
                         {#each odfData.data as address, i}
                             <TableAddress
@@ -81,33 +113,39 @@
 
         <div class="pagination-area">
             {#if odfData.data.length - 1 > 11}
-                <button
-                    disabled={currentPage <= 1}
-                    class="btn"
-                    on:click={callPreviousPage}
-                    on:keypress={callPreviousPage}>Anterior</button
-                >
+                {#if list === false}
+                    <button
+                        disabled={currentPage <= 1}
+                        class="btn"
+                        on:click={callPreviousPage}
+                        on:keypress={callPreviousPage}>Anterior</button
+                    >
 
-                <span>{currentPage}</span>-<span>{totalPages}</span>
+                    <span>{currentPage}</span>-<span>{totalPages}</span>
 
-                <button
-                    disabled={currentPage === totalPages}
-                    class="btn"
-                    on:click={callNextPage}
-                    on:keypress={callNextPage}>Proxima</button
-                >
+                    <button
+                        disabled={currentPage === totalPages}
+                        class="btn"
+                        on:click={callNextPage}
+                        on:keypress={callNextPage}>Proxima</button
+                    >
+                {/if}
             {/if}
         </div>
 
-        <div class="btn-area">
-            <button class="btn" on:click={close} on:keypress={close}
-                >Voltar</button
-            >
-        </div>
     </div>
 {/if}
 
 <style>
+    .btns-control-page-area{
+        display: flex;
+        flex-direction: row;
+        margin: 1%;
+        padding: 0%;
+        justify-content: right;
+        align-items: right;
+        text-align: right;
+    }
     .pagination-area {
         display: flex;
         flex-direction: row;
