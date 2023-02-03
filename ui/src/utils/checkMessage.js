@@ -17,10 +17,10 @@ export default function messageQuery(chosenOption) {
         14: "Fin Setup",
         15: "A value was returned",
         16: "Machine has stopped",
-        17: "/#/codigobarras/apontamento",
-        18: "/#/rip",
-        19: "/#/ferramenta",
-        20: "/#/codigobarras/",
+        17: "/#/barcode/tools/point/",
+        18: "/#/barcode/tools/point/rip",
+        19: "/#/barcode/tools/",
+        20: "/#/barcode/",
         21: "Relatorio de processos está vazia",
         22: "Não há rip a mostrar",
         23: "Preencha todos os campos",
@@ -51,6 +51,8 @@ export default function messageQuery(chosenOption) {
         48: 'Apontar apenas faltantes, confirma?',
         49: "Apontando apenas peças retrabalhadas, confirma ?",
         50: "Apontando apenas peças retrabalhad as e peças faltantes, confirma ?",
+        51: 'Apontamento iniciado',
+        52: '5-98888',
     }
 
     return query[String(chosenOption)]

@@ -1,17 +1,20 @@
 <script>
     import blockForbiddenChars from "../../utils/presanitize";
+    import { createEventDispatcher } from "svelte";
+
     let title = "FALTANTES";
     export let missingFeed;
 
-    import { createEventDispatcher } from "svelte";
-
     const dispatch = createEventDispatcher();
 
-    async function callDispatch() {
-        dispatch("message", {
-            text: "missingFeed!",
-            missingFeed: missingFeed,
-        });
+    async function callDispatch(event) {
+        if (event.key === "Enter") {
+            dispatch("message", {
+                eventType: event,
+                text: "Send",
+                missingFeed: missingFeed,
+            });
+        }
     }
 </script>
 
@@ -19,13 +22,14 @@
     <div class="title">
         <p>{title}</p>
     </div>
-    <div >
+    <div>
         <!-- svelte-ignore a11y-positive-tabindex -->
         <!-- svelte-ignore a11y-autofocus -->
+        <!-- on:input={callDispatch} -->
         <input
-            bind:value={missingFeed}
             on:input={blockForbiddenChars}
-            on:input={callDispatch}
+            on:keypress={callDispatch}
+            bind:value={missingFeed}
             tabindex="3"
             type="text"
         />

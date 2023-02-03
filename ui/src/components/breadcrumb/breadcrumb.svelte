@@ -1,8 +1,8 @@
 <script>
+  import { createEventDispatcher } from "svelte";
+
   export let titleBreadcrumb = ``;
   export let imgResource = ``;
-
-  import { createEventDispatcher } from "svelte";
 
   const dispatch = createEventDispatcher();
 

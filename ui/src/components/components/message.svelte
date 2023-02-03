@@ -17,7 +17,8 @@
 <div class="message-area">
     <h1 class="title">{titleInMessage}</h1>
     <h3 class="subTitle">{subTitle}</h3>
-    <button class="btn" on:click={redirect} on:keypress={redirect}>{btnInMessage}</button>
+    <!-- svelte-ignore a11y-autofocus -->
+    <button class="btn" autofocus on:click={redirect} on:keypress={redirect}>{btnInMessage}</button>
 </div>
 
 <style>

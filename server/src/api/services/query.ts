@@ -1,6 +1,5 @@
-import { sqlConfig } from '../../global.config'
+import { poolConnection} from '../../queryConnector';
 import { message } from './message';
-import mssql from 'mssql';
 
 export const selectQuery = async (chosenOption: number, values?: any) => {
     if (!values) {
@@ -34,18 +33,54 @@ export const selectQuery = async (chosenOption: number, values?: any) => {
         29: `SELECT TOP 1  SALDO FROM HISREAL WHERE 1 = 1 AND CODIGO = '${values.partCode}' ORDER BY DATA DESC`,
         30: `SELECT TOP 1 QTDE_LIB FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND NUMERO_ODF = '${values.NUMERO_ODF}' AND CODIGO_MAQUINA = '${values.CODIGO_MAQUINA}' AND NUMERO_OPERACAO = '${values.NUMERO_OPERACAO}'`,
         31: `SELECT * FROM HISTORICO_ENDERECO WHERE 1 = 1 AND ODF = '${values.NUMERO_ODF}' AND NUMERO_OPERACAO = ${Number(values.NUMERO_OPERACAO)} ORDER BY DATAHORA DESC`,
-        32: `SELECT TOP 1 DATA_FIM_CONVERTIDA, NUMOPE, CODIGO_MAQUINA, NUMERO_ODF, DT_FIM_OP FROM VW_APP_SEQUENCIAMENTO_MAQUINA ORDER BY HORA_FIM ASC`,
+        32: `SELECT TOP 1 DATA_FIM_CONVERTIDA, NUMOPE, CODIGO_MAQUINA, NUMERO_ODF, DT_FIM_OP, * FROM VW_APP_SEQUENCIAMENTO_MAQUINA AS SM ORDER BY SM.DATA_FIM_CONVERTIDA ASC`,
+        33: `SELECT TOP 1 EE.CODIGO AS COD_PRODUTO, NULL AS COD_PRODUTO_EST,  CE.CODIGO, CE.ENDERECO,  ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE  FROM CST_CAD_ENDERECOS CE(NOLOCK) LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO) WHERE ISNULL(EE.QUANTIDADE,0) <= 0 AND CE.ENDERECO LIKE '5%' AND UPPER(EE.CODIGO) LIKE '${values.CODIGO_PECA}%' AND CE.COMPRIMENTO > ${values.comprimento} AND CE.LARGURA > ${values.largura} AND CE.PESO > ${values.peso} ORDER BY CE.ENDERECO ASC`,
+        34: `SELECT TOP 1 EE.CODIGO AS COD_PRODUTO, NULL AS COD_PRODUTO_EST,  CE.CODIGO, CE.ENDERECO,  ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE  FROM CST_CAD_ENDERECOS CE(NOLOCK) LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO) WHERE ISNULL(EE.QUANTIDADE,0) <= 0 AND CE.ENDERECO LIKE '5%' AND UPPER(EE.CODIGO) IS NULL AND CE.COMPRIMENTO > ${values.comprimento} AND CE.LARGURA > ${values.largura} AND CE.PESO > ${values.peso} ORDER BY CE.ENDERECO ASC`,
+        35: `SELECT TOP 1 EE.CODIGO AS COD_PRODUTO, NULL AS COD_PRODUTO_EST,  CE.CODIGO, CE.ENDERECO,  ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE  FROM CST_CAD_ENDERECOS CE(NOLOCK) LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO) WHERE ISNULL(EE.QUANTIDADE,0) <= 0 AND CE.ENDERECO LIKE '7%' AND UPPER(EE.CODIGO) LIKE '${values.CODIGO_PECA}%' AND CE.COMPRIMENTO > ${values.comprimento} AND CE.LARGURA > ${values.largura} AND CE.PESO > ${values.peso} ORDER BY CE.ENDERECO ASC`,
+        36: `SELECT TOP 1 EE.CODIGO AS COD_PRODUTO, NULL AS COD_PRODUTO_EST,  CE.CODIGO, CE.ENDERECO,  ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE  FROM CST_CAD_ENDERECOS CE(NOLOCK) LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO) WHERE ISNULL(EE.QUANTIDADE,0) <= 0 AND CE.ENDERECO LIKE '7%' AND UPPER(EE.CODIGO) IS NULL AND CE.COMPRIMENTO > ${values.comprimento} AND CE.LARGURA > ${values.largura} AND CE.PESO > ${values.peso} ORDER BY CE.ENDERECO ASC`,
     }
 
     try {
-        const connection = await mssql.connect(sqlConfig);
-        const data = await connection.query(`${codes[String(chosenOption)]}`).then((result) => result.recordset)
-        await connection.close()
-        if (data.length > 0) {
-            return { message: message(1), data: data }
-        } else {
-            return { message: message(1), data: message(33) }
-        }
+        // const sql = require('mssql')
+        // const request = new sql.Request();
+        // request.mutiple = true;
+
+        const conn = await poolConnection()
+        const data = await conn.request().query(`${codes[String(chosenOption)]}`).then((result: any) => result.recordset) || null
+        // console.log('data', data);
+
+        // const x = await poolConnection()
+        // const data = request.query('SELECT * FROM MOTIVO_DEVOLUCAO', (err: any) => {
+        //     console.log('error on query', err);
+        // })
+
+        // const db = require('../../queryConnector')
+
+        // const data  = poolConnection.query('SELECT * FROM MOTIVO_DEVOLUCAO');
+        // console.log('data', data);
+        
+        // var Request = require('tedious').Request
+        // console.log('Request', Request);
+
+        // const data = await new Request(`${codes[String(chosenOption)]}`, (err: any, rowCount: any, rows: any) => {
+        //     console.log('err', err);
+        //     console.log('rowCount', rowCount);
+        //     console.log('rows', rows);
+        // })
+
+        // data.on('row', (row: any) => {
+        //     console.log('row', row);
+        // })
+
+
+
+
+        // const dataaa = await new Request(`${codes[String(chosenOption)]}`).then((res: any) => console.log('res', res))
+
+        // console.log('dataaaaa', dataaa);
+        // const conn = await poolConnection()
+        // const data = await conn.query(`${codes[String(chosenOption)]}`).then((result: any) => result.recordset) || null
+        return data
     } catch (error) {
         console.log('Error on selectQuery ', error)
         return { message: message(33), data: message(33) }

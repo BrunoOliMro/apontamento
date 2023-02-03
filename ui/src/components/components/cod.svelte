@@ -1,6 +1,5 @@
 <script>
     // @ts-nocheck
-    let imageLoader = "/images/axonLoader.gif";
     let operationNumber;
     export let odfData;
     let codigoCliente;
@@ -9,10 +8,8 @@
     let codigoPeca;
     let numeroOdf;
     let qtdeOdf;
-
-    if (!odfData.codData.data) {
-        odfData.codData.data = "S/I";
-    } else {
+    
+    if(odfData.codData.data){
         numeroOdf = odfData.codData.data.NUMERO_ODF;
         codigoPeca = odfData.codData.data.CODIGO_PECA;
         codigoCliente = odfData.codData.data.CODIGO_CLIENTE;
@@ -23,62 +20,50 @@
     }
 </script>
 
-{#await odfData.codData.data}
-    <div class="image-loader">
-        <div class="loader">
-            <img src={imageLoader} alt="" />
+<main>
+    <div class="areaCodigos">
+        <div class="odf-area">
+            <p class="odf">ODF:</p>
+            <p class="bold">
+                {!numeroOdf ? "S/I" : numeroOdf}
+            </p>
+        </div>
+
+        <hr />
+
+        <div class="odf-area">
+            <p class="odf">Cód. Interno:</p>
+            <p class="bold">
+                {!codigoPeca ? "S/I" : codigoPeca}
+            </p>
+        </div>
+
+        <hr />
+        <div class="odf-area">
+            <p class="odf">Cód. do Cliente:</p>
+            <p class="bold">
+                {!codigoCliente ? "S/I" : codigoCliente}
+            </p>
+        </div>
+        <hr />
+        <div class="odf-area">
+            <p class="odf">OP:</p>
+            <p class="bold">
+                {!operationNumber ? "S/I" : operationNumber} -
+                {!machineCode ? "S/I" : machineCode}
+                -
+                {!qtdeOdf ? "S/I" : qtdeOdf}
+            </p>
+        </div>
+        <hr />
+        <div class="odf-area">
+            <p class="odf">Operador:</p>
+            <p class="bold">
+                {!funcionario ? "S/I" : funcionario}
+            </p>
         </div>
     </div>
-{:then}
-    <main>
-        <div class="areaCodigos">
-            <div class="odf-area">
-                <p class="odf">ODF:</p>
-                <p class="bold">
-                    {numeroOdf === null || !numeroOdf ? "S/I" : numeroOdf}
-                </p>
-            </div>
-
-            <hr />
-
-            <div class="odf-area">
-                <p class="odf">Cód. Interno:</p>
-                <p class="bold">
-                    {codigoPeca === null || !codigoPeca ? "S/I" : codigoPeca}
-                </p>
-            </div>
-
-            <hr />
-            <div class="odf-area">
-                <p class="odf">Cód. do Cliente:</p>
-                <p class="bold">
-                    {codigoCliente === null || !codigoCliente
-                        ? "S/I"
-                        : codigoCliente}
-                </p>
-            </div>
-            <hr />
-            <div class="odf-area">
-                <p class="odf">OP:</p>
-                <p class="bold">
-                    {operationNumber === null || !operationNumber
-                        ? "S/I"
-                        : operationNumber} -
-                    {machineCode === null || !machineCode ? "S/I" : machineCode}
-                    -
-                    {qtdeOdf === null || !qtdeOdf ? "S/I" : qtdeOdf}
-                </p>
-            </div>
-            <hr />
-            <div class="odf-area">
-                <p class="odf">Operador:</p>
-                <p class="bold">
-                    {funcionario === null || !funcionario ? "S/I" : funcionario}
-                </p>
-            </div>
-        </div>
-    </main>
-{/await}
+</main>
 
 <style>
     .loader {

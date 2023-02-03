@@ -1,6 +1,7 @@
 import "dotenv/config";
 import mssql from "mssql";
 
+
 export const sqlConfig: mssql.config = {
     user: process.env["DB_USER"],
     password: process.env["DB_PWD"],
@@ -14,4 +15,5 @@ export const sqlConfig: mssql.config = {
     options: {
         trustServerCertificate: true // change to true for local dev / self-signed certs
     }
+
 };

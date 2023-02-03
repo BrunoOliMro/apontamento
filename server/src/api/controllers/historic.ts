@@ -18,8 +18,8 @@ export const historic: RequestHandler = async (req, res) => {
         const detailHistoric: any = await selectQuery(5, variables.cookies)
         const generalHistoric = await selectQuery(6, variables.cookies)
 
-        if(detailHistoric.data){
-            for (const iterator of detailHistoric.data) {
+        if(detailHistoric){
+            for (const iterator of detailHistoric) {
                 if (iterator.BOAS > 0) {
                     obj.push(iterator)
                 }
@@ -27,15 +27,15 @@ export const historic: RequestHandler = async (req, res) => {
                     obj.push(iterator)
                 }
             }
-            detailHistoric.data.reduce((acc: any, iterator: any) => {
+            detailHistoric.reduce((acc: any, iterator: any) => {
                 return acc + iterator.BOAS + iterator.REFUGO
             }, 0)
         }
 
 
         let objRes = {
-            resourceDetail: detailHistoric.data,
-            resource: generalHistoric.data,
+            resourceDetail: detailHistoric,
+            resource: generalHistoric,
             message: message(34)
         }
 

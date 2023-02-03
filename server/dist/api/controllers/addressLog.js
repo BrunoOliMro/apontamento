@@ -12,12 +12,7 @@ const addressLog = async (req, res) => {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
     }
     const data = await (0, query_1.selectQuery)(31, barcode.data);
-    if (data.data) {
-        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: data.data });
-    }
-    else {
-        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: data.data });
-    }
+    return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: data });
 };
 exports.addressLog = addressLog;
 //# sourceMappingURL=addressLog.js.map

@@ -1,3 +1,2 @@
-import mssql from 'mssql';
-export declare const selectAddress: (condicional: string, percentage: number, comprimento: number, largura: number, peso: number) => Promise<string | mssql.IRecordSet<any> | undefined>;
+export declare const selectAddress: (codigoMaquina: string, comprimento: number, largura: number, peso: number, variables: any) => Promise<any>;
 //# sourceMappingURL=selectAddress.d.ts.map

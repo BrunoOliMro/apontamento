@@ -59,21 +59,21 @@ export const returnedValue: RequestHandler = async (req, res) => {
 
     const valorTotal = Number(goodFeed + badFeed)
     const groupOdf: any = await selectQuery(28, body.data)
-    const i: number = await odfIndex(groupOdf.data, String(body!.data.NUMERO_OPERACAO))
-    const lastIndex: number = groupOdf.data!.findIndex((element: any) => element.QTDE_APONTADA === 0) - 1;
+    const i: number = await odfIndex(groupOdf, String(body!.data.NUMERO_OPERACAO))
+    const lastIndex: number = groupOdf!.findIndex((element: any) => element.QTDE_APONTADA === 0) - 1;
 
     if (lastIndex !== i) {
         return res.json({ status: message(1), message: message(43), data: message(33), code: codeNoteResult.code })
     }
 
-    let odf = groupOdf.data![i]
+    let odf = groupOdf![i]
 
-    if (i === groupOdf.data!.length - 1) {
-        odf = groupOdf.data![groupOdf.data!.length - 1]
+    if (i === groupOdf!.length - 1) {
+        odf = groupOdf![groupOdf!.length - 1]
     }
 
-    if (lastIndex === groupOdf.data!.length - 1) {
-        odf = groupOdf.data![groupOdf.data!.length - 1]
+    if (lastIndex === groupOdf!.length - 1) {
+        odf = groupOdf![groupOdf!.length - 1]
     }
 
     if (goodFeed) {
@@ -116,17 +116,17 @@ export const returnedValue: RequestHandler = async (req, res) => {
         variables.cookies.NUMERO_ODF = body.data.NUMERO_ODF
         variables.cookies.NUMERO_OPERACAO = body.data.NUMERO_OPERACAO.replaceAll(' ', '').replaceAll('000', '')
         variables.cookies.CODIGO_MAQUINA = body.data.CODIGO_MAQUINA
-        variables.cookies.REVISAO = groupOdf.data![i].REVISAO
-        variables.cookies.QTDE_LIB = groupOdf.data![i].QTDE_LIB
+        variables.cookies.REVISAO = groupOdf![i].REVISAO
+        variables.cookies.QTDE_LIB = groupOdf![i].QTDE_LIB
         variables.cookies.valorTotal = valorTotal
-        variables.cookies.valorApontado = groupOdf.data![i].QTDE_APONTADA - valorApontado
+        variables.cookies.valorApontado = groupOdf![i].QTDE_APONTADA - valorApontado
 
-        if (selectSuper.data!.length > 0) {
+        if (selectSuper!.length > 0) {
 
             const resultHasP: any = await selectQuery(22, body.data)
-            const execut = resultHasP.data!.map((element: any) => element.EXECUT)
-            const codigoFilho: string[] = resultHasP.data!.map((item: any) => item.NUMITE)
-            const processItens = resultHasP.data!.map((item: any) => item.NUMSEQ).filter((element: string) => element === String(String(body.data['NUMERO_OPERACAO']!).replaceAll(' ', '')).replaceAll('000', ''))
+            const execut = resultHasP!.map((element: any) => element.EXECUT)
+            const codigoFilho: string[] = resultHasP!.map((item: any) => item.NUMITE)
+            const processItens = resultHasP!.map((item: any) => item.NUMSEQ).filter((element: string) => element === String(String(body.data['NUMERO_OPERACAO']!).replaceAll(' ', '')).replaceAll('000', ''))
 
             if (processItens.length > 0) {
                 const updateStorageQuery: string[] = [];

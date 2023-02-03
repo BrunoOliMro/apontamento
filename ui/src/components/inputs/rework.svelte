@@ -1,17 +1,20 @@
 <script>
     import blockForbiddenChars from "../../utils/presanitize";
+    import { createEventDispatcher } from "svelte";
+
     let title = "RETRABALHADAS";
     export let reworkFeed;
 
-    import { createEventDispatcher } from "svelte";
-
     const dispatch = createEventDispatcher();
 
-    async function callDispatch() {
-        dispatch("message", {
-            text: "reworkFeed!",
-            reworkFeed: reworkFeed,
-        });
+    async function callDispatch(event) {
+        if (event.key === "Enter") {
+            dispatch("message", {
+                eventType: event,
+                text: "Send",
+                reworkFeed: reworkFeed,
+            });
+        }
     }
 </script>
 
@@ -21,10 +24,11 @@
     </div>
     <div>
         <!-- svelte-ignore a11y-positive-tabindex -->
+        <!-- on:input={callDispatch} -->
         <input
-            bind:value={reworkFeed}
-            on:input={callDispatch}
             on:input={blockForbiddenChars}
+            on:keypress={callDispatch}
+            bind:value={reworkFeed}
             tabindex="4"
             type="text"
         />

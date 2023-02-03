@@ -1,7 +1,10 @@
 <script>
-    export let title = "";
     import { createEventDispatcher } from "svelte";
     const dispatch = createEventDispatcher();
+
+    export let btnTitle = 'Fechar';
+    export let title = "";
+    
     function callDispatch() {
         dispatch("message", {
             text: "teste basso cabaço",
@@ -18,7 +21,7 @@
                 <hr />
                 <!-- svelte-ignore a11y-autofocus -->
                 <button autofocus class="btn" on:click={callDispatch}>
-                    Fechar
+                    {btnTitle}
                 </button>
             </div>
         </div>

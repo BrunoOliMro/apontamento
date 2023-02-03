@@ -15,7 +15,6 @@
     async function getDrawing() {
         const res = await fetch(urlString);
         drawing = await res.json();
-        console.log("Drawing", drawing);
         if (drawing) {
             if (drawing.message !== messageQuery(0)) {
                 imagemMsg = drawing.message;
@@ -53,7 +52,16 @@
     function print() {
         window.print();
     }
+
+    function handleKeydown(e) {
+    if (e.key === "Escape") {
+      window.location.href = messageQuery(17);
+    }
+  }
 </script>
+
+<svelte:window on:keydown={handleKeydown} />
+
 
 <main class="main">
     <div class="breadCrumb">
@@ -61,7 +69,7 @@
         <nav class="breadcrumb" aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a href="/#/codigobarras/apontamento"
+                    <a href="/#/barcode/tools//apontamento"
                         ><img src={back} alt="" />Apontamento</a
                     >
                 </li>
@@ -138,10 +146,6 @@
             {/each}
         {/await}
     </div>
-    <!-- 
-    {#if imagemMsg !== ""}
-        <h3>{imagemMsg}</h3>
-    {/if} -->
 </main>
 
 <style>

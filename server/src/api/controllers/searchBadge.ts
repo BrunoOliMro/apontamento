@@ -5,6 +5,7 @@ import { RequestHandler } from 'express';
 import { selectQuery } from '../services/query';
 
 export const searchBagde: RequestHandler = async (req, res) => {
+    var t0 = performance.now()
     const variables = await inicializer(req)
 
     if (!variables.body.badge) {
@@ -14,8 +15,10 @@ export const searchBagde: RequestHandler = async (req, res) => {
     const resultQuery = await selectQuery(16, variables.body)
 
     if (resultQuery.message !== message(17)) {
-        await cookieGenerator(res, resultQuery.data![0])
+        await cookieGenerator(res, resultQuery![0])
     }
 
-    return res.json({ status: message(1), message: message(1), data: resultQuery.data })
+    var t1 = performance.now()
+    console.log('SEARCHbADGE: ', t1 - t0);
+    return res.json({ status: message(1), message: message(1), data: resultQuery })
 }

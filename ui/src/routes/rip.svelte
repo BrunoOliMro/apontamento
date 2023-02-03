@@ -3,12 +3,11 @@
     import post from "../utils/postFunction";
     import Message from "../components/components/message.svelte";
     import { verifyStringLenght } from "../utils/verifyLength";
-    import TableRipRow from "../components/Tables/TableRipRow.svelte";
+    import RipTable from "../components/table/ripTable.svelte";
     import messageQuery from "../utils/checkMessage";
     import ModalConfirmation from "../components/modal/modalConfirmation.svelte";
     import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
     import Supervisor from "../components/components/supervisor.svelte";
-    import blockForbiddenChars from "../utils/presanitize";
     const Subtitle = "RIP - RELATÓRIO DE INSPEÇÃO DE PROCESSOS";
     const imageLoader = "/images/axonLoader.gif";
     const back = "/images/icons8-go-back-24.png";
@@ -194,7 +193,16 @@
         isRequesting = false;
         window.location.href = messageQuery(17);
     }
+    
+function handleKeydown(e) {
+    if (e.key === "Escape") {
+      window.location.href = messageQuery(20);
+    }
+  }
 </script>
+
+
+<svelte:window on:keydown={handleKeydown} />
 
 <main>
     {#if odf === true}
@@ -275,7 +283,7 @@
                     </thead>
                     <tbody id="body-table">
                         {#each ripTable.data as row, i}
-                            <TableRipRow
+                            <RipTable
                                 bind:setup={values}
                                 bind:value={row.values}
                                 dados={row}

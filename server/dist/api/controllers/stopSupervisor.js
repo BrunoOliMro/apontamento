@@ -25,7 +25,7 @@ const stopSupervisor = async (req, res) => {
     }
     if (resultVerifyCodeNote.accepted) {
         const resource = await (0, query_1.selectQuery)(10, variables.body);
-        if (resource.data) {
+        if (resource) {
             const insertPointCode = await (0, insert_1.insertInto)(variables.cookies);
             if (insertPointCode) {
                 return res.status(200).json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33) });

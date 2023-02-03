@@ -1,4 +1,4 @@
-<a class="out" href="/#/desenho/"><button type="button" class="btn">Desenho</button></a>
+<a class="out" href="/#/barcode/tools/point/drawing/"><button type="button" class="btn">Desenho</button></a>
 
 <style>
     a {

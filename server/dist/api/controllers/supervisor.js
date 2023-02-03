@@ -11,9 +11,9 @@ const supervisor = async (req, res) => {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33) });
     }
     const lookForBadge = await (0, query_1.selectQuery)(10, variables.body);
-    if (lookForBadge.data[0]) {
+    if (lookForBadge[0]) {
         res.cookie('supervisor', (0, encryptOdf_1.encrypted)('verificado'), { httpOnly: true });
-        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: lookForBadge.data[0].CRACHA, supervisor: lookForBadge.data });
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: lookForBadge[0].CRACHA, supervisor: lookForBadge });
     }
     else {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33), supervisor: (0, message_1.message)(33) });

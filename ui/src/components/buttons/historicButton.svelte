@@ -1,5 +1,5 @@
 <!-- svelte-ignore a11y-positive-tabindex -->
-<a class="out" href="/#/historico/"
+<a class="out" href="/#/barcode/tools/point/historic"
     ><button tabindex="7" type="button" class="btn">
         <p>Histórico de apontamento</p>
     </button>

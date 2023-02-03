@@ -1,368 +1,374 @@
 <script>
     // @ts-nocheck
-    import { verifyStringLenght } from "../../utils/verifyLength";
-    import blockForbiddenChars from "../../utils/presanitize";
+    // import ModalConfirmation from "../modal/modalConfirmation.svelte";
+    // import blockForbiddenChars from "../../utils/presanitize";
     import messageQuery from "../../utils/checkMessage";
     import GoodFeed from "../inputs/goodFeed.svelte";
+    import { createEventDispatcher } from "svelte";
     import Missing from "../inputs/missing.svelte";
     import Rework from "../inputs/rework.svelte";
-    import post from "../../utils/postFunction";
     import Bad from "../inputs/bad.svelte";
     import Footer from "./footer.svelte";
     import Status from "./status.svelte";
     import Cod from "./cod.svelte";
-    import ModalConfirmation from "../modal/modalConfirmation.svelte";
-    import Supervisor from "./supervisor.svelte";
-    let urlBadFeedMotive = `/api/v1/badFeedMotives`;
-    let supervisorStop = "api/v1/supervisorParada";
-    let imageLoader = "/images/axonLoader.gif";
-    let pointApi = `/api/v1/point`;
-    let showConfirm = false;
-    let loader = false;
-    var address = messageQuery(0);
-    let supervisor = messageQuery(0);
-    let message = messageQuery(0);
-    let data = [];
-    let badFeed;
-    let missingFeed;
-    let reworkFeed;
-    let valorFeed;
-    let value;
-    let isRequesting = false;
-    let resultRefugo = motives();
-    let arrayMotives = [];
+    // import Supervisor from "./supervisor.svelte";
+    // const imageLoader = "/images/axonLoader.gif";
+    // let showConfirm = false;
+    // let loader = false;
+    // var address = messageQuery(0);
+    // let message = messageQuery(0);
+    // let subTitle = messageQuery(0);
+    // let data = [];
+    // var returnValueAddress;
+    export let supervisor;
+    export let pointString = "APONTAR";
+    export let isRequesting = false;
+    export let rip = false;
+    export let badFeedMotive;
+    export let missingFeed;
+    export let reworkFeed;
+    export let valorFeed;
+    export let badFeed;
     export let odfData;
-    let availableQuantity = 0
-    let subTitle = messageQuery(0)
-    var returnValueAddress;
-    let rip = false
+    // motives();
+    const dispatch = createEventDispatcher();
 
-    if(!odfData.codData.data){
-        odfData.codData.data = 'S/I'
-    } else {
-        availableQuantity = odfData.codData.data.QTDE_LIB;
-    }
+    // async function motives() {
+    //     const res = await fetch(urlBadFeedMotive);
+    //     data = await res.json();
+    // }
 
-    async function checkStopMachine (event){
-        const res = await verifyStringLenght(event.detail.eventType, supervisor, 6, 14)
-        if(res === messageQuery(1)){
-            postStop();
+    async function callDispatch(event) {
+        if (
+            event.detail.text === "Check for super" ||
+            event.detail.text === "Send" ||
+            event.key === "Enter" ||
+            event.type === "click"
+        ) {
+            dispatch("message", {
+                eventType: event,
+                text: "Send",
+                badFeed: badFeed,
+                missingFeed: missingFeed,
+                reworkFeed: reworkFeed,
+                valorFeed: valorFeed,
+                value: badFeedMotive,
+                supervisor: supervisor,
+            });
         }
     }
 
-    const postStop = async () => {
-        loader = true
-        const res = await post(supervisorStop, {supervisor});
-        if (res) {
-            if (res.message === messageQuery(1)) {
-                callPost();
-            } else if (res.message !== messageQuery(0)) {
-                loader = false;
-            }
-        }
-    };
+    // async function checkStopMachine(event) {
+    //     const res = await verifyStringLenght(
+    //         event.detail.eventType,
+    //         supervisor,
+    //         6,
+    //         14
+    //     );
+    //     if (res === messageQuery(1)) {
+    //         postStop();
+    //     }
+    // }
 
-    async function motives() {
-        const res = await fetch(urlBadFeedMotive);
-        data = await res.json();
-        if(data.data.data){
-            arrayMotives = data.data.data.map(acc => acc.DESCRICAO)
-        } else {
-            arrayMotives = ['PEÇA DANIFICADA']
-        }
-    }
+    // const postStop = async (event) => {
+    //     loader = true;
+    //     const res = await post(supervisorStop, { supervisor });
+    //     if (res) {
+    //         if (res.message === messageQuery(1)) {
+    //             callDispatch(event);
+    //         } else if (res.message !== messageQuery(0)) {
+    //             loader = false;
+    //         }
+    //     }
+    // };
 
-    async function checkForSuper(event) {
-        const result = await verifyStringLenght(event, supervisor, 6, 14);
-        if (result === messageQuery(1)) {
-            callPost();
-        } 
-    }
+    // async function checkForSuper(event) {
+    //     const result = await verifyStringLenght(event, supervisor, 6, 14);
+    //     if (result === messageQuery(1)) {
+    //         callDispatch(event);
+    //     }
+    // }
 
-    const callPost = async () => {
-        loader = true;
-        isRequesting = true
-        close();
-        const res = await post(pointApi, { valorFeed, badFeed, missingFeed, reworkFeed, value, supervisor});
-        if (res.status) {
+    // function checkPost(event) {
+    //     isRequesting = true;
+    //     const numberQtdAllowed = Number(odfData.codData.data.QTDE_LIB || 0);
+    //     const numberBadFeed = Number(badFeed || 0);
+    //     const numberGoodFeed = Number(valorFeed || 0);
+    //     const numberMissing = Number(missingFeed || 0);
+    //     const numberReworkFeed = Number(reworkFeed || 0);
+    //     const total =
+    //         numberBadFeed + numberGoodFeed + numberMissing + numberReworkFeed;
 
-            isRequesting = false
-            loader = false
-            if(res.code){
-                rip = true
-            }
+    //     try {
+    //         if (
+    //             numberMissing > 0 &&
+    //             numberBadFeed + numberGoodFeed + numberReworkFeed === 0
+    //         ) {
+    //             return (message = messageQuery(48));
+    //         } else if (
+    //             numberReworkFeed > 0 &&
+    //             numberBadFeed + numberGoodFeed + numberMissing === 0
+    //         ) {
+    //             return (message = messageQuery(49));
+    //         } else if (
+    //             numberReworkFeed > 0 &&
+    //             numberMissing > 0 &&
+    //             numberBadFeed + numberGoodFeed === 0
+    //         ) {
+    //             return (message = messageQuery(50));
+    //         } else if (
+    //             (numberMissing > 0 &&
+    //                 numberGoodFeed > 0 &&
+    //                 numberGoodFeed < numberQtdAllowed &&
+    //                 numberBadFeed + numberReworkFeed === 0) ||
+    //             (numberReworkFeed > 0 &&
+    //                 numberGoodFeed > 0 &&
+    //                 numberGoodFeed < numberQtdAllowed &&
+    //                 numberBadFeed + numberMissing === 0) ||
+    //             (numberGoodFeed > 0 &&
+    //                 numberMissing > 0 &&
+    //                 numberReworkFeed > 0 &&
+    //                 numberBadFeed <= 0) ||
+    //             (numberBadFeed + numberMissing + numberReworkFeed === 0 &&
+    //                 numberGoodFeed > 0 &&
+    //                 numberGoodFeed < numberQtdAllowed)
+    //         ) {
+    //             return (message = messageQuery(46));
+    //         } else if (total > numberQtdAllowed) {
+    //             message = messageQuery(47);
+    //         } else if (numberBadFeed > 0 && total <= numberQtdAllowed) {
+    //             showConfirm = true;
+    //         } else if (total === 0) {
+    //             message = messageQuery(45);
+    //         } else if (
+    //             numberBadFeed + numberMissing + numberReworkFeed === 0 &&
+    //             numberGoodFeed === numberQtdAllowed
+    //         ) {
+    //             callDispatch(event);
+    //         }
+    //     } catch (error) {
+    //         return (message = messageQuery(4));
+    //     } finally {
+    //         isRequesting = false;
+    //     }
+    // }
 
-            if (res.message === messageQuery(46)) {
-                message = messageQuery(46);
-            } 
-            else if (res.message === messageQuery(10)) {
-                window.location.href =  messageQuery(18);
-            } 
-            else if (res.code === messageQuery(16)) {
-                message = messageQuery(43);
-            }
-            else if(res.message === messageQuery(1) && res.address && !res.returnValueAddress.address) {
-                address = res.address.address[0].ENDERECO
-            }
-            else if (res.message === messageQuery(1) && !res.address && res.returnValueAddress) {
-                returnValueAddress = res.returnValueAddress
-                message = messageQuery(44)
-            } 
-            else if(res.message === messageQuery(1) && !res.address && !res.returnValueAddress.address) {
-                return window.location.href = messageQuery(18);
-            }
-            else if (res.message === messageQuery(11)) {
-                window.location.href = messageQuery(18);
-            }  
-            else if (res.message !== messageQuery(0) && res.data !== messageQuery(0)) {
-                message = res.message;
-            }
-        } else {
-            message = messageQuery(4)
-        }
-    };
+    // function close() {
+    //     address = messageQuery(0);
+    //     message = messageQuery(0);
+    //     showConfirm = false;
+    // }
 
-    async function checkPost(event) {
+    // function closeRedirect() {
+    //     loader = true;
+    //     message = messageQuery(0);
+    //     address = false;
+    //     window.location.href = messageQuery(18);
+    // }
 
-        if (event.key !== "Enter" && event.type !== 'click') {
-            return
-        }
+    
+    if (!odfData.codData.data) {
+        odfData.codData.data = "S/I";
+    } 
 
-        isRequesting = true;
-        const numberBadFeed = Number(badFeed || 0);
-        const numberGoodFeed = Number(valorFeed || 0);
-        const numberQtdAllowed = Number(availableQuantity || 0);
-        const numberMissing = Number(missingFeed || 0);
-        const numberReworkFeed = Number(reworkFeed || 0);
-        const total = numberBadFeed + numberGoodFeed + numberMissing + numberReworkFeed;
-
-        try {
-            if(numberMissing > 0 && numberBadFeed + numberGoodFeed + numberReworkFeed === 0){
-                return message = messageQuery(48)
-            }
-            else  if ( numberReworkFeed > 0 && numberBadFeed + numberGoodFeed + numberMissing === 0) {
-                return (message = messageQuery(49));
-            } 
-            else if ( numberReworkFeed > 0 && numberMissing > 0 && numberBadFeed + numberGoodFeed === 0) {
-                return (message = messageQuery(50));
-            } 
-            else if ((numberMissing > 0 && numberGoodFeed > 0 && numberGoodFeed < numberQtdAllowed && numberBadFeed + numberReworkFeed === 0) ||
-                (numberReworkFeed > 0 && numberGoodFeed > 0 && numberGoodFeed < numberQtdAllowed && numberBadFeed + numberMissing === 0) ||
-                (numberGoodFeed > 0 && numberMissing > 0 && numberReworkFeed > 0 && numberBadFeed <= 0) ||
-                (numberBadFeed + numberMissing + numberReworkFeed === 0 && numberGoodFeed > 0 && numberGoodFeed < numberQtdAllowed)
-                ) {
-                return (message = messageQuery(46));
-            } 
-            else if (total > numberQtdAllowed) {
-                message = messageQuery(47);
-            } 
-            else  if (numberBadFeed > 0 && total <= numberQtdAllowed) {
-                showConfirm = true;
-            } 
-            else if (total === 0) {
-                message = messageQuery(45);
-            } 
-            else if ( numberBadFeed + numberMissing + numberReworkFeed === 0 && numberGoodFeed === numberQtdAllowed) {
-                callPost();
-            }
-        } catch (error) {
-            console.log('Error on CheckPost function checking sended Numbers', error)
-            return message = messageQuery(4)
-        } finally {
-            isRequesting = false
-        }
-    }
-
-    function close() {
-        address = messageQuery(0);
-        message = messageQuery(0);
-        showConfirm = false;
-    }
-
-    function closeRedirect() {
-        loader = true;
-        message = messageQuery(0);
-        address = false;
-        window.location.href = messageQuery(18);
+    if (odfData.codData.code === messageQuery(10) || rip === true) {
+        pointString = "RIP";
+        rip = true;
     }
 </script>
 
-{#if loader === true}
+<!-- {#if loader === true}
     <div class="imageLoader">
         <div class="loader">
             <img src={imageLoader} alt="" />
         </div>
     </div>
-{/if}
+{/if} -->
 
-{#await odfData.codData.data}
-    <div class="imageLoader">
-        <div class="loader">
-            <img src={imageLoader} alt="" />
-        </div>
+<div class="content">
+    <div class="status-area">
+        <div><Status {odfData} /></div>
+        <div><Cod {odfData} /></div>
     </div>
-{:then}
-    <div class="content">
-        <div class="status-area">
-            <div><Status {odfData} /></div>
-            <div><Cod {odfData} /></div>
+    <div class="feed-content">
+        <div class="footer-area">
+            <Footer {odfData} />
         </div>
-        <div class="feed-content">
-            <div class="footer-area">
-                <Footer {odfData} />
+        <div class="feed-area">
+            <div class="feed-area-div">
+                <GoodFeed
+                    autofocus
+                    tabindex="1"
+                    bind:goodFeed={valorFeed}
+                    on:message={callDispatch}
+                />
             </div>
-            <div class="feed-area">
-                <div class="feed-area-div">
-                    <GoodFeed
-                        autofocus
-                        tabindex="1"
-                        bind:goodFeed={valorFeed}
-                        on:message={checkPost}
-                    />
-                </div>
-                <div class="feed-area-div">
-                    <Bad tabindex="2" bind:valueOfBadFeed={badFeed}  on:message={checkPost} />
-                </div>
-                <div class="feed-area-div">
-                    <Missing tabindex="3" bind:missingFeed={missingFeed} on:message={checkPost} />
-                </div>
-                <div class="feed-area-div">
-                    <Rework tabindex="4" bind:reworkFeed={reworkFeed} on:message={checkPost} />
-                </div>
+            <div class="feed-area-div">
+                <Bad
+                    tabindex="2"
+                    bind:valueOfBadFeed={badFeed}
+                    on:message={callDispatch}
+                />
             </div>
+            <div class="feed-area-div">
+                <Missing tabindex="3" bind:missingFeed on:message={callDispatch} />
+            </div>
+            <div class="feed-area-div">
+                <Rework tabindex="4" bind:reworkFeed on:message={callDispatch} />
+            </div>
+        </div>
+        {#if pointString === "APONTAR"}
             <div class="buttonApontar">
                 <!-- svelte-ignore a11y-positive-tabindex -->
                 <a
                     disabled={isRequesting === true}
                     tabindex="5"
                     id="apontar"
-                    on:keypress|preventDefault={checkPost}
-                    on:click|preventDefault={checkPost}
+                    on:keypress|preventDefault={callDispatch}
+                    on:click|preventDefault={callDispatch}
                     type="submit"
                 >
                     <span />
                     <span />
                     <span />
                     <span />
-                    APONTAR
+                    {pointString}
                 </a>
             </div>
-        </div>
-    </div>
+        {/if}
 
-    {#await resultRefugo}
-        <div class="imageLoader">
-            <div class="loader">
-                <img src={imageLoader} alt="" />
-            </div>
-        </div>
-    {:then}
-        {#if showConfirm === true}
-            <div class="background">
-                <div class="header">
-                    <div class="closed">
-                        <h3>Apontamento com refugo</h3>
-                    </div>
-                    <select bind:value>
-                        {#each arrayMotives as item}
-                            <option>{item}</option>
-                        {/each}
-                    </select>
-                    <p>Supervisor</p>
-                    <input
-                        on:input={blockForbiddenChars}
-                        on:keypress={checkForSuper}
-                        bind:value={supervisor}
-                        autofocus
-                        class="supervisor"
-                        type="text"
-                        name="supervisor"
-                        id="supervisor"
-                    />
-                    <div class="modalFooter">
-                        <button on:keypress={close} on:click={close}
-                            >Fechar</button
-                        >
-                    </div>
-                </div>
+        {#if pointString !== "APONTAR"}
+            <div class="buttonApontar">
+                <!-- svelte-ignore a11y-positive-tabindex -->
+                <a
+                    disabled={isRequesting === true}
+                    tabindex="5"
+                    id="apontar"
+                    on:keypress|preventDefault={callDispatch}
+                    on:click|preventDefault={callDispatch}
+                    type="submit"
+                >
+                    <span />
+                    <span />
+                    <span />
+                    <span />
+                    {pointString}
+                </a>
             </div>
         {/if}
-    {/await}
+    </div>
+</div>
 
-   {#if message === messageQuery(46)}
-        <Supervisor titleSupervisor={message} subTitle={subTitle}  bind:supervisor={supervisor} on:message={callPost}/>
-    {/if}
-
-    {#if message === "Apontando apenas peças retrabalhadas, confirma ?" || message === 'Apontar apenas faltantes, confirma?' || message === "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?"}
-        <Supervisor titleSupervisor={message} subTitle={subTitle}  bind:supervisor={supervisor} on:message={checkForSuper}/>
-    {/if}
-
-    {#if message === "Máquina parada"}
-        <Supervisor titleSupervisor={message} subTitle={subTitle}  bind:supervisor={supervisor} on:message={checkStopMachine}/>
-    {/if}
-
-    {#if message === "Already pointed"}
+    <!-- {#if showConfirm === true}
         <div class="background">
             <div class="header">
                 <div class="closed">
-                    <h2>
-                        ODF apontada, finalize o processo.
-                    </h2>
+                    <h3>Apontamento com refugo</h3>
                 </div>
-                <button on:click={close} on:keypress={close}>Fechar</button>
-                <button on:keypress={closeRedirect} on:click={closeRedirect}
-                    >Continuar</button
-                >
+                <select bind:value={badFeedMotive}>
+                    {#each data.data.data.map((acc) => acc.DESCRICAO) ? data.data.data.map((acc) => acc.DESCRICAO) : ["PEÇA DANIFICADA"]  as item}
+                        <option>{item}</option>
+                    {/each}
+                </select>
+                <p>Supervisor</p>
+                <input
+                    on:input={blockForbiddenChars}
+                    on:keypress={checkForSuper}
+                    bind:value={supervisor}
+                    autofocus
+                    class="supervisor"
+                    type="text"
+                    name="supervisor"
+                    id="supervisor"
+                />
+                <div class="modalFooter">
+                    <button on:keypress={close} on:click={close}>Fechar</button>
+                </div>
             </div>
         </div>
-    {/if}
+    {/if} -->
 
-    {#if message && message !== messageQuery(0) && message !== messageQuery(46) && message !== 'Máquina parada' && message !== messageQuery(44) }
-        <ModalConfirmation on:message={close} message={message} title={message} on:message={close}/>
-    {/if}
+<!-- {#if message === messageQuery(46)}
+    <Supervisor
+        titleSupervisor={message}
+        {subTitle}
+        bind:supervisor
+        on:message={callDispatch}
+    />
+{/if}
 
-    {#if message === messageQuery(44) && returnValueAddress}
-        <div class="background">
-            <div class="header">
-                <div class="closed">
-                    <h2>
-                        Devolva a quantidade restante no : {returnValueAddress} 
-                    </h2>
-                </div>
-                <button on:keypress={closeRedirect} on:click={closeRedirect}
-                    >Continuar</button
-                >
+{#if message === "Apontando apenas peças retrabalhadas, confirma ?" || message === "Apontar apenas faltantes, confirma?" || message === "Apontando apenas peças retrabalhadas e peças faltantes, confirma ?"}
+    <Supervisor
+        titleSupervisor={message}
+        {subTitle}
+        bind:supervisor
+        on:message={checkForSuper}
+    />
+{/if}
+
+{#if message === "Máquina parada"}
+    <Supervisor
+        titleSupervisor={message}
+        {subTitle}
+        bind:supervisor
+        on:message={checkStopMachine}
+    />
+{/if}
+
+{#if message === "Already pointed"}
+    <div class="background">
+        <div class="header">
+            <div class="closed">
+                <h2>ODF apontada, finalize o processo.</h2>
             </div>
+            <button on:click={close} on:keypress={close}>Fechar</button>
+            <button on:keypress={closeRedirect} on:click={closeRedirect}
+                >Continuar</button
+            >
         </div>
-    {/if}
+    </div>
+{/if}
 
-    {#if address && address !== messageQuery(0)}
-        <div class="background">
-            <div class="header">
-                <div class="closed">
-                    <h2>
-                        Insira a quantidade apontada no : {address}
-                    </h2>
-                </div>
-                <button on:keypress={closeRedirect} on:click={closeRedirect}
-                    >Continuar</button
-                >
+{#if message && message !== messageQuery(0) && message !== messageQuery(46) && message !== "Máquina parada" && message !== messageQuery(44)}
+    <ModalConfirmation
+        on:message={close}
+        {message}
+        title={message}
+        on:message={close}
+    />
+{/if}
+
+{#if message === messageQuery(44) && returnValueAddress}
+    <div class="background">
+        <div class="header">
+            <div class="closed">
+                <h2>
+                    Devolva a quantidade restante no : {returnValueAddress}
+                </h2>
             </div>
+            <button on:keypress={closeRedirect} on:click={closeRedirect}
+                >Continuar</button
+            >
         </div>
-    {/if}
-{/await}
+    </div>
+{/if}
+
+{#if address && address !== messageQuery(0)}
+    <div class="background">
+        <div class="header">
+            <div class="closed">
+                <h2>
+                    Insira a quantidade apontada no : {address}
+                </h2>
+            </div>
+            <button on:keypress={closeRedirect} on:click={closeRedirect}
+                >Continuar</button
+            >
+        </div>
+    </div>
+{/if} -->
 
 <style>
-    h3 {
-        width: 100%;
-        font-size: 45px;
-        margin: 0%;
-        padding: 0%;
-        display: flex;
-        justify-content: left;
-        text-align: left;
-        text-align: left;
-    }
     .footer-area {
         display: flex;
         width: 100%;
@@ -383,12 +389,7 @@
         align-items: center;
         text-align: center;
     }
-    button {
-        letter-spacing: 0.5px;
-        width: 100%;
-        height: 28px;
-    }
-    .loader {
+    /* .loader {
         margin: 0%;
         position: relative;
         width: 10vw;
@@ -432,7 +433,7 @@
     option {
         font-size: 18px;
         background-color: #252525;
-    }
+    } */
 
     .buttonApontar {
         margin-top: 110px;
@@ -489,7 +490,7 @@
         box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
         border-radius: 6px;
     }
-    button {
+    /* button {
         display: flex;
         justify-content: right;
         text-align: right;
@@ -497,9 +498,9 @@
         border: none;
         background-color: transparent;
         color: white;
-    }
+    } */
 
-    .loader {
+    /* .loader {
         margin: 0%;
         position: relative;
         width: 10vw;
@@ -548,7 +549,7 @@
     option {
         width: 35px;
         background-color: #252525;
-    }
+    } */
     a {
         position: relative;
         display: inline-block;
@@ -648,7 +649,7 @@
         }
     }
 
-    .modalFooter {
+    /* .modalFooter {
         margin: 0%;
         padding: 0%;
         display: flex;
@@ -672,9 +673,9 @@
         text-align: center;
         border-radius: 10px;
         z-index: 9;
-    }
+    } */
 
-    .background {
+    /* .background {
         margin: 0%;
         padding: 0%;
         position: fixed;
@@ -707,7 +708,7 @@
         margin: 0%;
         padding: 0%;
         border-radius: 10px;
-    }
+    } */
     div {
         margin-left: 0%;
         padding: 0%;

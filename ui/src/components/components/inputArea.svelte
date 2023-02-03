@@ -2,6 +2,7 @@
     // @ts-nocheck
     import blockForbiddenChars from "../../utils/presanitize";
     import { createEventDispatcher } from "svelte";
+    
     export let titleInput;
     export let valueToBind;
 
@@ -19,14 +20,15 @@
     <div class="form-div">
         <div id="pop-up-badge">
             <div id="title">{titleInput}</div>
+            <!-- svelte-ignore a11y-autofocus -->
             <input
-                autocomplete="off"
                 autofocus
+                autocomplete="off"
+                bind:value={valueToBind}
                 on:keypress={callDispatch}
                 on:input|preventDefault={blockForbiddenChars}
                 onkeyup="this.value = this.value.toUpperCase()"
                 type="text"
-                bind:value={valueToBind}
             />
         </div>
     </div>

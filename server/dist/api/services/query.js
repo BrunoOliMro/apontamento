@@ -1,12 +1,8 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.selectQuery = void 0;
-const global_config_1 = require("../../global.config");
+const queryConnector_1 = require("../../queryConnector");
 const message_1 = require("./message");
-const mssql_1 = __importDefault(require("mssql"));
 const selectQuery = async (chosenOption, values) => {
     if (!values) {
         values = "";
@@ -39,18 +35,16 @@ const selectQuery = async (chosenOption, values) => {
         29: `SELECT TOP 1  SALDO FROM HISREAL WHERE 1 = 1 AND CODIGO = '${values.partCode}' ORDER BY DATA DESC`,
         30: `SELECT TOP 1 QTDE_LIB FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO WHERE 1 = 1 AND NUMERO_ODF = '${values.NUMERO_ODF}' AND CODIGO_MAQUINA = '${values.CODIGO_MAQUINA}' AND NUMERO_OPERACAO = '${values.NUMERO_OPERACAO}'`,
         31: `SELECT * FROM HISTORICO_ENDERECO WHERE 1 = 1 AND ODF = '${values.NUMERO_ODF}' AND NUMERO_OPERACAO = ${Number(values.NUMERO_OPERACAO)} ORDER BY DATAHORA DESC`,
-        32: `SELECT TOP 1 DATA_FIM_CONVERTIDA, NUMOPE, CODIGO_MAQUINA, NUMERO_ODF, DT_FIM_OP FROM VW_APP_SEQUENCIAMENTO_MAQUINA ORDER BY HORA_FIM ASC`,
+        32: `SELECT TOP 1 DATA_FIM_CONVERTIDA, NUMOPE, CODIGO_MAQUINA, NUMERO_ODF, DT_FIM_OP, * FROM VW_APP_SEQUENCIAMENTO_MAQUINA AS SM ORDER BY SM.DATA_FIM_CONVERTIDA ASC`,
+        33: `SELECT TOP 1 EE.CODIGO AS COD_PRODUTO, NULL AS COD_PRODUTO_EST,  CE.CODIGO, CE.ENDERECO,  ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE  FROM CST_CAD_ENDERECOS CE(NOLOCK) LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO) WHERE ISNULL(EE.QUANTIDADE,0) <= 0 AND CE.ENDERECO LIKE '5%' AND UPPER(EE.CODIGO) LIKE '${values.CODIGO_PECA}%' AND CE.COMPRIMENTO > ${values.comprimento} AND CE.LARGURA > ${values.largura} AND CE.PESO > ${values.peso} ORDER BY CE.ENDERECO ASC`,
+        34: `SELECT TOP 1 EE.CODIGO AS COD_PRODUTO, NULL AS COD_PRODUTO_EST,  CE.CODIGO, CE.ENDERECO,  ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE  FROM CST_CAD_ENDERECOS CE(NOLOCK) LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO) WHERE ISNULL(EE.QUANTIDADE,0) <= 0 AND CE.ENDERECO LIKE '5%' AND UPPER(EE.CODIGO) IS NULL AND CE.COMPRIMENTO > ${values.comprimento} AND CE.LARGURA > ${values.largura} AND CE.PESO > ${values.peso} ORDER BY CE.ENDERECO ASC`,
+        35: `SELECT TOP 1 EE.CODIGO AS COD_PRODUTO, NULL AS COD_PRODUTO_EST,  CE.CODIGO, CE.ENDERECO,  ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE  FROM CST_CAD_ENDERECOS CE(NOLOCK) LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO) WHERE ISNULL(EE.QUANTIDADE,0) <= 0 AND CE.ENDERECO LIKE '7%' AND UPPER(EE.CODIGO) LIKE '${values.CODIGO_PECA}%' AND CE.COMPRIMENTO > ${values.comprimento} AND CE.LARGURA > ${values.largura} AND CE.PESO > ${values.peso} ORDER BY CE.ENDERECO ASC`,
+        36: `SELECT TOP 1 EE.CODIGO AS COD_PRODUTO, NULL AS COD_PRODUTO_EST,  CE.CODIGO, CE.ENDERECO,  ISNULL(EE.QUANTIDADE,0) AS QUANTIDADE  FROM CST_CAD_ENDERECOS CE(NOLOCK) LEFT JOIN CST_ESTOQUE_ENDERECOS EE (NOLOCK) ON UPPER(CE.ENDERECO) = UPPER(EE.ENDERECO) WHERE ISNULL(EE.QUANTIDADE,0) <= 0 AND CE.ENDERECO LIKE '7%' AND UPPER(EE.CODIGO) IS NULL AND CE.COMPRIMENTO > ${values.comprimento} AND CE.LARGURA > ${values.largura} AND CE.PESO > ${values.peso} ORDER BY CE.ENDERECO ASC`,
     };
     try {
-        const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-        const data = await connection.query(`${codes[String(chosenOption)]}`).then((result) => result.recordset);
-        await connection.close();
-        if (data.length > 0) {
-            return { message: (0, message_1.message)(1), data: data };
-        }
-        else {
-            return { message: (0, message_1.message)(1), data: (0, message_1.message)(33) };
-        }
+        const conn = await (0, queryConnector_1.poolConnection)();
+        const data = await conn.request().query(`${codes[String(chosenOption)]}`).then((result) => result.recordset) || null;
+        return data;
     }
     catch (error) {
         console.log('Error on selectQuery ', error);

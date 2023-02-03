@@ -6,6 +6,7 @@ import { odfIndex } from '../utils/odfIndex';
 import { RequestHandler } from 'express';
 
 export const odfData: RequestHandler = async (req, res) => {
+    var t0 = performance.now();
     const variables = await inicializer(req)
     const response: any = {
         odfSelecionada: '',
@@ -24,13 +25,17 @@ export const odfData: RequestHandler = async (req, res) => {
             return res.json({ status: message(1), message: message(0), data: message(0), code: resultVerifyCodeNote.code })
         }
 
-        const i = await odfIndex(resultQuery.data, '00' + variables.cookies.NUMERO_OPERACAO.replaceAll(' ', '0'));
+        const i = await odfIndex(resultQuery, '00' + variables.cookies.NUMERO_OPERACAO.replaceAll(' ', '0'));
         if (i === null || i === undefined) {
             return res.json({ status: message(1), message: message(0), data: message(0), code: resultVerifyCodeNote.code })
         }
 
-        response.odfSelecionada = resultQuery.data![i];
+        response.odfSelecionada = resultQuery![i];
         response.odfSelecionada.FUNCIONARIO = variables.cookies.FUNCIONARIO;
+
+        var t1 = performance.now();
+        console.log("Call ODFDATA.TS took: " , t1 - t0);
+
         return res.json({ status: message(1), message: message(1), data: response.odfSelecionada, code: resultVerifyCodeNote.code })
     } else {
         return res.json({ status: message(1), message: message(0), data: message(33), code: resultVerifyCodeNote.code });

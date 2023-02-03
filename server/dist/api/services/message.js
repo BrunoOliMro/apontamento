@@ -51,6 +51,7 @@ const message = (chosenOption) => {
         47: 'Sem cookies',
         48: 'Preencha todos os campos',
         49: 'Pointed',
+        50: 'Apontamento iniciado',
     };
     return response[String(chosenOption)];
 };

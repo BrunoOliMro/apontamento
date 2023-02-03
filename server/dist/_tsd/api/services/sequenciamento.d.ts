@@ -1,21 +1,9 @@
 export declare const sequenciamentoView: (variables: any) => Promise<{
-    data: {
-        message: string | undefined;
-        data: import("mssql").IRecordSet<any>;
-    } | {
-        message: string | undefined;
-        data: string | undefined;
-    };
+    data: any;
     message: string | undefined;
     machine: any;
 } | {
-    data: {
-        message: string | undefined;
-        data: import("mssql").IRecordSet<any>;
-    } | {
-        message: string | undefined;
-        data: string | undefined;
-    };
+    data: any;
     message: string | undefined;
     machine?: never;
 }>;

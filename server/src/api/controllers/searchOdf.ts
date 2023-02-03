@@ -9,14 +9,14 @@ import { message } from '../services/message';
 import { odfIndex } from '../utils/odfIndex';
 import { update } from '../services/update';
 import { RequestHandler } from 'express';
-import { sequenciamentoView } from '../services/sequenciamento';
+// import { sequenciamentoView } from '../services/sequenciamento';
 
 export const searchOdf: RequestHandler = async (req, res) => {
     const variables = await inicializer(req)
     const barcode = unravelBarcode(variables.body.barcode) || null
 
     if (!barcode) {
-        return res.json({ status: message(1), message: message(0), data: message(33) })
+        return res.json({ status: message(1), message: message(6), data: message(33) })
     }
 
     barcode!.data!.FUNCIONARIO! = variables.cookies.FUNCIONARIO
@@ -36,8 +36,8 @@ export const searchOdf: RequestHandler = async (req, res) => {
     }
 
     // Seleciona todos os itens da Odf
-    let groupOdf = await selectQuery(0, barcode.data)
-    let odf = groupOdf.data
+    let odf = await selectQuery(0, barcode.data)
+    // let odf = groupOdf
 
     if (!odf) {
         return res.json({ status: message(1), message: message(6), data: message(8) })
@@ -61,7 +61,6 @@ export const searchOdf: RequestHandler = async (req, res) => {
         odf[i].QTDE_LIB = (odf[i - 1].QTD_BOAS || 0) - (odf[i].QTD_BOAS || 0) - (odf[i].QTD_REFUGO || 0) - (odf[i].QTD_RETRABALHADA || 0) - (odf[i].QTD_FALTANTE || 0)
     }
 
-    console.log('odf[i].QTDE_LIB', odf[i].QTDE_LIB);
     const resultVerifyCodeNote = await verifyCodeNote(barcode.data, [1, 3, 6, 9])
 
     if (!odf[i].QTDE_LIB || odf[i].QTDE_LIB <= 0) {
@@ -69,17 +68,17 @@ export const searchOdf: RequestHandler = async (req, res) => {
         return res.json({ status: message(1), message: message(11), data: message(11), code: resultVerifyCodeNote.code || message(33) })
     }
 
-    const verifySequenciamento: any = await sequenciamentoView(barcode!.data!)
-    console.log('verifySequenciamento', verifySequenciamento);
-    if(!verifySequenciamento!.message){
-        return res.json({status: message(1), message: 'Não é a máquina a operar', machine: verifySequenciamento.machine})
-    }
+    // Verifica se a maquina correta a produzir na vez e caso nao seja para a máquina pelo connect
+    // const verifySequenciamento: any = await sequenciamentoView(barcode!.data!)
+    // if(!verifySequenciamento!.message){
+    //     return res.json({status: message(1), message: 'Não é a máquina a operar', machine: verifySequenciamento.machine})
+    // }
 
     // Generate cookie that is gonna be used later;
     barcode.data.QTDE_LIB = odf[i].QTDE_LIB
     barcode.data.CODIGO_PECA = odf[i].CODIGO_PECA
     const resultComponents = await selectToKnowIfHasP(barcode)
-
+    console.log('resultComponents', resultComponents);
     if (resultComponents.message === message(13) || resultComponents.message === message(14) || resultComponents.message === message(15)) {
         barcode.data.QTDE_LIB = resultComponents.quantidade < odf[i].QTDE_LIB ? resultComponents.quantidade : odf[i].QTDE_LIB
         odf[i].condic = resultComponents.condic
@@ -98,7 +97,7 @@ export const searchOdf: RequestHandler = async (req, res) => {
     if (!barcode.data.QTDE_LIB) {
         return res.json({ status: message(1), message: message(11), data: message(33), code: resultVerifyCodeNote.code || message(33) })
     } else {
-        return res.json({ status: message(1), message: message(1), data: message(1), code: resultVerifyCodeNote.code || message(33) })
+        return res.json({ status: message(1), message: message(1), data: message(50), code: resultVerifyCodeNote.code || message(33) })
     }
 }
 

@@ -1,7 +1,6 @@
 <script>
   import messageQuery from "../../utils/checkMessage";
 
-  let imageLoader = "/images/axonLoader.gif";
   let horaInicio = "";
   let horaFinal = "";
 
@@ -14,7 +13,6 @@
   let anoFim = "";
 
   export let odfData;
-  console.log('Footer.svelte:', odfData);
 
   if (!odfData.codData.data) {
     odfData.codData.data = "S/I";
@@ -61,13 +59,6 @@
   // }
 </script>
 
-{#await odfData.codData.data}
-  <div class="image-loader">
-    <div class="loader">
-      <img src={imageLoader} alt="" />
-    </div>
-  </div>
-{:then}
   <main class="main">
     <div class="text-area">
       <div class="title">Início</div>
@@ -85,11 +76,6 @@
       </div>
     </div>
   </main>
-{/await}
-
-<!-- {#if message !== ""}
-  <h1>{message}</h1>
-{/if} -->
 
 <style>
   .data-time {

@@ -26,13 +26,7 @@ const update = async (chosenOption, values) => {
         const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
         const data = await connection.query(`${codes[String(chosenOption)]}`).then((result) => result.rowsAffected);
         await connection.close();
-        if (data[0] > 0) {
-            return (0, message_1.message)(1);
-        }
-        else {
-            console.log('Error on update');
-            return (0, message_1.message)(17);
-        }
+        return data;
     }
     catch (error) {
         console.log('Error on Update', error);

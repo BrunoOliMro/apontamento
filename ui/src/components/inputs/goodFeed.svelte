@@ -1,22 +1,18 @@
 <script>
     // @ts-nocheck
     import blockForbiddenChars from "../../utils/presanitize";
+    import { createEventDispatcher } from "svelte";
+
     let title = "BOAS";
     export let goodFeed;
-
-    import { createEventDispatcher } from "svelte";
 
     const dispatch = createEventDispatcher();
 
     async function callDispatch(event) {
-        if(event.key === 'Enter'){
-            dispatch('submit', {
-                text: 'Manda pae',
-                goodFeed: goodFeed
-            })
-        } else {
+        if (event.key === "Enter") {
             dispatch("message", {
-                text: "goodFeed!",
+                eventType: event,
+                text: "Send",
                 goodFeed: goodFeed,
             });
         }
@@ -27,14 +23,14 @@
     <div class="title">
         <p>{title}</p>
     </div>
-    <div >
+    <div>
         <!-- svelte-ignore a11y-positive-tabindex -->
         <!-- svelte-ignore a11y-autofocus -->
+        <!-- on:input={callDispatch} -->
         <input
+            on:input={blockForbiddenChars}
             on:keypress={callDispatch}
             bind:value={goodFeed}
-            on:input={callDispatch}
-            on:input={blockForbiddenChars}
             tabindex="1"
             autofocus
             type="text"

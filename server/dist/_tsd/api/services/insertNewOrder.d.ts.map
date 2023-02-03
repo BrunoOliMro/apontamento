@@ -1,1 +1,1 @@
-{"version":3,"file":"insertNewOrder.d.ts","sourceRoot":"","sources":["../../../../src/api/services/insertNewOrder.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,MAAM,OAAO,CAAC;AAI1B,eAAO,MAAM,kBAAkB,WAAkB,MAAM,wDAetD,CAAA"}
+{"version":3,"file":"insertNewOrder.d.ts","sourceRoot":"","sources":["../../../../src/api/services/insertNewOrder.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,MAAM,OAAO,CAAC;AAI1B,eAAO,MAAM,kBAAkB,cAAsB,GAAG,gBAAgB,MAAM,wDAmB7E,CAAA"}

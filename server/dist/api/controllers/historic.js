@@ -15,8 +15,8 @@ const historic = async (req, res) => {
     if (resultVerifyCodeNote.accepted) {
         const detailHistoric = await (0, query_1.selectQuery)(5, variables.cookies);
         const generalHistoric = await (0, query_1.selectQuery)(6, variables.cookies);
-        if (detailHistoric.data) {
-            for (const iterator of detailHistoric.data) {
+        if (detailHistoric) {
+            for (const iterator of detailHistoric) {
                 if (iterator.BOAS > 0) {
                     obj.push(iterator);
                 }
@@ -24,13 +24,13 @@ const historic = async (req, res) => {
                     obj.push(iterator);
                 }
             }
-            detailHistoric.data.reduce((acc, iterator) => {
+            detailHistoric.reduce((acc, iterator) => {
                 return acc + iterator.BOAS + iterator.REFUGO;
             }, 0);
         }
         let objRes = {
-            resourceDetail: detailHistoric.data,
-            resource: generalHistoric.data,
+            resourceDetail: detailHistoric,
+            resource: generalHistoric,
             message: (0, message_1.message)(34)
         };
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(34), data: objRes });

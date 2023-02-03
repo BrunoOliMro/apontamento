@@ -1,5 +1,5 @@
 export const message = (chosenOption: number) => {
-    const response: { [k: string]: string }  = {
+    const response: { [key: string]: string }  = {
         0: 'Algo deu errado',
         1: 'Success',
         2: 'Ocorreu um erro, tente novamente...',
@@ -48,6 +48,7 @@ export const message = (chosenOption: number) => {
         47: 'Sem cookies', 
         48: 'Preencha todos os campos',
         49: 'Pointed',
+        50: 'Apontamento iniciado',
     }
 
     return response[String(chosenOption)]

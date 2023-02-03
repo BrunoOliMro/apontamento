@@ -5,6 +5,7 @@ import { message } from '../services/message';
 import { RequestHandler } from 'express';
 
 export const status: RequestHandler = async (req, res) => {
+    var t0 = performance.now()
     const variables = await inicializer(req)
 
     if (!variables.cookies) {
@@ -16,8 +17,10 @@ export const status: RequestHandler = async (req, res) => {
     if (resultVerifyCodeNote.accepted) {
         const lookForTimer = await selectQuery(25, variables.cookies)
         let timeLeft
-        if(lookForTimer.data){
-            timeLeft = Number(lookForTimer.data[0].EXECUT * variables.cookies.QTDE_LIB! * 1000 - (Number(new Date().getTime() - resultVerifyCodeNote.time))) || 0
+        var t1 = performance.now()
+        console.log('Status.ts', t1- t0);
+        if(lookForTimer){
+            timeLeft = Number(lookForTimer[0].EXECUT * variables.cookies.QTDE_LIB! * 1000 - (Number(new Date().getTime() - resultVerifyCodeNote.time))) || 0
         } else {
             timeLeft = 6000;
         }

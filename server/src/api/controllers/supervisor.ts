@@ -13,9 +13,9 @@ export const supervisor: RequestHandler = async (req, res) => {
 
     const lookForBadge = await selectQuery(10, variables.body)
 
-    if(lookForBadge.data![0]){
+    if(lookForBadge![0]){
         res.cookie('supervisor', encrypted('verificado'), {httpOnly: true})
-        return res.json({ status: message(1), message: message(33), data: lookForBadge.data![0].CRACHA, supervisor: lookForBadge.data })
+        return res.json({ status: message(1), message: message(33), data: lookForBadge![0].CRACHA, supervisor: lookForBadge })
     } else {
         return res.json({ status: message(1), message: message(33), data:  message(33), supervisor: message(33)})
     }

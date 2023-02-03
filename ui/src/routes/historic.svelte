@@ -1,23 +1,24 @@
 <script>
+  // @ts-ignore
   // @ts-nocheck
-  import TableHistorico from "../components/Tables/TableHistorico.svelte";
+  import HistoricTable from "../components/table/HistoricTable.svelte";
   import messageQuery from "../utils/checkMessage";
   let back = "/images/icons8-go-back-24.png";
   let imageLoader = "/images/axonLoader.gif";
   let subtitle = "Histórico de Apontamento";
   let urlString = `/api/v1/historic`;
   let messageOnBtn = "Detalhado";
-  let result = getHistorico();
+  let result = getHis();
   let historic = [];
   let generalData = false;
   let detailData = true;
   let message = "";
 
-  async function getHistorico() {
+  async function getHis() {
     const res = await fetch(urlString);
     historic = await res.json();
-    if(historic.data.resourceDetail === messageQuery(0)){
-      return message = "Não há exibir histórico"
+    if (historic.data.resourceDetail === messageQuery(0)) {
+      return (message = "Não há exibir histórico");
     }
     if (historic.message === messageQuery(40)) {
       message = historic.message;
@@ -35,13 +36,21 @@
       generalData = true;
     }
   }
+
+  function handleKeydown(e) {
+    if (e.key === "Escape") {
+      window.location.href = messageQuery(17);
+    }
+  }
 </script>
+
+<svelte:window on:keydown={handleKeydown} />
 
 <main>
   <nav class="breadcrumb" aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item">
-        <a href="/#/codigobarras/apontamento">
+        <a href="/#/barcode/tools/point/">
           <img src={back} alt="" /> Apontamento
         </a>
       </li>
@@ -82,7 +91,7 @@
           {#if detailData === true}
             <tbody id="table-body">
               {#each historic.data.resource as column}
-                <TableHistorico dados={column} />
+                <HistoricTable dados={column} />
               {/each}
             </tbody>
           {/if}
@@ -90,17 +99,11 @@
           {#if generalData === true}
             <tbody id="table-body">
               {#each historic.data.resourceDetail as column}
-                <TableHistorico dados={column} />
+                <HistoricTable dados={column} />
               {/each}
             </tbody>
           {/if}
         </table>
-      </div>
-    {/if}
-
-    {#if message !== messageQuery(0) && message === "Não há exibir histórico" && historic.data.resourceDetail === messageQuery(0)}
-      <div class="message">
-        <h3>{message}</h3>
       </div>
     {/if}
   {/await}
@@ -142,17 +145,7 @@
     background-color: white;
     color: black;
   }
-  .message {
-    height: 200px;
-    width: 100vw;
-    display: flex;
-    flex-direction: row;
-    position: relative;
-    left: 0;
-    top: 0;
-    align-items: center;
-    justify-content: center;
-  }
+
   a {
     color: #252525;
     font-size: 20px;

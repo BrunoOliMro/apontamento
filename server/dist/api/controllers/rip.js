@@ -23,14 +23,14 @@ const rip = async (req, res) => {
     variables.cookies.badFeed = null;
     variables.cookies.motives = null;
     const ripDetails = await (0, query_1.selectQuery)(14, variables.cookies);
-    if (ripDetails.data.length > 0) {
-        res.cookie('cstNumope', ripDetails.data.map((acc) => acc.CST_NUMOPE));
-        res.cookie('numCar', ripDetails.data.map((acc) => acc.NUMCAR));
-        res.cookie('descricao', ripDetails.data.map((acc) => acc.DESCRICAO));
-        res.cookie('especif', ripDetails.data.map((acc) => acc.ESPECIF));
-        res.cookie('instrumento', ripDetails.data.map((acc) => acc.INSTRUMENTO));
-        res.cookie('lie', ripDetails.data.map((acc) => acc.LIE));
-        res.cookie('lse', ripDetails.data.map((acc) => acc.LSE));
+    if (ripDetails.length > 0) {
+        res.cookie('cstNumope', ripDetails.map((acc) => acc.CST_NUMOPE));
+        res.cookie('numCar', ripDetails.map((acc) => acc.NUMCAR));
+        res.cookie('descricao', ripDetails.map((acc) => acc.DESCRICAO));
+        res.cookie('especif', ripDetails.map((acc) => acc.ESPECIF));
+        res.cookie('instrumento', ripDetails.map((acc) => acc.INSTRUMENTO));
+        res.cookie('lie', ripDetails.map((acc) => acc.LIE));
+        res.cookie('lse', ripDetails.map((acc) => acc.LSE));
     }
     if (resultVerifyCodeNote.accepted) {
         const insertedPointCode = await (0, insert_1.insertInto)(variables.cookies);
@@ -39,13 +39,13 @@ const rip = async (req, res) => {
             return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33), code: (0, message_1.message)(33) });
         }
         else {
-            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: ripDetails.data, code: resultVerifyCodeNote.code });
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: ripDetails, code: resultVerifyCodeNote.code });
         }
     }
     else {
         const resultVerifyCodeNote = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [5]);
         if (resultVerifyCodeNote.accepted) {
-            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: ripDetails.data, code: resultVerifyCodeNote.code });
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: ripDetails, code: resultVerifyCodeNote.code });
         }
         else {
             return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33), code: resultVerifyCodeNote.code });

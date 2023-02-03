@@ -21,14 +21,15 @@ const tools = async (req, res) => {
     variables.cookies.motives = null;
     variables.cookies.tempoDecorrido = null;
     const codeNoteResult = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [6, 8, 9]);
+    console.log('codeNoteResult', codeNoteResult);
     if (codeNoteResult.code === (0, message_1.message)(38)) {
         toolsImg = await (0, query_1.selectQuery)(20, variables.cookies);
         console.log('toolsImg', toolsImg);
-        if (!toolsImg.data) {
+        if (!toolsImg) {
             return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(16), data: (0, message_1.message)(33) });
         }
-        else if (toolsImg.data) {
-            for await (const [i, record] of toolsImg.data.entries()) {
+        else if (toolsImg) {
+            for await (const [i, record] of toolsImg.entries()) {
                 const rec = await record;
                 const path = await pictures_1.pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], toolString, String(i));
                 result.push(path);
@@ -40,22 +41,24 @@ const tools = async (req, res) => {
             return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(16) });
         }
     }
+    console.log('aqui será');
     if (codeNoteResult.accepted || codeNoteResult.code === (0, message_1.message)(17)) {
         const inserted = await (0, insert_1.insertInto)(variables.cookies);
-        if (inserted === (0, message_1.message)(1)) {
+        console.log('inserted', inserted);
+        if (inserted.length > 0) {
             toolsImg = await (0, query_1.selectQuery)(20, variables.cookies);
             console.log('toolsImg', toolsImg);
-            if (!toolsImg.data) {
+            if (!toolsImg) {
                 return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(16), data: (0, message_1.message)(33) });
             }
-            else if (toolsImg.data) {
-                for await (const [i, record] of toolsImg.data.entries()) {
+            else if (toolsImg) {
+                for await (const [i, record] of toolsImg.entries()) {
                     const rec = await record;
                     const path = await pictures_1.pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], toolString, String(i));
                     result.push(path);
                 }
                 console.log('result', result);
-                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: result });
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: result || (0, message_1.message)(33) });
             }
             else {
                 return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(16) });

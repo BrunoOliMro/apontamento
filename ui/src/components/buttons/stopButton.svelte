@@ -1,13 +1,17 @@
 <script>
-    export let machineStop;
     import { createEventDispatcher } from "svelte";
+
+    export let machineStop;
+
     const dispatch = createEventDispatcher();
+    
     function messageDispatch() {
         dispatch("message", {
-            text: "Hello!",
+            text: "Open stop button!",
         });
     }
 </script>
+
 
 <!-- svelte-ignore a11y-positive-tabindex -->
 {#if machineStop === true}

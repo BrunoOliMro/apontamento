@@ -1,5 +1,5 @@
 import { decrypted } from "../utils/decryptedOdf"
-import { sanitize } from "../utils/sanitize"
+import { sanitize } from "../utils/sanitize";
 
 export const inicializer = async (req: any) => {
     var response: any = {

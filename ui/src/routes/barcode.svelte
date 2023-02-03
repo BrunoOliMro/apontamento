@@ -1,14 +1,15 @@
 <script>
   // @ts-nocheck
   import ModalConfirmation from "../../src/components/modal/modalConfirmation.svelte";
-  import { verifyStringLenght } from "../utils/verifyLength";
-  import post from "../utils/postFunction";
-  import messageQuery from "../utils/checkMessage";
-  import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
-  import ReturnBarcode from "../components/components/returnBarcode.svelte";
-  import InputArea from "../components/components/inputArea.svelte";
-  import ViewAddress from "../components/components/viewAddress.svelte";
   import CallViewAddress from "../components/components/callViewAddress.svelte";
+  import ReturnBarcode from "../components/components/returnBarcode.svelte";
+  import ViewAddress from "../components/components/viewAddress.svelte";
+  import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
+  import InputArea from "../components/components/inputArea.svelte";
+  import { verifyStringLenght } from "../utils/verifyLength";
+  import messageQuery from "../utils/checkMessage";
+  import post from "../utils/postFunction";
+  const apiConnect = `http://192.168.97.108:3000/back/api/v1/stop/machine`;
   const apiCallMotiveReturn = `/api/v1/returnMotives`;
   const returnedValueApi = `/api/v1/returnedValue`;
   const back = "/images/icons8-go-back-24.png";
@@ -18,35 +19,32 @@
   const urlBagde = `/api/v1/badge`;
   const barcodeUrl = `/api/v1/odf`;
   const title = "APONTAMENTO";
+  const titleBarcode = "CÓDIGO DE BARRAS DA ODF";
+  const titleEmployee = `COLABORADOR`;
+  const continueee = "Continuar";
+  const addressApi = `/api/v1/address`;
+  let breadcrumbModal = false;
+  let barcodeModal = false;
   let returnModal = false;
   let badgeModal = true;
-  let barcodeModal = false;
-  let breadcrumbModal = false;
   let loader = false;
-  let barcodeReturn = "";
-  let barcode = "";
-  let message = "";
+  let barcodeReturn = messageQuery(0);
+  let barcode = messageQuery(0);
+  let message = messageQuery(0);
+  let resultAddress = null;
+  let address = false;
+  let resultRedirect;
+  callReturnMotive();
   let valueStorage;
   let supervisor;
   let quantity;
+  let connect;
   let motive;
   let motives;
   let badge;
-  const titleBarcode = "CÓDIGO DE BARRAS DA ODF";
-  const titleEmployee = `COLABORADOR`;
-  let resultRedirect;
-  const addressApi = `/api/v1/address`;
-  let address = false;
-  let resultAddress = null;
- const apiConnect = `http://192.168.97.108:3000/back/api/v1/stop/machine`
-  callReturnMotive();
-  // callConnect ()
-  let connect;
 
-
-  async function callConnect (connect){
-    const res = await post(apiConnect,  {connect} );
-    console.log('res', res);
+  async function callConnect(connect) {
+    await post(apiConnect, { connect });
   }
 
   async function callReturnMotive() {
@@ -71,71 +69,44 @@
     if (verifyBarcode === messageQuery(1)) {
       loader = true;
       const res = await post(barcodeUrl, { barcode });
-      if (res) {
-        loader = false;
+      loader = false;
 
-        if (res.status === messageQuery(1)) {
-          console.log('barcode', res);
+      console.log("barcode", res);
 
-          if(res.status && res.message === 'Não é a máquina a operar'){
-            connect = { message: res.message, machine : res.machine}
-            return callConnect(connect)
-          }
+      if (res.message === messageQuery(36)) {
+        return (message = messageQuery(36));
+      }
 
-          if (res.data === messageQuery(36) && res.code === messageQuery(10)) {
-            return (window.location.href = messageQuery(18));
-          }
+      if (res.status && res.message === "Não é a máquina a operar") {
+        connect = { message: res.message, machine: res.machine };
+        return callConnect(connect);
+      }
 
-          if (res.code === messageQuery(10)) {
-            return (window.location.href = messageQuery(18));
-          }
+      if (
+        (res.data === messageQuery(36) && res.code === messageQuery(10)) ||
+        res.code === messageQuery(11)
+      ) {
+        return (window.location.href = messageQuery(18));
+      }
 
-          if (res.code === messageQuery(16)) {
-            return (window.location.href = messageQuery(17));
-          }
+      if (res.code === messageQuery(16) || res.code === messageQuery(27)) {
+        return (window.location.href = messageQuery(17));
+      }
 
-          if (
-            res.code === messageQuery(0) &&
-            res.message === messageQuery(39)
-          ) {
-            return (message = messageQuery(39));
-          }
+      if (res.code === messageQuery(0) && res.message === messageQuery(39)) {
+        return (message = messageQuery(39));
+      }
 
-          if (res.code === messageQuery(10) || res.code === messageQuery(11)) {
-            return (window.location.href = messageQuery(18));
-          }
+      if (
+        res.code === messageQuery(12) ||
+        res.code === messageQuery(13) ||
+        res.code === messageQuery(15)
+      ) {
+        return (message = res.data);
+      }
 
-          if (res.code === messageQuery(36)) {
-            return (message = messageQuery(36));
-          }
-
-          if (
-            res.code === messageQuery(12) ||
-            res.code === messageQuery(13) ||
-            res.code === messageQuery(15)
-          ) {
-            return (window.location.href = messageQuery(19));
-          }
-
-          if (res.code === messageQuery(27)) {
-            return (window.location.href = messageQuery(17));
-          }
-
-          if (res.code !== messageQuery(0)) {
-            return (message = res.code);
-          }
-        } else if (
-          res.code === messageQuery(12) ||
-          res.code === messageQuery(13) ||
-          res.code === messageQuery(14) ||
-          res.code === messageQuery(15)
-        ) {
-          window.location.href = messageQuery(19);
-        } else if (res.code === messageQuery(16)) {
-          window.location.href = messageQuery(17);
-        } else if (res.code !== messageQuery(0)) {
-          message = res.message;
-        }
+      if (res.code !== messageQuery(0)) {
+        return (message = res.code);
       }
     }
   }
@@ -153,26 +124,21 @@
 
       const res = await post(urlBagde, { badge });
 
-      if (res) {
-        loader = false;
-        if (res.status === messageQuery(1)) {
-          if (res.message === messageQuery(5)) {
-            return (message = messageQuery(6));
-          }
-
-          barcodeModal = true;
-          badgeModal = false;
-          breadcrumbModal = true;
-        } else if (res.message !== messageQuery(0)) {
-          returnModal = false;
-          message = res.message;
-        } else {
-          message = messageQuery(4);
+      loader = false;
+      if (res.status === messageQuery(1)) {
+        if (res.message === messageQuery(5)) {
+          return (message = messageQuery(6));
         }
+
+        barcodeModal = true;
+        badgeModal = false;
+        breadcrumbModal = true;
+      } else if (res.message !== messageQuery(0)) {
+        returnModal = false;
+        message = res.message;
+      } else {
+        message = messageQuery(4);
       }
-    } else if (resultVerifyBadge === messageQuery(5)) {
-      returnModal = false;
-      message = resultVerifyBadge;
     } else if (resultVerifyBadge === messageQuery(8)) {
       returnModal = false;
       message = resultVerifyBadge;
@@ -187,6 +153,10 @@
       barcodeModal = true;
       returnModal = false;
     }
+  }
+
+  function callRe() {
+    window.location.href = messageQuery(19);
   }
 
   async function showBarcodeAddress() {
@@ -205,15 +175,14 @@
       breadcrumbModal = true;
       badgeModal = false;
       returnModal = false;
-      message = "";
+      message = messageQuery(0);
       barcodeModal = true;
       address = false;
       resultAddress = null;
       address = false;
-      resultAddress = "";
-      supervisor = "";
-      badge = "",
-      barcode = ""
+      resultAddress = messageQuery(0);
+      supervisor = messageQuery(0);
+      (badge = messageQuery(0)), (barcode = messageQuery(0));
     }
 
     const resultVerifyBadge = await verifyStringLenght(
@@ -224,11 +193,11 @@
     );
 
     if (resultVerifyBadge) {
-      if(barcode){
-        loader = true
+      if (barcode) {
+        loader = true;
         resultAddress = await post(addressApi, { barcode, supervisor });
         address = false;
-        loader = false
+        loader = false;
       }
     }
   }
@@ -243,16 +212,16 @@
 
     loader = true;
     const res = await post(returnedValueApi, {
-      valueStorage: !valueStorage ? "" : valueStorage,
-      supervisor: !supervisor ? "" : supervisor,
-      quantity: !quantity ? "" : quantity,
-      barcodeReturn: !barcodeReturn ? "" : barcodeReturn,
-      motives: !motives ? "" : motives,
+      valueStorage: !valueStorage ? messageQuery(0) : valueStorage,
+      supervisor: !supervisor ? messageQuery(0) : supervisor,
+      quantity: !quantity ? messageQuery(0) : quantity,
+      barcodeReturn: !barcodeReturn ? messageQuery(0) : barcodeReturn,
+      motives: !motives ? messageQuery(0) : motives,
     });
-    barcodeReturn = "";
-    supervisor = "";
-    quantity = "";
-    valueStorage = "";
+    barcodeReturn = messageQuery(0);
+    supervisor = messageQuery(0);
+    quantity = messageQuery(0);
+    valueStorage = messageQuery(0);
     returnModal = false;
     if (res.message !== messageQuery(0)) {
       loader = false;
@@ -268,9 +237,9 @@
     badgeModal = true;
     returnModal = false;
     resultAddress = null;
-    barcode = "";
-    message = "";
-    (supervisor = ""((badge = ""))), (barcode = "");
+    message = messageQuery(0);
+    (supervisor = messageQuery(0)((badge = messageQuery(0)))),
+      (barcode = messageQuery(0));
     const res = await fetch(redirectRoute);
     resultRedirect = await res.json();
     if (resultRedirect.message === messageQuery(1)) {
@@ -279,26 +248,40 @@
   }
 
   function close() {
-    (badge = ""), (barcode = "");
+    (badge = messageQuery(0)), (barcode = messageQuery(0));
     loader = true;
     returnModal = false;
-    message = "";
+    message = messageQuery(0);
     location.reload();
   }
 
-  function closeModal () {
-    barcode = '';
-    supervisor = '';
-    resultAddress = '';
-    if(address === false){
-      address = true
+  function closeModal() {
+    barcode = messageQuery(0);
+    supervisor = messageQuery(0);
+    resultAddress = messageQuery(0);
+    if (address === false) {
+      address = true;
     } else {
-      address = false
+      address = false;
     }
   }
 
-
+  function handleKeydown(e) {
+    if (e.key === "Escape") {
+      address = false;
+      breadcrumbModal = false;
+      barcodeModal = false;
+      returnModal = false;
+      badgeModal = true;
+      loader = false;
+      message = '';
+      badge = '';
+      barcode = '';
+    }
+  }
 </script>
+
+<svelte:window on:keydown={handleKeydown} />
 
 <main>
   {#if breadcrumbModal === true}
@@ -374,9 +357,8 @@
   {/if}
 
   {#if resultAddress && resultAddress !== ""}
-    <ViewAddress odfData={resultAddress} on:message={closeModal}/>
+    <ViewAddress odfData={resultAddress} on:message={closeModal} />
   {/if}
-
 
   {#if returnModal === true && barcodeModal === false}
     <ReturnBarcode
@@ -390,7 +372,16 @@
     />
   {/if}
 
-  {#if message && message !== messageQuery(0)}
+  {#if message && message === messageQuery(51)}
+    <ModalConfirmation
+      title={message}
+      {message}
+      btnTitle={continueee}
+      on:message={callRe}
+    />
+  {/if}
+
+  {#if message && message !== messageQuery(0) && message !== messageQuery(51)}
     <ModalConfirmation title={message} {message} on:message={close} />
   {/if}
 </main>

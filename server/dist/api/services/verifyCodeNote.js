@@ -23,15 +23,15 @@ const verifyCodeNote = async (values, acceptableStrings) => {
         accepted: (0, message_1.message)(33),
     };
     let resultCodes = await (0, query_1.selectQuery)(23, values);
-    if (resultCodes.data.length > 0) {
-        response.time = resultCodes.data[0].DATAHORA;
+    if (resultCodes.length > 0) {
+        response.time = resultCodes[0].DATAHORA;
         response.employee = values.FUNCIONARIO;
-        if (values.FUNCIONARIO !== resultCodes.data[0].USUARIO && resultCodes.data[0].CODAPONTA === 4) {
-            response.employee = resultCodes.data[0].USUARIO;
+        if (values.FUNCIONARIO !== resultCodes[0].USUARIO && resultCodes[0].CODAPONTA === 4) {
+            response.employee = resultCodes[0].USUARIO;
         }
-        response.code = codes[String(resultCodes.data[0].CODAPONTA)];
+        response.code = codes[String(resultCodes[0].CODAPONTA)];
         acceptableStrings?.forEach(acc => {
-            if (Number(resultCodes.data[0].CODAPONTA) === acc) {
+            if (Number(resultCodes[0].CODAPONTA) === acc) {
                 response.accepted = (0, message_1.message)(1);
             }
         });

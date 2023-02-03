@@ -51,17 +51,17 @@ const returnedValue = async (req, res) => {
     }
     const valorTotal = Number(goodFeed + badFeed);
     const groupOdf = await (0, query_1.selectQuery)(28, body.data);
-    const i = await (0, odfIndex_1.odfIndex)(groupOdf.data, String(body.data.NUMERO_OPERACAO));
-    const lastIndex = groupOdf.data.findIndex((element) => element.QTDE_APONTADA === 0) - 1;
+    const i = await (0, odfIndex_1.odfIndex)(groupOdf, String(body.data.NUMERO_OPERACAO));
+    const lastIndex = groupOdf.findIndex((element) => element.QTDE_APONTADA === 0) - 1;
     if (lastIndex !== i) {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(43), data: (0, message_1.message)(33), code: codeNoteResult.code });
     }
-    let odf = groupOdf.data[i];
-    if (i === groupOdf.data.length - 1) {
-        odf = groupOdf.data[groupOdf.data.length - 1];
+    let odf = groupOdf[i];
+    if (i === groupOdf.length - 1) {
+        odf = groupOdf[groupOdf.length - 1];
     }
-    if (lastIndex === groupOdf.data.length - 1) {
-        odf = groupOdf.data[groupOdf.data.length - 1];
+    if (lastIndex === groupOdf.length - 1) {
+        odf = groupOdf[groupOdf.length - 1];
     }
     if (goodFeed) {
         if (!odf.QTD_BOAS || odf.QTD_BOAS <= 0) {
@@ -96,15 +96,15 @@ const returnedValue = async (req, res) => {
         variables.cookies.NUMERO_ODF = body.data.NUMERO_ODF;
         variables.cookies.NUMERO_OPERACAO = body.data.NUMERO_OPERACAO.replaceAll(' ', '').replaceAll('000', '');
         variables.cookies.CODIGO_MAQUINA = body.data.CODIGO_MAQUINA;
-        variables.cookies.REVISAO = groupOdf.data[i].REVISAO;
-        variables.cookies.QTDE_LIB = groupOdf.data[i].QTDE_LIB;
+        variables.cookies.REVISAO = groupOdf[i].REVISAO;
+        variables.cookies.QTDE_LIB = groupOdf[i].QTDE_LIB;
         variables.cookies.valorTotal = valorTotal;
-        variables.cookies.valorApontado = groupOdf.data[i].QTDE_APONTADA - valorApontado;
-        if (selectSuper.data.length > 0) {
+        variables.cookies.valorApontado = groupOdf[i].QTDE_APONTADA - valorApontado;
+        if (selectSuper.length > 0) {
             const resultHasP = await (0, query_1.selectQuery)(22, body.data);
-            const execut = resultHasP.data.map((element) => element.EXECUT);
-            const codigoFilho = resultHasP.data.map((item) => item.NUMITE);
-            const processItens = resultHasP.data.map((item) => item.NUMSEQ).filter((element) => element === String(String(body.data['NUMERO_OPERACAO']).replaceAll(' ', '')).replaceAll('000', ''));
+            const execut = resultHasP.map((element) => element.EXECUT);
+            const codigoFilho = resultHasP.map((item) => item.NUMITE);
+            const processItens = resultHasP.map((item) => item.NUMSEQ).filter((element) => element === String(String(body.data['NUMERO_OPERACAO']).replaceAll(' ', '')).replaceAll('000', ''));
             if (processItens.length > 0) {
                 const updateStorageQuery = [];
                 codigoFilho.forEach((element, i) => {

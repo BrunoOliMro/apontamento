@@ -28,7 +28,7 @@ export const stopSupervisor: RequestHandler = async (req, res) => {
 
     if (resultVerifyCodeNote.accepted) {
         const resource = await selectQuery(10, variables.body)
-        if (resource.data) {
+        if (resource) {
             const insertPointCode = await insertInto(variables.cookies)
             if (insertPointCode) {
                 return res.status(200).json({ status: message(1), message: message(1), data: message(33) })

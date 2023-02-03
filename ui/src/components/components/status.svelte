@@ -1,81 +1,67 @@
 <script>
     // @ts-nocheck
-    const imageLoader = `/images/axonLoader.gif`;
     const searchIcon = `/images/search.png`;
-    let maxTimeSpend = null;
     let greenBar = true;
     let blueBar = false;
     let redBar = false;
     export let odfData;
-    let timeSpend = 0;
-    let image = [];
 
     if (!odfData.codData.data) {
         odfData.codData.data = "";
-    } else {
-        maxTimeSpend = odfData.prodTime.data;
-        image = odfData.image.data;
     }
 
+    var timeSpend = 0;
     setInterval(() => {
-        let menorFif = (Number(50) * Number(maxTimeSpend)) / Number(100);
-        let maiorFif = (Number(75) * Number(maxTimeSpend)) / Number(100);
-        let excedido = (Number(100) * Number(maxTimeSpend)) / Number(100);
+        let menorFif =
+            (Number(50) * Number(odfData.prodTime.data)) / Number(100);
+        let maiorFif =
+            (Number(75) * Number(odfData.prodTime.data)) / Number(100);
+        let excedido =
+            (Number(100) * Number(odfData.prodTime.data)) / Number(100);
 
         timeSpend++;
 
         if (timeSpend <= menorFif) {
             redBar = false;
             blueBar = false;
-            // modalSuper = false;
             greenBar = true;
         } else if (timeSpend >= menorFif && timeSpend <= maiorFif) {
             greenBar = false;
             blueBar = true;
             redBar = false;
-            // modalSuper = false;
         } else if (timeSpend >= maiorFif) {
             redBar = true;
             greenBar = false;
             blueBar = false;
         } else if (timeSpend >= excedido) {
-            // modalSuper = true;
             greenBar = false;
             redBar = true;
-        } else if (maxTimeSpend <= 0 || maxTimeSpend === null) {
-            // modalSuper = true;
+        } else if (
+            odfData.prodTime.data <= 0 ||
+            odfData.prodTime.data === null
+        ) {
             redBar = true;
-        } else {
-            // modalSuper = false;
         }
     }, 1000);
 </script>
 
-{#await odfData.codData.data}
-    <div class="image-loader">
-        <div class="loader">
-            <img src={imageLoader} alt="" />
-        </div>
+<div class="conj">
+    {#if greenBar === true}
+        <div class="green" id="timeSpend" />
+    {/if}
+    {#if blueBar === true}
+        <div class="blue" id="timeSpend" />
+    {/if}
+    {#if redBar === true}
+        <div class="red" id="timeSpend" />
+    {/if}
+    <div class="icon-container">
+        <a class="out" href="/#/barcode/tools/point/drawing">
+            <img class="search-icon" src={searchIcon} alt="" />
+        </a>
+        <img class="img" src={String(odfData.image.data)} alt="" />
     </div>
-{:then}
-    <div class="conj">
-        {#if greenBar === true}
-            <div class="green" id="tempoDecorrido" />
-        {/if}
-        {#if blueBar === true}
-            <div class="blue" id="tempoDecorrido" />
-        {/if}
-        {#if redBar === true}
-            <div class="red" id="tempoDecorrido" />
-        {/if}
-        <div class="icon-container">
-            <a class="out" href="/#/desenho/">
-                <img class="search-icon" src={searchIcon} alt="" />
-            </a>
-            <img class="img" src={String(image)} alt="" />
-        </div>
-    </div>
-{/await}
+</div>
 
 <style>
     .icon-container {
@@ -123,7 +109,7 @@
         background-color: blue;
     }
 
-    h3 {
+    /* h3 {
         font-size: 20px;
         margin: 0px, 0px, 0px, 0px;
         padding: 0px;
@@ -132,7 +118,7 @@
         text-align: left;
         justify-content: left;
         display: flex;
-    }
+    } */
     /* h2 {
         font-size: 32px;
     }
@@ -197,7 +183,7 @@
         margin-right: 0%;
         padding: 0%;
     } */
-    .loader {
+    /* .loader {
         margin: 0%;
         position: relative;
         width: 10vw;
@@ -221,8 +207,8 @@
         align-items: center;
         justify-content: center;
         z-index: 99999999999999999999999999999999999999999999999999999999;
-    }
-    #tempoDecorrido {
+    } */
+    #timeSpend {
         margin: 0%;
         padding: 0%;
         border-radius: 6px 0px 0px 6px;

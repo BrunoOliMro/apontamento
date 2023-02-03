@@ -1,30 +1,18 @@
 <script>
-    const imageLoader = "/images/axonLoader.gif";
     const title = "Quantidade liberada: ";
-    let quantityAvailableProd;
     export let odfData;
 
     if (!odfData.codData.data) {
-        odfData.codData.data = "";
-    } else {
-        quantityAvailableProd = odfData.codData.data.QTDE_LIB;
+        odfData.codData.data = "S/I";
     }
 </script>
 
-{#await odfData.codData.data}
-    <div class="image-loader">
-        <div class="loader">
-            <img src={imageLoader} alt="" />
-        </div>
-    </div>
-{:then}
     <div>
         <div class="prod-area">
             {title}
-            <p>{quantityAvailableProd}</p>
+            <p>{odfData.codData.data.QTDE_LIB ?  odfData.codData.data.QTDE_LIB : 'S/I'}</p>
         </div>
     </div>
-{/await}
 
 <style>
     p {

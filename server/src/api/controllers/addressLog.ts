@@ -14,9 +14,5 @@ export const addressLog: RequestHandler = async (req, res) => {
 
     const data = await selectQuery(31, barcode.data)
 
-    if(data.data){
-        return res.json({status: message(1), message: message(1), data: data.data})
-    } else {
-        return res.json({status: message(1), message: message(1), data: data.data})
-    }
+    return res.json({status: message(1), message: message(1), data: data})
 }

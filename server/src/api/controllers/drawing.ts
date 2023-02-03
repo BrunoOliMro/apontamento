@@ -18,7 +18,7 @@ export const drawing: RequestHandler = async (req, res) => {
 
     if (resultVerify.accepted) {
         const result: any = await selectQuery(19, variables.cookies)
-        for await (const [i, record] of result.data!.entries()) {
+        for await (const [i, record] of result!.entries()) {
             const rec = await record;
             const path = await pictures.getPicturePath(rec['NUMPEC'], rec['IMAGEM'], variables.drawingString, String(i));
             valuesResult.push(path);

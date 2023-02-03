@@ -1,9 +1,8 @@
 <script>
-    import TableAddress from "../Tables/tableAddress.svelte";
+    // @ts-ignore
+    import AddressTable from "../table/addressTable.svelte";
     import { createEventDispatcher } from "svelte";
     export let odfData = null;
-    // @ts-ignore
-    let totalPages = Math.round(odfData.data.length / 11);
     let currentPage = 1;
     let minValue = 0;
     let maxValue = 11;
@@ -95,7 +94,7 @@
                         </tr>
 
                         {#each odfData.data as address, i}
-                            <TableAddress
+                            <AddressTable
                                 index={i + 1}
                                 min={minValue}
                                 max={maxValue}
@@ -121,10 +120,10 @@
                         on:keypress={callPreviousPage}>Anterior</button
                     >
 
-                    <span>{currentPage}</span>-<span>{totalPages}</span>
+                    <span>{currentPage}</span>-<span>{Math.round(odfData.data.length / 11)}</span>
 
                     <button
-                        disabled={currentPage === totalPages}
+                        disabled={currentPage === (Math.round(odfData.data.length / 11))}
                         class="btn"
                         on:click={callNextPage}
                         on:keypress={callNextPage}>Proxima</button

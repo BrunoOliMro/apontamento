@@ -44,12 +44,12 @@ export const ripPost: RequestHandler = async (req, res) => {
             const updatePcpProgResult = await update(0, variables.cookies)
             if (updatePcpProgResult === message(1)) {
                 await cookieCleaner(res)
-                return res.json({ status: message(1), message: message(1), data: message(33), code: pointCode.code, qtdelib: resultSelect.data![0].QTDE_LIB })
+                return res.json({ status: message(1), message: message(1), data: message(33), code: pointCode.code, qtdelib: resultSelect![0].QTDE_LIB })
             } else {
-                return res.json({ status: message(1), message: message(33), data: message(33), code: pointCode.code, qtdelib: resultSelect.data![0].QTDE_LIB })
+                return res.json({ status: message(1), message: message(33), data: message(33), code: pointCode.code, qtdelib: resultSelect![0].QTDE_LIB })
             }
         } else {
-            return res.json({ status: message(1), message: message(0), data: message(0), code: pointCode.code, qtdelib: resultSelect.data![0].QTDE_LIB })
+            return res.json({ status: message(1), message: message(0), data: message(0), code: pointCode.code, qtdelib: resultSelect![0].QTDE_LIB })
         }
     } else {
         for (const [key, value] of Object.entries(variables.body.values)) {
@@ -68,7 +68,7 @@ export const ripPost: RequestHandler = async (req, res) => {
             try {
                 const resultUpdatePcpProg = await update(0, variables.cookies)
                 if (resultUpdatePcpProg !== message(1)) {
-                    return res.json({ status: message(1), message: message(33), data: message(33), code: pointCode.code, qtdelib: resultSelect.data![0].QTDE_LIB })
+                    return res.json({ status: message(1), message: message(33), data: message(33), code: pointCode.code, qtdelib: resultSelect![0].QTDE_LIB })
                 } else {
                     const resultSplitLines: { [k: string]: any; } = Object.keys(objectSanitized).reduce((acc: any, iterator: any) => {
                         const [col, lin] = iterator.split('-')

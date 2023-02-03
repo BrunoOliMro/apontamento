@@ -42,14 +42,14 @@ const ripPost = async (req, res) => {
             const updatePcpProgResult = await (0, update_1.update)(0, variables.cookies);
             if (updatePcpProgResult === (0, message_1.message)(1)) {
                 await (0, clearCookie_1.cookieCleaner)(res);
-                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33), code: pointCode.code, qtdelib: resultSelect.data[0].QTDE_LIB });
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33), code: pointCode.code, qtdelib: resultSelect[0].QTDE_LIB });
             }
             else {
-                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33), code: pointCode.code, qtdelib: resultSelect.data[0].QTDE_LIB });
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33), code: pointCode.code, qtdelib: resultSelect[0].QTDE_LIB });
             }
         }
         else {
-            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(0), code: pointCode.code, qtdelib: resultSelect.data[0].QTDE_LIB });
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(0), code: pointCode.code, qtdelib: resultSelect[0].QTDE_LIB });
         }
     }
     else {
@@ -68,7 +68,7 @@ const ripPost = async (req, res) => {
             try {
                 const resultUpdatePcpProg = await (0, update_1.update)(0, variables.cookies);
                 if (resultUpdatePcpProg !== (0, message_1.message)(1)) {
-                    return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33), code: pointCode.code, qtdelib: resultSelect.data[0].QTDE_LIB });
+                    return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33), code: pointCode.code, qtdelib: resultSelect[0].QTDE_LIB });
                 }
                 else {
                     const resultSplitLines = Object.keys(objectSanitized).reduce((acc, iterator) => {

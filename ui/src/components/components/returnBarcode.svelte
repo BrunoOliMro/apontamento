@@ -95,7 +95,8 @@
 
         <div class="line-btn">
             <!-- svelte-ignore a11y-positive-tabindex -->
-            <p class="btn"
+            <p
+                class="btn"
                 tabindex="19"
                 on:keypress|preventDefault={callClose}
                 on:click|preventDefault={callClose}
@@ -103,7 +104,8 @@
                 Fechar
             </p>
             <!-- svelte-ignore a11y-positive-tabindex -->
-            <p class="btn"
+            <p
+                class="btn"
                 tabindex="18"
                 on:keypress|preventDefault={callDispatch}
                 on:click|preventDefault={callDispatch}
@@ -115,7 +117,7 @@
 </div>
 
 <style>
-    select{
+    select {
         font-size: 30px;
         width: 275px;
         height: 40px;
@@ -126,16 +128,16 @@
         justify-content: center;
         align-items: center;
     }
-    option{
+    option {
         border-radius: 10px;
     }
-    p{
+    p {
         margin: 1%;
         padding: 0%;
         font-size: 35px;
         font-weight: 500;
     }
-    input{
+    input {
         border-radius: 8px;
         width: 300px;
         height: 40px;
@@ -147,7 +149,7 @@
         align-items: center;
     }
 
-    .btn{
+    .btn {
         font-size: 22px;
         margin: 1%;
         padding: 0%;
@@ -165,12 +167,12 @@
         color: black;
     }
 
-    .btn:hover{
+    .btn:hover {
         color: #fff;
         background-color: #252525;
         transition: all 0.7s;
     }
-    .line-btn{
+    .line-btn {
         display: flex;
         margin: 1%;
         padding: 0%;
@@ -180,7 +182,7 @@
         text-align: center;
     }
 
-    .line{
+    .line {
         margin: 1%;
         padding: 0%;
         display: flex;

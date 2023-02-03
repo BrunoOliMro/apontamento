@@ -3,17 +3,20 @@
     import blockForbiddenChars from "../../utils/presanitize";
     import { createEventDispatcher } from "svelte";
 
-    export let supervisor = '';
-    export let titleSupervisor = '';
+    export let supervisor = "";
+    export let titleSupervisor = "";
     export let subTitle = "";
 
     const dispatch = createEventDispatcher();
 
     async function makeRequest(event) {
-        dispatch("message", {
-            eventType: event,
-            text: "Check for super",
-        });
+        console.log('Make Request: ', event);
+        if (event.key === "Enter" || event.type === "click") {
+            dispatch("message", {
+                eventType: event,
+                text: "Check for super",
+            });
+        }
     }
 
     async function close(event) {
@@ -35,6 +38,7 @@
             autocomplete="off"
             autofocus
             on:input|preventDefault={blockForbiddenChars}
+            on:keypress={makeRequest}
             bind:value={supervisor}
             onkeyup="this.value = this.value.toUpperCase()"
             type="text"
@@ -42,8 +46,8 @@
         <!-- svelte-ignore a11y-positive-tabindex -->
         <div class="line-btn">
             <button
+                tabindex="3"
                 class="btn"
-                tabindex="20"
                 on:click={close}
                 on:keypress={close}>Voltar</button
             >
@@ -58,12 +62,12 @@
 </div>
 
 <style>
-    .title-supervisor{
+    .title-supervisor {
         font-size: 45px;
         margin: 1%;
         padding: 0%;
     }
-    .subTitle-supervisor{
+    .subTitle-supervisor {
         font-size: 32px;
         margin: 1%;
         padding: 0%;

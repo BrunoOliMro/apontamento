@@ -1,11 +1,11 @@
 <script>
     // @ts-nocheck
-
     import blockForbiddenChars from "../../utils/presanitize";
     import { createEventDispatcher } from "svelte";
 
     export let barcodeAddress;
     export let supervisorToCallAddress;
+
     const dispatch = createEventDispatcher();
 
     async function redirect(event) {

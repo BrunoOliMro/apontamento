@@ -1,22 +1,22 @@
 <script>
   // @ts-nocheck
-  let loader = true;
-  import ModalConfirmation from "../components/modal/modalConfirmation.svelte";
+  // import ModalConfirmation from "../components/modal/modalConfirmation.svelte";
+  import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
   import Message from "../components/components/message.svelte";
   import messageQuery from "../utils/checkMessage";
-  import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
-  let selectedToolsApi = `/api/v1/ferselecionadas`;
-  let back = "/images/icons8-go-back-24.png";
-  let imageLoader = "/images/axonLoader.gif";
-  let toolsApi = `/api/v1/tools`;
-  let continuer = `Continuar`;
-  let title = "Colaborador";
+  const selectedToolsApi = `/api/v1/ferselecionadas`;
+  const back = "/images/icons8-go-back-24.png";
+  const imageLoader = "/images/axonLoader.gif";
+  const toolsApi = `/api/v1/tools`;
+  const continuer = `Continuar`;
+  const title = "Colaborador";
   let selectedTools = [];
+  let loader = true;
   let message = "";
   let tools = [];
   let array = [];
   let added = 0;
-  let result = getTools();
+  const result = getTools();
 
   async function callTools() {
     loader = true;
@@ -32,7 +32,6 @@
     if (selectedTools.status === messageQuery(1)) {
       if (selectedTools.message === messageQuery(1)) {
         window.location.href = messageQuery(17);
-        // location.reload();
       } else if (selectedTools.message !== messageQuery(0)) {
         message = selectedTools.message;
       }
@@ -45,36 +44,26 @@
     tools = await res.json();
     console.log("tools", tools);
     loader = false;
-    if (tools.status === messageQuery(1)) {
-      if (
-        tools.message === messageQuery(32) ||
-        tools.message === messageQuery(27) ||
-        tools.message === messageQuery(28) ||
-        tools.message === messageQuery(29) ||
-        tools.message === messageQuery(0) ||
-        tools.message === messageQuery(30) ||
-        tools.message === messageQuery(31)
-      ) {
-        message = messageQuery(32);
-      }
 
-      if (tools === messageQuery(5)) {
-        loader = true;
-        window.location.href = messageQuery(17);
-        message = messageQuery(32);
-      }
+    if (tools.data.length > 0) {
+      return (message = messageQuery(1));
+    }
 
-      if (tools === messageQuery(33)) {
-        window.location.href = messageQuery(17);
-        location.reload();
-        loader = false;
-      }
-    } else {
-      message = messageQuery(4);
+    if (
+      tools.message === messageQuery(32) ||
+      tools.message === messageQuery(27) ||
+      tools.message === messageQuery(28) ||
+      tools.message === messageQuery(29) ||
+      tools.message === messageQuery(0) ||
+      tools.message === messageQuery(30) ||
+      tools.message === messageQuery(31) ||
+      tools.message === messageQuery(1)
+    ) {
+      message = messageQuery(32);
     }
   }
 
-  function checkIfclicked(column, imgId) {
+  async function checkIfclicked(column, imgId) {
     if (!array.includes(column)) {
       added += 1;
       array.push(column);
@@ -87,16 +76,24 @@
     }
   }
 
-  function close() {
-    window.location.href = messageQuery(20);
-    location.reload();
-  }
+  // function close() {
+  //   window.location.href = messageQuery(20);
+  //   location.reload();
+  // }
 
-  function redirectToBarcode() {
+  async function redirectToBarcode() {
     loader = true;
     window.location.href = messageQuery(20);
   }
+
+  async function handleKeydown(e) {
+    if (e.key === "Escape") {
+      window.location.href = messageQuery(20);
+    }
+  }
 </script>
+
+<svelte:window on:keydown={handleKeydown} />
 
 {#if loader === true}
   <div class="image-loader">
@@ -106,31 +103,14 @@
   </div>
 {/if}
 
-<!-- <Breadcrumb src={back} {titleBreadcrumb} /> -->
 
 <div class="breadcrumb">
   <Breadcrumb
     imgResource={back}
     titleBreadcrumb={title}
-    
     on:message={redirectToBarcode}
   />
 </div>
-<!-- <nav class="breadcrumb" aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item">
-      <a href="/#/codigobarras"><img src={back} alt="" />Colaborador</a>
-    </li>
-  </ol>
-</nav> -->
-
-{#if loader === true}
-  <div class="image-loader">
-    <div class="loader">
-      <img src={imageLoader} alt="" />
-    </div>
-  </div>
-{/if}
 
 {#await result}
   <div class="image-loader">
@@ -140,7 +120,7 @@
   </div>
 {:then}
   <div class="content">
-    {#if tools.data && tools.data !== messageQuery(0) && message === messageQuery(0)}
+    {#if tools.data.length > 0 && message === messageQuery(1)}
       <h3>Selecione as ferramentas</h3>
       <div class="itens">
         {#each tools.data as column, i}
@@ -160,7 +140,7 @@
 {/await}
 
 {#if message && message === messageQuery(32)}
-<!-- subTitle={continue} -->
+  <!-- subTitle={continue} -->
   <Message
     titleInMessage={message}
     btnInMessage={continuer}
@@ -168,9 +148,9 @@
   />
 {/if}
 
-{#if message && message !== messageQuery(0) && message !== messageQuery(32)}
+<!-- {#if message && message !== messageQuery(0) && message !== messageQuery(32) && message !== messageQuery(1)}
   <ModalConfirmation on:message={close} />
-{/if}
+{/if} -->
 
 <style>
   .breadcrumb {

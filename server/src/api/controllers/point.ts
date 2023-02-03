@@ -9,14 +9,13 @@ import { insertInto } from '../services/insert';
 import { message } from '../services/message';
 import { update } from '../services/update';
 import { RequestHandler } from 'express';
-import { sqlConfig } from '../../global.config'
-import mssql from 'mssql';
 // import { decodedBuffer } from '../utils/decodeOdf';
 // var decodedOdfNumber = Number(decodedBuffer(String(req.cookies['encodedOdfNumber'])))
 // var decodedOperationNumber = Number(decodedBuffer(String(req.cookies['encodedOperationNuber'])))
 // var decodedMachineCode = String(decodedBuffer(String(req.cookies['encodedMachineCode'])))
 
 export const point: RequestHandler = async (req, res) => {
+    var t0 = performance.now();
     const variables = await inicializer(req)
 
     if (!variables.body) {
@@ -31,8 +30,6 @@ export const point: RequestHandler = async (req, res) => {
 
     const totalValue = (Number(variables.body.valorFeed) || 0) + (Number(variables.body.badFeed) || 0) + (Number(variables.body.reworkFeed) || 0) + (Number(variables.body.missingFeed) || 0);
     const released = Number(variables.cookies.QTDE_LIB)! - totalValue
-    const resultSelectPcpProg = await selectQuery(8, variables.cookies)
-    const valuesFromHisaponta = await selectQuery(9, variables.cookies)
     const startProd = new Date(resultVerifyCodeNote.time).getTime()
     const finalProdTimer = Number(new Date().getTime() - startProd) || null
     variables.body.valorApontado = totalValue
@@ -48,6 +45,7 @@ export const point: RequestHandler = async (req, res) => {
     variables.cookies.badFeed = variables.body.badFeed || 0;
     variables.cookies.missingFeed = variables.body.missingFeed || 0;
     variables.cookies.reworkFeed = variables.body.reworkFeed || 0;
+
     if (!totalValue) {
         return res.json({ status: message(1), message: message(0), data: message(33), code: resultVerifyCodeNote.code, address: message(33), returnValueAddress: message(33) })
     }
@@ -65,16 +63,24 @@ export const point: RequestHandler = async (req, res) => {
     else if (variables.body.badFeed! > 0) {
         // Se houver refugo, verifica se o supervisor esta correto
         if (!variables.body.supervisor) {
+            console.log('provalmente aqui');
             return res.json({ status: message(1), message: message(0), data: message(33), code: resultVerifyCodeNote.code, address: message(33), returnValueAddress: message(33) })
         }
         const findSupervisor = await selectQuery(10, variables.body)
-        if (!findSupervisor.message) {
+        if (findSupervisor.length <= 0) {
             return res.json({ status: message(1), message: message(17), data: message(33), code: resultVerifyCodeNote.code, address: message(33), returnValueAddress: message(33) })
         }
     }
 
+    let t3 = performance.now();
+    console.log("Call Variables in point.ts took: " + (t3 - t0) + " milliseconds.");
+
+
+    var t4 = performance.now();
+
+    const valuesFromHisaponta = await selectQuery(9, variables.cookies)
     // Verificar os usuarios
-    if (variables.cookies.FUNCIONARIO !== valuesFromHisaponta.data![0].USUARIO) {
+    if (variables.cookies.FUNCIONARIO !== valuesFromHisaponta![0].USUARIO) {
         variables.cookies.arrayDeCodAponta = [4, 5, 6];
         variables.cookies.descriptionArrat = ['Fin Prod.', 'Rip Ini.', 'Rip Fin.']
         variables.cookies.goodEnd = null
@@ -99,44 +105,59 @@ export const point: RequestHandler = async (req, res) => {
         }
     }
 
-    var resFromChildren: any = ''
+    var t5 = performance.now();
+    console.log("Call t5 and t4 took: ", (t5 - t4));
+
+
+    // A PRINCIPIO O MAIS LENTO É AQUI
+    var t6 = performance.now();
     // Caso haja 'P' faz update na quantidade de peças dos filhos
     if (variables.cookies.condic === 'P') {
+        // Insert loop to log every address in odf
         variables.cookies.totalValue = totalValue
-        resFromChildren = await getChildrenValuesBack(variables, req)
+        await getChildrenValuesBack(variables, req) || '';
     }
+    var t9 = performance.now();
+    console.log('t6 e t9', t9 - t6);
+    // ATE AQUI  
 
-    if (variables.cookies.totalValue < Number(variables.cookies.QTDE_LIB)!) {
-        
-    }
 
+    var t11 = performance.now()
     // Caso tenha retrabalhas apontados ou faltantes, faz insert em NOVA_ORDEM
     if (variables.body.reworkFeed! > 0 || variables.body.missingFeed! > 0) {
-        const newOrderString = `INSERT INTO NOVA_ORDEM (NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_LIB, QTDE_APONTADA, QTD_REFUGO, QTD_BOAS, QTD_RETRABALHADA, QTD_FALTANTE, CODIGO_PECA, CODIGO_CLIENTE, USUARIO, REVISAO) VALUES('${variables.cookies.NUMERO_ODF}', '${variables.cookies.NUMERO_OPERACAO}', '${variables.cookies.CODIGO_MAQUINA}', ${resultSelectPcpProg.data![0].QTDE_ODF}, ${released},${totalValue}, ${variables.body.badFeed || null}, ${variables.body.valorFeed || null},  ${variables.body.reworkFeed || null}, ${variables.body.missingFeed || null}, '${variables.cookies.CODIGO_PECA}', '${resultSelectPcpProg.data![0].CODIGO_CLIENTE}', '${variables.cookies.FUNCIONARIO}', '${variables.cookies.REVISAO}')`
-        await createNewOrder(variables.cookies.NUMERO_ODF, variables.cookies.NUMERO_OPERACAO, variables.cookies.CODIGO_MAQUINA, variables.body.reworkFeed, variables.body.missingFeed, variables.body.valorFeed, variables.body.badFeed, totalValue, resultSelectPcpProg.data![0].QTDE_ODF, resultSelectPcpProg.data![0].CODIGO_CLIENTE, variables.cookies.CODIGO_PECA)
-        await insertIntoNewOrder(newOrderString)
+        const resultSelectPcpProg = await selectQuery(8, variables.cookies)
+        await createNewOrder(variables.cookies.NUMERO_ODF, variables.cookies.NUMERO_OPERACAO, variables.cookies.CODIGO_MAQUINA, variables.body.reworkFeed, variables.body.missingFeed, variables.body.valorFeed, variables.body.badFeed, totalValue, resultSelectPcpProg![0].QTDE_ODF, resultSelectPcpProg![0].CODIGO_CLIENTE, variables.cookies.CODIGO_PECA)
+        await insertIntoNewOrder(variables, 0)
     }
+    var t12 = performance.now()
+    console.log('t12 e t11', t12 - t11);
 
+    var t15 = performance.now()
     var address: any;
     if ('00' + String(variables.cookies.NUMERO_OPERACAO!.replaceAll(' ', '')) === '00999') {
         address = await getAddress(totalValue, variables, req)
     }
 
-    if (variables.cookies.condic === 'P') {
-        // Insert loop to log every address in odf
-        const insertEveryAddress: string[] = []
-        // Insert to HISTORICO_ENDERECO
-        variables.cookies.childCode.split(',').forEach((element: string) => {
-            insertEveryAddress.push(`INSERT INTO HISTORICO_ENDERECO (DATAHORA, ODF, QUANTIDADE, CODIGO_PECA, CODIGO_FILHO, ENDERECO_ATUAL, STATUS, NUMERO_OPERACAO) VALUES (GETDATE(), '${variables.cookies.NUMERO_ODF}', ${Number(variables.cookies.goodFeed)} ,'${variables.cookies.CODIGO_PECA}', '${element}', '${ !resFromChildren.returnValueAddress ? message(33) : resFromChildren.returnValueAddress.address[0].ENDERECO }', 'APONTADO', '${variables.cookies.NUMERO_OPERACAO}')`)
-        });
-        const connection = await mssql.connect(sqlConfig);
-        await connection.query(insertEveryAddress.join('\n')).then(result => result.rowsAffected)
+    var resFromChildren: any = ''
+    if (variables.cookies.totalValue < Number(variables.cookies.QTDE_LIB)) {
+        resFromChildren = await getAddress(variables.cookies.totalValue - Number(variables.cookies.QTDE_LIB), variables, req)
     }
-    console.log('OU AQUIII', address);
-    // console.log('resFromChildren.returnValueAddress', !resFromChildren.hasOwnProperty('returnValueAddress')  ? message(33) : resFromChildren.returnValueAddress.address[0].ENDERECO );
-    console.log('aaa', !resFromChildren.returnValueAddress ? message(33) : resFromChildren.returnValueAddress.address[0].ENDERECO);
 
+    var t16 = performance.now()
+    console.log('ADDREESS: ', t16 - t15);
+
+    console.log('address', address);
+    console.log('resFromChildren', resFromChildren);
+
+    //  A SEGUNDA PARTE MAIS LENTA DA ROTA
+    var t7 = performance.now()
     await update(3, variables.body)
     await insertInto(variables.cookies)
+    var t8 = performance.now()
+    console.log('T7 e T8 took: ', t8 - t7);
+    // ATE AQUI
+
+    var t1 = performance.now();
+    console.log("Call Point.ts took: ", t1 - t0);
     return res.json({ status: message(1), message: message(1), data: message(33), code: message(49), address: !address ? message(33) : address, returnValueAddress: !resFromChildren.returnValueAddress ? message(33) : resFromChildren.returnValueAddress.address[0].ENDERECO })
 }

@@ -1,7 +1,4 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.point = void 0;
 const valuesFromChildren_1 = require("../services/valuesFromChildren");
@@ -14,9 +11,8 @@ const query_1 = require("../services/query");
 const insert_1 = require("../services/insert");
 const message_1 = require("../services/message");
 const update_1 = require("../services/update");
-const global_config_1 = require("../../global.config");
-const mssql_1 = __importDefault(require("mssql"));
 const point = async (req, res) => {
+    var t0 = performance.now();
     const variables = await (0, variableInicializer_1.inicializer)(req);
     if (!variables.body) {
         return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
@@ -27,8 +23,6 @@ const point = async (req, res) => {
     }
     const totalValue = (Number(variables.body.valorFeed) || 0) + (Number(variables.body.badFeed) || 0) + (Number(variables.body.reworkFeed) || 0) + (Number(variables.body.missingFeed) || 0);
     const released = Number(variables.cookies.QTDE_LIB) - totalValue;
-    const resultSelectPcpProg = await (0, query_1.selectQuery)(8, variables.cookies);
-    const valuesFromHisaponta = await (0, query_1.selectQuery)(9, variables.cookies);
     const startProd = new Date(resultVerifyCodeNote.time).getTime();
     const finalProdTimer = Number(new Date().getTime() - startProd) || null;
     variables.body.valorApontado = totalValue;
@@ -60,14 +54,19 @@ const point = async (req, res) => {
     }
     else if (variables.body.badFeed > 0) {
         if (!variables.body.supervisor) {
+            console.log('provalmente aqui');
             return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33), code: resultVerifyCodeNote.code, address: (0, message_1.message)(33), returnValueAddress: (0, message_1.message)(33) });
         }
         const findSupervisor = await (0, query_1.selectQuery)(10, variables.body);
-        if (!findSupervisor.message) {
+        if (findSupervisor.length <= 0) {
             return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(17), data: (0, message_1.message)(33), code: resultVerifyCodeNote.code, address: (0, message_1.message)(33), returnValueAddress: (0, message_1.message)(33) });
         }
     }
-    if (variables.cookies.FUNCIONARIO !== valuesFromHisaponta.data[0].USUARIO) {
+    let t3 = performance.now();
+    console.log("Call Variables in point.ts took: " + (t3 - t0) + " milliseconds.");
+    var t4 = performance.now();
+    const valuesFromHisaponta = await (0, query_1.selectQuery)(9, variables.cookies);
+    if (variables.cookies.FUNCIONARIO !== valuesFromHisaponta[0].USUARIO) {
         variables.cookies.arrayDeCodAponta = [4, 5, 6];
         variables.cookies.descriptionArrat = ['Fin Prod.', 'Rip Ini.', 'Rip Fin.'];
         variables.cookies.goodEnd = null;
@@ -87,34 +86,43 @@ const point = async (req, res) => {
             return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33), code: resultVerifyCodeNote.code, address: (0, message_1.message)(33), returnValueAddress: (0, message_1.message)(33) });
         }
     }
-    var resFromChildren = '';
+    var t5 = performance.now();
+    console.log("Call t5 and t4 took: ", (t5 - t4));
+    var t6 = performance.now();
     if (variables.cookies.condic === 'P') {
         variables.cookies.totalValue = totalValue;
-        resFromChildren = await (0, valuesFromChildren_1.getChildrenValuesBack)(variables, req);
+        await (0, valuesFromChildren_1.getChildrenValuesBack)(variables, req) || '';
     }
-    if (variables.cookies.totalValue < Number(variables.cookies.QTDE_LIB)) {
-    }
+    var t9 = performance.now();
+    console.log('t6 e t9', t9 - t6);
+    var t11 = performance.now();
     if (variables.body.reworkFeed > 0 || variables.body.missingFeed > 0) {
-        const newOrderString = `INSERT INTO NOVA_ORDEM (NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_LIB, QTDE_APONTADA, QTD_REFUGO, QTD_BOAS, QTD_RETRABALHADA, QTD_FALTANTE, CODIGO_PECA, CODIGO_CLIENTE, USUARIO, REVISAO) VALUES('${variables.cookies.NUMERO_ODF}', '${variables.cookies.NUMERO_OPERACAO}', '${variables.cookies.CODIGO_MAQUINA}', ${resultSelectPcpProg.data[0].QTDE_ODF}, ${released},${totalValue}, ${variables.body.badFeed || null}, ${variables.body.valorFeed || null},  ${variables.body.reworkFeed || null}, ${variables.body.missingFeed || null}, '${variables.cookies.CODIGO_PECA}', '${resultSelectPcpProg.data[0].CODIGO_CLIENTE}', '${variables.cookies.FUNCIONARIO}', '${variables.cookies.REVISAO}')`;
-        await (0, sendEmail_1.createNewOrder)(variables.cookies.NUMERO_ODF, variables.cookies.NUMERO_OPERACAO, variables.cookies.CODIGO_MAQUINA, variables.body.reworkFeed, variables.body.missingFeed, variables.body.valorFeed, variables.body.badFeed, totalValue, resultSelectPcpProg.data[0].QTDE_ODF, resultSelectPcpProg.data[0].CODIGO_CLIENTE, variables.cookies.CODIGO_PECA);
-        await (0, insertNewOrder_1.insertIntoNewOrder)(newOrderString);
+        const resultSelectPcpProg = await (0, query_1.selectQuery)(8, variables.cookies);
+        await (0, sendEmail_1.createNewOrder)(variables.cookies.NUMERO_ODF, variables.cookies.NUMERO_OPERACAO, variables.cookies.CODIGO_MAQUINA, variables.body.reworkFeed, variables.body.missingFeed, variables.body.valorFeed, variables.body.badFeed, totalValue, resultSelectPcpProg[0].QTDE_ODF, resultSelectPcpProg[0].CODIGO_CLIENTE, variables.cookies.CODIGO_PECA);
+        await (0, insertNewOrder_1.insertIntoNewOrder)(variables, 0);
     }
+    var t12 = performance.now();
+    console.log('t12 e t11', t12 - t11);
+    var t15 = performance.now();
     var address;
     if ('00' + String(variables.cookies.NUMERO_OPERACAO.replaceAll(' ', '')) === '00999') {
         address = await (0, getAddress_1.getAddress)(totalValue, variables, req);
     }
-    if (variables.cookies.condic === 'P') {
-        const insertEveryAddress = [];
-        variables.cookies.childCode.split(',').forEach((element) => {
-            insertEveryAddress.push(`INSERT INTO HISTORICO_ENDERECO (DATAHORA, ODF, QUANTIDADE, CODIGO_PECA, CODIGO_FILHO, ENDERECO_ATUAL, STATUS, NUMERO_OPERACAO) VALUES (GETDATE(), '${variables.cookies.NUMERO_ODF}', ${Number(variables.cookies.goodFeed)} ,'${variables.cookies.CODIGO_PECA}', '${element}', '${!resFromChildren.returnValueAddress ? (0, message_1.message)(33) : resFromChildren.returnValueAddress.address[0].ENDERECO}', 'APONTADO', '${variables.cookies.NUMERO_OPERACAO}')`);
-        });
-        const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-        await connection.query(insertEveryAddress.join('\n')).then(result => result.rowsAffected);
+    var resFromChildren = '';
+    if (variables.cookies.totalValue < Number(variables.cookies.QTDE_LIB)) {
+        resFromChildren = await (0, getAddress_1.getAddress)(variables.cookies.totalValue - Number(variables.cookies.QTDE_LIB), variables, req);
     }
-    console.log('OU AQUIII', address);
-    console.log('aaa', !resFromChildren.returnValueAddress ? (0, message_1.message)(33) : resFromChildren.returnValueAddress.address[0].ENDERECO);
+    var t16 = performance.now();
+    console.log('ADDREESS: ', t16 - t15);
+    console.log('address', address);
+    console.log('resFromChildren', resFromChildren);
+    var t7 = performance.now();
     await (0, update_1.update)(3, variables.body);
     await (0, insert_1.insertInto)(variables.cookies);
+    var t8 = performance.now();
+    console.log('T7 e T8 took: ', t8 - t7);
+    var t1 = performance.now();
+    console.log("Call Point.ts took: ", t1 - t0);
     return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33), code: (0, message_1.message)(49), address: !address ? (0, message_1.message)(33) : address, returnValueAddress: !resFromChildren.returnValueAddress ? (0, message_1.message)(33) : resFromChildren.returnValueAddress.address[0].ENDERECO });
 };
 exports.point = point;
