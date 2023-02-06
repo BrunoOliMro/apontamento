@@ -1,35 +1,24 @@
-import { RequestHandler } from "express";
-import { select } from "../services/select";
-import { encrypted } from "../utils/encryptOdf";
-import { sanitize } from "../utils/sanitize";
+import { inicializer } from '../services/variableInicializer';
+import { cookieGenerator } from '../utils/cookieGenerator';
+import { message } from '../services/message';
+import { RequestHandler } from 'express';
+import { selectQuery } from '../services/query';
 
 export const searchBagde: RequestHandler = async (req, res) => {
-    let matricula = String(sanitize(req.body["badge"])) || null
-    let start = new Date() || 0;
-    let lookForBadge = `SELECT TOP 1 [FUNCIONARIO], [CRACHA] FROM FUNCIONARIOS WHERE 1 = 1 AND [CRACHA] = '${matricula}' ORDER BY FUNCIONARIO`
+    var t0 = performance.now()
+    const variables = await inicializer(req)
 
-    if (!matricula || matricula === '') {
-        return res.json({ message: "Empty badge" })
+    if (!variables.body.badge) {
+        return res.json({ status: message(1), message: message(17), data: message(33) });
     }
 
-    try {
-        const selecionarMatricula = await select(lookForBadge)
+    const resultQuery = await selectQuery(16, variables.body)
 
-        if (selecionarMatricula) {
-            const startSetupTime = encrypted(String(start.getTime()))
-            const encryptedEmployee = encrypted(String(selecionarMatricula[0].FUNCIONARIO))
-            const encryptedBadge = encrypted(String(selecionarMatricula[0].CRACHA))
-            res.cookie("startSetupTime", startSetupTime)
-            res.cookie("employee", encryptedEmployee)
-            res.cookie("badge", encryptedBadge)
-            return res.json({ message: 'Badge found' })
-        } else if (!selecionarMatricula) {
-            return res.json({ message: 'Badge not found' })
-        } else {
-            return res.json({ message: 'Badge not found' })
-        }
-    } catch (error) {
-        console.log(error)
-        return res.json({ message: 'Error on searching for badge' })
+    if (resultQuery.message !== message(17)) {
+        await cookieGenerator(res, resultQuery![0])
     }
+
+    var t1 = performance.now()
+    console.log('SEARCHbADGE: ', t1 - t0);
+    return res.json({ status: message(1), message: message(1), data: resultQuery })
 }

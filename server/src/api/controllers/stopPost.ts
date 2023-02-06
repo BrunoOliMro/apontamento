@@ -1,43 +1,39 @@
-import { RequestHandler } from "express";
-import sanitize from "sanitize-html";
-import { insertInto } from "../services/insert";
-import { decrypted } from "../utils/decryptedOdf";
+import { inicializer } from '../services/variableInicializer';
+import { verifyCodeNote } from '../services/verifyCodeNote';
+import { insertInto } from '../services/insert';
+import { message } from '../services/message';
+import { RequestHandler } from 'express';
 
 export const stopPost: RequestHandler = async (req, res) => {
-    const numeroOdf = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
-    const funcionario = decrypted(String(sanitize(req.cookies['employee']))) || null
-    const codigoPeca = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
-    const revisao = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
-    const numeroOperacao = decrypted(String(req.cookies['NUMERO_OPERACAO'])) || null
-    const codigoMaq = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
-    const qtdLibMax = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
-    const boas = 0
-    const faltante = 0
-    const retrabalhada = 0
-    const codAponta = 7
-    const ruins = 0
-    const motivo = ''
-    const descricaoCodAponta = 'Parada'
-
-    //Encerra o processo todo
-    const end = new Date().getTime() || 0;
-    const start = decrypted(String(sanitize(req.cookies["startSetupTime"]))) || 0
-    const final: number = Number(end - start) || 0
+    const variables = await inicializer(req)
     
-    try {
-        //Insere O CODAPONTA 5
-        const resour = await insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, final)
-        console.log("parada", resour);
+    if (!variables.cookies) {
+        return res.json({ status: message(1), message: message(0), data: message(33) })
+    }
+    
+    const resultVerifyCodeNote = await verifyCodeNote(variables.cookies, [7])
+    const end = new Date().getTime() || 0;
+    const timeSpend = Number(end - resultVerifyCodeNote.time!) || 0
+    variables.cookies.tempoDecorrido = timeSpend
+    variables.cookies.goodFeed = null
+    variables.cookies.badFeed = null
+    variables.cookies.pointedCode = [7]
+    variables.cookies.missingFeed = null
+    variables.cookies.reworkFeed = null
+    variables.cookies.pointedCodeDescription = ['Parada']
+    variables.cookies.motives = null
 
-        if (resour === 'insert done') {
-            return res.status(200).json({ message: 'maquina parada com sucesso' })
-        } else if(resour === 'Algo deu errado') {
-            return res.json({ message: 'erro ao parar a maquina' })
+    if (resultVerifyCodeNote.accepted) {
+        return res.json({ status: message(1), message: message(19), data: message(33), code: message(20) })
+    } else {
+        //Insere O CODAPONTA 7 de parada de máquina
+        const resultInserted = await insertInto(variables.cookies)
+        if (resultInserted) {
+            return res.status(200).json({ status: message(1), message: message(1), data: message(33), code: message(20) })
+        } else if (!resultInserted) {
+            return res.json({ status: message(1), message: message(0), data: message(33) })
         } else {
-            return res.json({ message: 'erro ao parar a maquina' })
+            return res.json({ status: message(1), message: message(0), data: message(33) })
         }
-    } catch (error) {
-        console.log(error)
-        return res.json({ message: "ocorre um erro ao tentar parar a maquina" })
     }
 }

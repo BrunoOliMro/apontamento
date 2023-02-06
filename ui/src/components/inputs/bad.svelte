@@ -1,34 +1,34 @@
 <script>
-    import blockForbiddenChars from "../../routes/presanitize";
-    let title = "RUINS";
-    let badFeed;
-
+    import blockForbiddenChars from "../../utils/presanitize";
     import { createEventDispatcher } from "svelte";
+
+    let title = "RUINS";
+    export let valueOfBadFeed;
 
     const dispatch = createEventDispatcher();
 
-    async function disa() {
-        dispatch("message", {
-            text: "badfeed!",
-            badFeed,
-        });
+    async function callDispatch(event) {
+        if (event.key === "Enter") {
+            dispatch("message", {
+                eventType: event,
+                text: "Send",
+                badFeed: valueOfBadFeed,
+            });
+        }
     }
 </script>
 
 <main>
-    <div class="input-area">
+    <div class="content">
         <div class="title">
             <p>{title}</p>
         </div>
-        <div class="input-field">
-            <!-- svelte-ignore a11y-positive-tabindex -->
-            <!-- svelte-ignore a11y-autofocus -->
+        <div>
             <input
-                bind:value={badFeed}
-                on:input={disa}
                 on:input={blockForbiddenChars}
+                bind:value={valueOfBadFeed}
+                on:keypress={callDispatch}
                 tabindex="2"
-                autofocus
                 type="text"
             />
         </div>
@@ -41,7 +41,9 @@
         padding: 0%;
         font-size: 37px;
     }
-    .input-area {
+
+    .content {
+        font-weight: 500;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -54,7 +56,7 @@
     }
 
     input {
-        width: 115px;
+        width: 105px;
         height: 40px;
         margin-left: 0%;
         padding: 0%;

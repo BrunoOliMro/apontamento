@@ -1,46 +1,38 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.odfData = void 0;
-const sanitize_html_1 = __importDefault(require("sanitize-html"));
-const select_1 = require("../services/select");
-const decryptedOdf_1 = require("../utils/decryptedOdf");
-const encryptOdf_1 = require("../utils/encryptOdf");
+const variableInicializer_1 = require("../services/variableInicializer");
+const verifyCodeNote_1 = require("../services/verifyCodeNote");
+const query_1 = require("../services/query");
+const message_1 = require("../services/message");
 const odfIndex_1 = require("../utils/odfIndex");
-const queryGroup_1 = require("../utils/queryGroup");
 const odfData = async (req, res) => {
-    const numeroOdf = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_ODF"])))) || 0;
-    const numOper = "00" + (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["NUMERO_OPERACAO"]))).replaceAll(' ', '0');
-    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['employee']))) || null;
-    const lookForOdfData = `SELECT CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB,  QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${numeroOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`;
+    var t0 = performance.now();
+    const variables = await (0, variableInicializer_1.inicializer)(req);
     const response = {
-        message: '',
-        funcionario: funcionario,
         odfSelecionada: '',
     };
-    try {
-        const data = await (0, select_1.select)(lookForOdfData);
-        let x = (0, encryptOdf_1.encrypted)(String(data[0].QTDE_ODF));
-        res.cookie("qtdLibMax", x);
-        if (!funcionario) {
-            return res.json({ message: 'Algo deu errado' });
-        }
-        const indexOdf = await (0, odfIndex_1.odfIndex)(data, numOper);
-        const selectedItens = await (0, queryGroup_1.selectedItensFromOdf)(data, indexOdf);
-        response.odfSelecionada = selectedItens.odf;
-        if (response.message === 'Algo deu errado') {
-            return res.json({ message: 'Algo deu errado' });
-        }
-        else {
-            response.message = 'Tudo certo por aqui /OdfData.ts/';
-            return res.status(200).json(response);
-        }
+    if (!variables) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33), code: (0, message_1.message)(33) });
     }
-    catch (error) {
-        console.log(error);
-        return res.json({ message: "Algo deu errado" });
+    const resultVerifyCodeNote = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [3, 4, 5, 7]);
+    if (resultVerifyCodeNote.accepted) {
+        const resultQuery = await (0, query_1.selectQuery)(24, variables.cookies);
+        if (!resultQuery) {
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(0), code: resultVerifyCodeNote.code });
+        }
+        const i = await (0, odfIndex_1.odfIndex)(resultQuery, '00' + variables.cookies.NUMERO_OPERACAO.replaceAll(' ', '0'));
+        if (i === null || i === undefined) {
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(0), code: resultVerifyCodeNote.code });
+        }
+        response.odfSelecionada = resultQuery[i];
+        response.odfSelecionada.FUNCIONARIO = variables.cookies.FUNCIONARIO;
+        var t1 = performance.now();
+        console.log("Call ODFDATA.TS took: ", t1 - t0);
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: response.odfSelecionada, code: resultVerifyCodeNote.code });
+    }
+    else {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33), code: resultVerifyCodeNote.code });
     }
 };
 exports.odfData = odfData;

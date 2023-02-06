@@ -1,2 +1,2 @@
-export declare function unravelBarcode(barcode: string): any;
+export declare function unravelBarcode(obj: any): any;
 //# sourceMappingURL=unravelBarcode.d.ts.map

@@ -1,26 +1,27 @@
 <script>
-    export let title = "Maquina Parada";
     import { createEventDispatcher } from "svelte";
     const dispatch = createEventDispatcher();
-    function confirma() {
+
+    export let btnTitle = 'Fechar';
+    export let title = "";
+    
+    function callDispatch() {
         dispatch("message", {
             text: "teste basso cabaço",
         });
     }
 </script>
 
-<div class="modalBackground">
-    <div class="confirmationModal">
-        <div class="onlyConfirmModalContent">
-            <h2 class="modalTitle">{title}</h2>
-            <div class="onlyConfirmPop">
-                <button
-                    autofocus
-                    class="btnPopConfirm"
-                    id="confirmPop"
-                    on:click={confirma}
-                >
-                    CONFIRMAR
+<div class="background">
+    <div class="modal-content">
+        <div class="content">
+            <hr />
+            <h2 class="modal-title">{title}</h2>
+            <div class="div-btn">
+                <hr />
+                <!-- svelte-ignore a11y-autofocus -->
+                <button autofocus class="btn" on:click={callDispatch}>
+                    {btnTitle}
                 </button>
             </div>
         </div>
@@ -28,7 +29,12 @@
 </div>
 
 <style>
-    .confirmationModal {
+    hr {
+        margin: 2%;
+        padding: 0%;
+        color: white;
+    }
+    .modal-content {
         transition: all 1s;
         animation: ease-in;
         margin: 0%;
@@ -37,61 +43,77 @@
         background-color: #252525;
         top: 0;
         left: 0;
-        width: 600px;
+        width: 650px;
         height: 250px;
         display: block;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         text-align: center;
-        border-radius: 8px;
+        border-radius: 14px;
     }
-    .onlyConfirmModalContent {
+    .content {
         margin-top: 50px;
         margin-bottom: 0%;
-        margin-left: 25px;
+        margin-left: 0px;
         margin-right: 0%;
         padding: 0%;
     }
-    .onlyConfirmPop {
+    .div-btn {
         justify-content: right;
         margin-right: 1%;
         align-items: right;
         text-align: right;
     }
-    .btnPopConfirm {
+    .btn {
+        border-color: transparent;
         border: none;
-        background-color: transparent;
-        color: white;
+        background-color: white;
+        color: #252525;
     }
     button {
+        border-color: transparent;
         border: none;
+        transition: all 0.5s;
+        margin-right: 2%;
+        padding: 0%;
         letter-spacing: 0.5px;
-        width: fit-content;
+        width: 200px;
         height: 28px;
+        border-radius: 8px;
     }
-    .modalTitle {
+    
+    button:hover {
+        border: none;
+        border-color: transparent;
+        background-color: white;
+        color: black;
+        box-shadow: 0 0 2.5px rgb(216, 208, 208), 0 0 12.5px rgb(216, 208, 208), 0 0 25px rgb(216, 208, 208),
+            0 0 1px rgb(216, 208, 208);
+    }
+
+    .modal-title {
         margin-left: 0px;
         margin-bottom: 25px;
         margin-right: 0px;
         margin-top: 0px;
         padding: 0%;
-        justify-content: left;
-        align-items: left;
-        text-align: left;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
     }
 
     h2 {
-        font-size: 55px;
+        font-size: 52px;
         margin: 0px, 0px, 0px, 0px;
         padding: 0px;
-        width: 550px;
+        /* width: 600px; */
         align-items: left;
         text-align: left;
         justify-content: left;
         display: flex;
     }
-    .modalBackground {
+    .background {
         transition: 1s;
         position: fixed;
         top: 0;

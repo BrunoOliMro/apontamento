@@ -1,32 +1,36 @@
 <script>
     // @ts-nocheck
-    import blockForbiddenChars from "../../routes/presanitize";
-    let title = "BOAS";
-    let goodFeed;
-
+    import blockForbiddenChars from "../../utils/presanitize";
     import { createEventDispatcher } from "svelte";
+
+    let title = "BOAS";
+    export let goodFeed;
 
     const dispatch = createEventDispatcher();
 
-    async function disa() {
-        dispatch("message", {
-            text: "goodFeed!",
-            goodFeed,
-        });
+    async function callDispatch(event) {
+        if (event.key === "Enter") {
+            dispatch("message", {
+                eventType: event,
+                text: "Send",
+                goodFeed: goodFeed,
+            });
+        }
     }
 </script>
 
-<div class="input-area">
+<div class="content">
     <div class="title">
         <p>{title}</p>
     </div>
-    <div class="input-field">
+    <div>
         <!-- svelte-ignore a11y-positive-tabindex -->
         <!-- svelte-ignore a11y-autofocus -->
+        <!-- on:input={callDispatch} -->
         <input
-            bind:value={goodFeed}
-            on:input={disa}
             on:input={blockForbiddenChars}
+            on:keypress={callDispatch}
+            bind:value={goodFeed}
             tabindex="1"
             autofocus
             type="text"
@@ -40,7 +44,8 @@
         padding: 0%;
         font-size: 37px;
     }
-    .input-area {
+    .content {
+        font-weight: 500;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -53,7 +58,7 @@
     }
 
     input {
-        width: 115px;
+        width: 105px;
         height: 40px;
         margin: 0%;
         padding: 0%;

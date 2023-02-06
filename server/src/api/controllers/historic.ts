@@ -1,51 +1,48 @@
-import { RequestHandler } from "express";
-import { select } from "../services/select";
-import { decrypted } from "../utils/decryptedOdf";
-import { sanitize } from "../utils/sanitize";
+import { inicializer } from '../services/variableInicializer';
+import { verifyCodeNote } from '../services/verifyCodeNote';
+import { selectQuery } from '../services/query';
+import { message } from '../services/message';
+import { RequestHandler } from 'express';
 
 export const historic: RequestHandler = async (req, res) => {
-    let NUMERO_ODF = decrypted(String(sanitize(req.cookies["NUMERO_ODF"])))
-    const lookForDetail = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO_DETALHADO WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' ORDER BY DATAHORA DESC`
-    const lookforGeneric = `SELECT * FROM VW_APP_APONTAMENTO_HISTORICO WHERE 1 = 1 AND ODF = '${NUMERO_ODF}' ORDER BY OP ASC`
-    let obj = []
-    try {
-        const detailHistoric = await select(lookForDetail)
+    const variables = await inicializer(req);
+    const obj = [];
 
-        if (!detailHistoric) {
-            return res.json({ message: 'Error ao localizar o histórico' });
-        }
+    if (!variables) {
+        return res.json({ status: message(1), message: message(0), data: message(33) })
+    }
 
-        for (const iterator of detailHistoric) {
-            if (iterator.BOAS > 0) {
-                obj.push(iterator)
-            }
-            if (iterator.REFUGO > 0) {
-                obj.push(iterator)
-            }
-        }
+    const resultVerifyCodeNote = await verifyCodeNote(variables.cookies, [3, 4, 5, 7])
 
-        detailHistoric.reduce((acc: any, iterator: any) => {
-            return acc + iterator.BOAS + iterator.REFUGO
-        }, 0)
+    if (resultVerifyCodeNote.accepted) {
+        const detailHistoric: any = await selectQuery(5, variables.cookies)
+        const generalHistoric = await selectQuery(6, variables.cookies)
 
-        try {
-            const generalHistoric: any = await select(lookforGeneric)
-            if (!generalHistoric) {
-                return res.json({ message: 'Error ao localizar o histórico' });
-            } else {
-                let objRes = {
-                    resourceDetail: generalHistoric,
-                    resource: obj,
-                    message: 'Exibir histórico'
+        if(detailHistoric){
+            for (const iterator of detailHistoric) {
+                if (iterator.BOAS > 0) {
+                    obj.push(iterator)
                 }
-                return res.json(objRes)
+                if (iterator.REFUGO > 0) {
+                    obj.push(iterator)
+                }
             }
-        } catch (error) {
-            console.log(error)
-            return res.json({ message: 'Error ao localizar o histórico' });
+            detailHistoric.reduce((acc: any, iterator: any) => {
+                return acc + iterator.BOAS + iterator.REFUGO
+            }, 0)
         }
-    } catch (error) {
-        console.log(error)
-        return res.json({ message: 'Error ao localizar o histórico' });
+
+
+        let objRes = {
+            resourceDetail: detailHistoric,
+            resource: generalHistoric,
+            message: message(34)
+        }
+
+        // console.log('letRes', objRes);
+
+        return res.json({ status: message(1), message: message(34), data: objRes })
+    } else {
+        return res.json({ status: message(1), message: message(0), data: message(33) })
     }
 }

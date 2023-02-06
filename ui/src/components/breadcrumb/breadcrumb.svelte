@@ -1,38 +1,50 @@
 <script>
-  export let breadFer;
+  import { createEventDispatcher } from "svelte";
+
+  export let titleBreadcrumb = ``;
+  export let imgResource = ``;
+
+  const dispatch = createEventDispatcher();
+
+  async function callDispatch(event) {
+    dispatch("message", {
+      eventType: event,
+      text: "BreadCrumb!",
+    });
+  }
 </script>
 
 <nav class="breadcrumb" aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item">
-      <a href="/#/ferramenta">Ferramentas</a>
-    </li>
-    <li class="breadcrumb-item">
-      <a href="/#/codigobarras/apontamento">Apontamento</a>
+      <p on:click={callDispatch} on:keypress={callDispatch}>
+        <img src={imgResource} alt="" />
+        {titleBreadcrumb}
+      </p>
     </li>
   </ol>
 </nav>
 
 <style>
-  nav{
+  nav {
     letter-spacing: 1px;
     margin: 0%;
     padding: 0%;
   }
-  a{
+  p {
+    text-decoration: underline;
     font-size: 18px;
     color: black;
     margin: 0%;
     padding: 0%;
   }
 
-  a:hover{
+  p:hover {
+    opacity: 0.7;
+    cursor: pointer;
     color: rgb(52, 52, 52);
   }
-  .breadcrumb{
-    margin: 0%;
-    padding: 0%;
-  }
+  
 
   /* @media screen and (max-width: 500px) {
     .breadcrumb {

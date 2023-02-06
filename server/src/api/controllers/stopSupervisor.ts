@@ -1,46 +1,44 @@
-import { RequestHandler } from "express";
-import sanitize from "sanitize-html";
-import { insertInto } from "../services/insert";
-import { select } from "../services/select";
-import { decrypted } from "../utils/decryptedOdf";
+import { inicializer } from '../services/variableInicializer';
+import { verifyCodeNote } from '../services/verifyCodeNote';
+import { insertInto } from '../services/insert';
+import { selectQuery } from '../services/query';
+import { message } from '../services/message';
+import { RequestHandler } from 'express';
 
 export const stopSupervisor: RequestHandler = async (req, res) => {
-    const supervisor: string | null = String(sanitize(req.body['superSuperMaqPar'])) || null
-    console.log('linha 9 /stopSuper/');
-    const numeroOdf: number = decrypted(String(sanitize(req.cookies['NUMERO_ODF']))) || null
-    const NUMERO_OPERACAO: string = decrypted(String(sanitize(req.cookies['NUMERO_OPERACAO']))) || null
-    const CODIGO_MAQUINA: string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
-    const qtdLibMax: number = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
-    const funcionario: string = decrypted(String(sanitize(req.cookies['employee']))) || null
-    const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
-    const codigoPeca: string = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
-    console.log('linha 16 /stopsuper/');
-    const boas = 0
-    const faltante = 0
-    const retrabalhada = 0
-    const ruins = 0
-    const codAponta = 3
-    const descricaoCodAponta = `Ini Prod.`
-    const motivo = ''
-    const tempoDecorrido = 0
-    const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`
+    const variables = await inicializer(req)
+    variables.cookies.goodFeed = null
+    variables.cookies.badFeed = null
+    variables.cookies.pointedCode = [3]
+    variables.cookies.missingFeed = null
+    variables.cookies.reworkFeed = null
+    variables.cookies.pointedCodeDescription = [`Ini Prod.`]
+    variables.cookies.motives = null
+    variables.cookies.tempoDecorrido = null
 
-    try {
-        const resource = await select(lookForSupervisor)
-        console.log('linha 28 /stopSupervisor/', resource);
+    if (!variables.body) {
+        return res.json({ status: message(1), message: message(0), data: message(33) })
+    }
+
+    const resultVerifyCodeNote = await verifyCodeNote(variables.cookies, [7])
+
+    if (!resultVerifyCodeNote.accepted) {
+        return res.json({ status: message(1), message: message(0), data: message(33) })
+    }
+
+    if (resultVerifyCodeNote.accepted) {
+        const resource = await selectQuery(10, variables.body)
         if (resource) {
-            const insertTimerBackTo3 = await insertInto(funcionario, numeroOdf, codigoPeca, revisao, NUMERO_OPERACAO, CODIGO_MAQUINA, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido)
-            if(insertTimerBackTo3 === 'insert done'){
-                return res.status(200).json({ message: 'maquina' })
+            const insertPointCode = await insertInto(variables.cookies)
+            if (insertPointCode) {
+                return res.status(200).json({ status: message(1), message: message(1), data: message(33) })
             } else {
-                return res.json({ message: "supervisor não encontrado" })
+                return res.json({ status: message(1), message: message(21), data: message(33) })
             }
-        } else if (!resource) {
-            return res.json({ message: "supervisor não encontrado" })
         } else {
-            return res.json({ message: "supervisor não encontrado" })
+            return res.json({ status: message(1), message: message(21), data: message(33) })
         }
-    } catch (error) {
-        return res.json({ message: "erro na parada de maquina" })
+    } else {
+        return res.json({ status: message(1), message: message(0), data: message(33) })
     }
 }

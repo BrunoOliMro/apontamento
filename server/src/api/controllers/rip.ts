@@ -1,98 +1,57 @@
-import { RequestHandler } from "express";
-import sanitize from "sanitize-html";
-import { insertInto } from "../services/insert";
-import { select } from "../services/select";
-import { decrypted } from "../utils/decryptedOdf";
+import { inicializer } from '../services/variableInicializer';
+import { verifyCodeNote } from '../services/verifyCodeNote';
+import { insertInto } from '../services/insert';
+import { selectQuery } from '../services/query';
+import { message } from '../services/message';
+import { RequestHandler } from 'express';
 
 export const rip: RequestHandler = async (req, res) => {
-    const numpec: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
-    const revisao: string = decrypted(String(sanitize(req.cookies['REVISAO']))) || null
-    const codMaq: string = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
-    console.log('linha codmaqs', codMaq);
-    const codigoPeca: string = decrypted(String(sanitize(req.cookies["CODIGO_PECA"]))) || null
-    const numeroOdf: number = decrypted(String(sanitize(req.cookies["NUMERO_ODF"]))) || null
-    const numeroOperacao: string = decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))) || null
-    const funcionario: string = decrypted(String(sanitize(req.cookies['employee']))) || null
-    const start: string = decrypted(String(sanitize(req.cookies["startSetupTime"]))) || null
-    const qtdLibMax: number = decrypted(String(sanitize(req.cookies['qtdLibMax']))) || null
-    const startTime: number = Number(new Date(start).getTime()) || 0
-    const response = {
-        message: '',
-        url: '',
-        object: '',
-    }
-    const rip = `
-        SELECT  DISTINCT
-        PROCESSO.NUMPEC,
-        PROCESSO.REVISAO,
-        QA_CARACTERISTICA.NUMCAR AS NUMCAR,
-        QA_CARACTERISTICA.CST_NUMOPE AS CST_NUMOPE,
-        QA_CARACTERISTICA.DESCRICAO,
-        ESPECIFICACAO  AS ESPECIF,
-        LIE,
-        LSE,
-        QA_CARACTERISTICA.INSTRUMENTO
-        FROM PROCESSO
-        INNER JOIN CLIENTES ON PROCESSO.RESUCLI = CLIENTES.CODIGO
-        INNER JOIN QA_CARACTERISTICA ON QA_CARACTERISTICA.NUMPEC=PROCESSO.NUMPEC
-        AND QA_CARACTERISTICA.REV_QA=PROCESSO.REV_QA 
-        AND QA_CARACTERISTICA.REVISAO = PROCESSO.REVISAO 
-        LEFT JOIN (SELECT OP.MAQUIN, OP.NUMPEC, OP.RECNO_PROCESSO, LTRIM(NUMOPE) AS CST_SEQUENCIA  
-        FROM OPERACAO OP (NOLOCK)) AS TBL ON TBL.RECNO_PROCESSO = PROCESSO.R_E_C_N_O_  AND TBL.MAQUIN = QA_CARACTERISTICA.CST_NUMOPE
-        WHERE PROCESSO.NUMPEC = '${numpec}' 
-        AND PROCESSO.REVISAO = '${revisao}' 
-        AND CST_NUMOPE = '${codMaq}'
-        AND NUMCAR < '2999'
-        ORDER BY NUMPEC ASC`
-    const ripDetails = await select(rip)
+    const variables = await inicializer(req)
 
-    console.log("linha ripDetaisl", ripDetails);
-
-    if(ripDetails.length <= 0){
-        console.log("iewniureb");
-        response.message = 'Não há rip a mostrar'
-        response.url = '/#/codigobarras'
-        return res.json(response)
+    if (!variables.cookies) {
+        return res.json({ status: message(1), message: message(0), data: message(0), code: message(33) })
     }
 
-    let arrayNumope = ripDetails.map((acc: { CST_NUMOPE: string; }) => {
-        if (acc.CST_NUMOPE === codMaq) {
-            return acc
+    const resultVerifyCodeNote = await verifyCodeNote(variables.cookies, [4])
+
+    const oldTimer = new Date(resultVerifyCodeNote.time).getTime()
+    const timeSpendStartRip = Number(new Date().getTime() - oldTimer) || null
+    variables.cookies.tempoDecorrido = timeSpendStartRip
+    variables.cookies.pointedCodeDescription = [`Rip Ini.`]
+    variables.cookies.missingFeed = null
+    variables.cookies.pointedCode = [5]
+    variables.cookies.reworkFeed = null
+    variables.cookies.goodFeed = null
+    variables.cookies.badFeed = null
+    variables.cookies.motives = null
+
+    // Select to see if there any children
+    const ripDetails: any = await selectQuery( 14, variables.cookies)
+
+    if (ripDetails!.length > 0) {
+        res.cookie('cstNumope', ripDetails.map((acc: { CST_NUMOPE: string; }) => acc.CST_NUMOPE))
+        res.cookie('numCar', ripDetails.map((acc: { NUMCAR: any; }) => acc.NUMCAR))
+        res.cookie('descricao', ripDetails.map((acc: { DESCRICAO: any; }) => acc.DESCRICAO))
+        res.cookie('especif', ripDetails.map((acc: { ESPECIF: any; }) => acc.ESPECIF))
+        res.cookie('instrumento', ripDetails.map((acc: { INSTRUMENTO: any; }) => acc.INSTRUMENTO))
+        res.cookie('lie', ripDetails.map((acc: { LIE: any; }) => acc.LIE))
+        res.cookie('lse', ripDetails.map((acc: { LSE: any; }) => acc.LSE))
+    }
+
+    if (resultVerifyCodeNote.accepted) {
+        const insertedPointCode = await insertInto(variables.cookies)
+        const resultVerifyCodeNote = await verifyCodeNote(variables.cookies, [5])
+        if (!insertedPointCode) {
+            return res.json({ status: message(1), message: message(33), data: message(33), code: message(33) })
         } else {
-            return acc
+            return res.json({ status: message(1), message: message(1), data: ripDetails, code: resultVerifyCodeNote.code })
         }
-    })
-
-    let numopeFilter = arrayNumope.filter((acc: any) => acc)
-    res.cookie('cstNumope', numopeFilter.map((acc: { CST_NUMOPE: string; }) => acc.CST_NUMOPE))
-    res.cookie('numCar', numopeFilter.map((acc: { NUMCAR: any; }) => acc.NUMCAR))
-    res.cookie('descricao', numopeFilter.map((acc: { DESCRICAO: any; }) => acc.DESCRICAO))
-    res.cookie('especif', numopeFilter.map((acc: { ESPECIF: any; }) => acc.ESPECIF))
-    res.cookie('instrumento', numopeFilter.map((acc: { INSTRUMENTO: any; }) => acc.INSTRUMENTO))
-    res.cookie('lie', numopeFilter.map((acc: { LIE: any; }) => acc.LIE))
-    res.cookie('lse', numopeFilter.map((acc: { LSE: any; }) => acc.LSE))
-
-    const descricaoCodAponta = `Rip Ini`
-    const boas = 0
-    const ruins = 0
-    const faltante = 0
-    const retrabalhada = 0
-    const codAponta = 5
-    const motivo = ``
-
-    try {
-        const inserted = await insertInto(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, startTime)
-        if (inserted === 'insert done') {
-            return res.json(numopeFilter)
-        } else if (inserted === 'Algo deu errado') {
-            return response.message = 'Algo deu errado'
+    } else {
+        const resultVerifyCodeNote = await verifyCodeNote(variables.cookies, [5])
+        if(resultVerifyCodeNote.accepted){
+            return res.json({ status: message(1), message: message(1), data: ripDetails, code: resultVerifyCodeNote.code })
         } else {
-            return response.message = 'Algo deu errado'
+            return res.json({ status: message(1), message: message(1), data: message(33), code: resultVerifyCodeNote.code  })
         }
-    } catch (error) {
-        response.url = '/#/codigobarras/'
-        response.message = 'Erro ao iniciar tempo da rip'
-        return res.json(response)
     }
-
 }

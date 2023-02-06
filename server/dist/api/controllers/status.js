@@ -1,37 +1,32 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.status = void 0;
-const sanitize_html_1 = __importDefault(require("sanitize-html"));
-const select_1 = require("../services/select");
-const decryptedOdf_1 = require("../utils/decryptedOdf");
+const variableInicializer_1 = require("../services/variableInicializer");
+const verifyCodeNote_1 = require("../services/verifyCodeNote");
+const query_1 = require("../services/query");
+const message_1 = require("../services/message");
 const status = async (req, res) => {
-    const numpec = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA']))) || null;
-    const maquina = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
-    const numeroOperacao = (0, decryptedOdf_1.decrypted)((0, sanitize_html_1.default)(req.cookies['NUMERO_OPERACAO']));
-    const revisao = (0, decryptedOdf_1.decrypted)((0, sanitize_html_1.default)(req.cookies['REVISAO']));
-    const lookForTimer = `SELECT TOP 1 EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${numpec}' AND NUMOPE = ${numeroOperacao} AND MAQUIN = '${maquina}' AND REVISAO = ${revisao} ORDER BY REVISAO DESC`;
-    try {
-        const resource = await (0, select_1.select)(lookForTimer);
-        console.log('linha 15', Number((0, decryptedOdf_1.decrypted)(req.cookies['qtdLibMax'])));
-        let tempoRestante = Number(resource[0].EXECUT * Number((0, decryptedOdf_1.decrypted)((0, sanitize_html_1.default)(String(req.cookies["qtdLibMax"])))) * 1000 - (Number(new Date().getTime() - (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['startSetupTime'])))))) || 0;
-        console.log('LINHA 15/temporestante/', tempoRestante);
-        if (tempoRestante > 0) {
-            return res.status(200).json(tempoRestante);
-        }
-        else if (tempoRestante <= 0) {
-            tempoRestante = 0;
-            return res.json({ message: 'time for execution not found' });
+    var t0 = performance.now();
+    const variables = await (0, variableInicializer_1.inicializer)(req);
+    if (!variables.cookies) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(0), supervisor: (0, message_1.message)(33) });
+    }
+    const resultVerifyCodeNote = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [3, 4, 5, 7]);
+    if (resultVerifyCodeNote.accepted) {
+        const lookForTimer = await (0, query_1.selectQuery)(25, variables.cookies);
+        let timeLeft;
+        var t1 = performance.now();
+        console.log('Status.ts', t1 - t0);
+        if (lookForTimer) {
+            timeLeft = Number(lookForTimer[0].EXECUT * variables.cookies.QTDE_LIB * 1000 - (Number(new Date().getTime() - resultVerifyCodeNote.time))) || 0;
         }
         else {
-            return res.json({ message: 'Algo deu errado' });
+            timeLeft = 6000;
         }
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: timeLeft, supervisor: variables.cookies.supervisor });
     }
-    catch (error) {
-        console.log('linha 29 - Status.ts -', error);
-        return res.json({ error: true, message: "Erro no servidor." });
+    else {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33) });
     }
 };
 exports.status = status;

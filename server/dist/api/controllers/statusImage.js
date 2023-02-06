@@ -1,42 +1,43 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.statusImage = void 0;
-const sanitize_html_1 = __importDefault(require("sanitize-html"));
+const variableInicializer_1 = require("../services/variableInicializer");
+const verifyCodeNote_1 = require("../services/verifyCodeNote");
+const query_1 = require("../services/query");
+const message_1 = require("../services/message");
 const pictures_1 = require("../pictures");
-const select_1 = require("../services/select");
-const decryptedOdf_1 = require("../utils/decryptedOdf");
 const statusImage = async (req, res) => {
-    const numpec = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
-    const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
-    const statusImg = String("_status");
-    const lookOnProcess = `SELECT TOP 1 [NUMPEC], [IMAGEM] FROM PROCESSO (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${numpec}' AND REVISAO = '${revisao}' AND IMAGEM IS NOT NULL`;
-    let imgResult = [];
-    try {
-        const resource = await (0, select_1.select)(lookOnProcess);
-        if (resource.length > 0) {
-            try {
-                for await (let [i, record] of resource.entries()) {
-                    const rec = await record;
-                    const path = await pictures_1.pictures.getPicturePath(rec["NUMPEC"], rec["IMAGEM"], statusImg, String(i));
-                    imgResult.push(path);
-                }
-                return res.status(200).json(imgResult);
+    let t0 = performance.now();
+    const variables = await (0, variableInicializer_1.inicializer)(req);
+    const statuString = String('_status');
+    const valuesResult = [];
+    if (!variables.cookies) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
+    }
+    const resultVerifyCodeNote = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [3, 4, 5, 7]);
+    if (resultVerifyCodeNote.accepted) {
+        const lookOnProcess = await (0, query_1.selectQuery)(26, variables.cookies);
+        if (lookOnProcess) {
+            for await (const [i, record] of lookOnProcess.entries()) {
+                const rec = await record;
+                const path = await pictures_1.pictures.getPicturePath(rec['NUMPEC'], rec['IMAGEM'], statuString, String(i));
+                valuesResult.push(path);
             }
-            catch (error) {
-                console.log('error - statusimage -', error);
-                return res.json({ error: true, message: "Erro no servidor." });
+            var t1 = performance.now();
+            console.log('SIMAGE: ', t1 - t0);
+            if (valuesResult) {
+                return res.status(200).json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: valuesResult });
+            }
+            else {
+                return res.status(200).json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33) });
             }
         }
         else {
-            return res.json({ message: 'Status image not found' });
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(17), data: (0, message_1.message)(33) });
         }
     }
-    catch (error) {
-        console.log(error);
-        return res.json({ error: true, message: "Erro no servidor." });
+    else {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
     }
 };
 exports.statusImage = statusImage;

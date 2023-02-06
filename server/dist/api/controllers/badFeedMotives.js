@@ -1,29 +1,22 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.badFeedMotives = void 0;
-const mssql_1 = __importDefault(require("mssql"));
-const global_config_1 = require("../../global.config");
-const badFeedMotives = async (_req, res) => {
-    const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-    try {
-        const resource = await connection.query(`
-        SELECT R_E_C_N_O_, DESCRICAO FROM CST_MOTIVO_REFUGO (NOLOCK) ORDER BY DESCRICAO ASC`).then(record => record.recordset);
-        let resoc = resource.map(e => e.DESCRICAO);
-        if (resource.length > 0) {
-            return res.status(200).json(resoc);
-        }
-        else {
-            return res.json({ message: 'erro em motivos do refugo' });
-        }
+const variableInicializer_1 = require("../services/variableInicializer");
+const verifyCodeNote_1 = require("../services/verifyCodeNote");
+const query_1 = require("../services/query");
+const message_1 = require("../services/message");
+const badFeedMotives = async (req, res) => {
+    const variables = await (0, variableInicializer_1.inicializer)(req);
+    if (!variables) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
     }
-    catch (error) {
-        console.log(error);
-        return res.json({ message: 'erro em motivos de refugo' });
+    const pointedCode = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [3, 4, 5, 7]);
+    if (pointedCode.accepted) {
+        const resultMotives = await (0, query_1.selectQuery)(1);
+        return res.status(200).json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: resultMotives });
     }
-    finally {
+    else {
+        return res.status(400).json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
     }
 };
 exports.badFeedMotives = badFeedMotives;

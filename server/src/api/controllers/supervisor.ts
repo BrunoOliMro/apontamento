@@ -1,37 +1,22 @@
-import { RequestHandler } from "express";
-import { select } from "../services/select";
-import { sanitize } from "../utils/sanitize";
+import { inicializer } from '../services/variableInicializer';
+import { selectQuery } from '../services/query';
+import { encrypted } from '../utils/encryptOdf';
+import { message } from '../services/message';
+import { RequestHandler } from 'express';
 
 export const supervisor: RequestHandler = async (req, res) => {
-    let supervisor: string = String(sanitize(req.body['supervisor']))
-    let lookForBadge = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`
+    const variables = await inicializer(req)
 
-    if (!supervisor) {
-        return res.json({ message: 'supervisor não encontrado inválido' })
+    if (!variables) {
+        return res.json({ status: message(1), message: message(33), data: message(33) })
     }
 
-    if (
-        supervisor === '' ||
-        supervisor === '0' ||
-        supervisor === '00' ||
-        supervisor === '000' ||
-        supervisor === '0000' ||
-        supervisor === '00000' ||
-        supervisor === '000000') {
-        return res.json({ message: 'supervisor inválido' })
-    }
+    const lookForBadge = await selectQuery(10, variables.body)
 
-    try {
-        const resource = await select(lookForBadge)
-
-        if (resource) {
-            return res.json({ message: 'Supervisor encontrado' })
-        } else if (!resource) {
-            return res.json({ message: 'Supervisor não encontrado' })
-        } else {
-            return res.json({ message: 'Supervisor não encontrado' })
-        }
-    } catch (error) {
-        return res.json({ message: 'Erro ao localizar supervisor' })
+    if(lookForBadge![0]){
+        res.cookie('supervisor', encrypted('verificado'), {httpOnly: true})
+        return res.json({ status: message(1), message: message(33), data: lookForBadge![0].CRACHA, supervisor: lookForBadge })
+    } else {
+        return res.json({ status: message(1), message: message(33), data:  message(33), supervisor: message(33)})
     }
 }

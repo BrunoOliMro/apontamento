@@ -1,44 +1,43 @@
-import { RequestHandler } from "express";
-import sanitize from "sanitize-html";
-import { select } from "../services/select";
-import { decrypted } from "../utils/decryptedOdf";
-import { encrypted } from "../utils/encryptOdf";
-import { odfIndex } from "../utils/odfIndex";
-import { selectedItensFromOdf } from "../utils/queryGroup";
+import { inicializer } from '../services/variableInicializer';
+import { verifyCodeNote } from '../services/verifyCodeNote';
+import { selectQuery } from '../services/query';
+import { message } from '../services/message';
+import { odfIndex } from '../utils/odfIndex';
+import { RequestHandler } from 'express';
 
 export const odfData: RequestHandler = async (req, res) => {
-    const numeroOdf: number = Number(decrypted(String(sanitize(req.cookies["NUMERO_ODF"])))) || 0
-    const numOper: string = "00" + decrypted(String(sanitize(req.cookies["NUMERO_OPERACAO"]))).replaceAll(' ', '0')
-    const funcionario = decrypted(String(sanitize(req.cookies['employee']))) || null
-    const lookForOdfData = `SELECT CODIGO_CLIENTE, REVISAO, NUMERO_ODF, NUMERO_OPERACAO, CODIGO_MAQUINA, QTDE_ODF, QTDE_APONTADA, QTDE_LIB,  QTD_REFUGO, CODIGO_PECA, HORA_FIM, HORA_INICIO, DT_INICIO_OP, DT_FIM_OP FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${numeroOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
-    const response = {
-        message: '',
-        funcionario: funcionario,
+    var t0 = performance.now();
+    const variables = await inicializer(req)
+    const response: any = {
         odfSelecionada: '',
     }
-    try {
-        const data = await select(lookForOdfData)
-        let x = encrypted(String(data[0].QTDE_ODF))
-        res.cookie("qtdLibMax", x)
 
-        if (!funcionario) {
-            return res.json({ message: 'Algo deu errado' })
+    if (!variables) {
+        return res.json({ status: message(1), message: message(0), data: message(33), code: message(33) });
+    }
+
+    const resultVerifyCodeNote = await verifyCodeNote(variables.cookies, [3, 4, 5, 7])
+
+    if (resultVerifyCodeNote.accepted) {
+
+        const resultQuery = await selectQuery(24, variables.cookies);
+        if (!resultQuery) {
+            return res.json({ status: message(1), message: message(0), data: message(0), code: resultVerifyCodeNote.code })
         }
 
-        const indexOdf = await odfIndex(data, numOper)
-
-        const selectedItens: any = await selectedItensFromOdf(data, indexOdf)
-
-        response.odfSelecionada = selectedItens.odf;
-
-        if (response.message === 'Algo deu errado') {
-            return res.json({ message: 'Algo deu errado' });
-        } else {
-            response.message = 'Tudo certo por aqui /OdfData.ts/'
-            return res.status(200).json(response);
+        const i = await odfIndex(resultQuery, '00' + variables.cookies.NUMERO_OPERACAO.replaceAll(' ', '0'));
+        if (i === null || i === undefined) {
+            return res.json({ status: message(1), message: message(0), data: message(0), code: resultVerifyCodeNote.code })
         }
-    } catch (error) {
-        console.log(error);
-        return res.json({ message: "Algo deu errado" });
+
+        response.odfSelecionada = resultQuery![i];
+        response.odfSelecionada.FUNCIONARIO = variables.cookies.FUNCIONARIO;
+
+        var t1 = performance.now();
+        console.log("Call ODFDATA.TS took: " , t1 - t0);
+
+        return res.json({ status: message(1), message: message(1), data: response.odfSelecionada, code: resultVerifyCodeNote.code })
+    } else {
+        return res.json({ status: message(1), message: message(0), data: message(33), code: resultVerifyCodeNote.code });
     }
 }
