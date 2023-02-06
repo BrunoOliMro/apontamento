@@ -1,30 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.stopMotives = void 0;
-const select_1 = require("../services/select");
+const query_1 = require("../services/query");
+const message_1 = require("../services/message");
 const stopMotives = async (_req, res) => {
-    try {
-        const queryStr = `SELECT CODIGO, DESCRICAO FROM APT_PARADA (NOLOCK) ORDER BY DESCRICAO ASC`;
-        let resource = await (0, select_1.select)(queryStr);
-        if (!resource) {
-            return res.json({ message: 'erro motivos de parada de maquina' });
-        }
-        else if (resource) {
-            let resoc = resource.map((e) => e.DESCRICAO);
-            if (resoc) {
-                return res.status(200).json(resoc);
-            }
-            else {
-                return res.json({ message: 'erro motivos de parada de maquina' });
-            }
-        }
-        else {
-            return res.json({ message: 'erro motivos de parada de maquina' });
-        }
-    }
-    catch (error) {
-        return res.json({ message: 'erro motivos de parada de maquina' });
-    }
+    const result = await (0, query_1.selectQuery)(27);
+    return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: result });
 };
 exports.stopMotives = stopMotives;
 //# sourceMappingURL=stopMotives.js.map

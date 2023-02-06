@@ -1,37 +1,22 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.supervisor = void 0;
-const select_1 = require("../services/select");
-const sanitize_1 = require("../utils/sanitize");
+const variableInicializer_1 = require("../services/variableInicializer");
+const query_1 = require("../services/query");
+const encryptOdf_1 = require("../utils/encryptOdf");
+const message_1 = require("../services/message");
 const supervisor = async (req, res) => {
-    let supervisor = String((0, sanitize_1.sanitize)(req.body['supervisor']));
-    let lookForBadge = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`;
-    if (!supervisor) {
-        return res.json({ message: 'supervisor não encontrado inválido' });
+    const variables = await (0, variableInicializer_1.inicializer)(req);
+    if (!variables) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33) });
     }
-    if (supervisor === '' ||
-        supervisor === '0' ||
-        supervisor === '00' ||
-        supervisor === '000' ||
-        supervisor === '0000' ||
-        supervisor === '00000' ||
-        supervisor === '000000') {
-        return res.json({ message: 'supervisor inválido' });
+    const lookForBadge = await (0, query_1.selectQuery)(10, variables.body);
+    if (lookForBadge[0]) {
+        res.cookie('supervisor', (0, encryptOdf_1.encrypted)('verificado'), { httpOnly: true });
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: lookForBadge[0].CRACHA, supervisor: lookForBadge });
     }
-    try {
-        const resource = await (0, select_1.select)(lookForBadge);
-        if (resource) {
-            return res.json({ message: 'Supervisor encontrado' });
-        }
-        else if (!resource) {
-            return res.json({ message: 'Supervisor não encontrado' });
-        }
-        else {
-            return res.json({ message: 'Supervisor não encontrado' });
-        }
-    }
-    catch (error) {
-        return res.json({ message: 'Erro ao localizar supervisor' });
+    else {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(33), data: (0, message_1.message)(33), supervisor: (0, message_1.message)(33) });
     }
 };
 exports.supervisor = supervisor;

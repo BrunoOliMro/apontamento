@@ -16,48 +16,56 @@ const stopPost_1 = require("./controllers/stopPost");
 const tools_1 = require("./controllers/tools");
 const point_1 = require("./controllers/point");
 const searchBadge_1 = require("./controllers/searchBadge");
-const getPoint_1 = require("./controllers/getPoint");
 const supervisor_1 = require("./controllers/supervisor");
-const codeNote_1 = require("./controllers/codeNote");
 const stopSupervisor_1 = require("./controllers/stopSupervisor");
+const clear_1 = require("./controllers/clear");
+const returnMotives_1 = require("./controllers/returnMotives");
+const pointedCode_1 = require("./controllers/pointedCode");
+const addressLog_1 = require("./controllers/addressLog");
 const apiRouter = (0, express_1.Router)();
-apiRouter.route("/badge")
+apiRouter.route('/address')
+    .post(addressLog_1.addressLog);
+apiRouter.route('/returnMotives')
+    .get(returnMotives_1.returnMotives);
+apiRouter.route('/clearAll')
+    .get(clear_1.clear);
+apiRouter.route('/verifyCodeNote')
+    .get(pointedCode_1.pointedCode);
+apiRouter.route('/badge')
     .post(searchBadge_1.searchBagde);
-apiRouter.route("/odf")
-    .post(codeNote_1.codeNote)
+apiRouter.route('/odf')
     .post(searchOdf_1.searchOdf);
-apiRouter.route("/tools")
+apiRouter.route('/tools')
     .get(tools_1.tools);
-apiRouter.route("/ferselecionadas")
+apiRouter.route('/ferselecionadas')
     .get(tools_1.selectedTools);
-apiRouter.route("/odfData")
+apiRouter.route('/odfData')
     .get(odfData_1.odfData);
-apiRouter.route("/imagem")
+apiRouter.route('/imagem')
     .get(statusImage_1.statusImage);
-apiRouter.route("/status")
+apiRouter.route('/status')
     .get(status_1.status);
-apiRouter.route("/historic")
+apiRouter.route('/historic')
     .get(historic_1.historic);
-apiRouter.route("/point")
-    .post(point_1.point)
-    .get(getPoint_1.getPoint);
-apiRouter.route("/rip")
+apiRouter.route('/point')
+    .post(point_1.point);
+apiRouter.route('/rip')
     .get(rip_1.rip);
-apiRouter.route("/pointRip")
+apiRouter.route('/pointRip')
     .post(ripPost_1.ripPost);
-apiRouter.route("/returnedValue")
+apiRouter.route('/returnedValue')
     .post(returnedValue_1.returnedValue);
-apiRouter.route("/supervisor")
+apiRouter.route('/supervisor')
     .post(supervisor_1.supervisor);
-apiRouter.route("/supervisorParada")
+apiRouter.route('/supervisorParada')
     .post(stopSupervisor_1.stopSupervisor);
-apiRouter.route("/stopMotives")
+apiRouter.route('/stopMotives')
     .get(stopMotives_1.stopMotives);
-apiRouter.route("/stopPost")
+apiRouter.route('/stopPost')
     .post(stopPost_1.stopPost);
-apiRouter.route("/badFeedMotives")
+apiRouter.route('/badFeedMotives')
     .get(badFeedMotives_1.badFeedMotives);
-apiRouter.route("/drawing")
+apiRouter.route('/drawing')
     .get(drawing_1.drawing);
 exports.default = apiRouter;
 //# sourceMappingURL=router.js.map

@@ -1,54 +1,45 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.stopSupervisor = void 0;
-const sanitize_html_1 = __importDefault(require("sanitize-html"));
+const variableInicializer_1 = require("../services/variableInicializer");
+const verifyCodeNote_1 = require("../services/verifyCodeNote");
 const insert_1 = require("../services/insert");
-const select_1 = require("../services/select");
-const decryptedOdf_1 = require("../utils/decryptedOdf");
+const query_1 = require("../services/query");
+const message_1 = require("../services/message");
 const stopSupervisor = async (req, res) => {
-    const supervisor = String((0, sanitize_html_1.default)(req.body['superSuperMaqPar'])) || null;
-    console.log('linha 9 /stopSuper/');
-    const numeroOdf = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_ODF']))) || null;
-    const NUMERO_OPERACAO = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['NUMERO_OPERACAO']))) || null;
-    const CODIGO_MAQUINA = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_MAQUINA']))) || null;
-    const qtdLibMax = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['qtdLibMax']))) || null;
-    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['employee']))) || null;
-    const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
-    const codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['CODIGO_PECA']))) || null;
-    console.log('linha 16 /stopsuper/');
-    const boas = 0;
-    const faltante = 0;
-    const retrabalhada = 0;
-    const ruins = 0;
-    const codAponta = 3;
-    const descricaoCodAponta = `Ini Prod.`;
-    const motivo = '';
-    const tempoDecorrido = 0;
-    const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`;
-    try {
-        const resource = await (0, select_1.select)(lookForSupervisor);
-        console.log('linha 28 /stopSupervisor/', resource);
+    const variables = await (0, variableInicializer_1.inicializer)(req);
+    variables.cookies.goodFeed = null;
+    variables.cookies.badFeed = null;
+    variables.cookies.pointedCode = [3];
+    variables.cookies.missingFeed = null;
+    variables.cookies.reworkFeed = null;
+    variables.cookies.pointedCodeDescription = [`Ini Prod.`];
+    variables.cookies.motives = null;
+    variables.cookies.tempoDecorrido = null;
+    if (!variables.body) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
+    }
+    const resultVerifyCodeNote = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [7]);
+    if (!resultVerifyCodeNote.accepted) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
+    }
+    if (resultVerifyCodeNote.accepted) {
+        const resource = await (0, query_1.selectQuery)(10, variables.body);
         if (resource) {
-            const insertTimerBackTo3 = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, NUMERO_OPERACAO, CODIGO_MAQUINA, qtdLibMax, boas, ruins, codAponta, descricaoCodAponta, motivo, faltante, retrabalhada, tempoDecorrido);
-            if (insertTimerBackTo3 === 'insert done') {
-                return res.status(200).json({ message: 'maquina' });
+            const insertPointCode = await (0, insert_1.insertInto)(variables.cookies);
+            if (insertPointCode) {
+                return res.status(200).json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33) });
             }
             else {
-                return res.json({ message: "supervisor não encontrado" });
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(21), data: (0, message_1.message)(33) });
             }
         }
-        else if (!resource) {
-            return res.json({ message: "supervisor não encontrado" });
-        }
         else {
-            return res.json({ message: "supervisor não encontrado" });
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(21), data: (0, message_1.message)(33) });
         }
     }
-    catch (error) {
-        return res.json({ message: "erro na parada de maquina" });
+    else {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
     }
 };
 exports.stopSupervisor = stopSupervisor;

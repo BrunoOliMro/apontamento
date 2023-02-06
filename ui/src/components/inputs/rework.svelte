@@ -1,33 +1,35 @@
 <script>
-    import blockForbiddenChars from "../../routes/presanitize";
-    let title = "RETRABALHAR";
-    let reworkFeed;
-
+    import blockForbiddenChars from "../../utils/presanitize";
     import { createEventDispatcher } from "svelte";
+
+    let title = "RETRABALHADAS";
+    export let reworkFeed;
 
     const dispatch = createEventDispatcher();
 
-    async function disa() {
-        dispatch("message", {
-            text: "reworkFeed!",
-            reworkFeed,
-        });
+    async function callDispatch(event) {
+        if (event.key === "Enter") {
+            dispatch("message", {
+                eventType: event,
+                text: "Send",
+                reworkFeed: reworkFeed,
+            });
+        }
     }
 </script>
 
-<div class="input-area">
+<div class="content">
     <div class="title">
         <p>{title}</p>
     </div>
-    <div class="input-field">
+    <div>
         <!-- svelte-ignore a11y-positive-tabindex -->
-        <!-- svelte-ignore a11y-autofocus -->
+        <!-- on:input={callDispatch} -->
         <input
-            bind:value={reworkFeed}
-            on:input={disa}
             on:input={blockForbiddenChars}
+            on:keypress={callDispatch}
+            bind:value={reworkFeed}
             tabindex="4"
-            autofocus
             type="text"
         />
     </div>
@@ -39,7 +41,8 @@
         padding: 0%;
         font-size: 37px;
     }
-    .input-area {
+    .content {
+        font-weight: 500;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -52,7 +55,7 @@
     }
 
     input {
-        width: 115px;
+        width: 105px;
         height: 40px;
         margin: 0%;
         padding: 0%;

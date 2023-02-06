@@ -1,1 +1,1 @@
-{"version":3,"file":"stopSupervisor.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/stopSupervisor.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAMzC,eAAO,MAAM,cAAc,EAAE,cAuC5B,CAAA"}
+{"version":3,"file":"stopSupervisor.d.ts","sourceRoot":"","sources":["../../../../src/api/controllers/stopSupervisor.ts"],"names":[],"mappings":"AAKA,OAAO,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAEzC,eAAO,MAAM,cAAc,EAAE,cAoC5B,CAAA"}

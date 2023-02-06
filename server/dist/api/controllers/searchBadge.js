@@ -1,38 +1,23 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.searchBagde = void 0;
-const select_1 = require("../services/select");
-const encryptOdf_1 = require("../utils/encryptOdf");
-const sanitize_1 = require("../utils/sanitize");
+const variableInicializer_1 = require("../services/variableInicializer");
+const cookieGenerator_1 = require("../utils/cookieGenerator");
+const message_1 = require("../services/message");
+const query_1 = require("../services/query");
 const searchBagde = async (req, res) => {
-    let matricula = String((0, sanitize_1.sanitize)(req.body["badge"])) || null;
-    let start = new Date() || 0;
-    let lookForBadge = `SELECT TOP 1 [FUNCIONARIO], [CRACHA] FROM FUNCIONARIOS WHERE 1 = 1 AND [CRACHA] = '${matricula}' ORDER BY FUNCIONARIO`;
-    if (!matricula || matricula === '') {
-        return res.json({ message: "Empty badge" });
+    var t0 = performance.now();
+    const variables = await (0, variableInicializer_1.inicializer)(req);
+    if (!variables.body.badge) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(17), data: (0, message_1.message)(33) });
     }
-    try {
-        const selecionarMatricula = await (0, select_1.select)(lookForBadge);
-        if (selecionarMatricula) {
-            const startSetupTime = (0, encryptOdf_1.encrypted)(String(start.getTime()));
-            const encryptedEmployee = (0, encryptOdf_1.encrypted)(String(selecionarMatricula[0].FUNCIONARIO));
-            const encryptedBadge = (0, encryptOdf_1.encrypted)(String(selecionarMatricula[0].CRACHA));
-            res.cookie("startSetupTime", startSetupTime);
-            res.cookie("employee", encryptedEmployee);
-            res.cookie("badge", encryptedBadge);
-            return res.json({ message: 'Badge found' });
-        }
-        else if (!selecionarMatricula) {
-            return res.json({ message: 'Badge not found' });
-        }
-        else {
-            return res.json({ message: 'Badge not found' });
-        }
+    const resultQuery = await (0, query_1.selectQuery)(16, variables.body);
+    if (resultQuery.message !== (0, message_1.message)(17)) {
+        await (0, cookieGenerator_1.cookieGenerator)(res, resultQuery[0]);
     }
-    catch (error) {
-        console.log(error);
-        return res.json({ message: 'Error on searching for badge' });
-    }
+    var t1 = performance.now();
+    console.log('SEARCHbADGE: ', t1 - t0);
+    return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: resultQuery });
 };
 exports.searchBagde = searchBagde;
 //# sourceMappingURL=searchBadge.js.map

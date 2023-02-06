@@ -1,11 +1,10 @@
-<a class="out" href="/#/desenho/"
-    ><button type="button" class="sideButton">Desenho</button></a
->
+<a class="out" href="/#/barcode/tools/point/drawing/"><button type="button" class="btn">Desenho</button></a>
+
 <style>
-      a{
-    text-decoration: none;
-}
-    .sideButton {
+    a {
+        text-decoration: none;
+    }
+    .btn {
         outline: none;
         margin: 0%;
         padding: 0%;
@@ -19,12 +18,10 @@
         border-radius: 3px;
         background-color: transparent;
         border: none;
-        /* border-color: grey;
-        box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4); */
         letter-spacing: 1px;
     }
 
-    .sideButton:hover {
+    .btn:hover {
         outline: none;
         cursor: pointer;
         background-color: black;

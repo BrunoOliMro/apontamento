@@ -1,233 +1,129 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.point = void 0;
-const mssql_1 = __importDefault(require("mssql"));
-const global_config_1 = require("../../global.config");
+const valuesFromChildren_1 = require("../services/valuesFromChildren");
+const insertNewOrder_1 = require("../services/insertNewOrder");
+const variableInicializer_1 = require("../services/variableInicializer");
+const verifyCodeNote_1 = require("../services/verifyCodeNote");
+const getAddress_1 = require("../services/getAddress");
+const sendEmail_1 = require("../utils/sendEmail");
+const query_1 = require("../services/query");
 const insert_1 = require("../services/insert");
-const select_1 = require("../services/select");
+const message_1 = require("../services/message");
 const update_1 = require("../services/update");
-const decodeOdf_1 = require("../utils/decodeOdf");
-const decryptedOdf_1 = require("../utils/decryptedOdf");
-const encryptOdf_1 = require("../utils/encryptOdf");
-const sanitize_1 = require("../utils/sanitize");
 const point = async (req, res) => {
-    let qtdBoas = Number((0, sanitize_1.sanitize)(req.body["valorFeed"])) || 0;
-    let supervisor = (0, sanitize_1.sanitize)(req.body["supervisor"]) || null;
-    const motivorefugo = (0, sanitize_1.sanitize)(req.body["value"]) || null;
-    const badFeed = Number((0, sanitize_1.sanitize)(req.body["badFeed"])) || 0;
-    const missingFeed = Number((0, sanitize_1.sanitize)(req.body["missingFeed"])) || 0;
-    const reworkFeed = Number((0, sanitize_1.sanitize)(req.body["reworkFeed"])) || 0;
-    let condic;
-    if (!req.cookies['condic']) {
-        condic = null;
+    var t0 = performance.now();
+    const variables = await (0, variableInicializer_1.inicializer)(req);
+    if (!variables.body) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
     }
-    else {
-        condic = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['condic']))) || null;
+    const resultVerifyCodeNote = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [3]);
+    if (!resultVerifyCodeNote.accepted) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(5), data: (0, message_1.message)(33), code: resultVerifyCodeNote.code, address: (0, message_1.message)(33), returnValueAddress: (0, message_1.message)(33) });
     }
-    const odfNumberDecrypted = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))) || 0;
-    const operationNumber = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"])) || null;
-    const codigoPeca = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['CODIGO_PECA'])) || null;
-    const machineCode = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies["CODIGO_MAQUINA"])) || null;
-    const qtdLibMax = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['qtdLibMax']))) || 0;
-    const nextMachineProcess = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['MAQUINA_PROXIMA'])) || null;
-    const nextOperationProcess = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['OPERACAO_PROXIMA'])) || null;
-    const employee = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['employee'])) || null;
-    const revisao = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['REVISAO'])) || null;
-    const updateQtyQuery = [];
-    const updateQtyQuery2 = [];
-    var response = {
-        message: '',
-        balance: 0,
-        url: '',
-    };
-    res.cookie("startRip", Number(new Date()));
-    console.log('linha 38');
-    const finalProdTimer = Number(new Date().getTime() - Number((0, decodeOdf_1.decodedBuffer)(String(req.cookies['startProd']))) / 1000) || 0;
-    const valorTotalApontado = (Number(qtdBoas) + Number(badFeed) + Number(missingFeed) + Number(reworkFeed));
-    let faltante = qtdLibMax - valorTotalApontado;
-    console.log("linha 56 /point.ts/");
-    if (!valorTotalApontado) {
-        return res.json({ message: 'Algo deu errado' });
+    const totalValue = (Number(variables.body.valorFeed) || 0) + (Number(variables.body.badFeed) || 0) + (Number(variables.body.reworkFeed) || 0) + (Number(variables.body.missingFeed) || 0);
+    const released = Number(variables.cookies.QTDE_LIB) - totalValue;
+    const startProd = new Date(resultVerifyCodeNote.time).getTime();
+    const finalProdTimer = Number(new Date().getTime() - startProd) || null;
+    variables.body.valorApontado = totalValue;
+    variables.body.released = released;
+    variables.body.NUMERO_OPERACAO = variables.cookies.NUMERO_OPERACAO;
+    variables.body.CODIGO_MAQUINA = variables.cookies.CODIGO_MAQUINA;
+    variables.body.NUMERO_ODF = variables.cookies.NUMERO_ODF;
+    variables.cookies.QTDE_LIB = Number(variables.cookies.QTDE_LIB);
+    variables.cookies.pointedCodeDescription = ['Fin Prod.'];
+    variables.cookies.tempoDecorrido = finalProdTimer;
+    variables.cookies.pointedCode = [4];
+    variables.cookies.goodFeed = variables.body.valorFeed || 0;
+    variables.cookies.badFeed = variables.body.badFeed || 0;
+    variables.cookies.missingFeed = variables.body.missingFeed || 0;
+    variables.cookies.reworkFeed = variables.body.reworkFeed || 0;
+    if (!totalValue) {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33), code: resultVerifyCodeNote.code, address: (0, message_1.message)(33), returnValueAddress: (0, message_1.message)(33) });
     }
-    if (!supervisor || supervisor === '' && valorTotalApontado === qtdLibMax) {
-        if (badFeed > 0) {
-            return res.json({ message: 'Supervisor inválido' });
+    else if (!variables.body.supervisor && totalValue === variables.cookies.QTDE_LIB) {
+        if (variables.body.badFeed > 0) {
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(21), data: (0, message_1.message)(33), code: resultVerifyCodeNote.code, address: (0, message_1.message)(33), returnValueAddress: (0, message_1.message)(33) });
         }
         else {
-            supervisor = '004067';
+            variables.body.supervisor = '004067';
         }
     }
-    console.log("linha 62 Supervisor /point.ts/", supervisor);
-    if (!supervisor || supervisor === '' || supervisor === '000000' || supervisor === '0' || supervisor === '00' || supervisor === '000' || supervisor === '0000' || supervisor === '00000') {
-        console.log("linha 64");
-        return res.json({ message: 'Supervisor inválido' });
+    else if (!Number(variables.cookies.QTDE_LIB) || Number(variables.body.valorFeed) > Number(variables.cookies.QTDE_LIB) || totalValue > Number(variables.cookies.QTDE_LIB) || Number(variables.body.badFeed) > Number(variables.cookies.QTDE_LIB) || Number(variables.body.missingFeed) > Number(variables.cookies.QTDE_LIB) || Number(variables.body.reworkFeed) > Number(variables.cookies.QTDE_LIB)) {
+        return res.json({ message: 'Quantidade apontada excede o limite' });
     }
-    console.log("linha 68", qtdLibMax);
-    if (!qtdLibMax) {
-        console.log("linha 68 /point.ts/ qtdLibMax /", qtdLibMax);
-        return res.json({ message: 'Quantidade inválida' });
-    }
-    console.log("linha 73 /point.ts/");
-    if (!machineCode || machineCode === '' || machineCode === '0' || machineCode === '00' || machineCode === '000' || machineCode === '0000' || machineCode === '00000') {
-        return res.json({ message: 'Código máquina inválido' });
-    }
-    if (!operationNumber || operationNumber === '' || operationNumber === '0' || operationNumber === '00' || operationNumber === '000' || operationNumber === '0000' || operationNumber === '00000') {
-        return res.json({ message: 'Número operação inválido' });
-    }
-    if (!codigoPeca || codigoPeca === '' || codigoPeca === '0' || codigoPeca === '00' || codigoPeca === '000' || codigoPeca === '0000' || codigoPeca === '00000') {
-        return res.json({ message: 'Código de peça inválido' });
-    }
-    console.log("linha 87 /point.ts/");
-    if (!odfNumberDecrypted) {
-        return res.json({ message: 'Número odf inválido' });
-    }
-    if (!employee || employee === '0') {
-        return res.json({ message: 'Funcionário Inválido' });
-    }
-    if (qtdBoas > qtdLibMax || valorTotalApontado > qtdLibMax || badFeed > qtdLibMax || missingFeed > qtdLibMax || reworkFeed > qtdLibMax) {
-        return res.json({ message: 'Quantidade excedida' });
-    }
-    console.log("linha 99 Boas /point.ts/", qtdBoas);
-    if (!missingFeed) {
-        faltante = qtdLibMax - valorTotalApontado;
-    }
-    console.log("linha 113 Faltante  /point.ts/", faltante);
-    if (valorTotalApontado > qtdLibMax) {
-        return res.json({ message: 'valor apontado maior que a quantidade liberada' });
-    }
-    if (badFeed > 0) {
-        if (!motivorefugo) {
-            console.log(["Não foi dado motivo para o refugo"]);
-            return res.json({ message: 'Algo deu errado' });
+    else if (variables.body.badFeed > 0) {
+        if (!variables.body.supervisor) {
+            console.log('provalmente aqui');
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33), code: resultVerifyCodeNote.code, address: (0, message_1.message)(33), returnValueAddress: (0, message_1.message)(33) });
         }
-        const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA  = '${supervisor}'`;
-        const findSupervisor = await (0, select_1.select)(lookForSupervisor);
-        if (findSupervisor === 'Algo deu errado' || findSupervisor === 'Data not found') {
-            return res.json({ message: 'Supervisor não encontrado' });
+        const findSupervisor = await (0, query_1.selectQuery)(10, variables.body);
+        if (findSupervisor.length <= 0) {
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(17), data: (0, message_1.message)(33), code: resultVerifyCodeNote.code, address: (0, message_1.message)(33), returnValueAddress: (0, message_1.message)(33) });
         }
     }
-    let quantidadePossivelProduzir = Number(req.cookies['quantidade']);
-    console.log("linha 141 /point.ts/ qtdLibMax", qtdLibMax);
-    console.log("linha 141 /point.ts /  quantidade possivel", quantidadePossivelProduzir);
-    if (valorTotalApontado > quantidadePossivelProduzir) {
-        console.log('linha 145 /não da pra fazer essa operação/');
-        response.message = 'Saldo menor que o apontado';
-        response.balance = quantidadePossivelProduzir;
-        console.log('linha 148/response/', response);
-        return res.json(response);
-    }
-    if (condic === 'P') {
-        if (!req.cookies['execut']) {
-            return res.json({ message: 'Algo deu errado' });
-        }
-        let execut = Number((0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['execut'])));
-        let codigoFilho;
-        if (!req.cookies['codigoFilho']) {
-            return res.json({ message: 'Algo deu errado' });
+    let t3 = performance.now();
+    console.log("Call Variables in point.ts took: " + (t3 - t0) + " milliseconds.");
+    var t4 = performance.now();
+    const valuesFromHisaponta = await (0, query_1.selectQuery)(9, variables.cookies);
+    if (variables.cookies.FUNCIONARIO !== valuesFromHisaponta[0].USUARIO) {
+        variables.cookies.arrayDeCodAponta = [4, 5, 6];
+        variables.cookies.descriptionArrat = ['Fin Prod.', 'Rip Ini.', 'Rip Fin.'];
+        variables.cookies.goodEnd = null;
+        variables.cookies.badEnd = null;
+        variables.cookies.missingEnd = null;
+        variables.cookies.reworkEnd = null;
+        const resultEndingProcess = await (0, insert_1.insertInto)(variables.cookies);
+        if (resultEndingProcess === (0, message_1.message)(1)) {
+            variables.cookies.descriptionArray = ['Ini Setup.', 'Fin Setup.', 'Ini Prod.'];
+            variables.cookies.codeArray = [1, 2, 3];
+            const resultNewProcess = await (0, insert_1.insertInto)(variables.cookies);
+            if (resultNewProcess !== (0, message_1.message)(1)) {
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33), code: resultVerifyCodeNote.code, address: (0, message_1.message)(33), returnValueAddress: (0, message_1.message)(33) });
+            }
         }
         else {
-            codigoFilho = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['codigoFilho']))).split(",") || null;
-            if (!codigoFilho) {
-                console.log(["Sem dados dos filhos"]);
-                return res.json({ message: 'Algo deu errado' });
-            }
-        }
-        console.log("linha 145 /point.ts/");
-        try {
-            const connection = await mssql_1.default.connect(global_config_1.sqlConfig);
-            const diferenceBetween = quantidadePossivelProduzir - valorTotalApontado * execut;
-            console.log("apontado", valorTotalApontado);
-            console.log('quantidadePossivel', quantidadePossivelProduzir);
-            console.log('linha 159 /point.ts/', diferenceBetween);
-            if (valorTotalApontado < quantidadePossivelProduzir) {
-                console.log("linha 156 /point.ts/");
-                try {
-                    codigoFilho.forEach((codigoFilho) => {
-                        updateQtyQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${diferenceBetween} WHERE 1 = 1 AND CODIGO = '${codigoFilho}'`);
-                    });
-                    console.log("linha 161");
-                    await connection.query(updateQtyQuery.join("\n")).then(result => result.rowsAffected);
-                }
-                catch (error) {
-                    console.log("linha 159 /point.ts/", error);
-                    return res.json({ message: 'Algo deu errado' });
-                }
-            }
-            try {
-                console.log("linha 172 /point.ts/");
-                codigoFilho.forEach((element) => {
-                    const updateQuery = `DELETE CST_ALOCACAO WHERE 1 = 1 AND ODF = '${odfNumberDecrypted}' AND CODIGO_FILHO = '${element}' `;
-                    updateQtyQuery2.push(updateQuery);
-                });
-                await connection.query(updateQtyQuery2.join("\n")).then(result => result.rowsAffected);
-            }
-            catch (error) {
-                console.log("linha 185 /selectHasP/", error);
-                return res.json({ message: 'Algo deu errado' });
-            }
-            finally {
-                await connection.close();
-            }
-        }
-        catch (err) {
-            console.log("linha 175  -Point.ts-", err);
-            return res.json({ message: 'erro ao efetivar estoque das peças filhas' });
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33), code: resultVerifyCodeNote.code, address: (0, message_1.message)(33), returnValueAddress: (0, message_1.message)(33) });
         }
     }
-    try {
-        try {
-            if (valorTotalApontado < qtdLibMax) {
-                const updateNextProcess = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'S' WHERE 1 = 1 AND NUMERO_ODF = ${odfNumberDecrypted}  AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${nextOperationProcess}' AND CODIGO_MAQUINA = '${nextMachineProcess}'`;
-                await (0, update_1.update)(updateNextProcess);
-            }
-        }
-        catch (error) {
-            console.log('linha 198 - error - //point.ts', error);
-            return res.json({ message: 'Algo deu errado' });
-        }
-        if (valorTotalApontado === quantidadePossivelProduzir) {
-            try {
-                const updateQtdpointed = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET APONTAMENTO_LIBERADO = 'N' WHERE 1 = 1 AND NUMERO_ODF = ${odfNumberDecrypted} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${operationNumber}' AND CODIGO_MAQUINA = '${machineCode}'`;
-                await (0, update_1.update)(updateQtdpointed);
-            }
-            catch (error) {
-                if (error) {
-                    console.log('cadeeeeeee');
-                }
-                console.log('linha 212 - error - //point.ts', error);
-                return res.json({ message: 'Algo deu errado' });
-            }
-        }
-        try {
-            const updateCol = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA + '${valorTotalApontado}' WHERE 1 = 1 AND NUMERO_ODF = ${odfNumberDecrypted} AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${operationNumber}' AND CODIGO_MAQUINA = '${machineCode}'`;
-            await (0, update_1.update)(updateCol);
-        }
-        catch (error) {
-            console.log("linha 209 - error - /point.ts/", error);
-            return res.json({ message: 'Algo deu errado' });
-        }
-        try {
-            console.log("linha 215 /point.ts/ Inserindo dados de apontamento...");
-            const codAponta = 4;
-            const descricaoCodigoAponta = 'Fin Prod';
-            await (0, insert_1.insertInto)(employee, odfNumberDecrypted, codigoPeca, revisao, operationNumber, machineCode, qtdLibMax, qtdBoas, badFeed, codAponta, descricaoCodigoAponta, motivorefugo, faltante, reworkFeed, finalProdTimer);
-        }
-        catch (error) {
-            console.log("erro ao fazer insert linha 220 /point.ts/", error);
-            return res.json({ message: 'Algo deu errado' });
-        }
-        qtdBoas = (0, encryptOdf_1.encrypted)(String(qtdBoas));
-        res.cookie('qtdBoas', qtdBoas);
-        console.log("linha 227 - chegou ao fim /point.ts/", qtdBoas);
-        return res.json({ message: 'Sucesso ao apontar' });
+    var t5 = performance.now();
+    console.log("Call t5 and t4 took: ", (t5 - t4));
+    var t6 = performance.now();
+    if (variables.cookies.condic === 'P') {
+        variables.cookies.totalValue = totalValue;
+        await (0, valuesFromChildren_1.getChildrenValuesBack)(variables, req) || '';
     }
-    catch (error) {
-        console.log(error);
-        return res.json({ message: 'Erro ao apontar' });
+    var t9 = performance.now();
+    console.log('t6 e t9', t9 - t6);
+    var t11 = performance.now();
+    if (variables.body.reworkFeed > 0 || variables.body.missingFeed > 0) {
+        const resultSelectPcpProg = await (0, query_1.selectQuery)(8, variables.cookies);
+        await (0, sendEmail_1.createNewOrder)(variables.cookies.NUMERO_ODF, variables.cookies.NUMERO_OPERACAO, variables.cookies.CODIGO_MAQUINA, variables.body.reworkFeed, variables.body.missingFeed, variables.body.valorFeed, variables.body.badFeed, totalValue, resultSelectPcpProg[0].QTDE_ODF, resultSelectPcpProg[0].CODIGO_CLIENTE, variables.cookies.CODIGO_PECA);
+        await (0, insertNewOrder_1.insertIntoNewOrder)(variables, 0);
     }
+    var t12 = performance.now();
+    console.log('t12 e t11', t12 - t11);
+    var t15 = performance.now();
+    var address;
+    if ('00' + String(variables.cookies.NUMERO_OPERACAO.replaceAll(' ', '')) === '00999') {
+        address = await (0, getAddress_1.getAddress)(totalValue, variables, req);
+    }
+    var resFromChildren = '';
+    if (variables.cookies.totalValue < Number(variables.cookies.QTDE_LIB)) {
+        resFromChildren = await (0, getAddress_1.getAddress)(variables.cookies.totalValue - Number(variables.cookies.QTDE_LIB), variables, req);
+    }
+    var t16 = performance.now();
+    console.log('ADDREESS: ', t16 - t15);
+    console.log('address', address);
+    console.log('resFromChildren', resFromChildren);
+    var t7 = performance.now();
+    await (0, update_1.update)(3, variables.body);
+    await (0, insert_1.insertInto)(variables.cookies);
+    var t8 = performance.now();
+    console.log('T7 e T8 took: ', t8 - t7);
+    var t1 = performance.now();
+    console.log("Call Point.ts took: ", t1 - t0);
+    return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33), code: (0, message_1.message)(49), address: !address ? (0, message_1.message)(33) : address, returnValueAddress: !resFromChildren.returnValueAddress ? (0, message_1.message)(33) : resFromChildren.returnValueAddress.address[0].ENDERECO });
 };
 exports.point = point;
 //# sourceMappingURL=point.js.map

@@ -1,2 +1,2 @@
-export declare const decrypted: (numeroOdfCookies: string) => any;
+export declare const decrypted: (numberOdf: string | null) => any;
 //# sourceMappingURL=decryptedOdf.d.ts.map

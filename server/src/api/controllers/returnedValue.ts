@@ -1,145 +1,156 @@
-import { RequestHandler } from "express";
-import { insertInto } from "../services/insert";
-import { select } from "../services/select";
-import { update } from "../services/update";
-import { decrypted } from "../utils/decryptedOdf";
-import { sanitize } from "../utils/sanitize";
-import { unravelBarcode } from "../utils/unravelBarcode";
+// const updateQuery = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = ${valorApontado}, QTD_BOAS = QTD_BOAS - ${goodFeed}, QTD_FALTANTE = ${faltante}, QTDE_LIB = ${qtdLib}, QTD_REFUGO = QTD_REFUGO - ${badFeed}, QTD_ESTORNADA = COALESCE(QTD_ESTORNADA, 0 ) + ${valorTotal} WHERE 1 = 1 AND NUMERO_ODF = '${data.data.odfNumber}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${Number(data?.data.opNumber)}' AND CODIGO_MAQUINA = '${data.data.machineCod}'`
+import { getChildrenValuesBack } from '../services/valuesFromChildren';
+import { inicializer } from '../services/variableInicializer';
+import { verifyCodeNote } from '../services/verifyCodeNote';
+import { unravelBarcode } from '../utils/unravelBarcode';
+import { sqlConfig } from '../../global.config';
+import { selectQuery } from '../services/query';
+import { insertInto } from '../services/insert';
+import { message } from '../services/message';
+import { odfIndex } from '../utils/odfIndex';
+import { update } from '../services/update';
+import { RequestHandler } from 'express';
+import mssql from 'mssql';
+
+
 
 export const returnedValue: RequestHandler = async (req, res) => {
-    const choosenOption = Number(sanitize(req.body["quantity"])) || 0;
-    const supervisor = sanitize(req.body["supervisor"]) || null;
-    const returnValues = String(sanitize(req.body['returnValueStorage'])) || null;
-    if (!returnValues) {
-        return res.json({ message: 'Não foi indicado boas e ruins' })
-    }
-    const funcionario: string = decrypted(String(sanitize(req.cookies['employee']))) || null;
-    const barcode = sanitize(req.body["barcodeReturn"]) || null;
-    const lookForSupervisor = `SELECT TOP 1 CRACHA FROM VIEW_GRUPO_APT WHERE 1 = 1 AND CRACHA = '${supervisor}'`;
-    let boas;
-    let ruins;
-    const codAponta = 8
-    let descricaoCodigoAponta = ""
-    let motivo = ``
-    let tempoDecorrido = 0
-    var response = {
-        message: '',
-    }
-    if (!funcionario) {
-        return res.json({ message: 'odf não encontrada' })
+    const variables = await inicializer(req)
+
+    if (!variables.body.supervisor || !variables.body.quantity || !variables.body.barcodeReturn) {
+        return res.json({ status: message(1), message: message(48), data: message(33) })
     }
 
-    if (!barcode && !choosenOption && !supervisor || supervisor === "undefined") {
-        return res.json({ message: "odf não encontrada" })
+    const body = unravelBarcode(variables.body.barcodeReturn) || null;
+
+    if (!body.data) {
+        return res.json({ status: message(1), message: message(0), data: message(33) })
     }
 
-    if (!barcode || barcode === 'undefined' || barcode === '') {
-        return res.json({ message: "codigo de barras vazio" })
+    var goodFeed = 0;
+    var badFeed = 0;
+    var codeNoteResult;
+    variables.cookies.goodFeed = variables.body.QTDE_LIB || null
+    variables.cookies.badFeed = null
+    variables.cookies.pointedCode = [8]
+    variables.cookies.missingFeed = null
+    variables.cookies.reworkFeed = null
+    variables.cookies.pointedCodeDescription = ['Estorno']
+    variables.cookies.motives = null
+    variables.cookies.tempoDecorrido = null
+
+    if (!variables.body.valueStorage) {
+        return res.json({ status: message(1), message: message(26), data: message(33) })
     }
 
-    if (!supervisor || supervisor === "undefined" || supervisor === '') {
-        return res.json({ message: "supervisor esta vazio" })
+    if (variables.body.valueStorage === 'BOAS') {
+        variables.cookies.goodFeed = Number(!variables.body.valueStorage ? 0 : variables.body.quantity)
+    } else if (variables.body.valueStorage === 'RUINS') {
+        variables.cookies.badFeed = Number(!variables.body.valueStorage ? 0 : variables.body.quantity)
     }
 
-    if (!choosenOption) {
-        return res.json({ message: "quantidade esta vazio" })
-    }
-    if (returnValues === 'BOAS') {
-        boas = choosenOption
-    }
 
-    if (returnValues === 'RUINS') {
-        ruins = choosenOption
+    if (body.data) {
+        codeNoteResult = await verifyCodeNote(body.data, [6, 8])
+        if (!codeNoteResult.accepted) {
+            return res.json({ status: message(1), message: message(25), data: message(33), code: codeNoteResult.code })
+        }
     }
 
-    if (!boas) {
-        boas = 0
+    const valorTotal = Number(goodFeed + badFeed)
+    const groupOdf: any = await selectQuery(28, body.data)
+    const i: number = await odfIndex(groupOdf, String(body!.data.NUMERO_OPERACAO))
+    const lastIndex: number = groupOdf!.findIndex((element: any) => element.QTDE_APONTADA === 0) - 1;
+
+    if (lastIndex !== i) {
+        return res.json({ status: message(1), message: message(43), data: message(33), code: codeNoteResult.code })
     }
 
-    if (!ruins) {
-        ruins = 0
+    let odf = groupOdf![i]
+
+    if (i === groupOdf!.length - 1) {
+        odf = groupOdf![groupOdf!.length - 1]
     }
 
-    const dados = await unravelBarcode(barcode)
-    const lookForOdfData = `SELECT * FROM VW_APP_APTO_PROGRAMACAO_PRODUCAO (NOLOCK) WHERE 1 = 1 AND NUMERO_ODF = ${dados.numOdf} AND CODIGO_PECA IS NOT NULL ORDER BY NUMERO_OPERACAO ASC`
-    const resourceOdfData = await select(lookForOdfData)
-    let quantityPointedbefore = resourceOdfData.map((element: any) => element.QTDE_APONTADA)
-    //let numeroOperacao = dados.numOper.replaceAll(' ', '')
-    let index = quantityPointedbefore.findIndex((value: any) => value === 0)
-    if (index < 0) {
-        index = resourceOdfData.length
+    if (lastIndex === groupOdf!.length - 1) {
+        odf = groupOdf![groupOdf!.length - 1]
     }
-    console.log('linha 72', index);
-    let availableToReturn = resourceOdfData[index - 1]
-    console.log('linha 73', availableToReturn);
 
-    if (!availableToReturn) {
-        availableToReturn = resourceOdfData[index]
+    if (goodFeed) {
+        if (!odf.QTD_BOAS || odf.QTD_BOAS <= 0) {
+            return res.json({ status: message(1), message: message(27), data: message(33), code: codeNoteResult.code })
+        }
+    } else if (badFeed) {
+        if (!odf.QTD_REFUGO || odf.QTD_REFUGO <= 0) {
+            return res.json({ status: message(1), message: message(27), data: message(33), code: codeNoteResult.code })
+        }
     }
-    // console.log('linha 70', availableToReturn.QTDE_APONTADA);
 
-    let valorTotal = boas + ruins
-
-    console.log('linha 74', dados.numOper);
-    console.log('linha 75', "00" + availableToReturn.NUMERO_OPERACAO.replaceAll(' ', '0'));
-
-    if (availableToReturn.QTDE_APONTADA <= 0) {
-        return res.json({ message: "não ha valor que possa ser devolvido" })
-    } else if ("00" + availableToReturn.NUMERO_OPERACAO.replaceAll(' ', '0') !== dados.numOper) {
-        response.message = 'Essa não pode ser estornada'
-        return res.json(response)
-    } else if (!availableToReturn.QTD_REFUGO && ruins > 0) {
-        console.log('linha 79');
-        response.message = 'Refugo Inválido'
-        return res.json(response)
-    } else if (availableToReturn.QTDE_APONTADA < valorTotal) {
-        console.log('linha 84');
-        response.message = 'Valor acima'
-        return res.json(response)
-    } else if (availableToReturn.QTDE_APONTADA <= 0) {
-        console.log('linha 88');
-        response.message = 'Não há o que estornar'
-        return res.json(response)
+    if (odf.QTDE_APONTADA < valorTotal || odf.QTDE_APONTADA <= 0 || !odf.QTD_REFUGO && badFeed > 0) {
+        return res.json({ status: message(1), message: message(27), data: message(33), code: codeNoteResult.code })
+    } else if (!odf || '00' + odf.NUMERO_OPERACAO.replaceAll(' ', '0') !== body?.data.NUMERO_OPERACAO) {
+        return res.json({ status: message(1), message: message(29), data: message(33), code: codeNoteResult.code })
     } else {
-        console.log('linha 92');
-        let codigoPeca = String(availableToReturn.CODIGO_PECA)
-        let revisao = String(availableToReturn.REVISAO)
-        let qtdOdf = Number(availableToReturn.QTDE_ODF) || 0
-        let qtdApontOdf = Number(availableToReturn.QTDE_APONTADA) || 0
-        let faltante = Number(0)
-        let retrabalhada = Number(0)
-        let qtdLibMax = qtdOdf - qtdApontOdf
 
-        if (availableToReturn.QTDE_APONTADA <= 0) {
-            qtdLibMax = 0
+        if (i <= 0) {
+            // ATENÇÃO olhar diferença entre quantidade apontada no processo anterior e no processo atual!!!!!!!!!!
+            odf.QTDE_LIB = odf.QTDE_ODF - odf.QTDE_APONTADA - odf.QTD_FALTANTE;
+        } else if (i > 0) {
+            // ATENÇÃO quantidade liberado é igual qtd_lib = boasProcessoPassado -  boas - ruins - retrabalhadas
+            // Quantidade liberada é a diferença qtd_lib =  boasProcesso passado - boas - ruins - retrabalhadas
+            odf.QTDE_LIB = (odf.QTD_BOAS || 0) - (odf.QTD_BOAS || 0) - (odf.QTD_REFUGO || 0) - (odf.QTD_RETRABALHADA || 0) - (odf.QTD_FALTANTE || 0)
         }
 
-        if (qtdLibMax <= 0) {
-            return res.json({ message: "não ha valor que possa ser devolvido" })
-        }
 
-        const selectSuper: any = await select(lookForSupervisor)
-        if (selectSuper.length > 0) {
-            try {
-                const insertHisCodReturned = await insertInto(funcionario, dados.numOdf, codigoPeca, revisao, dados.numOper, dados.codMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, tempoDecorrido)
-                if (insertHisCodReturned === 'insert done') {
-                    const updateQuery = `UPDATE PCP_PROGRAMACAO_PRODUCAO SET QTDE_APONTADA = QTDE_APONTADA - '${valorTotal}', QTD_REFUGO = QTD_REFUGO - ${ruins} WHERE 1 = 1 AND NUMERO_ODF = '${dados.numOdf}' AND CAST (LTRIM(NUMERO_OPERACAO) AS INT) = '${dados.numOper}' AND CODIGO_MAQUINA = '${dados.codMaq}'`
-                    const updateValuesOnPcp = await update(updateQuery)
-                    if (updateValuesOnPcp === 'Update sucess') {
-                        return res.status(200).json({ message: 'estorno feito' })
-                    } else {
-                        return res.json({ message: 'erro de estorno' })
-                    }
+        const valorApontado = Number(odf.QTDE_APONTADA - valorTotal)
+        // const qtdLib = Number(odf.QTDE_LIB + valorTotal)
+
+        variables.cookies.reworkFeed = null
+        variables.cookies.valorApontado = valorApontado
+        variables.cookies.missingFeed = null
+        variables.cookies.qtdLib = odf.QTDE_LIB
+
+        const selectSuper = await selectQuery(10, variables.body)
+
+        variables.cookies.QTDE_APONTADA = valorApontado
+        variables.cookies.NUMERO_ODF = body.data.NUMERO_ODF
+        variables.cookies.NUMERO_OPERACAO = body.data.NUMERO_OPERACAO.replaceAll(' ', '').replaceAll('000', '')
+        variables.cookies.CODIGO_MAQUINA = body.data.CODIGO_MAQUINA
+        variables.cookies.REVISAO = groupOdf![i].REVISAO
+        variables.cookies.QTDE_LIB = groupOdf![i].QTDE_LIB
+        variables.cookies.valorTotal = valorTotal
+        variables.cookies.valorApontado = groupOdf![i].QTDE_APONTADA - valorApontado
+
+        if (selectSuper!.length > 0) {
+
+            const resultHasP: any = await selectQuery(22, body.data)
+            const execut = resultHasP!.map((element: any) => element.EXECUT)
+            const codigoFilho: string[] = resultHasP!.map((item: any) => item.NUMITE)
+            const processItens = resultHasP!.map((item: any) => item.NUMSEQ).filter((element: string) => element === String(String(body.data['NUMERO_OPERACAO']!).replaceAll(' ', '')).replaceAll('000', ''))
+
+            if (processItens.length > 0) {
+                const updateStorageQuery: string[] = [];
+                codigoFilho.forEach((element: string, i: number) => {
+                    updateStorageQuery.push(`UPDATE ESTOQUE SET SALDOREAL = SALDOREAL + ${variables.body.quantity * execut[i]} WHERE 1 = 1 AND CODIGO = '${element}'`);
+                });
+                const connection = await mssql.connect(sqlConfig);
+                await connection.query(updateStorageQuery.join('\n')).then(result => result.rowsAffected)
+            }
+
+
+            const insertHisCodReturned = await insertInto(variables.cookies)
+            if (insertHisCodReturned) {
+                const updateValuesOnPcp = await update(2, variables.cookies)
+                if (updateValuesOnPcp === message(1)) {
+                    return res.status(200).json({ status: message(1), message: message(31), data: message(31), code: codeNoteResult.code })
                 } else {
-                    return res.json({ message: 'erro de estorno' })
+                    return res.json({ status: message(1), message: message(0), data: message(33), code: codeNoteResult.code })
                 }
-            } catch (error) {
-                console.log(error)
-                return res.json({ message: 'erro de estorno' })
+            } else {
+                return res.json({ status: message(1), message: message(0), data: message(33), code: codeNoteResult.code })
             }
         } else {
-            return res.json({ message: 'erro de estorno' })
+            return res.json({ status: message(1), message: message(0), data: message(33), code: codeNoteResult.code })
         }
     }
-
 }

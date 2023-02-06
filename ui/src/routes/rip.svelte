@@ -1,323 +1,354 @@
 <script>
     // @ts-nocheck
-    let imageLoader = "/images/axonLoader.gif";
-    import TableRipRow from "../components/Tables/TableRipRow.svelte";
-    let seq = "Seq";
+    import post from "../utils/postFunction";
+    import Message from "../components/components/message.svelte";
+    import { verifyStringLenght } from "../utils/verifyLength";
+    import RipTable from "../components/table/ripTable.svelte";
+    import messageQuery from "../utils/checkMessage";
+    import ModalConfirmation from "../components/modal/modalConfirmation.svelte";
+    import Breadcrumb from "../components/breadcrumb/breadcrumb.svelte";
+    import Supervisor from "../components/components/supervisor.svelte";
+    const Subtitle = "RIP - RELATÓRIO DE INSPEÇÃO DE PROCESSOS";
+    const imageLoader = "/images/axonLoader.gif";
+    const back = "/images/icons8-go-back-24.png";
+    const supervisorRouter = `/api/v1/supervisor`;
+    const pointRipRouter = `/api/v1/pointRip`;
+    const titleBread = `Dados da ODF`;
+    const ripRouter = `/api/v1/rip`;
+    const final = `Finalizar`;
+    const seq = "Seq";
+    let isRequesting = false;
+    let finish = false;
+    let loader = false;
+    let odf = false;
     let extraColumns = [];
-    let pointRipRouter = `/api/v1/pointRip`;
-    let ripRouter = `/api/v1/rip`;
-    let Subtitle = "RIP - RELATÓRIO DE INSPEÇÃO DE PROCESSOS";
     let ripTable = [];
-    let setup = {};
-    let showErrorEmpty = false;
-    let showSuper = false;
-    let supervisorMessage = "";
-    let supervisorRouter = `/api/v1/supervisor`;
-    let showError = false;
-    let showSetup = false;
-    const promiseResult = callRip();
+    const setup = {};
+    let values = {};
+    let supervisor = messageQuery(0);
+    let message = messageQuery(0);
     let lie;
     let lsd;
-    let loader = false;
-    let odfFinish = false;
-    let badgeMessage = "";
-    let redirect;
+    const cookies = document.cookie;
+    let messageObj = false;
+    let result ;
+
+        if(!cookies){
+            message = messageQuery(38)
+            messageObj = true
+        } else {
+            result = callRip()
+        }
 
     async function callRip() {
         const res = await fetch(ripRouter);
         ripTable = await res.json();
-
-        if(ripTable.message === 'Não há rip a mostrar'){
-            loader = true;
-            await doPost()
-            return window.location.href = `${ripTable.url}`;
-        }
-
-        lie = ripTable.map((acc) => acc.LIE);
-        lsd = ripTable.map((acc) => acc.LSE);
-    }
-
-    function checkSuper(event) {
-        if (supervisorMessage.length >= 6 && event.key === "Enter") {
-            if (supervisorMessage === "000000") {
-                badgeMessage = "cracha invalido";
-            }
-            doPostSuper();
-        }
-    }
-
-    const doPostSuper = async () => {
-        loader = true;
-        const headers = new Headers();
-        headers.append("Content-Type", "application/json");
-        const res = await fetch(supervisorRouter, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                supervisor: !supervisorMessage ? "" : supervisorMessage,
-            }),
-        }).then((res) => res.json());
-        loader = false;
-        console.log("linha 60 /do post Super/", res);
-        if (res.message === "Supervisor encontrado") {
-            showSuper = false;
-            await doPost();
-            //odfFinish = true;
-            //window.location.href = "/#/codigobarras";
-            //location.reload();
-        } else if (res.message === "Supervisor não encontrado") {
-            showError = true;
-        }
-    };
-
-    const doPost = async () => {
-        loader = true;
-        const headers = new Headers();
-        const res = await fetch(pointRipRouter, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                setup: setup,
-            }),
-        }).then((res) => res.json());
-        console.log("linha 84 res. rip", res);
-
-        if (res) {
+        
+        if (ripTable) {
             loader = false;
-        }
 
-        if(res.message === 'Não há rip a mostrar'){
-            return window.location.href =`${res.url}`;
+            if(ripTable.message === messageQuery(1) && ripTable.data.length > 0 && ripTable.code === messageQuery(11)){
+                lie = ripTable.data.map((acc) => acc.LIE);
+                return lsd = ripTable.data.map((acc) => acc.LSE);
+            } 
+
+            if(ripTable.message === messageQuery(1) && ripTable.code === messageQuery(12)){
+                message = messageQuery(38)
+                return messageObj = true
+            }
+
+            if(ripTable.data.length <= 0){
+                return callPost()
+            }
+        } else {
+            messageObj = true
+            return (message = messageQuery(4));
         }
-        if (res.message === "rip vazia") {
-            showErrorEmpty = true;
+    }
+
+    async function checkSuper(event) {
+        const resultVerifySupervisor = await verifyStringLenght( event, supervisor, 6, 14);
+        if (resultVerifySupervisor === messageQuery(1)) {
+            const res = await post(supervisorRouter, supervisor);
+            if (res) {
+                return callPost();
+            } else {
+                return (message = messageQuery(25));
+            }
+        } else {
+            return (message = messageQuery(26));
         }
-        if (res.message === "rip enviada, odf finalizada") {
-            odfFinish = true;
-            redirect = res.url;
-            //window.location.href = "/#/codigobarras";
-        }
-        if (res.message === "ocorreu um erro ao enviar os dados da rip") {
-            badgeMessage = "ocorreu um erro ao enviar os dados da rip";
-            //window.location.href = "/#/codigobarras";
+    }
+
+    const callPost = async () => {
+        isRequesting = true;
+        loader = true;
+        const res = await post(pointRipRouter, setup);
+        isRequesting = false;
+        if (res) {
+            console.log("call Post Rip", res.qtdelib);
+            loader = false
+
+            if(res.code === messageQuery(12) && res.qtdelib > 0 ){
+                message = messageQuery(41)
+                return messageObj = true
+            } else if(res.code === messageQuery(12) && res.qtdelib <= 0) {
+                message = messageQuery(38)
+                return messageObj = true
+            }
+
+            if(res.code ===  messageQuery(12) ){
+                message = messageQuery(38)
+                messageObj = false
+            }  
+            else if( res.status === messageQuery(1) && res.message === messageQuery(1) &&  res.data === messageQuery(1) && res.code === messageQuery(33) ){
+                message = messageQuery(38)
+                messageObj = true
+            }
+        } else {
+            message = messageQuery(4);
         }
     };
-
-    function callFinish() {
-        odfFinish = false;
-        window.location.href = redirect;
-    }
 
     function createCol() {
-        const quantityReleased = Object.values(setup).length - ripTable.length;
-        const amountTotalToSend = extraColumns.length * ripTable.length;
+        const quantityReleased =
+            Object.values(values).length -
+            ripTable.data.length * extraColumns.length;
 
-        let arrayToAddCol = ripTable.reduce((acc, int) => {
-            if (acc.values === undefined) {
-                return false;
-            } else if (acc.values >= 0 && int.values >= 0) {
-                return true;
+        if (quantityReleased - ripTable.data.length === 0) {
+            if (extraColumns.length < 13) {
+                extraColumns = [...extraColumns, extraColumns.length + 2];
             }
-        });
-
-        if (amountTotalToSend === quantityReleased) {
-            if (arrayToAddCol === true) {
-                if (extraColumns.length < 13) {
-                    extraColumns = [...extraColumns, extraColumns.length + 2];
-                }
-            }
-        } else if (amountTotalToSend !== quantityReleased) {
-            showSetup = true;
+        } else {
+            message = "Preencha tudo";
         }
     }
 
-    const check = () => {
-        //loader = true;
-        if (Object.values(setup).length <= 0) {
-            return (showSuper = true);
+    const check = async () => {
+        isRequesting = true;
+        if (
+            Object.values(values).length <= 0 ||
+            Object.values(values).length < ripTable.data.length
+        ) {
+            return (message = messageQuery(23));
         }
 
-        const rows = Object.keys(setup).reduce((acc, key, i) => {
-            if (ripTable[i].LSE === null && ripTable[i].LIE === null) {
-                ripTable[i].LSE = "OK";
-                ripTable[i].LIE = "OK";
+        let copyOfExtraCol = extraColumns;
+        let extraArrayCollumns = [];
+        if (extraColumns.length === 1) {
+            extraArrayCollumns.push(copyOfExtraCol + 1);
+        }
+
+        const quantityReleased =
+            ripTable.data.length * extraArrayCollumns.length -
+            Object.values(values).length;
+
+        if (quantityReleased <= 0) {
+            const rows = Object.keys(values).reduce((acc, iterator) => {
+                // if (ripTable[i].LSE === null && ripTable[i].LIE === null) {
+                //     ripTable[i].LSE = "OK";
+                //     ripTable[i].LIE = "OK";
+                // }
+                const [col, lin] = iterator.split("-");
+                if (acc[lin] === undefined) acc[lin] = {};
+                acc[lin][col] = values[iterator];
+                return acc;
+            }, {});
+
+            const callSupervisor = Object.values(rows).some((row) => {
+                return Object.keys(row)
+                    .filter((key) => key !== "LIE" && key !== "LSE")
+                    .some((key) => {
+                        let value = row[key];
+                        return value < row["LIE"] || value > row["LSE"];
+                    });
+            });
+
+            if (callSupervisor === true) {
+                loader = false;
+                message = messageQuery(24);
+            } else if (callSupervisor === false) {
+                loader = true;
+                callPost();
+            } else if (quantityReleased !== 0) {
+                loader = false;
+                return (message = messageQuery(4));
             }
-
-            const [col, lin] = key.split("-");
-            if (acc[lin] === undefined) acc[lin] = {};
-            acc[lin][col] = setup[key];
-            if (!acc[lin]["LIE"]) acc[lin]["LIE"] = ripTable[i].LIE;
-            if (!acc[lin]["LSE"]) acc[lin]["LSE"] = ripTable[i].LSE;
-            return acc;
-        }, {});
-
-        const callSupervisor = Object.values(rows).some((row) => {
-            return Object.keys(row)
-                .filter((key) => key !== "LIE" && key !== "LSE")
-                .some((key) => {
-                    let value = row[key];
-                    if (value === "ok") {
-                        value = false;
-                    }
-                    return value < row["LIE"] || value > row["LSE"];
-                });
-        });
-
-        if (callSupervisor === true) {
-            loader = false;
-            showSuper = true;
-        } else if (callSupervisor === false) {
-            loader = true;
-            doPost();
         }
     };
 
-    function close() {
-        showSetup = false;
-        showSuper = false;
-        showError = false;
-        showErrorEmpty = false;
-        badgeMessage = "";
+    async function callFinish() {
+        finish = false;
+        message = messageQuery(0)
+        window.location.href = messageQuery(20);
     }
+
+    function close() {
+        message = messageQuery(0);
+        isRequesting = false;
+    }
+
+    function redirect() {
+        message = messageQuery(0);
+        isRequesting = false;
+        window.location.href = messageQuery(17);
+    }
+    
+function handleKeydown(e) {
+    if (e.key === "Escape") {
+      window.location.href = messageQuery(20);
+    }
+  }
 </script>
 
+
+<svelte:window on:keydown={handleKeydown} />
+
 <main>
-    <div class="bread" />
-    <div class="divBtn">
+    {#if odf === true}
+        <Breadcrumb
+            imgResource={back}
+            titleBreadcrumb={titleBread}
+            on:message={redirect}
+        />
+
+        <!-- <div class="breadcrumb-area">
+            <div class="cod-area">
+                <a
+                    tabindex="8"
+                    href={messageQuery(17)}
+                    on:keypress={redirect}
+                    on:click={redirect}
+                >
+                    <img src={back} alt="" />Dados da ODF</a
+                >
+            </div>
+        </div> -->
+    {/if}
+
+    <div class="div-btn">
+        <!-- svelte-ignore a11y-positive-tabindex -->
         <button
             on:click={createCol}
             on:keypress={createCol}
             tabindex="21"
-            class="sideButton"
+            class="btn"
             type="submit">Adicionar coluna</button
         >
+        <!-- svelte-ignore a11y-positive-tabindex -->
         <button
+            disabled={isRequesting === true}
             on:click={check}
             on:keypress={check}
             tabindex="22"
-            class="sideButton"
+            class="btn"
             type="submit">Enviar dados</button
         >
     </div>
 
     <div class="title">{Subtitle}</div>
+
     {#if loader === true}
-        <div class="imageLoader">
+        <div class="image-loader">
             <div class="loader">
                 <img src={imageLoader} alt="" />
             </div>
         </div>
     {/if}
 
-    {#await promiseResult}
-        <div class="imageLoader">
+    {#await result}
+        <div class="image-loader">
             <div class="loader">
                 <img src={imageLoader} alt="" />
             </div>
         </div>
-    {:then itens}
-        {#if ripTable.length !== 0}
-            <form action="/api/v1/lancamentoRip" method="POST">
-                <div class="tabela table-responsive">
-                    <table class="table table-hover table-striped caption-top">
-                        <thead>
-                            <tr id="header">
-                                <th scope="col">{seq}</th>
-                                <th scope="col">Item</th>
-                                <th scope="col">Descrição</th>
-                                <th scope="col">Especif.</th>
-                                <th scope="col">LIE</th>
-                                <th scope="col">LSE</th>
-                                <th scope="col">Instrumento</th>
-                                <th scope="col">SETUP</th>
-                                {#each extraColumns as columnNumber}
-                                    <th scope="col">M {columnNumber}</th>
-                                {/each}
-                            </tr>
-                        </thead>
-                        <tbody id="corpoTabela">
-                            {#each ripTable as row, i}
-                                <TableRipRow
-                                    bind:setup
-                                    bind:value={row.values}
-                                    dados={row}
-                                    indice={i + 1}
-                                    {extraColumns}
-                                />
+    {:then}
+        {#if messageObj == false }
+            <div class="table table-responsive">
+                <table class="table table-hover table-striped caption-top">
+                    <thead>
+                        <tr id="modal-content">
+                            <th scope="col">{seq}</th>
+                            <th scope="col">Item</th>
+                            <th scope="col">Descrição</th>
+                            <th scope="col">Especif.</th>
+                            <th scope="col">LIE</th>
+                            <th scope="col">LSE</th>
+                            <th scope="col">Instrumento</th>
+                            <th scope="col">SETUP</th>
+                            {#each extraColumns as columnNumber}
+                                <th scope="col">M {columnNumber}</th>
                             {/each}
-                        </tbody>
-                    </table>
-                </div>
-            </form>
-        {:else}
-            <h2>Não há histórico para exibir</h2>
+                        </tr>
+                    </thead>
+                    <tbody id="body-table">
+                        {#each ripTable.data as row, i}
+                            <RipTable
+                                bind:setup={values}
+                                bind:value={row.values}
+                                dados={row}
+                                indice={i + 1}
+                                {extraColumns}
+                            />
+                        {/each}
+                    </tbody>
+                </table>
+            </div>
         {/if}
     {/await}
-    {#if odfFinish === true}
-        <div class="fundo">
-            <div class="header">
-                <h3>ODF FINALIZADA</h3>
-                <button on:click={callFinish} on:keypress={callFinish}
-                    >Fechar</button
-                >
-            </div>
+
+    {#if messageObj === true}
+        <div class="message-area">
+            <Message
+                titleInMessage={message}
+                btnInMessage={final}
+                on:message={callFinish}
+            />
         </div>
     {/if}
-    {#if showSuper === true}
-        <div class="fundo">
-            <div class="header">
+
+    {#if message === "Supervisor needed"}
+        <Supervisor bind:supervisor={supervisor} on:message={checkSuper} />
+        <!-- <div class="background">
+            <div class="modal-content">
                 <h3>Supervisor</h3>
                 <input
+                    bind:value={supervisor}
+                    on:keypress={checkSuper}
                     autofocus
                     tabindex="18"
-                    bind:value={supervisorMessage}
-                    on:keypress={checkSuper}
                     onkeyup="this.value = this.value.toUpperCase()"
                     type="text"
-                    name="supervisor"
-                    id="supervisor"
                 />
+
                 <button tabindex="20" on:click={close} on:keypress={close}
                     >Fechar</button
                 >
             </div>
-        </div>
+        </div> -->
+    {/if }
+
+    {#if message && message === messageQuery(4) && messageObj === true}
+        <Message title={message} btn={final} on:message={redirect} />
     {/if}
-    {#if showErrorEmpty === true}
-        <div class="fundo">
-            <div class="header">
-                <h3>Rip vazia, envio inválido</h3>
-                <button on:click={close} on:keypress={close}>Confirma</button>
-            </div>
-        </div>
-    {/if}
-    {#if showError === true}
-        <div class="fundo">
-            <div class="header">
-                <h3>Algo deu errado</h3>
-                <button on:click={close} on:keypress={close}>Confirma</button>
-            </div>
-        </div>
-    {/if}
-    {#if showSetup === true}
-        <div class="fundo">
-            <div class="header">
-                <h3>Preencha todos os campos</h3>
-                <button on:click={close} on:keypress={close}>Fechar</button>
-            </div>
-        </div>
-    {/if}
-    {#if badgeMessage === "ocorreu um erro ao enviar os dados da rip"}
-        <div class="fundo">
-            <div class="header">
-                <h3>Erro ao enviar a rip</h3>
-                <button on:click={close} on:keypress={close}>Fechar</button>
-            </div>
-        </div>
+
+    {#if message && message !== messageQuery(0) && message !== messageQuery(38) && message !== messageQuery(4) && message !== messageQuery(41)}
+        <ModalConfirmation title={message} {message} on:message={close} />
     {/if}
 </main>
 
 <style>
+    /* .cod-area {
+        display: flex;
+        margin: 1%;
+        padding: 0%;
+    }
+    a {
+        margin: 0%;
+        padding: 0%;
+        color: #252525;
+        font-size: 20px;
+    } */
     .loader {
         margin: 0%;
         position: relative;
@@ -329,7 +360,7 @@
         justify-content: center;
         z-index: 9999999999999;
     }
-    .imageLoader {
+    .image-loader {
         margin: 0%;
         padding: 0%;
         position: fixed;
@@ -343,21 +374,11 @@
         justify-content: center;
         z-index: 999999999999999;
     }
-    .bread {
-        margin-left: 1%;
-        margin-top: 5px;
-    }
-    .divBtn {
-        letter-spacing: 1px;
-    }
     main {
         letter-spacing: 1px;
     }
-    h2 {
-        font-size: 30px;
-    }
 
-    .fundo {
+    /* .background {
         position: fixed;
         top: 0;
         left: 0;
@@ -369,7 +390,7 @@
         align-items: center;
         justify-content: center;
     }
-    .header {
+    .modal-content {
         color: white;
         background-color: black;
         width: 500px;
@@ -379,17 +400,18 @@
         justify-content: center;
         align-items: center;
         text-align: center;
-        border-radius: 3px;
+        border-radius: 10px;
     }
     input {
         width: 300px;
-        border-radius: 3px;
-    }
+        border-radius: 8px;
+    } */
 
-    .divBtn {
+    .div-btn {
         display: flex;
         margin: 1%;
         justify-content: right;
+        letter-spacing: 1px;
     }
     .title {
         font-size: 35px;
@@ -397,7 +419,7 @@
         display: flex;
         justify-content: center;
     }
-    .sideButton {
+    .btn {
         margin: 1%;
         padding: 0%;
         font-size: 14px;
@@ -414,17 +436,16 @@
         box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4);
     }
 
-    .sideButton:hover {
+    .btn:hover {
         cursor: pointer;
         background-color: black;
         color: white;
         transition: 1s;
     }
-    .tabela {
+    .table {
         width: 100%;
         height: 100%;
         border: 2px solid #cfd4d9;
-        /* border-radius: 10px; */
         padding: 0 15px 0 15px;
     }
     table {

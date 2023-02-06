@@ -5,33 +5,31 @@ const selectedItensFromOdf = async (groupOdf, indexOdf) => {
     let response = {
         message: '',
         odf: '',
-        nextOdf: '',
-        beforeOdf: '',
+        odfBefore: '',
     };
+    response.odfBefore = groupOdf[indexOdf - 1];
+    response.odf = groupOdf[indexOdf];
+    return response;
     if (indexOdf <= 0) {
-        response.message = 'Primeira ODF selecionada';
-        response.beforeOdf = groupOdf[indexOdf];
-        response.nextOdf = groupOdf[indexOdf + 1];
-        response.odf = groupOdf[indexOdf];
-        return response;
+        if (groupOdf[indexOdf].QTDE_APONTADA >= groupOdf[indexOdf].QTDE_ODF) {
+            return response.message = 'Não há limite na ODF';
+        }
+        else {
+            groupOdf[indexOdf].QTDE_LIB = groupOdf[indexOdf].QTDE_ODF - groupOdf[indexOdf].QTDE_APONTADA;
+            return response;
+        }
     }
-    else if (indexOdf + 1 === groupOdf.length) {
-        console.log("linha 19 /query/ ultimaOdf");
-        response.message = 'Ultima ODF';
-        response.odf = groupOdf[indexOdf];
-        response.nextOdf = groupOdf[indexOdf];
-        response.beforeOdf = groupOdf[indexOdf - 1];
-        return response;
-    }
-    else if (indexOdf > 0 && indexOdf < groupOdf.length - 1) {
-        response.message = 'Alguma ODF no meio';
-        response.nextOdf = groupOdf[indexOdf + 1];
-        response.beforeOdf = groupOdf[indexOdf - 1];
-        response.odf = groupOdf[indexOdf];
-        return response;
+    else if (indexOdf > 0) {
+        if (groupOdf[indexOdf].QTDE_APONTADA >= groupOdf[indexOdf - 1].QTD_BOAS || groupOdf[indexOdf].QTDE_APONTADA >= groupOdf[indexOdf].QTDE_ODF) {
+            return response.message = 'Não há limite na ODF';
+        }
+        else {
+            groupOdf[indexOdf].QTDE_LIB = groupOdf[indexOdf - 1].QTD_BOAS;
+            return response;
+        }
     }
     else {
-        return response.message = 'Algo deu errado';
+        return null;
     }
 };
 exports.selectedItensFromOdf = selectedItensFromOdf;

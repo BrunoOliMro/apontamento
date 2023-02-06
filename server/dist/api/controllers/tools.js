@@ -1,138 +1,124 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.selectedTools = exports.tools = void 0;
-const pictures_1 = require("../pictures");
+const variableInicializer_1 = require("../services/variableInicializer");
+const verifyCodeNote_1 = require("../services/verifyCodeNote");
 const insert_1 = require("../services/insert");
-const select_1 = require("../services/select");
-const decodeOdf_1 = require("../utils/decodeOdf");
-const decryptedOdf_1 = require("../utils/decryptedOdf");
-const encodedOdf_1 = require("../utils/encodedOdf");
-const sanitize_1 = require("../utils/sanitize");
+const message_1 = require("../services/message");
+const pictures_1 = require("../pictures");
+const query_1 = require("../services/query");
 const tools = async (req, res) => {
-    if (!Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"]))))) {
-        return res.json({ message: 'Algo deu errado' });
-    }
-    const decodedOdfNumber = Number((0, decodeOdf_1.decodedBuffer)(String((0, sanitize_1.sanitize)(req.cookies['encodedOdfNumber'])))) || 0;
-    const numeroOdf = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_ODF"])))) || 0;
-    const codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_PECA"]))) || null;
-    let numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["NUMERO_OPERACAO"]))) || null;
-    const codigoMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_MAQUINA"]))) || null;
-    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['employee']))) || null;
-    const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
-    const start = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["startSetupTime"])))) || 0;
-    const qtdLibMax = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['qtdLibMax'])))) || 0;
-    const ferramenta = String("_ferr");
-    const boas = 0;
-    const ruins = 0;
-    const codAponta = 1;
-    const descricaoCodigoAponta = 'Ini Setup.';
-    const faltante = 0;
-    const retrabalhada = 0;
-    const motivo = '';
-    const lookForTools = `SELECT [CODIGO], [IMAGEM] FROM VIEW_APTO_FERRAMENTAL WHERE 1 = 1 AND IMAGEM IS NOT NULL AND CODIGO = '${codigoPeca}'`;
-    let toolsImg;
+    const variables = await (0, variableInicializer_1.inicializer)(req);
+    const toolString = String("_ferr");
     const result = [];
-    if (numeroOdf !== decodedOdfNumber) {
-        return res.json({ message: 'Erro na ODF' });
-    }
-    console.log("linha 49 /tools/");
-    try {
-        const inserted = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, start);
-        if (inserted === 'Algo deu errado') {
-            return res.json({ message: "Erro ao inserir codapontamento 1" });
+    var toolsImg;
+    variables.cookies.goodFeed = null;
+    variables.cookies.badFeed = null;
+    variables.cookies.pointedCode = [1];
+    variables.cookies.missingFeed = null;
+    variables.cookies.reworkFeed = null;
+    variables.cookies.pointedCodeDescription = ['Ini Setup.'];
+    variables.cookies.motives = null;
+    variables.cookies.tempoDecorrido = null;
+    const codeNoteResult = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [6, 8, 9]);
+    console.log('codeNoteResult', codeNoteResult);
+    if (codeNoteResult.code === (0, message_1.message)(38)) {
+        toolsImg = await (0, query_1.selectQuery)(20, variables.cookies);
+        console.log('toolsImg', toolsImg);
+        if (!toolsImg) {
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(16), data: (0, message_1.message)(33) });
         }
-        else if (inserted === 'insert done') {
-            try {
-                toolsImg = await (0, select_1.select)(lookForTools);
-                if (toolsImg.length <= 0) {
-                    return res.json({ message: "/images/sem_imagem.gif" });
-                }
-                if (toolsImg.length > 0) {
-                    for await (const [i, record] of toolsImg.entries()) {
-                        const rec = await record;
-                        const path = await pictures_1.pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], ferramenta, String(i));
-                        result.push(path);
-                    }
-                    const obj = {
-                        message: 'codeApont 1 inserido',
-                        result: result,
-                    };
-                    return res.json(obj);
-                }
-                else {
-                    return res.json({ message: "/images/sem_imagem.gif" });
-                }
+        else if (toolsImg) {
+            for await (const [i, record] of toolsImg.entries()) {
+                const rec = await record;
+                const path = await pictures_1.pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], toolString, String(i));
+                result.push(path);
             }
-            catch (error) {
-                console.log(error);
-                return res.json({ message: 'Data not found' });
+            console.log('result', result);
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: result || (0, message_1.message)(33) });
+        }
+        else {
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(16) });
+        }
+    }
+    console.log('aqui será');
+    if (codeNoteResult.accepted || codeNoteResult.code === (0, message_1.message)(17)) {
+        const inserted = await (0, insert_1.insertInto)(variables.cookies);
+        console.log('inserted', inserted);
+        if (inserted.length > 0) {
+            toolsImg = await (0, query_1.selectQuery)(20, variables.cookies);
+            console.log('toolsImg', toolsImg);
+            if (!toolsImg) {
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(16), data: (0, message_1.message)(33) });
+            }
+            else if (toolsImg) {
+                for await (const [i, record] of toolsImg.entries()) {
+                    const rec = await record;
+                    const path = await pictures_1.pictures.getPicturePath(rec["CODIGO"], rec["IMAGEM"], toolString, String(i));
+                    result.push(path);
+                }
+                console.log('result', result);
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: result || (0, message_1.message)(33) });
+            }
+            else {
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(16) });
             }
         }
         else {
-            return res.json({ message: 'Data not found' });
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
         }
     }
-    catch (error) {
-        console.log(error);
-        return res.json({ message: "Erro ao inserir codapontamento 1" });
+    else {
+        return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(45), data: (0, message_1.message)(33), code: codeNoteResult.code || (0, message_1.message)(33) });
     }
 };
 exports.tools = tools;
 const selectedTools = async (req, res) => {
-    console.log("linha 91 /selectedTools.ts/");
-    const numeroOdf = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_ODF'])))) || 0;
-    const numeroOperacao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['NUMERO_OPERACAO']))) || null;
-    const codigoMaq = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['CODIGO_MAQUINA']))) || null;
-    const codigoPeca = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies["CODIGO_PECA"]))) || null;
-    const funcionario = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['employee']))) || null;
-    const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['REVISAO']))) || null;
-    const qtdLibMax = Number((0, decryptedOdf_1.decrypted)(String((0, sanitize_1.sanitize)(req.cookies['qtdLibMax'])))) || 0;
-    const boas = 0;
-    const ruins = 0;
-    const codAponta = 2;
-    const codAponta3 = 3;
-    const descricaoCodigoAponta = 'Fin Setup.';
-    const descricaoCodigoAponta3 = 'Ini Prod.';
-    const faltante = 0;
-    const retrabalhada = 0;
-    const motivo = String('' || null);
-    let x = (0, decryptedOdf_1.decrypted)((0, sanitize_1.sanitize)(req.cookies['startSetupTime']));
-    let y = Number(new Date().getTime());
-    const tempoDecorrido = Number(y - x) || 0;
-    let z = (0, encodedOdf_1.encoded)(String(new Date().getTime()));
-    console.log("linha 115");
-    res.cookie("startProd", z);
-    try {
-        const codApontamentoFinalSetup = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta, descricaoCodigoAponta, motivo, faltante, retrabalhada, tempoDecorrido);
-        console.log('linha 117', codApontamentoFinalSetup);
-        if (codApontamentoFinalSetup === 'Algo deu errado') {
-            return res.json({ message: 'Algo deu errado' });
-        }
-        else if (codApontamentoFinalSetup === 'insert done') {
-            try {
-                const codApontamentoInicioSetup = await (0, insert_1.insertInto)(funcionario, numeroOdf, codigoPeca, revisao, numeroOperacao, codigoMaq, qtdLibMax, boas, ruins, codAponta3, descricaoCodigoAponta3, motivo, faltante, retrabalhada, Number(new Date().getTime() || 0));
-                console.log("linha 123", codApontamentoInicioSetup);
-                if (codApontamentoInicioSetup === 'Algo deu errado') {
-                    return res.json({ message: 'Algo deu errado' });
-                }
-                else if (codApontamentoInicioSetup === 'insert done') {
-                    console.log("feer selecionadas");
-                    return res.json({ message: 'ferramentas selecionadas com successo' });
-                }
-                else {
-                    return res.json({ message: 'Algo deu errado' });
-                }
+    const variables = await (0, variableInicializer_1.inicializer)(req);
+    variables.cookies.goodFeed = null;
+    variables.cookies.badFeed = null;
+    variables.cookies.missingFeed = null;
+    variables.cookies.reworkFeed = null;
+    variables.cookies.motives = null;
+    const codeNoteResult = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [1]);
+    const startSetupTime = new Date(codeNoteResult.time).getTime();
+    const timeSpend = Number(new Date().getTime() - startSetupTime) || null;
+    variables.cookies.tempoDecorrido = timeSpend;
+    if (codeNoteResult.accepted) {
+        variables.cookies.pointedCodeDescription = ['Fin Setup'];
+        variables.cookies.pointedCode = [2];
+        const codApontamentoFinalSetup = await (0, insert_1.insertInto)(variables.cookies);
+        if (codApontamentoFinalSetup !== (0, message_1.message)(0)) {
+            variables.cookies.pointedCode = [3];
+            variables.cookies.pointedCodeDescription = ['Ini Prod.'];
+            const codApontamentoInicioSetup = await (0, insert_1.insertInto)(variables.cookies);
+            if (codApontamentoInicioSetup !== (0, message_1.message)(0)) {
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33), code: codeNoteResult.code || (0, message_1.message)(33) });
             }
-            catch (error) {
-                return res.json({ message: 'Algo deu errado' });
+            else {
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33), code: codeNoteResult.code || (0, message_1.message)(33) });
             }
         }
         else {
-            return res.json({ message: 'Algo deu errado' });
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33), code: codeNoteResult.code || (0, message_1.message)(33) });
         }
     }
-    catch (error) {
-        return res.json({ message: 'Algo deu errado' });
+    else {
+        const codeNoteResult = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [2]);
+        if (codeNoteResult.accepted) {
+            variables.cookies.pointedCodeDescription = ['Ini Prod.'];
+            variables.cookies.pointedCode = [3];
+            const codApontamentoInicioSetup = await (0, insert_1.insertInto)(variables.cookies);
+            if (codApontamentoInicioSetup) {
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: (0, message_1.message)(33), code: codeNoteResult.code || (0, message_1.message)(33) });
+            }
+            else {
+                return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33), code: codeNoteResult.code || (0, message_1.message)(33) });
+            }
+        }
+        else {
+            return res.json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33), code: codeNoteResult.code || (0, message_1.message)(33) });
+        }
     }
 };
 exports.selectedTools = selectedTools;

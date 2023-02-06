@@ -1,23 +1,17 @@
 <script>
     import { createEventDispatcher } from "svelte";
     const dispatch = createEventDispatcher();
-    function messageDispatch() {
+    function message() {
         dispatch("message", {
             text: "Hello!",
         });
     }
 </script>
 
-<button
-    on:click={messageDispatch}
-    type="button"
-    class="sideButton"
-    name="missing"
-    >Faltante
-</button>
+<button on:click={message} type="button" class="btn">Faltante </button>
 
 <style>
-    .sideButton {
+    .btn {
         outline: none;
         margin: 0%;
         padding: 0%;
@@ -31,12 +25,10 @@
         border-radius: 3px;
         background-color: transparent;
         border: none;
-        /* border-color: grey;
-        box-shadow: 0 0 10px 0.5px rgba(0, 0, 0, 0.4); */
         letter-spacing: 1px;
     }
 
-    .sideButton:hover {
+    .btn:hover {
         outline: none;
         cursor: pointer;
         background-color: black;

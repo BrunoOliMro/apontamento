@@ -1,5 +1,6 @@
-<a class="out" href="/#/historico/"
-    ><button type="button" class="sideButton">
+<!-- svelte-ignore a11y-positive-tabindex -->
+<a class="out" href="/#/barcode/tools/point/historic"
+    ><button tabindex="7" type="button" class="btn">
         <p>Histórico de apontamento</p>
     </button>
 </a>
@@ -7,20 +8,23 @@
 <style>
     a {
         text-decoration: none;
-        /* color: black; */
     }
 
-    p{
+    a:hover {
+        text-decoration: none;
+    }
+
+    p {
         font-size: 20px;
         margin: 0%;
         padding: 0%;
     }
 
-    .sideButton {
+    .btn {
         outline: none;
         margin: 0%;
         padding: 0%;
-        width:300px;
+        width: 300px;
         height: 30px;
         display: flex;
         justify-content: center;
@@ -35,14 +39,10 @@
         letter-spacing: 1px;
     }
 
-    .sideButton:hover {
+    .btn:hover {
         cursor: pointer;
         background-color: white;
         color: blue;
         transition: all 1s;
-    }
-
-    a:hover {
-        text-decoration: none;
     }
 </style>

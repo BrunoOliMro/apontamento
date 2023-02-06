@@ -1,33 +1,30 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.drawing = void 0;
-const sanitize_html_1 = __importDefault(require("sanitize-html"));
+const variableInicializer_1 = require("../services/variableInicializer");
+const query_1 = require("../services/query");
+const message_1 = require("../services/message");
 const pictures_1 = require("../pictures");
-const select_1 = require("../services/select");
-const decryptedOdf_1 = require("../utils/decryptedOdf");
+const verifyCodeNote_1 = require("../services/verifyCodeNote");
 const drawing = async (req, res) => {
-    const revisao = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies['REVISAO']))) || null;
-    const numpec = (0, decryptedOdf_1.decrypted)(String((0, sanitize_html_1.default)(req.cookies["CODIGO_PECA"]))) || null;
-    let desenho = String("_desenho");
-    const lookForImages = `SELECT DISTINCT [NUMPEC], [IMAGEM] FROM QA_LAYOUT (NOLOCK) WHERE 1 = 1 AND NUMPEC = '${numpec}' AND REVISAO = ${revisao} AND IMAGEM IS NOT NULL`;
-    try {
-        const resource = await (0, select_1.select)(lookForImages);
-        let imgResult = [];
-        for await (let [i, record] of resource.entries()) {
+    const variables = await (0, variableInicializer_1.inicializer)(req);
+    variables.cookies.drawingString = String('_drawing');
+    const valuesResult = [];
+    if (!variables) {
+        return res.status(400).json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
+    }
+    const resultVerify = await (0, verifyCodeNote_1.verifyCodeNote)(variables.cookies, [3, 4, 5, 7]);
+    if (resultVerify.accepted) {
+        const result = await (0, query_1.selectQuery)(19, variables.cookies);
+        for await (const [i, record] of result.entries()) {
             const rec = await record;
-            const path = await pictures_1.pictures.getPicturePath(rec["NUMPEC"], rec["IMAGEM"], desenho, String(i));
-            imgResult.push(path);
+            const path = await pictures_1.pictures.getPicturePath(rec['NUMPEC'], rec['IMAGEM'], variables.drawingString, String(i));
+            valuesResult.push(path);
         }
-        return res.status(200).json(imgResult);
+        return res.status(200).json({ status: (0, message_1.message)(1), message: (0, message_1.message)(1), data: valuesResult });
     }
-    catch (error) {
-        console.log(error);
-        return res.json({ error: true, message: "Erro no servidor." });
-    }
-    finally {
+    else {
+        return res.status(400).json({ status: (0, message_1.message)(1), message: (0, message_1.message)(0), data: (0, message_1.message)(33) });
     }
 };
 exports.drawing = drawing;

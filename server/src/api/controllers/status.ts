@@ -1,29 +1,31 @@
-import { RequestHandler } from "express";
-import sanitize from "sanitize-html";
-import { select } from "../services/select";
-import { decrypted } from "../utils/decryptedOdf";
+import { inicializer } from '../services/variableInicializer';
+import { verifyCodeNote } from '../services/verifyCodeNote';
+import { selectQuery } from '../services/query';
+import { message } from '../services/message';
+import { RequestHandler } from 'express';
 
 export const status: RequestHandler = async (req, res) => {
-    const numpec = decrypted(String(sanitize(req.cookies['CODIGO_PECA']))) || null
-    const maquina = decrypted(String(sanitize(req.cookies['CODIGO_MAQUINA']))) || null
-    const numeroOperacao = decrypted(sanitize(req.cookies['NUMERO_OPERACAO']))
-    const revisao = decrypted(sanitize(req.cookies['REVISAO']))
-    const lookForTimer = `SELECT TOP 1 EXECUT FROM OPERACAO WHERE 1 = 1 AND NUMPEC = '${numpec}' AND NUMOPE = ${numeroOperacao} AND MAQUIN = '${maquina}' AND REVISAO = ${revisao} ORDER BY REVISAO DESC`
-    try {
-        const resource = await select(lookForTimer)
-        console.log('linha 15', Number(decrypted(req.cookies['qtdLibMax'])));
-        let tempoRestante = Number(resource[0].EXECUT * Number(decrypted(sanitize(String(req.cookies["qtdLibMax"])))) * 1000 - (Number(new Date().getTime() - decrypted(String(sanitize(req.cookies['startSetupTime'])))))) || 0
-        console.log('LINHA 15/temporestante/', tempoRestante);
-        if (tempoRestante > 0) {
-            return res.status(200).json(tempoRestante)
-        } else if (tempoRestante <= 0) {
-            tempoRestante = 0
-            return res.json({ message: 'time for execution not found' })
+    var t0 = performance.now()
+    const variables = await inicializer(req)
+
+    if (!variables.cookies) {
+        return res.json({ status: message(1), message: message(0), data: message(0), supervisor: message(33) })
+    }
+
+    const resultVerifyCodeNote = await verifyCodeNote(variables.cookies, [3, 4, 5, 7])
+
+    if (resultVerifyCodeNote.accepted) {
+        const lookForTimer = await selectQuery(25, variables.cookies)
+        let timeLeft
+        var t1 = performance.now()
+        console.log('Status.ts', t1- t0);
+        if(lookForTimer){
+            timeLeft = Number(lookForTimer[0].EXECUT * variables.cookies.QTDE_LIB! * 1000 - (Number(new Date().getTime() - resultVerifyCodeNote.time))) || 0
         } else {
-            return res.json({ message: 'Algo deu errado' })
+            timeLeft = 6000;
         }
-    } catch (error) {
-        console.log('linha 29 - Status.ts -', error)
-        return res.json({ error: true, message: "Erro no servidor." });
+        return res.json({ status: message(1), message: message(1), data: timeLeft, supervisor: variables.cookies.supervisor })
+    } else {
+        return res.json({ status: message(1), message: message(33), data: message(33) })
     }
 }

@@ -1,0 +1,1 @@
+{"version":3,"file":"queryConnector.js","sourceRoot":"","sources":["../src/queryConnector.ts"],"names":[],"mappings":";;;;;;AAAA,mDAA4C;AAC5C,kDAAuB;AAEhB,MAAM,cAAc,GAAQ,KAAK,IAAI,EAAE;IAsE1C,OAAO,MAAM,IAAI,eAAG,CAAC,cAAc,CAAC,yBAAS,CAAC,CAAC,OAAO,EAAE,CAAC,IAAI,CAAC,IAAI,CAAC,EAAE,GAAG,OAAO,IAAI,CAAA,CAAC,CAAC,CAAC,CAAA;AA6E1F,CAAC,CAAA;AAnJY,QAAA,cAAc,kBAmJ1B"}

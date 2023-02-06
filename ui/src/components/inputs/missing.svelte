@@ -1,32 +1,35 @@
 <script>
-    import blockForbiddenChars from "../../routes/presanitize";
-    let title = "FALTANTE";
-    let missingFeed;
-
+    import blockForbiddenChars from "../../utils/presanitize";
     import { createEventDispatcher } from "svelte";
+
+    let title = "FALTANTES";
+    export let missingFeed;
 
     const dispatch = createEventDispatcher();
 
-    async function disa(event) {
-        dispatch("message", {
-            text: "missingFeed!",
-            missingFeed,
-        });
+    async function callDispatch(event) {
+        if (event.key === "Enter") {
+            dispatch("message", {
+                eventType: event,
+                text: "Send",
+                missingFeed: missingFeed,
+            });
+        }
     }
 </script>
 
-<div class="input-area">
+<div class="content">
     <div class="title">
         <p>{title}</p>
     </div>
-    <div class="input-field">
+    <div>
         <!-- svelte-ignore a11y-positive-tabindex -->
         <!-- svelte-ignore a11y-autofocus -->
+        <!-- on:input={callDispatch} -->
         <input
-            bind:value={missingFeed}
             on:input={blockForbiddenChars}
-            on:input={disa}
-            autofocus
+            on:keypress={callDispatch}
+            bind:value={missingFeed}
             tabindex="3"
             type="text"
         />
@@ -39,20 +42,20 @@
         padding: 0%;
         font-size: 37px;
     }
-    .input-area {
+    .content {
+        font-weight: 500;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         text-align: center;
-        /* height: 10px; */
         width: fit-content;
         padding: 0%;
         margin: 0%;
     }
 
     input {
-        width: 115px;
+        width: 105px;
         height: 40px;
         margin-left: 0%;
         padding: 0%;
